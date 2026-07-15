@@ -114,6 +114,7 @@
     .voice-panel-toggle { margin-top: 10px; }
     #voicePanel .dc-btn { margin-top: 10px; }
     .play { min-width: min(260px, 40vw); }
+    .play span { white-space: nowrap; }
     .play.stop { background: #d44755; }
     .now { min-width: 180px; color: #315fe8; font-size: 13px; font-weight: 750; }
     dialog { width: min(430px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 16px; color: #192238; box-shadow: 0 24px 70px #14203b45; }
@@ -132,7 +133,7 @@
 </head>
 <body>
   <main class="app">
-    <header><div><h1 data-i18n="title">ルーティン練習・編集</h1></div><a href="./practice.html" class="dc-btn" data-i18n="simplePlayer">シンプル再生へ</a></header>
+    <header><div><h1 data-i18n="title">ルーティン練習・編集</h1></div><a href="./practice.html" class="dc-btn"><svg class="dc-icon filled small" aria-hidden="true"><use href="./assets/icons.svg#i-play"/></svg><span data-i18n="simplePlayer">シンプル再生へ</span></a></header>
     <label class="ui-locale"><span data-i18n="interfaceLanguage">画面表示</span><select id="uiLocale"><option value="en">English</option><option value="ja-JP">日本語</option></select></label>
     <p class="notice" data-i18n="notice">ここに表示するのは機械的に拍計算できた旧データです。ダンス内容は未監修のため、初心者向けプリセットとしてはまだ公開しません。</p>
     <section class="top">
@@ -180,7 +181,7 @@
   <footer class="transport dc-bar">
     <div class="dc-bar-inner">
       <button id="speedChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="speedPanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-gauge"/></svg><span data-i18n="speedShort">速度</span></button>
-      <button id="play" class="dc-btn primary play"><svg class="dc-icon filled" aria-hidden="true"><use id="playIcon" href="./assets/icons.svg#i-play"/></svg><span id="playLabel" data-i18n="previewAll">▶ 全体を試聴</span></button>
+      <button id="play" class="dc-btn primary play"><svg class="dc-icon filled" aria-hidden="true"><use id="playIcon" href="./assets/icons.svg#i-play"/></svg><span id="playLabel">全体を試聴</span></button>
       <button id="voiceChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="voicePanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-voice"/></svg><span data-i18n="voiceShort">音声</span></button>
       <button id="countInChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="countInPanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-metronome"/></svg><span data-i18n="countInShort">カウントイン</span></button>
       <div id="now" class="now" data-i18n="stopped">停止中</div>
@@ -299,6 +300,7 @@
     let voiceTimingAdjustedAt = audioPreferences.voiceTimingAdjustedAt ?? null;
     let timingPreferencesChanged = false;
     let editorVoiceInitialized = false;
+    let expandedFigureIndex = null;
 
     applyUiLocale();
 
@@ -431,6 +433,7 @@
       stop();
       const source = sourceById.get(id);
       state = new RoutineEditorState(draftFor(source));
+      expandedFigureIndex = null;
       render();
     }
 
@@ -459,13 +462,17 @@
       document.querySelector('#figureCount').textContent = t('figureCount', { count: routine.figures.length });
       document.querySelector('#undo').disabled = !state.canUndo;
       document.querySelector('#redo').disabled = !state.canRedo;
+      if (expandedFigureIndex !== null) {
+        expandedFigureIndex = routine.figures.length ? Math.min(expandedFigureIndex, routine.figures.length - 1) : null;
+      }
       document.querySelector('#figures').replaceChildren(...routine.figures.map((figure, index) => {
         const row = document.createElement('article');
         const displayName = localizedFigureName(figure.name);
         row.className = 'figure';
+        if (index === expandedFigureIndex) row.classList.add('expanded');
         row.dataset.index = index;
         row.innerHTML = `<span class="number" aria-hidden="true">${index + 1}</span><button class="drag-handle" draggable="true" aria-label="${escapeHtml(t('moveFigure', { name: displayName }))}" title="${escapeHtml(t('moveTitle'))}"><svg class="dc-icon filled" aria-hidden="true"><use href="./assets/icons.svg#i-grip"/></svg></button>
-          <button class="figure-summary" type="button" aria-expanded="false"><span class="figure-summary-name">${escapeHtml(displayName)}</span><span class="figure-summary-counts">${escapeHtml(figure.counts)}</span><svg class="dc-icon small chevron" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg></button>
+          <button class="figure-summary" type="button" aria-expanded="${index === expandedFigureIndex}"><span class="figure-summary-name">${escapeHtml(displayName)}</span><span class="figure-summary-counts">${escapeHtml(figure.counts)}</span><svg class="dc-icon small chevron" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg></button>
           <div class="figure-detail">
             <label>${escapeHtml(t('figureLabel'))}<select class="figure-name dc-select" aria-label="${escapeHtml(t('figureLabel'))}">${figureOptions.map((option, optionIndex) => `<option value="${optionIndex}"${option.name === figure.name && option.counts === figure.counts ? ' selected' : ''}>${escapeHtml(figureDisplayName(routine.danceId, option.name, translator.locale))} (${escapeHtml(option.counts)})</option>`).join('')}</select></label>
             <label>${escapeHtml(t('countsLabel'))}<input class="counts dc-select" value="${escapeHtml(figure.counts)}" readonly aria-readonly="true"></label>
@@ -541,6 +548,7 @@
         row.querySelector('.figure-summary').addEventListener('click', () => {
           const expanded = row.classList.toggle('expanded');
           row.querySelector('.figure-summary').setAttribute('aria-expanded', String(expanded));
+          expandedFigureIndex = expanded ? index : null;
           document.querySelectorAll('.figure.expanded').forEach(other => {
             if (other !== row) {
               other.classList.remove('expanded');
@@ -865,7 +873,10 @@
     function stop() {
       engine?.stop();
       setPlayDisplay(t('previewAll'));
-      document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
+      document.querySelectorAll('.figure.active').forEach(item => {
+        item.classList.remove('active');
+        item.querySelector('.figure-summary')?.setAttribute('aria-expanded', String(item.classList.contains('expanded')));
+      });
       clearActiveBeat();
       document.querySelector('#now').textContent = t('stopped');
     }
@@ -873,7 +884,10 @@
     function onFrame({ playing, event, countIn, originalTick }) {
       if (!playing) { stopDisplay(); return; }
       if (countIn) { clearActiveBeat(); document.querySelector('#now').textContent = t('countInStatus'); return; }
-      document.querySelectorAll('.figure').forEach((item, index) => item.classList.toggle('active', index === event?.figureIndex));
+      document.querySelectorAll('.figure').forEach((item, index) => {
+        item.classList.toggle('active', index === event?.figureIndex);
+        item.querySelector('.figure-summary')?.setAttribute('aria-expanded', String(item.classList.contains('active') || item.classList.contains('expanded')));
+      });
       renderActiveBeat(originalTick);
       document.querySelector('#now').textContent = event ? `${localizedFigureName(event.figureName)} · ${event.token}` : '';
     }
@@ -903,7 +917,10 @@
 
     function stopDisplay() {
       setPlayDisplay(t('previewAll'));
-      document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
+      document.querySelectorAll('.figure.active').forEach(item => {
+        item.classList.remove('active');
+        item.querySelector('.figure-summary')?.setAttribute('aria-expanded', String(item.classList.contains('expanded')));
+      });
       clearActiveBeat();
       document.querySelector('#now').textContent = t('stopped');
     }
@@ -923,6 +940,7 @@
       translator = createEditorTranslator(event.target.value);
       localStorage.setItem(UI_LOCALE_STORAGE_KEY, translator.locale);
       applyUiLocale();
+      setPlayDisplay(t('previewAll'));
       populateRoutineOptions();
       await refreshEditorVoiceOption();
       render();

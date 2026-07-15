@@ -26,7 +26,17 @@ for (const pageName of PAGES) {
     await page.waitForTimeout(600);
 
     const found = await page.evaluate(({ MIN_TAP, MIN_CONTRAST }) => {
+      window.scrollTo(0, 0);
       const issues = [];
+
+      // 0) 固定バーの位置
+      for (const bar of document.querySelectorAll('.dc-bar')) {
+        const rect = bar.getBoundingClientRect();
+        if (Math.abs(rect.bottom - innerHeight) > 2) {
+          issues.push(`BAR-POSITION bottom=${Math.round(rect.bottom)} viewport=${innerHeight} ${bar.tagName.toLowerCase()}${bar.id ? `#${bar.id}` : ''}.${[...bar.classList].join('.')}`);
+        }
+      }
+
       const visible = element => {
         const style = getComputedStyle(element);
         if (style.display === 'none' || style.visibility === 'hidden' || element.closest('[hidden]')) return false;

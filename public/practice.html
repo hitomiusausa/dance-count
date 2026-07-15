@@ -140,14 +140,14 @@
         <small id="voiceChoiceHint" data-i18n="standardVoiceHint">標準音声は拍に合わせて調整済みです。</small>
       </div>
 
-      <div class="transport dc-bar"><div class="dc-bar-inner">
-        <button id="play" class="dc-btn primary play"><svg class="dc-icon filled" aria-hidden="true"><use id="playIcon" href="./assets/icons.svg#i-play"/></svg><span id="playLabel"></span></button>
-      </div></div>
       <p id="message" class="message" role="alert"></p>
 
       <p class="editor-link"><span data-i18n="editorHelp">音声タイミングやフィガーを詳しく調整する場合は、</span><a href="./routine-editor.html" class="dc-btn" data-i18n="editor">一覧で練習・編集</a></p>
     </section>
   </main>
+  <div class="transport dc-bar"><div class="dc-bar-inner">
+    <button id="play" class="dc-btn primary play"><svg class="dc-icon filled" aria-hidden="true"><use id="playIcon" href="./assets/icons.svg#i-play"/></svg><span id="playLabel"></span></button>
+  </div></div>
 
   <script type="module">
     import { DANCE_PROFILES } from '../src/v2/dance-profiles.js';

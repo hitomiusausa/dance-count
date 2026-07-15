@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { PRACTICE_MESSAGES, EDITOR_MESSAGES } from '../../src/v2/ui-messages.js';
 
 const PRACTICE_NEW_KEYS = ['languageToggle'];
-const EDITOR_NEW_KEYS = ['languageToggle', 'speedShort', 'voiceShort', 'countInShort', 'settingsSummary', 'closePanel'];
+const EDITOR_NEW_KEYS = ['languageToggle', 'speedShort', 'voiceShort', 'countInShort', 'settingsSummary'];
 
 test('practice dictionaries define the redesign keys in both locales', () => {
   for (const locale of ['en', 'ja-JP']) {
