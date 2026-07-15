@@ -8,6 +8,7 @@
   <script>
     if (location.protocol === 'file:') location.replace('http://localhost:4173/public/routine-editor.html');
   </script>
+  <link rel="stylesheet" href="./assets/ui.css">
   <style>
     :root { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #192238; background: #f3f5f9; }
     * { box-sizing: border-box; }
@@ -37,8 +38,17 @@
     .list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 22px 2px 10px; }
     .list-head h2 { margin: 0; font-size: 19px; }
     .list-head span { color: #68748a; font-size: 13px; font-weight: 750; }
-    .figures { display: grid; gap: 11px; padding-left: 46px; }
-    .figure { position: relative; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(145px, .55fr) auto auto; align-items: end; gap: 8px; padding: 16px 13px 13px; border: 1px solid #dce2eb; border-radius: 12px; background: white; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .12s; }
+    .figures { display: grid; gap: 11px; padding-left: 52px; }
+    .figure { position: relative; display: grid; gap: 8px; padding: 12px 13px; border: 1px solid #dce2eb; border-radius: 12px; background: white; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .12s; }
+    .figure-summary { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: var(--dc-tap); padding: 4px 2px; border: 0; background: transparent; color: var(--dc-text); font-size: 15px; font-weight: 750; text-align: left; cursor: pointer; }
+    .figure-summary-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .figure-summary-counts { color: var(--dc-text-sub); font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+    .figure-summary .chevron { transition: transform .15s; }
+    .figure.expanded .figure-summary .chevron { transform: rotate(180deg); }
+    .figure-detail { display: none; min-width: 0; gap: 8px; grid-template-columns: minmax(180px, 1fr) minmax(145px, .55fr); align-items: end; }
+    .figure.expanded .figure-detail, .figure.active .figure-detail { display: grid; }
+    .beat-timeline, .card-actions { grid-column: 1 / -1; }
+    .card-actions { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
     .figure:hover { transform: translateY(-2px); border-color: #bbc8df; box-shadow: 0 7px 20px #26395f12; }
     .figure.active { border-color: #315fe8; box-shadow: 0 0 0 2px #315fe829; }
     .figure.invalid { border-color: #d45a69; box-shadow: 0 0 0 2px #d45a6926; }
@@ -48,10 +58,9 @@
     .figure.drag-after::after { bottom: -7px; }
     .figure.just-moved { animation: moved-highlight .65s ease-out; }
     @keyframes moved-highlight { 0% { transform: scale(1.012); border-color: #315fe8; box-shadow: 0 0 0 5px #315fe82c; } 100% { transform: none; } }
-    .drag-handle { position: absolute; left: -43px; top: 50%; display: grid; place-items: center; width: 34px; height: 48px; padding: 0; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: grab; touch-action: none; transform: translateY(-50%); transition: color .16s, background .16s, border-color .16s, transform .16s, box-shadow .16s; }
-    .drag-handle::before { content: ""; width: 16px; height: 24px; background: radial-gradient(circle, currentColor 2px, transparent 2.5px) 0 0 / 8px 8px; color: #8792a6; }
+    .drag-handle { position: absolute; left: -50px; top: 50%; display: grid; place-items: center; width: 44px; height: 48px; padding: 0; border: 1px solid transparent; border-radius: 10px; color: #8792a6; background: transparent; cursor: grab; touch-action: none; transform: translateY(-50%); transition: color .16s, background .16s, border-color .16s, transform .16s, box-shadow .16s; }
     .figure:hover .drag-handle { color: #315fe8; border-color: #b7c6f6; background: #f5f7ff; transform: translateY(-50%) translateX(-2px); box-shadow: 0 4px 12px #315fe81c; }
-    .drag-handle:hover::before, .drag-handle:focus-visible::before { color: #315fe8; }
+    .drag-handle:hover, .drag-handle:focus-visible { color: #315fe8; }
     .drag-handle:focus-visible { outline: 3px solid #315fe833; border-color: #315fe8; background: #f5f7ff; }
     .drag-handle:active { cursor: grabbing; }
     .number { position: absolute; top: -9px; left: 12px; min-width: 24px; height: 19px; padding: 0 6px; border: 1px solid #d8dfeb; border-radius: 10px; color: #657187; background: #f7f8fb; font-size: 11px; font-weight: 800; line-height: 17px; text-align: center; }
@@ -69,15 +78,6 @@
     .beat-event { position: absolute; z-index: 1; top: 6px; display: grid; place-items: center; min-width: 24px; height: 25px; padding: 0 6px; border-radius: 7px; color: #244fc9; background: #e8eeff; font-size: 12px; font-weight: 850; transform: translateX(2px); }
     .beat-cell.active-beat .beat-event { color: white; background: #315fe8; box-shadow: 0 2px 7px #315fe84a; }
     .timeline-error { color: #a53342; font-size: 11px; font-weight: 700; }
-    .remove { padding: 10px; }
-    .preview { color: #315fe8; border-color: #aebff4; font-weight: 750; }
-    .card-actions { display: flex; align-items: center; gap: 4px; }
-    .card-actions button { padding: 10px; }
-    .icon-button { display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0 !important; color: #59677e; border-color: transparent; background: transparent; }
-    .icon-button:hover, .icon-button:focus-visible { color: #315fe8; border-color: #bdcaf0; background: #f2f5ff; }
-    .icon-button.danger:hover, .icon-button.danger:focus-visible { color: #a83242; border-color: #edbdc4; background: #fff2f4; }
-    .icon-button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .add-icon { display: inline-block; width: 18px; height: 18px; margin-right: 5px; vertical-align: -3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .figure-note { grid-column: 1 / -1; display: none; align-items: center; gap: 7px; margin-top: -1px; padding: 7px 9px; border-radius: 8px; color: #59677e; background: #f3f5f9; font-size: 11px; font-weight: 700; }
     .figure-note.visible { display: flex; }
     .figure-note.warning { color: #7b5510; background: #fff5d9; }
@@ -125,7 +125,7 @@
     .field-help { min-height: 18px; margin: 0; color: #68748a; font-size: 11px; line-height: 1.5; }
     .field-help.error { color: #a22f3f; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
-    @media (max-width: 650px) { .app { padding-bottom: 35px; } .top { grid-template-columns: 1fr; } .practice-settings { grid-template-columns: 1fr; } .timing-grid { grid-template-columns: 1fr; } .timing-guide, .word-offsets { grid-column: auto; } .word-offsets { grid-template-columns: 1fr; } .word-offset { grid-template-columns: 50px minmax(0, 1fr) 48px; } .word-preview { grid-column: 2 / 4; justify-self: start; } .figures { padding-left: 39px; } .figure { grid-template-columns: 1fr auto auto; } .figure label:nth-of-type(2) { grid-column: 1 / 4; } .drag-handle { left: -38px; width: 31px; } .transport { position: static; padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); } .transport-inner { flex-direction: column; } .play { width: 100%; min-width: 0; } .now { min-width: 0; } }
+    @media (max-width: 650px) { .app { padding-bottom: 35px; } .top { grid-template-columns: 1fr; } .practice-settings { grid-template-columns: 1fr; } .timing-grid { grid-template-columns: 1fr; } .timing-guide, .word-offsets { grid-column: auto; } .word-offsets { grid-template-columns: 1fr; } .word-offset { grid-template-columns: 50px minmax(0, 1fr) 48px; } .word-preview { grid-column: 2 / 4; justify-self: start; } .figures { padding-left: 48px; } .drag-handle { left: -46px; width: 44px; } .figure-detail { grid-template-columns: 1fr; } .transport { position: static; padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); } .transport-inner { flex-direction: column; } .play { width: 100%; min-width: 0; } .now { min-width: 0; } }
   </style>
 </head>
 <body>
@@ -167,9 +167,8 @@
       </details>
     </section>
     <div class="toolbar">
-      <button id="undo" data-i18n="undo">↶ 元に戻す</button>
-      <button id="redo" data-i18n="redo">↷ やり直す</button>
-      <button id="add"><svg class="add-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addFigure">フィガー追加</span></button>
+      <button id="undo" class="dc-btn"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-undo"/></svg><span data-i18n="undo">元に戻す</span></button>
+      <button id="redo" class="dc-btn"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-redo"/></svg><span data-i18n="redo">やり直す</span></button>
       <button id="reset" data-i18n="resetData">元データに戻す</button>
     </div>
     <p id="status" class="status" aria-live="polite" data-i18n="loadingRoutine">ルーティンを読み込んでいます…</p>
@@ -180,6 +179,7 @@
     </div>
     <div class="list-head"><h2 data-i18n="figureList">フィガー一覧</h2><span id="figureCount">—</span></div>
     <section id="figures" class="figures"></section>
+    <button id="add" class="dc-add-figure"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-plus"/></svg><span data-i18n="addFigure">フィガー追加</span></button>
   </main>
   <footer class="transport"><div class="transport-inner">
     <label><span data-i18n="fullCountIn">全体のカウントイン</span>
@@ -250,7 +250,7 @@
     import { buildFigureCatalog } from '../src/v2/figure-catalog.js';
     import { readRoutineDraft } from '../src/v2/routine-draft.js';
     import { dropDestination } from '../src/v2/routine-editor-order.js';
-    import { createEditorTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260713-global-4';
+    import { createEditorTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260715-global-5';
     import { figureDisplayName } from '../src/v2/figure-terminology.js?v=20260713-verified-1';
 
     let translator = createEditorTranslator(localStorage.getItem(UI_LOCALE_STORAGE_KEY) || navigator.language);
@@ -451,16 +451,19 @@
         const displayName = localizedFigureName(figure.name);
         row.className = 'figure';
         row.dataset.index = index;
-        row.innerHTML = `<span class="number" aria-hidden="true">${index + 1}</span><button class="drag-handle" draggable="true" aria-label="${escapeHtml(t('moveFigure', { name: displayName }))}" title="${escapeHtml(t('moveTitle'))}"></button>
-          <label>${escapeHtml(t('figureLabel'))}<select class="figure-name" aria-label="${escapeHtml(t('figureLabel'))}">${figureOptions.map((option, optionIndex) => `<option value="${optionIndex}"${option.name === figure.name && option.counts === figure.counts ? ' selected' : ''}>${escapeHtml(figureDisplayName(routine.danceId, option.name, translator.locale))} (${escapeHtml(option.counts)})</option>`).join('')}</select></label>
-          <label>${escapeHtml(t('countsLabel'))}<input class="counts" value="${escapeHtml(figure.counts)}" readonly aria-readonly="true"></label>
-          <div class="card-actions">
-            <button class="preview" aria-label="${escapeHtml(t('previewFigure', { name: displayName }))}">${escapeHtml(t('previewButton'))}</button>
-            <button class="duplicate icon-button" aria-label="${escapeHtml(t('duplicateFigure', { name: displayName }))}" title="${escapeHtml(t('duplicate'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2M13.5 11v5M11 13.5h5"/></svg></button>
-            <button class="remove danger icon-button" aria-label="${escapeHtml(t('deleteFigure', { name: displayName }))}" title="${escapeHtml(t('deleteShort'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>
-            <button class="insert-after icon-button" aria-label="${escapeHtml(t('insertAfterFigure', { name: displayName }))}" title="${escapeHtml(t('insertAfter'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M20 8v8M16 12h8"/></svg></button>
-          </div>
-          <div class="beat-timeline" data-timeline-index="${index}" aria-label="${escapeHtml(t('timeline', { name: displayName }))}"></div>`;
+        row.innerHTML = `<span class="number" aria-hidden="true">${index + 1}</span><button class="drag-handle" draggable="true" aria-label="${escapeHtml(t('moveFigure', { name: displayName }))}" title="${escapeHtml(t('moveTitle'))}"><svg class="dc-icon filled" aria-hidden="true"><use href="./assets/icons.svg#i-grip"/></svg></button>
+          <button class="figure-summary" type="button" aria-expanded="false"><span class="figure-summary-name">${escapeHtml(displayName)}</span><span class="figure-summary-counts">${escapeHtml(figure.counts)}</span><svg class="dc-icon small chevron" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg></button>
+          <div class="figure-detail">
+            <label>${escapeHtml(t('figureLabel'))}<select class="figure-name dc-select" aria-label="${escapeHtml(t('figureLabel'))}">${figureOptions.map((option, optionIndex) => `<option value="${optionIndex}"${option.name === figure.name && option.counts === figure.counts ? ' selected' : ''}>${escapeHtml(figureDisplayName(routine.danceId, option.name, translator.locale))} (${escapeHtml(option.counts)})</option>`).join('')}</select></label>
+            <label>${escapeHtml(t('countsLabel'))}<input class="counts dc-select" value="${escapeHtml(figure.counts)}" readonly aria-readonly="true"></label>
+            <div class="card-actions">
+              <button class="preview dc-btn" aria-label="${escapeHtml(t('previewFigure', { name: displayName }))}"><svg class="dc-icon filled small" aria-hidden="true"><use href="./assets/icons.svg#i-play"/></svg><span>${escapeHtml(t('previewButton'))}</span></button>
+              <button class="duplicate dc-btn" aria-label="${escapeHtml(t('duplicateFigure', { name: displayName }))}"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-copy"/></svg><span>${escapeHtml(t('duplicate'))}</span></button>
+              <button class="insert-after dc-btn" aria-label="${escapeHtml(t('insertAfterFigure', { name: displayName }))}"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-insert-after"/></svg><span>${escapeHtml(t('insertAfter'))}</span></button>
+              <button class="remove dc-btn danger" aria-label="${escapeHtml(t('deleteFigure', { name: displayName }))}"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-trash"/></svg><span>${escapeHtml(t('deleteShort'))}</span></button>
+            </div>
+            <div class="beat-timeline" data-timeline-index="${index}" aria-label="${escapeHtml(t('timeline', { name: displayName }))}"></div>
+          </div>`;
         row.querySelector('.figure-name').addEventListener('change', event => {
           const selected = figureOptions[Number(event.target.value)];
           if (selected) mutate(value => {
@@ -522,6 +525,16 @@
         row.querySelector('.duplicate').addEventListener('click', () => duplicateFigure(index));
         row.querySelector('.remove').addEventListener('click', () => requestDelete(index));
         row.querySelector('.insert-after').addEventListener('click', () => openCreateDialog(index + 1));
+        row.querySelector('.figure-summary').addEventListener('click', () => {
+          const expanded = row.classList.toggle('expanded');
+          row.querySelector('.figure-summary').setAttribute('aria-expanded', String(expanded));
+          document.querySelectorAll('.figure.expanded').forEach(other => {
+            if (other !== row) {
+              other.classList.remove('expanded');
+              other.querySelector('.figure-summary')?.setAttribute('aria-expanded', 'false');
+            }
+          });
+        });
         return row;
       }));
       document.querySelector('#routineBpm').value = routine.bpm ?? profile.practiceBpm;

@@ -32,3 +32,11 @@ test('practice.html links the shared UI assets and has no emoji', async () => {
   assert.ok(html.includes('assets/icons.svg#i-globe'), 'globe icon missing');
   assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}]/u.test(html), 'no emoji allowed');
 });
+
+test('routine-editor.html links the shared UI assets and labels card actions', async () => {
+  const html = await fs.readFile(path.join(root, 'public/routine-editor.html'), 'utf8');
+  assert.ok(html.includes('assets/ui.css'), 'ui.css link missing');
+  assert.ok(html.includes('dc-add-figure'), 'list-end add button missing');
+  assert.ok(html.includes('icons.svg#i-copy'), 'labeled duplicate action missing');
+  assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}]/u.test(html), 'no emoji allowed');
+});
