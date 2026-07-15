@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "description": "旧アプリ(dance-count-B_215.html)以外から取り込んだルーティンの正本。図形名は紙面のフリガナに忠実に転記し、printedName/printedCountsに原文を保存する。カウントは行内の小節グループを連結した文字列（小節をまたぐ&は前拍の後半に置くv2パーサの解釈になる——アナクルーシス説。専門家確認前）。",
+  "sources": [
+    {
+      "file": "新ファイナル級ワルツ.pdf",
+      "kind": "紙資料の写真スキャン（1ページ・テキスト層なし）",
+      "receivedAt": "2026-07-15",
+      "receivedFrom": "ひとみうさ提供（/Users/usausagi/Downloads/新ファイナル級ワルツ.pdf）",
+      "transcribedAt": "2026-07-15",
+      "transcribedBy": "Claude (Fable 5) — 高解像度画像を4分割して目視転記、v2コンパイラで全13行=32小節・全フィガー小節境界終了を確認",
+      "authority": null,
+      "region": null,
+      "notes": "団体・地域・出典の記載なし。開始向き:「逆壁斜めに面して始める」。第1〜第4LODの4セクション構成。紙面の英語には誤記あり（Turnning, Doble Sise Lock 等）——フリガナ（カタカナ）を正として転記し、原文はprintedNameに保存。"
+    }
+  ],
+  "routines": [
+    {
+      "id": "waltz_new_final",
+      "danceId": "waltz",
+      "name": "ワルツ 新ファイナル級",
+      "sourceFile": "新ファイナル級ワルツ.pdf",
+      "sourceReference": "紙資料スキャン（2026-07-15受領・同日転記）。逆壁斜めに面して始める。第1〜第4LOD構成。団体・出典記載なし",
+      "figures": [
+        {
+          "name": "ナチュラルターン1〜3・ランニングスピンターン",
+          "counts": "1231&23",
+          "lod": 1,
+          "printedName": "1~3 of Natural Turn, Running Spin Turn",
+          "printedCounts": "123, 1&23"
+        },
+        {
+          "name": "ランニングフィニッシュ・ランニングウィーブ",
+          "counts": "1231&23",
+          "lod": 1,
+          "printedName": "Running Finish, Running Weave",
+          "printedCounts": "123, 1&23"
+        },
+        {
+          "name": "サイドロック・フォールアウェーリバース アンド スリップピボット",
+          "counts": "1231&23",
+          "lod": 1,
+          "printedName": "Side Lock, Fallaway Reverse and Slip Pivot",
+          "printedCounts": "123 1&23"
+        },
+        {
+          "name": "ヴィニーズロック・スローアウェイオーバースウェイ トゥ PP",
+          "counts": "12&3&123123",
+          "lod": 1,
+          "printedName": "Viennese Lock, Throwaway Oversway to P.P.",
+          "printedCounts": "12&3, &123, 123"
+        },
+        {
+          "name": "パッシングナチュラルターン・バックホイスク",
+          "counts": "123123",
+          "lod": 1,
+          "printedName": "Passing Natural Turn, Back Whisk",
+          "printedCounts": "123, 123"
+        },
+        {
+          "name": "ビッグトップ・プログレッシブシャッセ トゥ ライト",
+          "counts": "12312&3",
+          "lod": 2,
+          "printedName": "Big Top, Progressive Chasse to Right",
+          "printedCounts": "123, 12&3"
+        },
+        {
+          "name": "リバースチェック・ランニングフィニッシュ",
+          "counts": "1231&23",
+          "lod": 2,
+          "printedName": "Reverse Check, Running Finish",
+          "printedCounts": "123, 1&23"
+        },
+        {
+          "name": "ナチュラルスピンターン・ターニングロック トゥ ザ ライト",
+          "counts": "1231231&23",
+          "lod": 3,
+          "printedName": "Natural Spin Turn, Turnning Lock to the Right",
+          "printedCounts": "123, 123, 1&23"
+        },
+        {
+          "name": "ダブルサイドロック・バウンスフォールアウェイ・シャッセロール",
+          "counts": "12&3&1&2312&3",
+          "lod": 3,
+          "printedName": "Doble Sise Lock, Bounce Fallaway, Chasse Roll",
+          "printedCounts": "12&3&, 1&23, 12&3"
+        },
+        {
+          "name": "フォールアウェイロンデエンディング・オーバースウェイ ウィズ レディーレッグリフト・スタンディングスピン",
+          "counts": "12312312&3",
+          "lod": 3,
+          "printedName": "Fallaway Ronde ending, Oversway with Lady Leg Lift, Standing Spin",
+          "printedCounts": "123, 123, 12&3"
+        },
+        {
+          "name": "パッシングナチュラルターン・アウトサイドスピン",
+          "counts": "123&1&23&",
+          "lod": 3,
+          "printedName": "Passing Natural Turn, Outside Spin",
+          "printedCounts": "123&, 1&23&"
+        },
+        {
+          "name": "ナチュラルツイストターン・ランジ・チェンジングスウェイ・シャッセエンディング PP",
+          "counts": "12312&3",
+          "lod": 3,
+          "printedName": "Natural Twist turn, Lunge, Changing Sway, Chasse Ending P.P.",
+          "printedCounts": "123, 12&3"
+        },
+        {
+          "name": "ウィーブ トゥ PP・スローシャッセ (With F.E.O.)",
+          "counts": "12312312312&3",
+          "lod": 4,
+          "printedName": "Weave to P.P., Slow Chasse (With F.E.O.)",
+          "printedCounts": "123, 123, 123, 12&3"
+        }
+      ]
+    }
+  ]
+}

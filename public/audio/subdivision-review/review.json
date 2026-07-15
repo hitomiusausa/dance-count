@@ -1,0 +1,156 @@
+{
+  "generatedAt": "2026-07-13T10:58:33.529Z",
+  "sampleRate": 48000,
+  "results": [
+    {
+      "id": "chacha-practice",
+      "danceId": "chacha",
+      "dance": "チャチャチャ",
+      "counts": "234&1",
+      "bpm": 96,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "chacha-practice-current.wav",
+        "maxOverlapMs": 8,
+        "totalOverlapMs": 15,
+        "shortenedEvents": 0,
+        "peak": 0.582,
+        "clippedSamples": 0
+      },
+      "fade": {
+        "file": "chacha-practice-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 2,
+        "peak": 0.582,
+        "clippedSamples": 0
+      }
+    },
+    {
+      "id": "chacha-fast",
+      "danceId": "chacha",
+      "dance": "チャチャチャ",
+      "counts": "234&1",
+      "bpm": 128,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "chacha-fast-current.wav",
+        "maxOverlapMs": 86,
+        "totalOverlapMs": 183,
+        "shortenedEvents": 0,
+        "peak": 0.576,
+        "clippedSamples": 0
+      },
+      "fade": {
+        "file": "chacha-fast-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 4,
+        "peak": 0.582,
+        "clippedSamples": 0
+      }
+    },
+    {
+      "id": "samba-practice",
+      "danceId": "samba",
+      "dance": "サンバ",
+      "counts": "1a2",
+      "bpm": 80,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "samba-practice-current.wav",
+        "maxOverlapMs": 83,
+        "totalOverlapMs": 165,
+        "shortenedEvents": 0,
+        "peak": 0.69,
+        "clippedSamples": 0
+      },
+      "fade": {
+        "file": "samba-practice-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 2,
+        "peak": 0.69,
+        "clippedSamples": 0
+      }
+    },
+    {
+      "id": "samba-fast",
+      "danceId": "samba",
+      "dance": "サンバ",
+      "counts": "1a2",
+      "bpm": 104,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "samba-fast-current.wav",
+        "maxOverlapMs": 126,
+        "totalOverlapMs": 252,
+        "shortenedEvents": 0,
+        "peak": 0.69,
+        "clippedSamples": 0
+      },
+      "fade": {
+        "file": "samba-fast-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 2,
+        "peak": 0.69,
+        "clippedSamples": 0
+      }
+    },
+    {
+      "id": "jive-practice",
+      "danceId": "jive",
+      "dance": "ジャイブ",
+      "counts": "123a45a6",
+      "bpm": 136,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "jive-practice-current.wav",
+        "maxOverlapMs": 160,
+        "totalOverlapMs": 653,
+        "shortenedEvents": 0,
+        "peak": 0.998,
+        "clippedSamples": 0
+      },
+      "fade": {
+        "file": "jive-practice-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 5,
+        "peak": 0.799,
+        "clippedSamples": 0
+      }
+    },
+    {
+      "id": "jive-fast",
+      "danceId": "jive",
+      "dance": "ジャイブ",
+      "counts": "123a45a6",
+      "bpm": 176,
+      "repetitions": 2,
+      "fadeMs": 12,
+      "current": {
+        "file": "jive-fast-current.wav",
+        "maxOverlapMs": 185,
+        "totalOverlapMs": 940,
+        "shortenedEvents": 0,
+        "peak": 1.055,
+        "clippedSamples": 10
+      },
+      "fade": {
+        "file": "jive-fast-fade.wav",
+        "maxOverlapMs": 0,
+        "totalOverlapMs": 0,
+        "shortenedEvents": 9,
+        "peak": 0.799,
+        "clippedSamples": 0
+      }
+    }
+  ]
+}

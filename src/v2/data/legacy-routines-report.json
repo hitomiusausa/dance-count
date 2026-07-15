@@ -1,0 +1,2710 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-15T05:50:29.673Z",
+  "summary": {
+    "routineCount": 25,
+    "figureCount": 317,
+    "mechanicallyValidUnreviewed": 17,
+    "needsReview": 8,
+    "issueCounts": {
+      "AMBIGUOUS_LEADING_SUBDIVISION": 4,
+      "COMPILE_ERROR": 1,
+      "FIGURE_PHASE_CONTINUES": 49,
+      "LEGACY_JIVE_TIMING": 1,
+      "REPEATED_SUBDIVISION": 1,
+      "ROUTINE_INCOMPLETE_BAR": 5
+    }
+  },
+  "routines": [
+    {
+      "id": "tango_new_gold",
+      "danceId": "tango",
+      "name": "タンゴ 新ゴールド級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 29,
+      "durationTicks": null,
+      "issues": [
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 7,
+          "figureName": "ドロップ・オーバー・スウェイ&コントラ・チェック・ツー・PP",
+          "counts": "&QQSSQQS&S"
+        },
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 22,
+          "figureName": "ナチュラルピボット&ナチュラルスピン",
+          "counts": "&QQ"
+        },
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 27,
+          "figureName": "ターニング 5 ステップ",
+          "counts": "&QQQQS"
+        }
+      ],
+      "figures": [
+        {
+          "id": "tango_new_gold-figure-1",
+          "name": "2ウォークス",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_new_gold-figure-2",
+          "name": "フォーラウェイ・フォア・ステップ",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-3",
+          "name": "ホイスク・ツー・PP & ファン",
+          "counts": "SSQQ&S"
+        },
+        {
+          "id": "tango_new_gold-figure-4",
+          "name": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_new_gold-figure-5",
+          "name": "オープンリバーススターン レディ・アウトサイド",
+          "counts": "QQS"
+        },
+        {
+          "id": "tango_new_gold-figure-6",
+          "name": "バックチェック & ナチュラル・ピボット",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_new_gold-figure-7",
+          "name": "セイム・フット・ランジ",
+          "counts": "QQS"
+        },
+        {
+          "id": "tango_new_gold-figure-8",
+          "name": "ドロップ・オーバー・スウェイ&コントラ・チェック・ツー・PP",
+          "counts": "&QQSSQQS&S"
+        },
+        {
+          "id": "tango_new_gold-figure-9",
+          "name": "バック・チェック2回",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-10",
+          "name": "ライトエロスライン&フリック・ツーPP",
+          "counts": "S&S"
+        },
+        {
+          "id": "tango_new_gold-figure-11",
+          "name": "プロムナード・ピボット & シャッセ",
+          "counts": "SQQQQ&"
+        },
+        {
+          "id": "tango_new_gold-figure-12",
+          "name": "ドラッグ ツー PP",
+          "counts": "SS&S"
+        },
+        {
+          "id": "tango_new_gold-figure-13",
+          "name": "オープンナチュラル",
+          "counts": "SQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-14",
+          "name": "アウトサイドスピン & ピボット ツー PP",
+          "counts": "QQQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-15",
+          "name": "チェアー",
+          "counts": "S"
+        },
+        {
+          "id": "tango_new_gold-figure-16",
+          "name": "クローズ&2ウォークス(右回り) to PP",
+          "counts": "SSS&S"
+        },
+        {
+          "id": "tango_new_gold-figure-17",
+          "name": "ザ・チェイス (1〜5)",
+          "counts": "SQQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-18",
+          "name": "ストップロック&レフトホイスク",
+          "counts": "Q&QSS&S"
+        },
+        {
+          "id": "tango_new_gold-figure-19",
+          "name": "ナチュラルツイストターン(5〜6)",
+          "counts": "QQS"
+        },
+        {
+          "id": "tango_new_gold-figure-20",
+          "name": "プロムナードリンク",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-21",
+          "name": "フォーラウェイ・リバース&スリップピボット",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-22",
+          "name": "チェンジオブダイレクション",
+          "counts": "QQSS"
+        },
+        {
+          "id": "tango_new_gold-figure-23",
+          "name": "ナチュラルピボット&ナチュラルスピン",
+          "counts": "&QQ"
+        },
+        {
+          "id": "tango_new_gold-figure-24",
+          "name": "ザ・チェイス (3〜5)(エンディング1)",
+          "counts": "QQQQQ&QSQQ"
+        },
+        {
+          "id": "tango_new_gold-figure-25",
+          "name": "プロムナードロック",
+          "counts": "SQ&Q"
+        },
+        {
+          "id": "tango_new_gold-figure-26",
+          "name": "レフトランジ & ライトランジ",
+          "counts": "S&S"
+        },
+        {
+          "id": "tango_new_gold-figure-27",
+          "name": "セイムフット・ランジ",
+          "counts": "S&S"
+        },
+        {
+          "id": "tango_new_gold-figure-28",
+          "name": "ターニング 5 ステップ",
+          "counts": "&QQQQS"
+        },
+        {
+          "id": "tango_new_gold-figure-29",
+          "name": "クローズド・プロムナード",
+          "counts": "SQQS"
+        }
+      ]
+    },
+    {
+      "id": "tango_1grade",
+      "danceId": "tango",
+      "name": "タンゴ 1級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 22,
+      "durationTicks": 115200,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "ファイブステップ",
+          "counts": "QQQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 9,
+          "figureName": "ロックターン(1-4)",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 10,
+          "figureName": "ロックオンライトフット",
+          "counts": "QQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 13,
+          "figureName": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 17,
+          "figureName": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 18,
+          "figureName": "オープンリバースターン レディアウトサイド オープンフィニッシュ",
+          "counts": "QQSQQS"
+        }
+      ],
+      "figures": [
+        {
+          "id": "tango_1grade-figure-1",
+          "name": "2ウォークス",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_1grade-figure-2",
+          "name": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_1grade-figure-3",
+          "name": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-4",
+          "name": "アウトサイドスウィブル",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_1grade-figure-5",
+          "name": "ファイブステップ",
+          "counts": "QQQQS"
+        },
+        {
+          "id": "tango_1grade-figure-6",
+          "name": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-7",
+          "name": "フォーステップ",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_1grade-figure-8",
+          "name": "フォーラウェイプロムナード",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "tango_1grade-figure-9",
+          "name": "プロムナードターン(1-3)",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_1grade-figure-10",
+          "name": "ロックターン(1-4)",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-11",
+          "name": "ロックオンライトフット",
+          "counts": "QQS"
+        },
+        {
+          "id": "tango_1grade-figure-12",
+          "name": "バックコルテ",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-13",
+          "name": "2ウォークス トゥ PP",
+          "counts": "SS&"
+        },
+        {
+          "id": "tango_1grade-figure-14",
+          "name": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-15",
+          "name": "バックコルテ",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-16",
+          "name": "オーバースウェイ エンディング3",
+          "counts": "QQSSQ&QSQQ"
+        },
+        {
+          "id": "tango_1grade-figure-17",
+          "name": "ザ・チェイス",
+          "counts": "SQQQQS"
+        },
+        {
+          "id": "tango_1grade-figure-18",
+          "name": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_1grade-figure-19",
+          "name": "オープンリバースターン レディアウトサイド オープンフィニッシュ",
+          "counts": "QQSQQS"
+        },
+        {
+          "id": "tango_1grade-figure-20",
+          "name": "フォーステップ(1-2)",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_1grade-figure-21",
+          "name": "アウトサイドスウィブル トゥ リンク",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_1grade-figure-22",
+          "name": "ブラッシュタップ",
+          "counts": "QQ&S"
+        }
+      ]
+    },
+    {
+      "id": "waltz_1grade",
+      "danceId": "waltz",
+      "name": "ワルツ 1級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 22,
+      "durationTicks": 72000,
+      "issues": [],
+      "figures": [
+        {
+          "id": "waltz_1grade-figure-1",
+          "name": "予備足",
+          "counts": "@@3"
+        },
+        {
+          "id": "waltz_1grade-figure-2",
+          "name": "ナチュラルスピンターン（アンダーターン）",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_1grade-figure-3",
+          "name": "リバースターン(4-6, 1/4)",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-4",
+          "name": "リバースターン(1-3) & リバースピボット(3/8)",
+          "counts": "123&"
+        },
+        {
+          "id": "waltz_1grade-figure-5",
+          "name": "ウィスク",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-6",
+          "name": "シャッセ フロム PP",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-7",
+          "name": "ナチュラルターン(1-3)（アンダーターン）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-8",
+          "name": "オープンインピタス（アンダーターン）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-9",
+          "name": "ウィーブ フロム PP",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_1grade-figure-10",
+          "name": "プロムナードシャッセ",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-11",
+          "name": "クロスヘジテーション",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-12",
+          "name": "アウトサイドチェンジ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-13",
+          "name": "ヘジテーションチェンジ",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_1grade-figure-14",
+          "name": "フォーラウェイリバース＆スリップピボット",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-15",
+          "name": "シャッセ トゥ ライト",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-16",
+          "name": "バックロック",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-17",
+          "name": "バックウィスク",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-18",
+          "name": "ウィング",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-19",
+          "name": "ダブルリバーススピン",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-20",
+          "name": "コントラチェック",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_1grade-figure-21",
+          "name": "シャッセ フロム PP",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_1grade-figure-22",
+          "name": "ナチュラルターン(1-3)",
+          "counts": "123"
+        }
+      ]
+    },
+    {
+      "id": "chacha_2grade",
+      "danceId": "chacha",
+      "name": "チャチャチャ 2級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 13,
+      "durationTicks": 69120,
+      "issues": [],
+      "figures": [
+        {
+          "id": "chacha_2grade-figure-1",
+          "name": "オープンヒップツイスト",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-2",
+          "name": "ホッキースティック",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-3",
+          "name": "オープンベーシックムーブメント1〜5",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-4",
+          "name": "ナチュラルトップ11〜15",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-5",
+          "name": "クローズドヒップツイスト",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-6",
+          "name": "アレマーナ",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-7",
+          "name": "ハンドトゥハンド トゥ ライトサイドポジション",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-8",
+          "name": "スポットターン トゥ レフト",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-9",
+          "name": "レフトサイド ショルダー トゥ ショルダー",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-10",
+          "name": "ライトサイド ショルダー トゥ ショルダー",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-11",
+          "name": "レフトサイド ショルダー トゥ ショルダー",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-12",
+          "name": "アンダーアームターン トゥ ライト",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_2grade-figure-13",
+          "name": "クロスベーシック（スパイラルエンディング）",
+          "counts": "234&1234&1"
+        }
+      ]
+    },
+    {
+      "id": "pasodoble_2grade",
+      "danceId": "pasodoble",
+      "name": "パソドブレ 2級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 16,
+      "durationTicks": 84480,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 6,
+          "figureName": "プロムナードクローズ",
+          "counts": "12"
+        }
+      ],
+      "figures": [
+        {
+          "id": "pasodoble_2grade-figure-1",
+          "name": "予備足",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-2",
+          "name": "シュールプラス",
+          "counts": "5678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-3",
+          "name": "シックスティーン",
+          "counts": "1234567812345678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-4",
+          "name": "アタック",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-5",
+          "name": "シャッセ トゥ ライト（ウィズエレベーション）",
+          "counts": "5678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-6",
+          "name": "エカルト",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-7",
+          "name": "プロムナードクローズ",
+          "counts": "12"
+        },
+        {
+          "id": "pasodoble_2grade-figure-8",
+          "name": "シャッセ トゥ ライト",
+          "counts": "34"
+        },
+        {
+          "id": "pasodoble_2grade-figure-9",
+          "name": "シュールプラス",
+          "counts": "5678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-10",
+          "name": "ツイストターン",
+          "counts": "12345678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-11",
+          "name": "シュールプラス",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-12",
+          "name": "プロムナード & カウンタープロムナード",
+          "counts": "56781234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-13",
+          "name": "グランドサークル",
+          "counts": "56781234"
+        },
+        {
+          "id": "pasodoble_2grade-figure-14",
+          "name": "シャッセ トゥ ライト",
+          "counts": "5678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-15",
+          "name": "プロムナード",
+          "counts": "12345678"
+        },
+        {
+          "id": "pasodoble_2grade-figure-16",
+          "name": "シュールプラス",
+          "counts": "1234"
+        }
+      ]
+    },
+    {
+      "id": "samba_1grade",
+      "danceId": "samba",
+      "name": "サンバ 1級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 20,
+      "durationTicks": 69120,
+      "issues": [],
+      "figures": [
+        {
+          "id": "samba_1grade-figure-1",
+          "name": "ウィスク トゥ レフト",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-2",
+          "name": "フットチェンジ（方法1）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-3",
+          "name": "クルザードスウォークス アンド ロックス",
+          "counts": "SSQQSSSQQS"
+        },
+        {
+          "id": "samba_1grade-figure-4",
+          "name": "フットチェンジ（方法2）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-5",
+          "name": "ウィスク トゥ ライト",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-6",
+          "name": "レフトフット サンバウォーク イン プロムナードポジション（1回目）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-7",
+          "name": "サイドサンバウォーク（1回目）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-8",
+          "name": "レフトフット サンバウォーク イン プロムナードポジション（2回目）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-9",
+          "name": "サイドサンバウォーク（2回目）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-10",
+          "name": "クリスクロスボルタ(1〜7)",
+          "counts": "1a2a1a2"
+        },
+        {
+          "id": "samba_1grade-figure-11",
+          "name": "サンバロックス(1〜6)",
+          "counts": "QQSQQS"
+        },
+        {
+          "id": "samba_1grade-figure-12",
+          "name": "クリスクロス ボタフォゴ(4〜6)",
+          "counts": "1a21a2"
+        },
+        {
+          "id": "samba_1grade-figure-13",
+          "name": "ナチュラルロール（アンダーターン）",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "samba_1grade-figure-14",
+          "name": "オープンロックス",
+          "counts": "SQQSQQSQQ"
+        },
+        {
+          "id": "samba_1grade-figure-15",
+          "name": "リバースターン",
+          "counts": "1a21a2"
+        },
+        {
+          "id": "samba_1grade-figure-16",
+          "name": "ウィスク トゥ レフト（レディ アンダーアームターン）",
+          "counts": "1a2"
+        },
+        {
+          "id": "samba_1grade-figure-17",
+          "name": "プログレッシブベーシックムーブメンツ",
+          "counts": "1a21a21a21a2"
+        },
+        {
+          "id": "samba_1grade-figure-18",
+          "name": "コルタジャカ",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "id": "samba_1grade-figure-19",
+          "name": "ウィスク トゥ レフト トゥ ライト",
+          "counts": "1a21a2"
+        },
+        {
+          "id": "samba_1grade-figure-20",
+          "name": "リバースベーシックムーブメンツ",
+          "counts": "1a21a2"
+        }
+      ]
+    },
+    {
+      "id": "waltz_silver",
+      "danceId": "waltz",
+      "name": "ワルツ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 6,
+      "durationTicks": 17280,
+      "issues": [],
+      "figures": [
+        {
+          "id": "waltz_silver-figure-1",
+          "name": "ナチュラルターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_silver-figure-2",
+          "name": "リバースターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_silver-figure-3",
+          "name": "クローズドチェンジ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_silver-figure-4",
+          "name": "ウィスク",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_silver-figure-5",
+          "name": "シャッセフロムPP",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_silver-figure-6",
+          "name": "オープンテレマーク",
+          "counts": "123"
+        }
+      ]
+    },
+    {
+      "id": "waltz_bronze",
+      "danceId": "waltz",
+      "name": "ワルツ ブロンズ級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 3,
+      "durationTicks": 8640,
+      "issues": [],
+      "figures": [
+        {
+          "id": "waltz_bronze-figure-1",
+          "name": "ナチュラルターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_bronze-figure-2",
+          "name": "リバースターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_bronze-figure-3",
+          "name": "クローズドチェンジ",
+          "counts": "123"
+        }
+      ]
+    },
+    {
+      "id": "tango_gold",
+      "danceId": "tango",
+      "name": "タンゴ ゴールド級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 5,
+      "durationTicks": 24960,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 3,
+          "figureName": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "オープンリバーススターン",
+          "counts": "QQS"
+        },
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ],
+      "figures": [
+        {
+          "id": "tango_gold-figure-1",
+          "name": "ウォークス (2歩)",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_gold-figure-2",
+          "name": "フォーラウェイ・フォア・ステップ",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_gold-figure-3",
+          "name": "ホイスク・ツー・PP & ファン",
+          "counts": "SSQQ&S"
+        },
+        {
+          "id": "tango_gold-figure-4",
+          "name": "オープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_gold-figure-5",
+          "name": "オープンリバーススターン",
+          "counts": "QQS"
+        }
+      ]
+    },
+    {
+      "id": "tango_silver",
+      "danceId": "tango",
+      "name": "タンゴ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 6,
+      "durationTicks": 30720,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 3,
+          "figureName": "ナチュラルプロムナードターン",
+          "counts": "SQQS"
+        }
+      ],
+      "figures": [
+        {
+          "id": "tango_silver-figure-1",
+          "name": "ウォーク (2歩)",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_silver-figure-2",
+          "name": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_silver-figure-3",
+          "name": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_silver-figure-4",
+          "name": "ナチュラルプロムナードターン",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_silver-figure-5",
+          "name": "バックコルテ",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_silver-figure-6",
+          "name": "リバースターン",
+          "counts": "QQSQQS"
+        }
+      ]
+    },
+    {
+      "id": "slowfox_silver",
+      "danceId": "slowfox",
+      "name": "スローフォックス シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 6,
+      "durationTicks": 23040,
+      "issues": [],
+      "figures": [
+        {
+          "id": "slowfox_silver-figure-1",
+          "name": "フェザーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_silver-figure-2",
+          "name": "スリーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_silver-figure-3",
+          "name": "ナチュラルターン",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_silver-figure-4",
+          "name": "リバースターン",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_silver-figure-5",
+          "name": "ホバーテレマーク",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_silver-figure-6",
+          "name": "クローズドテレマーク",
+          "counts": "SQQ"
+        }
+      ]
+    },
+    {
+      "id": "quickstep_silver",
+      "danceId": "quickstep",
+      "name": "クイックステップ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 5,
+      "durationTicks": 28800,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 0,
+          "figureName": "クォーターターン",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 3,
+          "figureName": "ナチュラルスピンターン",
+          "counts": "SQQSSS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "バックロック",
+          "counts": "QQ&S"
+        },
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ],
+      "figures": [
+        {
+          "id": "quickstep_silver-figure-1",
+          "name": "クォーターターン",
+          "counts": "SQQS"
+        },
+        {
+          "id": "quickstep_silver-figure-2",
+          "name": "プログレッシブシャッセ",
+          "counts": "SQQS"
+        },
+        {
+          "id": "quickstep_silver-figure-3",
+          "name": "フォワードロック",
+          "counts": "QQ&S"
+        },
+        {
+          "id": "quickstep_silver-figure-4",
+          "name": "ナチュラルスピンターン",
+          "counts": "SQQSSS"
+        },
+        {
+          "id": "quickstep_silver-figure-5",
+          "name": "バックロック",
+          "counts": "QQ&S"
+        }
+      ]
+    },
+    {
+      "id": "rumba_silver",
+      "danceId": "rumba",
+      "name": "ルンバ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 6,
+      "durationTicks": 32640,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 0,
+          "figureName": "クローズドベーシック",
+          "counts": "2341234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "ニューヨーク",
+          "counts": "234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 2,
+          "figureName": "ハンドトゥハンド",
+          "counts": "2341234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "ファン",
+          "counts": "2341234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 5,
+          "figureName": "ホッキースティック",
+          "counts": "2341234"
+        },
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ],
+      "figures": [
+        {
+          "id": "rumba_silver-figure-1",
+          "name": "クローズドベーシック",
+          "counts": "2341234"
+        },
+        {
+          "id": "rumba_silver-figure-2",
+          "name": "ニューヨーク",
+          "counts": "234"
+        },
+        {
+          "id": "rumba_silver-figure-3",
+          "name": "ハンドトゥハンド",
+          "counts": "2341234"
+        },
+        {
+          "id": "rumba_silver-figure-4",
+          "name": "アンダーアームターン",
+          "counts": "234"
+        },
+        {
+          "id": "rumba_silver-figure-5",
+          "name": "ファン",
+          "counts": "2341234"
+        },
+        {
+          "id": "rumba_silver-figure-6",
+          "name": "ホッキースティック",
+          "counts": "2341234"
+        }
+      ]
+    },
+    {
+      "id": "chacha_silver",
+      "danceId": "chacha",
+      "name": "チャチャチャ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 5,
+      "durationTicks": 26880,
+      "issues": [],
+      "figures": [
+        {
+          "id": "chacha_silver-figure-1",
+          "name": "クローズドベーシック",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_silver-figure-2",
+          "name": "ニューヨーク",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_silver-figure-3",
+          "name": "スポットターン",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_silver-figure-4",
+          "name": "アンダーアームターン",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_silver-figure-5",
+          "name": "ファン",
+          "counts": "234&1234&1"
+        }
+      ]
+    },
+    {
+      "id": "samba_silver",
+      "danceId": "samba",
+      "name": "サンバ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 5,
+      "durationTicks": null,
+      "issues": [
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 4,
+          "figureName": "ボルタ",
+          "counts": "&&&&"
+        },
+        {
+          "code": "REPEATED_SUBDIVISION",
+          "severity": "error",
+          "message": "分割拍が連続しており、v2の拍位置へ自動変換できません",
+          "figureIndex": 4,
+          "figureName": "ボルタ",
+          "counts": "&&&&"
+        }
+      ],
+      "figures": [
+        {
+          "id": "samba_silver-figure-1",
+          "name": "サンバウォーク",
+          "counts": "S&S&"
+        },
+        {
+          "id": "samba_silver-figure-2",
+          "name": "ウィスク",
+          "counts": "S&S&"
+        },
+        {
+          "id": "samba_silver-figure-3",
+          "name": "サンバロックス",
+          "counts": "QQS"
+        },
+        {
+          "id": "samba_silver-figure-4",
+          "name": "ボタフォゴ",
+          "counts": "S&S&"
+        },
+        {
+          "id": "samba_silver-figure-5",
+          "name": "ボルタ",
+          "counts": "&&&&"
+        }
+      ]
+    },
+    {
+      "id": "pasodoble_silver",
+      "danceId": "pasodoble",
+      "name": "パソドブレ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 5,
+      "durationTicks": 14400,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 0,
+          "figureName": "アペル",
+          "counts": "1"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "アタック",
+          "counts": "12"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 2,
+          "figureName": "シャッセツーライト",
+          "counts": "1234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 3,
+          "figureName": "プロムナードクローズ",
+          "counts": "1234"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "フラメンカルックス",
+          "counts": "1234"
+        },
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り960 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ],
+      "figures": [
+        {
+          "id": "pasodoble_silver-figure-1",
+          "name": "アペル",
+          "counts": "1"
+        },
+        {
+          "id": "pasodoble_silver-figure-2",
+          "name": "アタック",
+          "counts": "12"
+        },
+        {
+          "id": "pasodoble_silver-figure-3",
+          "name": "シャッセツーライト",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_silver-figure-4",
+          "name": "プロムナードクローズ",
+          "counts": "1234"
+        },
+        {
+          "id": "pasodoble_silver-figure-5",
+          "name": "フラメンカルックス",
+          "counts": "1234"
+        }
+      ]
+    },
+    {
+      "id": "jive_silver",
+      "danceId": "jive",
+      "name": "ジャイブ シルバー級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 6,
+      "durationTicks": null,
+      "issues": [
+        {
+          "code": "LEGACY_JIVE_TIMING",
+          "severity": "review",
+          "message": "旧版のジャイブ表記は正確なQaQタイミングとして自動承認できません"
+        },
+        {
+          "code": "COMPILE_ERROR",
+          "severity": "error",
+          "message": "Count \"&\" is not valid for ジャイブ"
+        }
+      ],
+      "figures": [
+        {
+          "id": "jive_silver-figure-1",
+          "name": "ベーシックインプレイス",
+          "counts": "12&3&4"
+        },
+        {
+          "id": "jive_silver-figure-2",
+          "name": "スロウアウェイフォーラウェイ",
+          "counts": "12&3&4"
+        },
+        {
+          "id": "jive_silver-figure-3",
+          "name": "リンク",
+          "counts": "12&3&4"
+        },
+        {
+          "id": "jive_silver-figure-4",
+          "name": "チェンジオブプレイス (LtoR)",
+          "counts": "12&3&4"
+        },
+        {
+          "id": "jive_silver-figure-5",
+          "name": "チェンジオブプレイス (RtoL)",
+          "counts": "12&3&4"
+        },
+        {
+          "id": "jive_silver-figure-6",
+          "name": "アメリカンスピン",
+          "counts": "12&3&4"
+        }
+      ]
+    },
+    {
+      "id": "vwaltz_basic",
+      "danceId": "vwaltz",
+      "name": "ヴィエニーズワルツ ベーシック",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 4,
+      "durationTicks": 17280,
+      "issues": [],
+      "figures": [
+        {
+          "id": "vwaltz_basic-figure-1",
+          "name": "ナチュラルターン",
+          "counts": "123123"
+        },
+        {
+          "id": "vwaltz_basic-figure-2",
+          "name": "リバースターン",
+          "counts": "123123"
+        },
+        {
+          "id": "vwaltz_basic-figure-3",
+          "name": "チェンジステップ (NtoR)",
+          "counts": "123"
+        },
+        {
+          "id": "vwaltz_basic-figure-4",
+          "name": "チェンジステップ (RtoN)",
+          "counts": "123"
+        }
+      ]
+    },
+    {
+      "id": "tango_bronze",
+      "danceId": "tango",
+      "name": "タンゴ ブロンズ級",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 22,
+      "durationTicks": 122880,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 2,
+          "figureName": "ナチュラルプロムナードターン",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 14,
+          "figureName": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 15,
+          "figureName": "ツーウォークス",
+          "counts": "SS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 17,
+          "figureName": "バックオープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 19,
+          "figureName": "オーバースウェイ",
+          "counts": "QQSSS&S"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 20,
+          "figureName": "ナチュラルツイストターン",
+          "counts": "SQQSQQ"
+        }
+      ],
+      "figures": [
+        {
+          "id": "tango_bronze-figure-1",
+          "name": "ツーウォークス",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_bronze-figure-2",
+          "name": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_bronze-figure-3",
+          "name": "ナチュラルプロムナードターン",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_bronze-figure-4",
+          "name": "ロックターン オープンフィニッシュ",
+          "counts": "SQQSQQS"
+        },
+        {
+          "id": "tango_bronze-figure-5",
+          "name": "フォーラウェイリバース&スリップピボット",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_bronze-figure-6",
+          "name": "ベーシックリバースターン",
+          "counts": "QQSQQS"
+        },
+        {
+          "id": "tango_bronze-figure-7",
+          "name": "ツーウォークス",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_bronze-figure-8",
+          "name": "フォーラウェイフォーステップ",
+          "counts": "QQQQ"
+        },
+        {
+          "id": "tango_bronze-figure-9",
+          "name": "フォーラウェイプロムナード",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "tango_bronze-figure-10",
+          "name": "ザ チェイス エンディング1",
+          "counts": "SQQQQQ&QSQQ"
+        },
+        {
+          "id": "tango_bronze-figure-11",
+          "name": "プロムナードリンク",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_bronze-figure-12",
+          "name": "オープンリバースターンレディアウトサイド オープンフィニッシュ",
+          "counts": "QQSQQS"
+        },
+        {
+          "id": "tango_bronze-figure-13",
+          "name": "アウトサイドスイブル",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_bronze-figure-14",
+          "name": "コントラチェック",
+          "counts": "SQQ"
+        },
+        {
+          "id": "tango_bronze-figure-15",
+          "name": "クローズドプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_bronze-figure-16",
+          "name": "ツーウォークス",
+          "counts": "SS"
+        },
+        {
+          "id": "tango_bronze-figure-17",
+          "name": "プログレッシブリンク",
+          "counts": "QQ"
+        },
+        {
+          "id": "tango_bronze-figure-18",
+          "name": "バックオープンプロムナード",
+          "counts": "SQQS"
+        },
+        {
+          "id": "tango_bronze-figure-19",
+          "name": "リバースアウトサイドスイブル方法4",
+          "counts": "QQSQQ"
+        },
+        {
+          "id": "tango_bronze-figure-20",
+          "name": "オーバースウェイ",
+          "counts": "QQSSS&S"
+        },
+        {
+          "id": "tango_bronze-figure-21",
+          "name": "ナチュラルツイストターン",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "tango_bronze-figure-22",
+          "name": "クローズドプロムナード",
+          "counts": "SQQS"
+        }
+      ]
+    },
+    {
+      "id": "rumba_bronze_istd",
+      "danceId": "rumba",
+      "name": "ルンバ ブロンズ級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 17,
+      "durationTicks": 122880,
+      "issues": [],
+      "figures": [
+        {
+          "id": "rumba_bronze_istd-figure-1",
+          "name": "キューバンロックス",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-2",
+          "name": "チェックフロムオープンCPP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-3",
+          "name": "アンダーアームターンtoライト＆アンダーアームターンtoレフト",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-4",
+          "name": "オープンヒップツイスト",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-5",
+          "name": "アレマーナ",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-6",
+          "name": "スライディングドアーズ（スパイラルエンディング）",
+          "counts": "2341234123412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-7",
+          "name": "カール、フォーラウェイ",
+          "counts": "234123&41"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-8",
+          "name": "キューバンロックス スポットターンtoレフト",
+          "counts": "2&3412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-9",
+          "name": "フォワードウォークスinライトサイドポジション（スパイラルエンディング）",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-10",
+          "name": "コンティニュアスサーキュラーヒップツイスト（オーバーターンドエンディング）",
+          "counts": "2341234123412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-11",
+          "name": "スウィブル、シンコペーテッドバックワードウォーク",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-12",
+          "name": "ナチュラルトップ",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-13",
+          "name": "オープニングアウトtoライトアンドレフト",
+          "counts": "234123412341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-14",
+          "name": "クラブウォークス",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-15",
+          "name": "スポットターンtoライト",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-16",
+          "name": "4〜6 カール",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_istd-figure-17",
+          "name": "リバーストップ（スパイラルエンディング）",
+          "counts": "23412341"
+        }
+      ]
+    },
+    {
+      "id": "chacha_bronze_istd",
+      "danceId": "chacha",
+      "name": "チャチャチャ ブロンズ級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 26,
+      "durationTicks": 138240,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 5,
+          "figureName": "クローズドベーシックムーブメント1-2（ダブルハンドホールド）",
+          "counts": "23"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 7,
+          "figureName": "クローズドベーシックムーブメント6-7",
+          "counts": "23"
+        }
+      ],
+      "figures": [
+        {
+          "id": "chacha_bronze_istd-figure-1",
+          "name": "クローズドベーシックムーブメント",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-2",
+          "name": "タイムステップ LF",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-3",
+          "name": "タイムステップ RF",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-4",
+          "name": "タイムステップ LF（グアパチャタイミング）",
+          "counts": "2a34&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-5",
+          "name": "スポットターンtoレフト",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-6",
+          "name": "クローズドベーシックムーブメント1-2（ダブルハンドホールド）",
+          "counts": "23"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-7",
+          "name": "スリー チャ チャ チャ（バック）",
+          "counts": "4&12&34&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-8",
+          "name": "クローズドベーシックムーブメント6-7",
+          "counts": "23"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-9",
+          "name": "スリー チャ チャ チャ（フォワード）",
+          "counts": "4&12&34&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-10",
+          "name": "アレマーナ（レディエンドfwdトゥワーズマンズライトサイド）",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-11",
+          "name": "ヒップツイストスパイラル",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-12",
+          "name": "ニューヨーク LSP",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-13",
+          "name": "スプリットキューバンブレイク（RアンドL）",
+          "counts": "2&34&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-14",
+          "name": "アンダーアームターンtoライト",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-15",
+          "name": "クロスベーシック1-5（グアパチャタイミング）",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-16",
+          "name": "クロスベーシック6-10（ノーマル）",
+          "counts": "2a34&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-17",
+          "name": "クローズドベーシックムーブメント1-5（グアパチャタイミング）",
+          "counts": "2a34&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-18",
+          "name": "ファン",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-19",
+          "name": "ホッキースティック",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-20",
+          "name": "チェイス",
+          "counts": "234&1234&1234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-21",
+          "name": "オープンベーシックムーブメント1-5",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-22",
+          "name": "ナチュラルトップ11-15",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-23",
+          "name": "クローズドヒップツイスト",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-24",
+          "name": "アレマーナ",
+          "counts": "234&1234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-25",
+          "name": "ショルダーtoショルダー（ダブルハンドホールド）",
+          "counts": "234&1"
+        },
+        {
+          "id": "chacha_bronze_istd-figure-26",
+          "name": "スポットターンtoレフト",
+          "counts": "234&1"
+        }
+      ]
+    },
+    {
+      "id": "waltz_2grade_jdf",
+      "danceId": "waltz",
+      "name": "ワルツ 2級(全ダ連)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 20,
+      "durationTicks": 69120,
+      "issues": [],
+      "figures": [
+        {
+          "id": "waltz_2grade_jdf-figure-1",
+          "name": "クローズド・チェンジ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-2",
+          "name": "ナチュラル・スピン・ターン（アンダーターン）",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-3",
+          "name": "リバース・ターン（4−6）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-4",
+          "name": "プログレッシブ・シャッセ・トゥ・ライト",
+          "counts": "12&3"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-5",
+          "name": "アウトサイド・チェンジ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-6",
+          "name": "ナチュラル・ターン（1−3）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-7",
+          "name": "インピタス・ターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-8",
+          "name": "ターニング・ロック・トゥ・ザ・レフト",
+          "counts": "1&23"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-9",
+          "name": "ヘジテーション・チェンジ",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-10",
+          "name": "リバース・ターン（1−3）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-11",
+          "name": "リバース・コルテ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-12",
+          "name": "アウトサイド・チェンジ",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-13",
+          "name": "ナチュラル・ターン（1−3）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-14",
+          "name": "オープン・インピタス・ターン",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-15",
+          "name": "ウイング",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-16",
+          "name": "クローズド・テレマーク",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-17",
+          "name": "ナチュラル・ターン（1−3）",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-18",
+          "name": "バック・ホイスク",
+          "counts": "123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-19",
+          "name": "ウィーブ・フロム・PP",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_2grade_jdf-figure-20",
+          "name": "ヘジテーション・チェンジ",
+          "counts": "123123"
+        }
+      ]
+    },
+    {
+      "id": "rumba_bronze_aichi",
+      "danceId": "rumba",
+      "name": "ルンバ ブロンズ級(愛知)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 20,
+      "durationTicks": 115200,
+      "issues": [],
+      "figures": [
+        {
+          "id": "rumba_bronze_aichi-figure-1",
+          "name": "オープンヒップツイスト",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-2",
+          "name": "ホッキースティック Open CPP",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-3",
+          "name": "ニューヨーク to LSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-4",
+          "name": "ニューヨーク to RSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-5",
+          "name": "ニューヨーク to LSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-6",
+          "name": "アンダーアームターン to ライト",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-7",
+          "name": "ジグザグ",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-8",
+          "name": "サーキュラーヒップツイスト 4-9",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-9",
+          "name": "アドバンストヒップツイスト",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-10",
+          "name": "アレマーナ",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-11",
+          "name": "ロープスピニング",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-12",
+          "name": "ハンドツーハンド to RSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-13",
+          "name": "ハンドツーハンド to LSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-14",
+          "name": "ソロスパイラル from ハンドツーハンド to RSP",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-15",
+          "name": "アイーダ エンディング4 方法1",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-16",
+          "name": "プログレッシブウォークスフォワードinRシャドーポジション エンディング1 ファンエンディング",
+          "counts": "234123412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-17",
+          "name": "ホッキースティック（女子ランナウェーウォーク）",
+          "counts": "23412341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-18",
+          "name": "オープンベーシックの変形",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-19",
+          "name": "ナチュラルトップ 7-9",
+          "counts": "2341"
+        },
+        {
+          "id": "rumba_bronze_aichi-figure-20",
+          "name": "スパイラル エンディング1",
+          "counts": "23412341"
+        }
+      ]
+    },
+    {
+      "id": "slowfox_1grade",
+      "danceId": "slowfox",
+      "name": "スローフォックス 1級(ISTD)",
+      "source": "dance-count-B_215.html",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "dance-count-B_215.html",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": null,
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "needs-review",
+      "figureCount": 15,
+      "durationTicks": 87360,
+      "issues": [
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 0,
+          "figureName": "予備足",
+          "counts": "@@@S"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 1,
+          "figureName": "フェザーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 2,
+          "figureName": "オープンテレマーク アンド フェザーエンディング",
+          "counts": "SQQSQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 3,
+          "figureName": "ホーバーテレマーク",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 4,
+          "figureName": "カーブドフェザー トゥ バックフェザー",
+          "counts": "SQQSQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 5,
+          "figureName": "フェザーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 6,
+          "figureName": "リバースターン",
+          "counts": "SQQSQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 7,
+          "figureName": "スリーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 8,
+          "figureName": "ホーバークロス",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 9,
+          "figureName": "フォーラウェイリバース アンド スリップピボット",
+          "counts": "S&QQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 10,
+          "figureName": "リバースウェーブ（1-6）",
+          "counts": "SQQSQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 11,
+          "figureName": "オープンインピタス",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 12,
+          "figureName": "ナチュラルウィーブ フロム PP",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 13,
+          "figureName": "スリーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "code": "FIGURE_PHASE_CONTINUES",
+          "severity": "info",
+          "message": "フィガーは小節途中で終わり、次のフィガーが同じ小節位相を引き継ぎます",
+          "figureIndex": 14,
+          "figureName": "ナチュラルターン",
+          "counts": "SQQSSS"
+        },
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り960 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ],
+      "figures": [
+        {
+          "id": "slowfox_1grade-figure-1",
+          "name": "予備足",
+          "counts": "@@@S"
+        },
+        {
+          "id": "slowfox_1grade-figure-2",
+          "name": "フェザーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-3",
+          "name": "オープンテレマーク アンド フェザーエンディング",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-4",
+          "name": "ホーバーテレマーク",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-5",
+          "name": "カーブドフェザー トゥ バックフェザー",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-6",
+          "name": "フェザーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-7",
+          "name": "リバースターン",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-8",
+          "name": "スリーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-9",
+          "name": "ホーバークロス",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-10",
+          "name": "フォーラウェイリバース アンド スリップピボット",
+          "counts": "S&QQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-11",
+          "name": "リバースウェーブ（1-6）",
+          "counts": "SQQSQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-12",
+          "name": "オープンインピタス",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-13",
+          "name": "ナチュラルウィーブ フロム PP",
+          "counts": "SQQQQQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-14",
+          "name": "スリーステップ",
+          "counts": "SQQ"
+        },
+        {
+          "id": "slowfox_1grade-figure-15",
+          "name": "ナチュラルターン",
+          "counts": "SQQSSS"
+        }
+      ]
+    },
+    {
+      "id": "waltz_new_final",
+      "danceId": "waltz",
+      "name": "ワルツ 新ファイナル級",
+      "source": "新ファイナル級ワルツ.pdf",
+      "provenance": {
+        "sourceKind": "legacy-import",
+        "sourceFile": "新ファイナル級ワルツ.pdf",
+        "contentLocale": "ja-JP",
+        "region": null,
+        "authority": null,
+        "authorityVersion": null,
+        "sourceReference": "紙資料スキャン（2026-07-15受領・同日転記）。逆壁斜めに面して始める。第1〜第4LOD構成。団体・出典記載なし",
+        "authorityClaimStatus": "unverified",
+        "reviewStatus": "unreviewed",
+        "reviewedAt": null,
+        "reviewerEvidence": null
+      },
+      "status": "mechanically-valid-unreviewed",
+      "figureCount": 13,
+      "durationTicks": 92160,
+      "issues": [],
+      "figures": [
+        {
+          "id": "waltz_new_final-figure-1",
+          "name": "ナチュラルターン1〜3・ランニングスピンターン",
+          "counts": "1231&23"
+        },
+        {
+          "id": "waltz_new_final-figure-2",
+          "name": "ランニングフィニッシュ・ランニングウィーブ",
+          "counts": "1231&23"
+        },
+        {
+          "id": "waltz_new_final-figure-3",
+          "name": "サイドロック・フォールアウェーリバース アンド スリップピボット",
+          "counts": "1231&23"
+        },
+        {
+          "id": "waltz_new_final-figure-4",
+          "name": "ヴィニーズロック・スローアウェイオーバースウェイ トゥ PP",
+          "counts": "12&3&123123"
+        },
+        {
+          "id": "waltz_new_final-figure-5",
+          "name": "パッシングナチュラルターン・バックホイスク",
+          "counts": "123123"
+        },
+        {
+          "id": "waltz_new_final-figure-6",
+          "name": "ビッグトップ・プログレッシブシャッセ トゥ ライト",
+          "counts": "12312&3"
+        },
+        {
+          "id": "waltz_new_final-figure-7",
+          "name": "リバースチェック・ランニングフィニッシュ",
+          "counts": "1231&23"
+        },
+        {
+          "id": "waltz_new_final-figure-8",
+          "name": "ナチュラルスピンターン・ターニングロック トゥ ザ ライト",
+          "counts": "1231231&23"
+        },
+        {
+          "id": "waltz_new_final-figure-9",
+          "name": "ダブルサイドロック・バウンスフォールアウェイ・シャッセロール",
+          "counts": "12&3&1&2312&3"
+        },
+        {
+          "id": "waltz_new_final-figure-10",
+          "name": "フォールアウェイロンデエンディング・オーバースウェイ ウィズ レディーレッグリフト・スタンディングスピン",
+          "counts": "12312312&3"
+        },
+        {
+          "id": "waltz_new_final-figure-11",
+          "name": "パッシングナチュラルターン・アウトサイドスピン",
+          "counts": "123&1&23&"
+        },
+        {
+          "id": "waltz_new_final-figure-12",
+          "name": "ナチュラルツイストターン・ランジ・チェンジングスウェイ・シャッセエンディング PP",
+          "counts": "12312&3"
+        },
+        {
+          "id": "waltz_new_final-figure-13",
+          "name": "ウィーブ トゥ PP・スローシャッセ (With F.E.O.)",
+          "counts": "12312312312&3"
+        }
+      ]
+    }
+  ]
+}

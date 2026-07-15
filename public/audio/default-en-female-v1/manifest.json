@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 2,
+  "id": "default-en-female-v1",
+  "name": "Google en-US-Neural2-F",
+  "source": "google-cloud-tts",
+  "locale": "en-US",
+  "voiceName": "en-US-Neural2-F",
+  "speakingRate": 1.25,
+  "sampleRate": 48000,
+  "status": "auto-onset-measured",
+  "words": {
+    "slow": {
+      "file": "slow.wav",
+      "onsetMs": 30,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "quick": {
+      "file": "quick.wav",
+      "onsetMs": 45,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "one": {
+      "file": "one.wav",
+      "onsetMs": 35,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "two": {
+      "file": "two.wav",
+      "onsetMs": 45,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "three": {
+      "file": "three.wav",
+      "onsetMs": 50,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "four": {
+      "file": "four.wav",
+      "onsetMs": 80,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "five": {
+      "file": "five.wav",
+      "onsetMs": 70,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "six": {
+      "file": "six.wav",
+      "revision": "brighter-2st-20260712",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "seven": {
+      "file": "seven.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "eight": {
+      "file": "eight.wav",
+      "onsetMs": 25,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "and": {
+      "file": "and.wav",
+      "onsetMs": 35,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    },
+    "ah": {
+      "file": "ah.wav",
+      "onsetMs": 25,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1"
+    }
+  },
+  "onsetMeasuredAt": "2026-07-12T12:40:12.516Z"
+}

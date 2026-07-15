@@ -1,0 +1,1512 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T05:53:21.956Z",
+  "policy": {
+    "translationRule": "Exact dance-specific source-name match only",
+    "unmatchedBehavior": "Keep the original Japanese source name",
+    "scope": "Terminology evidence only; does not verify routine composition, level, or organization authority"
+  },
+  "summary": {
+    "figures": 317,
+    "verified": 144,
+    "unverified": 173,
+    "unique": 267,
+    "verifiedUnique": 103
+  },
+  "dances": [
+    {
+      "danceId": "tango",
+      "routines": 5,
+      "figures": 84,
+      "verified": 29,
+      "unverified": 55,
+      "verifiedNames": [
+        {
+          "sourceName": "クローズドプロムナード",
+          "occurrences": 5,
+          "englishName": "Closed Promenade",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "オープンプロムナード",
+          "occurrences": 4,
+          "englishName": "Open Promenade",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "プログレッシブリンク",
+          "occurrences": 4,
+          "englishName": "Progressive Link",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バックコルテ",
+          "occurrences": 3,
+          "englishName": "Back Corte",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ナチュラルプロムナードターン",
+          "occurrences": 2,
+          "englishName": "Natural Promenade Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "フォーラウェイプロムナード",
+          "occurrences": 2,
+          "englishName": "Fallaway Promenade",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "プロムナードリンク",
+          "occurrences": 2,
+          "englishName": "Promenade Link",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "アウトサイドスイブル",
+          "occurrences": 1,
+          "englishName": "Outside Swivels",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "アウトサイドスウィブル",
+          "occurrences": 1,
+          "englishName": "Outside Swivels",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "クローズド・プロムナード",
+          "occurrences": 1,
+          "englishName": "Closed Promenade",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ナチュラルツイストターン",
+          "occurrences": 1,
+          "englishName": "Natural Twist Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バックオープンプロムナード",
+          "occurrences": 1,
+          "englishName": "Back Open Promenade",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "フォーステップ",
+          "occurrences": 1,
+          "englishName": "Four Step",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ブラッシュタップ",
+          "occurrences": 1,
+          "englishName": "Brush Tap",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "ツーウォークス",
+          "occurrences": 3
+        },
+        {
+          "sourceName": "2ウォークス",
+          "occurrences": 2
+        },
+        {
+          "sourceName": "フォーラウェイ・フォア・ステップ",
+          "occurrences": 2
+        },
+        {
+          "sourceName": "ホイスク・ツー・PP & ファン",
+          "occurrences": 2
+        },
+        {
+          "sourceName": "2ウォークス トゥ PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アウトサイドスウィブル トゥ リンク",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アウトサイドスピン & ピボット ツー PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウォーク (2歩)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウォークス (2歩)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オーバースウェイ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オーバースウェイ エンディング3",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンナチュラル",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンリバーススターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンリバーススターン レディ・アウトサイド",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンリバースターン レディアウトサイド オープンフィニッシュ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンリバースターンレディアウトサイド オープンフィニッシュ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズ&2ウォークス(右回り) to PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "コントラチェック",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ザ チェイス エンディング1",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ザ・チェイス",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ザ・チェイス (1〜5)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ザ・チェイス (3〜5)(エンディング1)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ストップロック&レフトホイスク",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "セイム・フット・ランジ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "セイムフット・ランジ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ターニング 5 ステップ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "チェアー",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "チェンジオブダイレクション",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ドラッグ ツー PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ドロップ・オーバー・スウェイ&コントラ・チェック・ツー・PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルツイストターン(5〜6)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルピボット&ナチュラルスピン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "バック・チェック2回",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "バックチェック & ナチュラル・ピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ファイブステップ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーステップ(1-2)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーラウェイ・リバース&スリップピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーラウェイフォーステップ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーラウェイリバース&スリップピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プロムナード・ピボット & シャッセ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プロムナードターン(1-3)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プロムナードロック",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ベーシックリバースターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ライトエロスライン&フリック・ツーPP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースアウトサイドスイブル方法4",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "レフトランジ & ライトランジ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ロックオンライトフット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ロックターン オープンフィニッシュ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ロックターン(1-4)",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 34.5
+    },
+    {
+      "danceId": "waltz",
+      "routines": 5,
+      "figures": 64,
+      "verified": 29,
+      "unverified": 35,
+      "verifiedNames": [
+        {
+          "sourceName": "アウトサイド・チェンジ",
+          "occurrences": 2,
+          "englishName": "Outside Change",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ウィスク",
+          "occurrences": 2,
+          "englishName": "Whisk",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "クローズドチェンジ",
+          "occurrences": 2,
+          "englishName": "Closed Changes",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "シャッセ フロム PP",
+          "occurrences": 2,
+          "englishName": "Chasse from PP",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ナチュラルターン",
+          "occurrences": 2,
+          "englishName": "Natural Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ヘジテーション・チェンジ",
+          "occurrences": 2,
+          "englishName": "Hesitation Change",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "リバースターン",
+          "occurrences": 2,
+          "englishName": "Reverse Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "アウトサイドチェンジ",
+          "occurrences": 1,
+          "englishName": "Outside Change",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ウィーブ フロム PP",
+          "occurrences": 1,
+          "englishName": "Weave from PP",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ウィーブ・フロム・PP",
+          "occurrences": 1,
+          "englishName": "Weave from PP",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "オープン・インピタス・ターン",
+          "occurrences": 1,
+          "englishName": "Open Impetus",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "クローズド・チェンジ",
+          "occurrences": 1,
+          "englishName": "Closed Changes",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "クローズド・テレマーク",
+          "occurrences": 1,
+          "englishName": "Closed Telemark",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "シャッセ トゥ ライト",
+          "occurrences": 1,
+          "englishName": "Progressive Chasse to Right",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "シャッセフロムPP",
+          "occurrences": 1,
+          "englishName": "Chasse from PP",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ダブルリバーススピン",
+          "occurrences": 1,
+          "englishName": "Double Reverse Spin",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バック・ホイスク",
+          "occurrences": 1,
+          "englishName": "Back Whisk",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バックウィスク",
+          "occurrences": 1,
+          "englishName": "Back Whisk",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バックロック",
+          "occurrences": 1,
+          "englishName": "Back Lock",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "プログレッシブ・シャッセ・トゥ・ライト",
+          "occurrences": 1,
+          "englishName": "Progressive Chasse to Right",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ヘジテーションチェンジ",
+          "occurrences": 1,
+          "englishName": "Hesitation Change",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "リバース・コルテ",
+          "occurrences": 1,
+          "englishName": "Reverse Corte",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "ナチュラル・ターン（1−3）",
+          "occurrences": 3
+        },
+        {
+          "sourceName": "インピタス・ターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウィーブ トゥ PP・スローシャッセ (With F.E.O.)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ヴィニーズロック・スローアウェイオーバースウェイ トゥ PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウィング",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウイング",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンインピタス（アンダーターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンテレマーク",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クロスヘジテーション",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "コントラチェック",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "サイドロック・フォールアウェーリバース アンド スリップピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ターニング・ロック・トゥ・ザ・レフト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ダブルサイドロック・バウンスフォールアウェイ・シャッセロール",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラル・スピン・ターン（アンダーターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルスピンターン・ターニングロック トゥ ザ ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルスピンターン（アンダーターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルターン(1-3)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルターン(1-3)（アンダーターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルターン1〜3・ランニングスピンターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルツイストターン・ランジ・チェンジングスウェイ・シャッセエンディング PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "パッシングナチュラルターン・アウトサイドスピン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "パッシングナチュラルターン・バックホイスク",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ビッグトップ・プログレッシブシャッセ トゥ ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーラウェイリバース＆スリップピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォールアウェイロンデエンディング・オーバースウェイ ウィズ レディーレッグリフト・スタンディングスピン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プロムナードシャッセ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ランニングフィニッシュ・ランニングウィーブ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバース・ターン（1−3）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバース・ターン（4−6）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースターン(1-3) & リバースピボット(3/8)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースターン(4-6, 1/4)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースチェック・ランニングフィニッシュ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "予備足",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 45.3
+    },
+    {
+      "danceId": "chacha",
+      "routines": 3,
+      "figures": 44,
+      "verified": 21,
+      "unverified": 23,
+      "verifiedNames": [
+        {
+          "sourceName": "アレマーナ",
+          "occurrences": 2,
+          "englishName": "Alemana",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "クローズドヒップツイスト",
+          "occurrences": 2,
+          "englishName": "Closed Hip Twist",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スポットターンtoレフト",
+          "occurrences": 2,
+          "englishName": "Spot Turns",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ファン",
+          "occurrences": 2,
+          "englishName": "Fan",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ホッキースティック",
+          "occurrences": 2,
+          "englishName": "Hockey Stick",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "オープンヒップツイスト",
+          "occurrences": 1,
+          "englishName": "Open Hip Twist",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スプリットキューバンブレイク（RアンドL）",
+          "occurrences": 1,
+          "englishName": "Split Cuban Breaks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スポットターン",
+          "occurrences": 1,
+          "englishName": "Spot Turns",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スポットターン トゥ レフト",
+          "occurrences": 1,
+          "englishName": "Spot Turns",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スリー チャ チャ チャ（バック）",
+          "occurrences": 1,
+          "englishName": "Three Cha Cha Chas",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スリー チャ チャ チャ（フォワード）",
+          "occurrences": 1,
+          "englishName": "Three Cha Cha Chas",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "タイムステップ LF",
+          "occurrences": 1,
+          "englishName": "Time Steps",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "タイムステップ RF",
+          "occurrences": 1,
+          "englishName": "Time Steps",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "チェイス",
+          "occurrences": 1,
+          "englishName": "Chase",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ニューヨーク",
+          "occurrences": 1,
+          "englishName": "New York",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ヒップツイストスパイラル",
+          "occurrences": 1,
+          "englishName": "Hip Twist Spiral",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "レフトサイド ショルダー トゥ ショルダー",
+          "occurrences": 2
+        },
+        {
+          "sourceName": "アレマーナ（レディエンドfwdトゥワーズマンズライトサイド）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターン トゥ ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターンtoライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンベーシックムーブメント1-5",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンベーシックムーブメント1〜5",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシック",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシックムーブメント",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシックムーブメント1-2（ダブルハンドホールド）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシックムーブメント1-5（グアパチャタイミング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシックムーブメント6-7",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クロスベーシック（スパイラルエンディング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クロスベーシック1-5（グアパチャタイミング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クロスベーシック6-10（ノーマル）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ショルダーtoショルダー（ダブルハンドホールド）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "タイムステップ LF（グアパチャタイミング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルトップ11-15",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルトップ11〜15",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ニューヨーク LSP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ハンドトゥハンド トゥ ライトサイドポジション",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ライトサイド ショルダー トゥ ショルダー",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 47.7
+    },
+    {
+      "danceId": "pasodoble",
+      "routines": 2,
+      "figures": 21,
+      "verified": 18,
+      "unverified": 3,
+      "verifiedNames": [
+        {
+          "sourceName": "シュールプラス",
+          "occurrences": 4,
+          "englishName": "Sur Place",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "アタック",
+          "occurrences": 2,
+          "englishName": "Deplacement (Attack)",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "シャッセ トゥ ライト",
+          "occurrences": 2,
+          "englishName": "Chasses to Right",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "プロムナードクローズ",
+          "occurrences": 2,
+          "englishName": "Promenade Close",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "エカルト",
+          "occurrences": 1,
+          "englishName": "Ecart (Fallaway Whisk)",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "グランドサークル",
+          "occurrences": 1,
+          "englishName": "Grand Circle",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "シックスティーン",
+          "occurrences": 1,
+          "englishName": "Sixteen",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "シャッセ トゥ ライト（ウィズエレベーション）",
+          "occurrences": 1,
+          "englishName": "Chasses to Right",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "シャッセツーライト",
+          "occurrences": 1,
+          "englishName": "Chasses to Right",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ツイストターン",
+          "occurrences": 1,
+          "englishName": "Twist Turn",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "プロムナード",
+          "occurrences": 1,
+          "englishName": "Promenade",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "プロムナード & カウンタープロムナード",
+          "occurrences": 1,
+          "englishName": "Promenade and Counter Promenade",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "アペル",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フラメンカルックス",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "予備足",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 85.7
+    },
+    {
+      "danceId": "samba",
+      "routines": 2,
+      "figures": 25,
+      "verified": 9,
+      "unverified": 16,
+      "verifiedNames": [
+        {
+          "sourceName": "ウィスク",
+          "occurrences": 1,
+          "englishName": "Whisks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "オープンロックス",
+          "occurrences": 1,
+          "englishName": "Open Rocks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "クルザードスウォークス アンド ロックス",
+          "occurrences": 1,
+          "englishName": "Cruzados Walks and Locks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "コルタジャカ",
+          "occurrences": 1,
+          "englishName": "Corta Jaca",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "サンバウォーク",
+          "occurrences": 1,
+          "englishName": "Samba Walks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "サンバロックス",
+          "occurrences": 1,
+          "englishName": "Samba Locks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "フットチェンジ（方法1）",
+          "occurrences": 1,
+          "englishName": "Foot Changes",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "フットチェンジ（方法2）",
+          "occurrences": 1,
+          "englishName": "Foot Changes",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "リバースターン",
+          "occurrences": 1,
+          "englishName": "Reverse Turn",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "ウィスク トゥ ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウィスク トゥ レフト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウィスク トゥ レフト トゥ ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ウィスク トゥ レフト（レディ アンダーアームターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クリスクロス ボタフォゴ(4〜6)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クリスクロスボルタ(1〜7)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "サイドサンバウォーク（1回目）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "サイドサンバウォーク（2回目）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "サンバロックス(1〜6)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルロール（アンダーターン）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プログレッシブベーシックムーブメンツ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ボタフォゴ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ボルタ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースベーシックムーブメンツ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "レフトフット サンバウォーク イン プロムナードポジション（1回目）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "レフトフット サンバウォーク イン プロムナードポジション（2回目）",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 36
+    },
+    {
+      "danceId": "slowfox",
+      "routines": 2,
+      "figures": 21,
+      "verified": 16,
+      "unverified": 5,
+      "verifiedNames": [
+        {
+          "sourceName": "スリーステップ",
+          "occurrences": 3,
+          "englishName": "Three Step",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "フェザーステップ",
+          "occurrences": 3,
+          "englishName": "Feather Step",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ナチュラルターン",
+          "occurrences": 2,
+          "englishName": "Natural Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "リバースターン",
+          "occurrences": 2,
+          "englishName": "Reverse Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "オープンインピタス",
+          "occurrences": 1,
+          "englishName": "Open Impetus",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "オープンテレマーク アンド フェザーエンディング",
+          "occurrences": 1,
+          "englishName": "Open Telemark and Feather Ending",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "クローズドテレマーク",
+          "occurrences": 1,
+          "englishName": "Closed Telemark",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ホーバークロス",
+          "occurrences": 1,
+          "englishName": "Hover Cross",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ホーバーテレマーク",
+          "occurrences": 1,
+          "englishName": "Hover Telemark",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ホバーテレマーク",
+          "occurrences": 1,
+          "englishName": "Hover Telemark",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "カーブドフェザー トゥ バックフェザー",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルウィーブ フロム PP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォーラウェイリバース アンド スリップピボット",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースウェーブ（1-6）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "予備足",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 76.2
+    },
+    {
+      "danceId": "quickstep",
+      "routines": 1,
+      "figures": 5,
+      "verified": 5,
+      "unverified": 0,
+      "verifiedNames": [
+        {
+          "sourceName": "クォーターターン",
+          "occurrences": 1,
+          "englishName": "Quarter Turn to Right",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "ナチュラルスピンターン",
+          "occurrences": 1,
+          "englishName": "Natural Spin Turn",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "バックロック",
+          "occurrences": 1,
+          "englishName": "Back Lock",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "フォワードロック",
+          "occurrences": 1,
+          "englishName": "Forward Lock",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        },
+        {
+          "sourceName": "プログレッシブシャッセ",
+          "occurrences": 1,
+          "englishName": "Progressive Chasse",
+          "sourceTitle": "ISTD Modern Ballroom Professional Modular Examinations Syllabus 2018",
+          "sourceReference": "https://www.istd.org/documents/modern-ballroom-professional-modular-examinations-syllabus/"
+        }
+      ],
+      "unverifiedNames": [],
+      "coveragePercent": 100
+    },
+    {
+      "danceId": "rumba",
+      "routines": 3,
+      "figures": 43,
+      "verified": 11,
+      "unverified": 32,
+      "verifiedNames": [
+        {
+          "sourceName": "アレマーナ",
+          "occurrences": 2,
+          "englishName": "Alemana",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "オープンヒップツイスト",
+          "occurrences": 2,
+          "englishName": "Open Hip Twist",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "オープニングアウトtoライトアンドレフト",
+          "occurrences": 1,
+          "englishName": "Opening Out to Right and Left",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "キューバンロックス",
+          "occurrences": 1,
+          "englishName": "Cuban Rocks",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ナチュラルトップ",
+          "occurrences": 1,
+          "englishName": "Natural Top",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ニューヨーク",
+          "occurrences": 1,
+          "englishName": "New York",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ファン",
+          "occurrences": 1,
+          "englishName": "Fan",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ホッキースティック",
+          "occurrences": 1,
+          "englishName": "Hockey Stick",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ロープスピニング",
+          "occurrences": 1,
+          "englishName": "Rope Spinning",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        }
+      ],
+      "unverifiedNames": [
+        {
+          "sourceName": "ニューヨーク to LSP",
+          "occurrences": 2
+        },
+        {
+          "sourceName": "4〜6 カール",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アイーダ エンディング4 方法1",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アドバンストヒップツイスト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターン to ライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "アンダーアームターンtoライト＆アンダーアームターンtoレフト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "オープンベーシックの変形",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "カール、フォーラウェイ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "キューバンロックス スポットターンtoレフト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クラブウォークス",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "クローズドベーシック",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "コンティニュアスサーキュラーヒップツイスト（オーバーターンドエンディング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "サーキュラーヒップツイスト 4-9",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ジグザグ",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "スウィブル、シンコペーテッドバックワードウォーク",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "スパイラル エンディング1",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "スポットターンtoライト",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "スライディングドアーズ（スパイラルエンディング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ソロスパイラル from ハンドツーハンド to RSP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "チェックフロムオープンCPP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルトップ 7-9",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ニューヨーク to RSP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ハンドツーハンド to LSP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ハンドツーハンド to RSP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ハンドトゥハンド",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "フォワードウォークスinライトサイドポジション（スパイラルエンディング）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "プログレッシブウォークスフォワードinRシャドーポジション エンディング1 ファンエンディング",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ホッキースティック Open CPP",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ホッキースティック（女子ランナウェーウォーク）",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバーストップ（スパイラルエンディング）",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 25.6
+    },
+    {
+      "danceId": "jive",
+      "routines": 1,
+      "figures": 6,
+      "verified": 6,
+      "unverified": 0,
+      "verifiedNames": [
+        {
+          "sourceName": "アメリカンスピン",
+          "occurrences": 1,
+          "englishName": "American Spin",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "スロウアウェイフォーラウェイ",
+          "occurrences": 1,
+          "englishName": "Fallaway Throwaway",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "チェンジオブプレイス (LtoR)",
+          "occurrences": 1,
+          "englishName": "Change of Places Left to Right",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "チェンジオブプレイス (RtoL)",
+          "occurrences": 1,
+          "englishName": "Change of Places Right to Left",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "ベーシックインプレイス",
+          "occurrences": 1,
+          "englishName": "Basic in Place",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        },
+        {
+          "sourceName": "リンク",
+          "occurrences": 1,
+          "englishName": "Link",
+          "sourceTitle": "ISTD Latin American Syllabus Outline September 2024",
+          "sourceReference": "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf"
+        }
+      ],
+      "unverifiedNames": [],
+      "coveragePercent": 100
+    },
+    {
+      "danceId": "vwaltz",
+      "routines": 1,
+      "figures": 4,
+      "verified": 0,
+      "unverified": 4,
+      "verifiedNames": [],
+      "unverifiedNames": [
+        {
+          "sourceName": "チェンジステップ (NtoR)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "チェンジステップ (RtoN)",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "ナチュラルターン",
+          "occurrences": 1
+        },
+        {
+          "sourceName": "リバースターン",
+          "occurrences": 1
+        }
+      ],
+      "coveragePercent": 0
+    }
+  ]
+}

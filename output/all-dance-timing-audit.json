@@ -1,0 +1,626 @@
+{
+  "generatedAt": "2026-07-15T05:53:21.742Z",
+  "scope": {
+    "dances": 10,
+    "atomicCases": 621,
+    "atomicEvents": 1503,
+    "exactTickToMsChecks": 4509,
+    "templates": 14,
+    "compiledRoutines": 17,
+    "compiledFigures": 241,
+    "figureSyntaxChecks": 317,
+    "figureCheckFailures": 7,
+    "reportRoutines": 25,
+    "reportFigures": 317
+  },
+  "voices": {
+    "slow": {
+      "fileMs": 641,
+      "manifestOnsetMs": 30,
+      "measuredOnsetMs": 30,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 420,
+      "postOnsetMs": 390,
+      "peak": 0.584,
+      "rms": 0.081
+    },
+    "quick": {
+      "fileMs": 581,
+      "manifestOnsetMs": 45,
+      "measuredOnsetMs": 45,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 350,
+      "postOnsetMs": 305,
+      "peak": 0.449,
+      "rms": 0.066
+    },
+    "one": {
+      "fileMs": 591,
+      "manifestOnsetMs": 35,
+      "measuredOnsetMs": 35,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 380,
+      "postOnsetMs": 345,
+      "peak": 0.582,
+      "rms": 0.093
+    },
+    "two": {
+      "fileMs": 545,
+      "manifestOnsetMs": 45,
+      "measuredOnsetMs": 45,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 340,
+      "postOnsetMs": 295,
+      "peak": 0.329,
+      "rms": 0.073
+    },
+    "three": {
+      "fileMs": 560,
+      "manifestOnsetMs": 50,
+      "measuredOnsetMs": 50,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 345,
+      "postOnsetMs": 295,
+      "peak": 0.324,
+      "rms": 0.068
+    },
+    "four": {
+      "fileMs": 535,
+      "manifestOnsetMs": 80,
+      "measuredOnsetMs": 80,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 320,
+      "postOnsetMs": 240,
+      "peak": 0.516,
+      "rms": 0.095
+    },
+    "five": {
+      "fileMs": 567,
+      "manifestOnsetMs": 70,
+      "measuredOnsetMs": 70,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 325,
+      "postOnsetMs": 255,
+      "peak": 0.799,
+      "rms": 0.108
+    },
+    "six": {
+      "fileMs": 745,
+      "manifestOnsetMs": 40,
+      "measuredOnsetMs": 40,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 495,
+      "postOnsetMs": 455,
+      "peak": 0.414,
+      "rms": 0.051
+    },
+    "seven": {
+      "fileMs": 655,
+      "manifestOnsetMs": 40,
+      "measuredOnsetMs": 40,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 445,
+      "postOnsetMs": 405,
+      "peak": 0.553,
+      "rms": 0.098
+    },
+    "eight": {
+      "fileMs": 535,
+      "manifestOnsetMs": 25,
+      "measuredOnsetMs": 25,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 315,
+      "postOnsetMs": 290,
+      "peak": 0.56,
+      "rms": 0.077
+    },
+    "and": {
+      "fileMs": 591,
+      "manifestOnsetMs": 35,
+      "measuredOnsetMs": 35,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 355,
+      "postOnsetMs": 320,
+      "peak": 0.422,
+      "rms": 0.081
+    },
+    "ah": {
+      "fileMs": 498,
+      "manifestOnsetMs": 25,
+      "measuredOnsetMs": 25,
+      "onsetDeltaMs": 0,
+      "activeEndMs": 295,
+      "postOnsetMs": 270,
+      "peak": 0.69,
+      "rms": 0.136
+    }
+  },
+  "onsetMismatches": [],
+  "figureCheckFailures": [
+    {
+      "routineId": "samba_silver",
+      "routine": "サンバ シルバー級",
+      "figureIndex": 4,
+      "figure": "ボルタ",
+      "counts": "&&&&",
+      "message": "Subdivision \"&\" must follow a beat token"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 0,
+      "figure": "ベーシックインプレイス",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 1,
+      "figure": "スロウアウェイフォーラウェイ",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 2,
+      "figure": "リンク",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 3,
+      "figure": "チェンジオブプレイス (LtoR)",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 4,
+      "figure": "チェンジオブプレイス (RtoL)",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    },
+    {
+      "routineId": "jive_silver",
+      "routine": "ジャイブ シルバー級",
+      "figureIndex": 5,
+      "figure": "アメリカンスピン",
+      "counts": "12&3&4",
+      "message": "Count \"&\" is not valid for ジャイブ"
+    }
+  ],
+  "dances": [
+    {
+      "danceId": "waltz",
+      "dance": "ワルツ",
+      "atomicCases": 36,
+      "eventCount": 84,
+      "exactTickChecks": 252,
+      "templates": 2,
+      "tempi": [
+        84,
+        84,
+        90
+      ],
+      "transitionTypes": 30,
+      "collisionRiskTypes": 0,
+      "worstCollision": null,
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "tango",
+      "dance": "タンゴ",
+      "atomicCases": 21,
+      "eventCount": 48,
+      "exactTickChecks": 144,
+      "templates": 1,
+      "tempi": [
+        112,
+        124,
+        136
+      ],
+      "transitionTypes": 24,
+      "collisionRiskTypes": 9,
+      "worstCollision": {
+        "from": "and",
+        "to": "quick",
+        "gapTicks": 480,
+        "gapMs": 221,
+        "overlapMs": 99,
+        "bpm": 136,
+        "example": "@&Q"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "vwaltz",
+      "dance": "ヴィエニーズワルツ",
+      "atomicCases": 36,
+      "eventCount": 84,
+      "exactTickChecks": 252,
+      "templates": 1,
+      "tempi": [
+        150,
+        168,
+        180
+      ],
+      "transitionTypes": 45,
+      "collisionRiskTypes": 18,
+      "worstCollision": {
+        "from": "one",
+        "to": "and",
+        "gapTicks": 480,
+        "gapMs": 167,
+        "overlapMs": 178,
+        "bpm": 180,
+        "example": "1&1"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "slowfox",
+      "dance": "スローフォックス",
+      "atomicCases": 21,
+      "eventCount": 48,
+      "exactTickChecks": 144,
+      "templates": 1,
+      "tempi": [
+        80,
+        112,
+        120
+      ],
+      "transitionTypes": 24,
+      "collisionRiskTypes": 6,
+      "worstCollision": {
+        "from": "and",
+        "to": "quick",
+        "gapTicks": 480,
+        "gapMs": 250,
+        "overlapMs": 70,
+        "bpm": 120,
+        "example": "@&Q"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "quickstep",
+      "dance": "クイックステップ",
+      "atomicCases": 21,
+      "eventCount": 48,
+      "exactTickChecks": 144,
+      "templates": 2,
+      "tempi": [
+        160,
+        192,
+        208
+      ],
+      "transitionTypes": 24,
+      "collisionRiskTypes": 9,
+      "worstCollision": {
+        "from": "and",
+        "to": "quick",
+        "gapTicks": 480,
+        "gapMs": 144,
+        "overlapMs": 176,
+        "bpm": 208,
+        "example": "@&Q"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "rumba",
+      "dance": "ルンバ",
+      "atomicCases": 55,
+      "eventCount": 130,
+      "exactTickChecks": 390,
+      "templates": 1,
+      "tempi": [
+        80,
+        100,
+        108
+      ],
+      "transitionTypes": 72,
+      "collisionRiskTypes": 6,
+      "worstCollision": {
+        "from": "one",
+        "to": "and",
+        "gapTicks": 480,
+        "gapMs": 278,
+        "overlapMs": 67,
+        "bpm": 108,
+        "example": "1&1"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "chacha",
+      "dance": "チャチャチャ",
+      "atomicCases": 80,
+      "eventCount": 205,
+      "exactTickChecks": 615,
+      "templates": 1,
+      "tempi": [
+        96,
+        112,
+        128
+      ],
+      "transitionTypes": 96,
+      "collisionRiskTypes": 27,
+      "worstCollision": {
+        "from": "ah",
+        "to": "one",
+        "gapTicks": 240,
+        "gapMs": 117,
+        "overlapMs": 153,
+        "bpm": 128,
+        "example": "1a1"
+      },
+      "templateCollisionRisks": 2,
+      "worstTemplateCollision": {
+        "from": "and",
+        "to": "one",
+        "gapTicks": 480,
+        "gapMs": 234,
+        "overlapMs": 86,
+        "bpm": 128,
+        "example": "234&1"
+      }
+    },
+    {
+      "danceId": "samba",
+      "dance": "サンバ",
+      "atomicCases": 75,
+      "eventCount": 190,
+      "exactTickChecks": 570,
+      "templates": 2,
+      "tempi": [
+        80,
+        100,
+        104
+      ],
+      "transitionTypes": 93,
+      "collisionRiskTypes": 23,
+      "worstCollision": {
+        "from": "quick",
+        "to": "ah",
+        "gapTicks": 240,
+        "gapMs": 144,
+        "overlapMs": 161,
+        "bpm": 104,
+        "example": "Qa1"
+      },
+      "templateCollisionRisks": 3,
+      "worstTemplateCollision": {
+        "from": "ah",
+        "to": "two",
+        "gapTicks": 240,
+        "gapMs": 144,
+        "overlapMs": 126,
+        "bpm": 104,
+        "example": "1a2"
+      }
+    },
+    {
+      "danceId": "pasodoble",
+      "dance": "パソドブレ",
+      "atomicCases": 171,
+      "eventCount": 414,
+      "exactTickChecks": 1242,
+      "templates": 2,
+      "tempi": [
+        96,
+        112,
+        124
+      ],
+      "transitionTypes": 240,
+      "collisionRiskTypes": 31,
+      "worstCollision": {
+        "from": "six",
+        "to": "and",
+        "gapTicks": 480,
+        "gapMs": 242,
+        "overlapMs": 213,
+        "bpm": 124,
+        "example": "6&1"
+      },
+      "templateCollisionRisks": 0,
+      "worstTemplateCollision": null
+    },
+    {
+      "danceId": "jive",
+      "dance": "ジャイブ",
+      "atomicCases": 105,
+      "eventCount": 252,
+      "exactTickChecks": 756,
+      "templates": 1,
+      "tempi": [
+        136,
+        168,
+        176
+      ],
+      "transitionTypes": 144,
+      "collisionRiskTypes": 39,
+      "worstCollision": {
+        "from": "six",
+        "to": "ah",
+        "gapTicks": 720,
+        "gapMs": 256,
+        "overlapMs": 199,
+        "bpm": 176,
+        "example": "6a1"
+      },
+      "templateCollisionRisks": 10,
+      "worstTemplateCollision": {
+        "from": "ah",
+        "to": "four",
+        "gapTicks": 240,
+        "gapMs": 85,
+        "overlapMs": 185,
+        "bpm": 176,
+        "example": "123a45a6"
+      }
+    }
+  ],
+  "needsReview": [
+    {
+      "id": "tango_new_gold",
+      "name": "タンゴ 新ゴールド級",
+      "issueCodes": [
+        "AMBIGUOUS_LEADING_SUBDIVISION"
+      ],
+      "reviewIssues": [
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 7,
+          "figureName": "ドロップ・オーバー・スウェイ&コントラ・チェック・ツー・PP",
+          "counts": "&QQSSQQS&S"
+        },
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 22,
+          "figureName": "ナチュラルピボット&ナチュラルスピン",
+          "counts": "&QQ"
+        },
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 27,
+          "figureName": "ターニング 5 ステップ",
+          "counts": "&QQQQS"
+        }
+      ]
+    },
+    {
+      "id": "tango_gold",
+      "name": "タンゴ ゴールド級",
+      "issueCodes": [
+        "ROUTINE_INCOMPLETE_BAR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ]
+    },
+    {
+      "id": "quickstep_silver",
+      "name": "クイックステップ シルバー級",
+      "issueCodes": [
+        "ROUTINE_INCOMPLETE_BAR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ]
+    },
+    {
+      "id": "rumba_silver",
+      "name": "ルンバ シルバー級",
+      "issueCodes": [
+        "ROUTINE_INCOMPLETE_BAR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り1920 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ]
+    },
+    {
+      "id": "samba_silver",
+      "name": "サンバ シルバー級",
+      "issueCodes": [
+        "AMBIGUOUS_LEADING_SUBDIVISION",
+        "REPEATED_SUBDIVISION"
+      ],
+      "reviewIssues": [
+        {
+          "code": "AMBIGUOUS_LEADING_SUBDIVISION",
+          "severity": "review",
+          "message": "先頭の分割拍が前拍・現在拍・アウフタクトのどれに属するか確認が必要です",
+          "figureIndex": 4,
+          "figureName": "ボルタ",
+          "counts": "&&&&"
+        },
+        {
+          "code": "REPEATED_SUBDIVISION",
+          "severity": "error",
+          "message": "分割拍が連続しており、v2の拍位置へ自動変換できません",
+          "figureIndex": 4,
+          "figureName": "ボルタ",
+          "counts": "&&&&"
+        }
+      ]
+    },
+    {
+      "id": "pasodoble_silver",
+      "name": "パソドブレ シルバー級",
+      "issueCodes": [
+        "ROUTINE_INCOMPLETE_BAR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り960 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ]
+    },
+    {
+      "id": "jive_silver",
+      "name": "ジャイブ シルバー級",
+      "issueCodes": [
+        "LEGACY_JIVE_TIMING",
+        "COMPILE_ERROR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "LEGACY_JIVE_TIMING",
+          "severity": "review",
+          "message": "旧版のジャイブ表記は正確なQaQタイミングとして自動承認できません"
+        },
+        {
+          "code": "COMPILE_ERROR",
+          "severity": "error",
+          "message": "Count \"&\" is not valid for ジャイブ"
+        }
+      ]
+    },
+    {
+      "id": "slowfox_1grade",
+      "name": "スローフォックス 1級(ISTD)",
+      "issueCodes": [
+        "ROUTINE_INCOMPLETE_BAR"
+      ],
+      "reviewIssues": [
+        {
+          "code": "ROUTINE_INCOMPLETE_BAR",
+          "severity": "review",
+          "message": "ルーティン全体が小節途中（残り960 ticks）で終わるため、ループ前に確認が必要です"
+        }
+      ]
+    }
+  ]
+}

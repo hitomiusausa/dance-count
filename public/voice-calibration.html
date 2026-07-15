@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>音声タイミング校正 | Dance Count</title>
+  <script>if (location.protocol === 'file:') location.replace('http://localhost:4173/public/voice-calibration.html');</script>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, sans-serif; color: #172033; background: #f4f6fa; }
+    body { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { margin-bottom: 8px; font-size: clamp(24px, 4vw, 36px); }
+    .lead { color: #586174; line-height: 1.7; }
+    .panel { background: white; border: 1px solid #dce1ea; border-radius: 16px; padding: 20px; margin-top: 20px; box-shadow: 0 6px 24px #2233550d; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+    label { display: grid; gap: 6px; font-size: 13px; color: #586174; }
+    input[type="number"] { width: 90px; padding: 9px; border: 1px solid #bcc4d2; border-radius: 8px; font-size: 16px; }
+    button { padding: 10px 15px; border: 0; border-radius: 9px; background: #315fe8; color: white; font-weight: 700; cursor: pointer; }
+    button.secondary { color: #25304a; background: #e9edf5; }
+    button:disabled { opacity: .45; cursor: wait; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px 7px; border-bottom: 1px solid #e6e9ef; text-align: left; }
+    th { font-size: 12px; color: #687184; }
+    .word { font-weight: 750; font-size: 17px; }
+    .nudge { display: inline-flex; gap: 4px; align-items: center; }
+    .nudge button { padding: 7px 9px; background: #e9edf5; color: #25304a; }
+    .status { min-height: 1.5em; color: #315fe8; font-weight: 650; }
+    @media (max-width: 620px) { .optional { display: none; } th, td { padding-inline: 4px; } }
+  </style>
+</head>
+<body>
+  <h1>音声タイミング校正</h1>
+  <p class="lead">クリックと声を同時に鳴らして確認します。声が遅く聞こえたら onset を増やし、早ければ減らします。通常は自動測定値のままで使えます。</p>
+
+  <section class="panel">
+    <div class="controls">
+      <label>テンポ（BPM）<input id="bpm" type="number" min="40" max="240" value="120"></label>
+      <label>全体補正（ms）<input id="globalOffset" type="number" min="-300" max="300" value="0"></label>
+      <button id="playSequence">全単語を確認</button>
+      <button id="download" class="secondary">manifestを保存</button>
+    </div>
+    <p id="status" class="status" aria-live="polite"></p>
+    <table>
+      <thead><tr><th>カウント</th><th>onset</th><th>微調整</th><th class="optional">確認</th></tr></thead>
+      <tbody id="words"></tbody>
+    </table>
+  </section>
+
+  <script type="module">
+    import { loadVoicePack, scheduleVoiceEvent } from '../src/v2/voice-pack-loader.js';
+
+    const manifestUrl = new URL('./audio/default-en-female-v1/manifest.json', location.href);
+    const tbody = document.querySelector('#words');
+    const status = document.querySelector('#status');
+    let audioContext;
+    let voicePack;
+
+    function clickAt(time) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.frequency.value = 1200;
+      gain.gain.setValueAtTime(0.18, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.035);
+      oscillator.connect(gain).connect(audioContext.destination);
+      oscillator.start(time);
+      oscillator.stop(time + 0.04);
+    }
+
+    async function ready() {
+      if (!audioContext) audioContext = new AudioContext();
+      await audioContext.resume();
+      if (!voicePack) {
+        status.textContent = '音声を読み込んでいます…';
+        voicePack = await loadVoicePack(audioContext, manifestUrl);
+        render();
+        status.textContent = '準備できました';
+      }
+    }
+
+    function playWord(key, time = audioContext.currentTime + 0.12) {
+      clickAt(time);
+      scheduleVoiceEvent({
+        audioContext,
+        voicePack,
+        event: { voiceKey: key },
+        targetTime: time,
+        userOffsetMs: Number(document.querySelector('#globalOffset').value)
+      });
+    }
+
+    function render() {
+      tbody.replaceChildren(...[...voicePack.words].map(([key, word]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td class="word">${key}</td>
+          <td><input aria-label="${key} onset" type="number" min="0" max="1000" value="${word.onsetMs}"> ms</td>
+          <td><span class="nudge"><button data-delta="-5">−5</button><button data-delta="-1">−1</button><button data-delta="1">+1</button><button data-delta="5">+5</button></span></td>
+          <td class="optional"><button class="secondary play">クリック＋声</button></td>`;
+        const input = row.querySelector('input');
+        input.addEventListener('change', () => {
+          word.onsetMs = Math.max(0, Number(input.value) || 0);
+          voicePack.manifest.words[key].onsetMs = word.onsetMs;
+          input.value = word.onsetMs;
+        });
+        row.querySelectorAll('[data-delta]').forEach(button => button.addEventListener('click', async () => {
+          await ready();
+          word.onsetMs = Math.max(0, word.onsetMs + Number(button.dataset.delta));
+          voicePack.manifest.words[key].onsetMs = word.onsetMs;
+          input.value = word.onsetMs;
+          playWord(key);
+        }));
+        row.querySelector('.play').addEventListener('click', async () => { await ready(); playWord(key); });
+        return row;
+      }));
+    }
+
+    document.querySelector('#playSequence').addEventListener('click', async event => {
+      event.currentTarget.disabled = true;
+      try {
+        await ready();
+        const interval = 60 / Number(document.querySelector('#bpm').value) * 2;
+        const start = audioContext.currentTime + 0.2;
+        [...voicePack.words.keys()].forEach((key, index) => playWord(key, start + index * interval));
+        status.textContent = '全単語を順番に再生しています';
+        setTimeout(() => { event.currentTarget.disabled = false; }, interval * voicePack.words.size * 1000);
+      } catch (error) {
+        status.textContent = `読み込みエラー: ${error.message}`;
+        event.currentTarget.disabled = false;
+      }
+    });
+
+    document.querySelector('#download').addEventListener('click', async () => {
+      await ready();
+      voicePack.manifest.status = 'manually-calibrated';
+      voicePack.manifest.onsetCalibratedAt = new Date().toISOString();
+      const blob = new Blob([`${JSON.stringify(voicePack.manifest, null, 2)}\n`], { type: 'application/json' });
+      const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'manifest.json' });
+      link.click();
+      URL.revokeObjectURL(link.href);
+      status.textContent = '調整済みmanifest.jsonを保存しました';
+    });
+  </script>
+</body>
+</html>

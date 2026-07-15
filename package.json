@@ -1,0 +1,18 @@
+{
+  "name": "dance-count-for-ballroom",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 4173",
+    "test": "node --test test/v2/*.test.js",
+    "routines:migrate": "node tools/migrate-legacy-routines.js",
+    "voices:generate": "node tools/generate-google-voices.js",
+    "voices:measure": "node tools/measure-voice-onsets.js",
+    "voices:audit-recording": "node tools/audit-recorded-voice-pack.js",
+    "timing:audit": "node tools/audit-all-dance-timing.js",
+    "terminology:audit": "node tools/audit-figure-terminology.js",
+    "audio:subdivision-review": "node tools/render-subdivision-audio-review.js",
+    "voices:build": "npm run voices:generate && npm run voices:measure",
+    "voices:six-candidates": "node tools/generate-six-candidates.js"
+  }
+}

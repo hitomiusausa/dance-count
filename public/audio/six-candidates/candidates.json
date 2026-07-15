@@ -1,0 +1,22 @@
+{
+  "voiceName": "en-US-Neural2-F",
+  "speakingRate": 1.25,
+  "generatedAt": "2026-07-12T12:37:30.086Z",
+  "candidates": [
+    {
+      "id": "six-retry",
+      "label": "同じ設定で再生成",
+      "file": "six-retry.wav"
+    },
+    {
+      "id": "six-brighter",
+      "label": "少し明るい声（+2半音）",
+      "file": "six-brighter.wav"
+    },
+    {
+      "id": "five-six-seven-context",
+      "label": "前後の数字を含む発音",
+      "file": "five-six-seven-context.wav"
+    }
+  ]
+}

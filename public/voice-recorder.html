@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>録音音声を作る | Dance Count</title>
+  <script>if (location.protocol === 'file:') location.replace('http://localhost:4173/public/voice-recorder.html');</script>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #182136; background: #f3f5f9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, #e9efff 0, transparent 34rem), #f3f5f9; }
+    button, input, select { font: inherit; }
+    :focus-visible { outline: 3px solid #315fe84d; outline-offset: 2px; }
+    .app { width: min(920px, 100%); margin: auto; padding: 28px 18px 70px; }
+    header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    h1 { margin: 0; font-size: clamp(25px, 5vw, 40px); letter-spacing: -.035em; }
+    header nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 12px; }
+    header a { color: #315fe8; font-size: 13px; font-weight: 750; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .lead { color: #68738a; line-height: 1.7; }
+    .privacy { padding: 12px 14px; border: 1px solid #cfe0d5; border-radius: 11px; color: #315d42; background: #f0faf4; font-size: 12px; line-height: 1.65; }
+    .panel { margin-top: 18px; padding: clamp(16px, 3vw, 24px); border: 1px solid #dce2eb; border-radius: 22px; background: #ffffffed; box-shadow: 0 16px 45px #20335a12; backdrop-filter: blur(8px); }
+    .setup { display: grid; grid-template-columns: minmax(160px, .7fr) minmax(220px, 1fr) auto; align-items: end; gap: 12px; }
+    .ui-locale { width: 150px; margin: 14px 0 0 auto; }
+    label { display: grid; gap: 6px; color: #657086; font-size: 12px; font-weight: 700; }
+    input[type="text"] { width: 100%; padding: 10px 11px; border: 1px solid #bdc6d5; border-radius: 9px; }
+    select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #bdc6d5; border-radius: 9px; color: #253149; background: white; }
+    button, .file-button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 9px 13px; border: 1px solid #c5cedc; border-radius: 9px; color: #334057; background: white; cursor: pointer; font-weight: 700; }
+    button.primary { color: white; border-color: #315fe8; background: #315fe8; }
+    button.stop { color: white; border-color: #cf4050; background: #cf4050; }
+    button:disabled { opacity: .45; cursor: default; }
+    .progress { display: flex; justify-content: space-between; gap: 10px; margin: 20px 0 8px; color: #536079; font-size: 12px; font-weight: 750; }
+    .progress-track { height: 6px; overflow: hidden; border-radius: 10px; background: #e5e9f0; }
+    .progress-track span { display: block; height: 100%; width: 0; background: #315fe8; transition: width .2s; }
+    .words { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 17px; }
+    .word { display: grid; grid-template-columns: minmax(86px, .55fr) 1.25fr; align-items: center; gap: 8px 12px; min-width: 0; padding: 13px; border: 1px solid #e0e5ed; border-radius: 14px; background: #fff; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+    .word:hover { transform: translateY(-1px); border-color: #cbd5e5; box-shadow: 0 8px 20px #263b6510; }
+    .word.recorded { border-color: #b9d9c5; background: #f7fcf9; }
+    .word.recording { border-color: #e17b87; background: #fff5f6; box-shadow: 0 0 0 3px #d9475520; }
+    .word-name strong { display: block; font-size: 18px; }
+    .word-name span, .word-status { color: #748095; font-size: 11px; }
+    .word-audio { min-width: 0; }
+    .waveform { display: block; width: 100%; height: 34px; margin-top: 5px; border-radius: 7px; background: #eef3ff; }
+    .word-actions { grid-column: 1 / -1; display: flex; gap: 6px; }
+    .word-actions button { min-width: 70px; }
+    .status { min-height: 23px; margin: 13px 0 0; color: #315fe8; font-size: 12px; font-weight: 700; }
+    .status.error { color: #ad3040; }
+    .pack-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 17px; padding-top: 15px; border-top: 1px solid #e4e8ef; }
+    .ready-banner { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 15px; padding: 13px 15px; border: 1px solid #b9d9c5; border-radius: 12px; color: #315d42; background: #f0faf4; }
+    .ready-banner[hidden] { display: none; }
+    .ready-banner strong { display: block; font-size: 14px; }
+    .ready-banner span { display: block; margin-top: 2px; font-size: 11px; }
+    .ready-banner a { flex: 0 0 auto; padding: 9px 12px; border-radius: 9px; color: white; background: #26734a; font-size: 12px; font-weight: 800; text-decoration: none; }
+    .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    @media (max-width: 700px) { .words { grid-template-columns: 1fr; } }
+    @media (max-width: 590px) { header { align-items: flex-start; } .setup { grid-template-columns: 1fr; } .word-actions { justify-content: stretch; } .word-actions button { flex: 1; } .ready-banner { align-items: stretch; flex-direction: column; } .ready-banner a { text-align: center; } }
+    @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><h1 data-i18n="title">録音音声を作る</h1><nav><a href="./routine-editor.html" data-i18n="navEditor">一覧で練習・編集</a><a href="./practice.html" data-i18n="navSimple">シンプル再生</a></nav></header>
+    <label class="ui-locale"><span data-i18n="interfaceLanguage">画面表示</span><select id="uiLocale"><option value="en">English</option><option value="ja-JP">日本語</option></select></label>
+    <p class="lead" data-i18n="lead">英語または日本語の12個のカウントを一つずつ録音します。2つの音声セットは別々に保存されるため、上書きせず練習時に切り替えられます。録音後は波形から声の先頭を見つけ、クリック音と余分な無音を自動でカットします。</p>
+    <p class="privacy"><strong data-i18n="privacyTitle">プライバシー：</strong><span data-i18n="privacyText">録音はこの端末内だけに保存されます。このサービスから外部へ送信しません。書き出しを選んだ場合だけ、音声を含むJSONファイルを端末へ保存します。</span></p>
+
+    <section class="panel">
+      <div class="setup">
+        <label><span data-i18n="voiceLanguage">録音する音声セット</span><select id="packChoice"></select></label>
+        <label><span data-i18n="packName">音声パック名</span><input id="packName" type="text" maxlength="60" value="自分の録音音声"></label>
+        <button id="microphone" type="button" class="primary" data-i18n="prepareMicrophone">マイクを準備</button>
+      </div>
+      <div class="progress"><span id="progressText">0 / 12 録音済み</span><span id="readyText">未完成</span></div>
+      <div class="progress-track" role="progressbar" aria-label="録音の進み具合" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><span id="progressBar"></span></div>
+      <p id="status" class="status" role="status" aria-live="polite">画面を開いただけではマイクは使用しません。</p>
+      <div id="words" class="words"></div>
+      <div id="readyBanner" class="ready-banner" hidden><div><strong data-i18n="readyTitle">録音音声の準備ができました</strong><span>一覧画面で「自分の録音音声」を選べます。</span></div><a href="./routine-editor.html" data-i18n="practiceRecorded">録音した声で練習する</a></div>
+      <div class="pack-actions">
+        <button id="export" type="button" data-i18n="export">録音をファイルへ書き出す</button>
+        <label class="file-button"><span data-i18n="import">録音ファイルを読み込む</span><input id="import" type="file" accept="application/json,.json"></label>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { normalizeRecordingBlob } from '../src/v2/recording-normalizer.js';
+    import {
+      createRecordedVoicePack,
+      exportRecordedVoicePack,
+      importRecordedVoicePack,
+      recordedPackProgress,
+      REQUIRED_VOICE_KEYS
+    } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
+    import { JAPANESE_RECORDED_PACK_ID, loadLocalRecordedPack, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
+    import { canonicalLanguageTag, createTranslator, resolveUiLocale } from '../src/v2/localization.js?v=20260713-global';
+
+    const MESSAGES = {
+      en: {
+        title: 'Record a voice set', navEditor: 'Practice & edit list', navSimple: 'Simple player', interfaceLanguage: 'Interface language',
+        lead: 'Record the 12 count words one at a time. Each language is saved as a separate voice set, so you can switch without overwriting another set. After recording, the app detects the voice onset and automatically removes the click and extra silence.',
+        privacyTitle: 'Privacy: ', privacyText: 'Recordings stay on this device and are not sent by this service. Audio is saved to your device only when you export a JSON file.',
+        voiceLanguage: 'Count language', packName: 'Voice set name', prepareMicrophone: 'Enable microphone', stopMicrophone: 'Turn off microphone',
+        progress: '{recorded} / {total} recorded', ready: 'Ready to use', incomplete: 'Incomplete', initialStatus: 'The microphone is not used just by opening this page.',
+        readyTitle: 'Your recorded voice is ready', readyDefault: 'Select this voice set in the practice or editor screen.', readyAdjusted: 'Your confirmed timing adjustments will be included in exported files.', practiceRecorded: 'Practice with this voice',
+        export: 'Export voice set', import: 'Import voice set', notRecorded: 'Not recorded', recording: 'Recording… Say the word, then stop.', normalized: 'Trimmed automatically · {seconds}s', saved: 'Recorded · voice starts at {ms} ms',
+        record: '● Record', rerecord: 'Record again', stop: '■ Stop', preview: '▶ Preview', waveform: 'Trimmed waveform for {word}',
+        englishDefaultName: 'My English counts', japaneseDefaultName: 'My Japanese counts', microphoneStopped: 'The microphone is off. Your recordings remain saved on this device.',
+        unsupportedRecorder: 'This browser cannot record audio. Use the latest Chrome or Safari.', microphoneReady: 'The microphone is ready. Press “Record” for a word.', microphoneDenied: 'Microphone access was denied. Check this site’s browser permissions.', microphoneError: 'Could not start the microphone: {message}',
+        recordingWord: 'Recording {word}. Say the word, then stop.', savedWord: '{word} was trimmed and saved at the standard clip length.', saveError: 'Could not save the recording: {message}', previewError: 'Could not play the recording: {message}',
+        englishIntro: 'Record the English count words.', japaneseIntro: 'Record the Japanese count words. You may use yon/shi and nana/shichi to match your class.', switchWhileRecording: 'Stop recording before changing the voice set.', nameSaved: 'Voice set name saved.', exported: 'Voice set exported.', imported: 'Voice set imported.', importError: 'Could not import the file: {message}', replaceConfirm: 'Replace the saved {language} voice set with the imported file?'
+      },
+      'ja-JP': {
+        title: '録音音声を作る', navEditor: '一覧で練習・編集', navSimple: 'シンプル再生', interfaceLanguage: '画面表示',
+        lead: '英語または日本語の12個のカウントを一つずつ録音します。音声セットは言語ごとに別々に保存されるため、上書きせず練習時に切り替えられます。録音後は波形から声の先頭を見つけ、クリック音と余分な無音を自動でカットします。',
+        privacyTitle: 'プライバシー：', privacyText: '録音はこの端末内だけに保存されます。このサービスから外部へ送信しません。書き出しを選んだ場合だけ、音声を含むJSONファイルを端末へ保存します。',
+        voiceLanguage: 'カウント音声の言語', packName: '音声パック名', prepareMicrophone: 'マイクを準備', stopMicrophone: 'マイクを終了',
+        progress: '{recorded} / {total} 録音済み', ready: '練習で使用できます', incomplete: '未完成', initialStatus: '画面を開いただけではマイクは使用しません。',
+        readyTitle: '録音音声の準備ができました', readyDefault: '練習画面または編集画面で、この音声セットを選べます。', readyAdjusted: '確定済みのタイミング調整を含めてファイルへ書き出せます。', practiceRecorded: '録音した声で練習する',
+        export: '録音をファイルへ書き出す', import: '録音ファイルを読み込む', notRecorded: '未録音', recording: '録音中…発音してから停止してください', normalized: '自動カット済み · {seconds}秒', saved: '録音済み · 声の開始 {ms} ms',
+        record: '● 録音', rerecord: '再録音', stop: '■ 停止', preview: '▶ 試聴', waveform: '{word}の切り出し後の波形',
+        englishDefaultName: '自分の英語カウント', japaneseDefaultName: '自分の日本語カウント', microphoneStopped: 'マイクを終了しました。録音は端末に保存されています。',
+        unsupportedRecorder: 'このブラウザは音声録音に対応していません。ChromeまたはSafariの最新版を使用してください。', microphoneReady: 'マイクを使用できます。録音したい単語の「録音」を押してください。', microphoneDenied: 'マイクの使用が許可されませんでした。ブラウザのサイト設定を確認してください。', microphoneError: 'マイクを開始できませんでした：{message}',
+        recordingWord: '{word}を録音中です。発音してから停止してください。', savedWord: '{word}の前後を自動でカットし、標準音声と同じ長さで保存しました。', saveError: '録音を保存できませんでした：{message}', previewError: '試聴できませんでした：{message}',
+        englishIntro: '英語カウントを録音します。', japaneseIntro: '日本語カウントを録音します。「よん／し」「なな／しち」は教室の呼び方で録音できます。', switchWhileRecording: '録音を停止してから音声セットを切り替えてください。', nameSaved: '音声パック名を保存しました。', exported: '録音音声パックを書き出しました。', imported: '録音音声パックを読み込みました。', importError: '読み込めませんでした：{message}', replaceConfirm: '保存済みの{language}音声セットを、読み込んだファイルで置き換えますか？'
+      }
+    };
+    const uiLocaleStorageKey = 'dance-count-v2-ui-locale';
+    let translator = createTranslator(MESSAGES, localStorage.getItem(uiLocaleStorageKey) || navigator.language);
+    const t = (key, variables) => translator.t(key, variables);
+    const activePackKey = 'dance-count-v2-active-recorded-pack';
+    const packDefinitions = {
+      [LOCAL_RECORDED_PACK_ID]: { id: LOCAL_RECORDED_PACK_ID, locale: 'en', vocabularyId: 'en', nameKey: 'englishDefaultName' },
+      [JAPANESE_RECORDED_PACK_ID]: { id: JAPANESE_RECORDED_PACK_ID, locale: 'ja-JP', vocabularyId: 'ja-JP', nameKey: 'japaneseDefaultName' }
+    };
+    const status = document.querySelector('#status');
+    let pack;
+    let stream = null;
+    let recorder = null;
+    let recordingKey = null;
+    let audioContext = null;
+
+    document.querySelector('#uiLocale').value = translator.locale;
+    applyUiLocale();
+    showStatus(t('initialStatus'));
+    populatePackChoices();
+    const initialPackId = localStorage.getItem(activePackKey) in packDefinitions ? localStorage.getItem(activePackKey) : LOCAL_RECORDED_PACK_ID;
+    document.querySelector('#packChoice').value = initialPackId;
+    try { pack = await loadOrCreatePack(initialPackId); }
+    catch (error) { pack = createPack(initialPackId); showStatus(error.message, true); }
+    document.querySelector('#packName').value = pack.name;
+    render();
+    await normalizeExistingRecordings();
+
+    function showStatus(message, error = false) {
+      status.textContent = message;
+      status.classList.toggle('error', error);
+    }
+
+    function createPack(id) {
+      const definition = packDefinitions[id] ?? packDefinitions[LOCAL_RECORDED_PACK_ID];
+      return createRecordedVoicePack(t(definition.nameKey), definition);
+    }
+
+    async function loadOrCreatePack(id) {
+      const loaded = await loadLocalRecordedPack(id);
+      if (!loaded) return createPack(id);
+      const definition = packDefinitions[id] ?? packDefinitions[LOCAL_RECORDED_PACK_ID];
+      const previousLocale = loaded.locale;
+      const previousVocabularyId = loaded.vocabularyId;
+      loaded.locale = canonicalLanguageTag(loaded.locale ?? definition.locale);
+      if (loaded.locale === 'ja') loaded.locale = 'ja-JP';
+      loaded.vocabularyId ??= definition.vocabularyId ?? getCountVocabulary(loaded.locale).id;
+      if (previousLocale !== loaded.locale || previousVocabularyId !== loaded.vocabularyId) await saveLocalRecordedPack(loaded);
+      return loaded;
+    }
+
+    function labelsForPack() {
+      return getCountVocabulary(pack.vocabularyId ?? pack.locale).prompts;
+    }
+
+    function populatePackChoices() {
+      const select = document.querySelector('#packChoice');
+      const selected = select.value;
+      select.replaceChildren(...Object.values(packDefinitions).map(definition => {
+        const vocabulary = getCountVocabulary(definition.vocabularyId);
+        return new Option(vocabularyDisplayName(vocabulary, translator.locale), definition.id);
+      }));
+      if (selected && packDefinitions[selected]) select.value = selected;
+    }
+
+    function applyUiLocale() {
+      document.documentElement.lang = translator.locale;
+      document.title = `${t('title')} | Dance Count`;
+      document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+      if (stream) document.querySelector('#microphone').textContent = t('stopMicrophone');
+      populatePackChoices();
+    }
+
+    function render() {
+      const labels = labelsForPack();
+      const progress = recordedPackProgress(pack);
+      document.querySelector('#progressText').textContent = t('progress', progress);
+      document.querySelector('#readyText').textContent = progress.complete ? t('ready') : t('incomplete');
+      document.querySelector('#progressBar').style.width = `${progress.recorded / progress.total * 100}%`;
+      document.querySelector('.progress-track').setAttribute('aria-valuenow', String(progress.recorded));
+      document.querySelector('#readyBanner').hidden = !progress.complete;
+      document.querySelector('#readyBanner span').textContent = pack.timingAdjustments
+        ? t('readyAdjusted')
+        : t('readyDefault');
+      document.querySelector('#words').replaceChildren(...REQUIRED_VOICE_KEYS.map(key => {
+        const item = pack.words[key];
+        const row = document.createElement('article');
+        row.className = `word${item ? ' recorded' : ''}${recordingKey === key ? ' recording' : ''}`;
+        row.dataset.key = key;
+        row.innerHTML = `<div class="word-name"><strong>${labels[key][0]}</strong><span>${labels[key][1]}</span></div>
+          <div class="word-audio"><div class="word-status">${recordingKey === key ? t('recording') : item ? item.normalized ? t('normalized', { seconds: (item.durationMs / 1000).toFixed(2) }) : t('saved', { ms: item.onsetMs }) : t('notRecorded')}</div>${item?.normalized ? `<canvas class="waveform" width="240" height="42" aria-label="${t('waveform', { word: labels[key][0] })}"></canvas>` : ''}</div>
+          <div class="word-actions"><button class="record ${recordingKey === key ? 'stop' : ''}" ${stream ? '' : 'disabled'}>${recordingKey === key ? t('stop') : item ? t('rerecord') : t('record')}</button><button class="preview" ${item ? '' : 'disabled'}>${t('preview')}</button></div>`;
+        row.querySelector('.record').addEventListener('click', () => recordingKey === key ? stopRecording() : startRecording(key));
+        row.querySelector('.preview').addEventListener('click', () => previewWord(key));
+        return row;
+      }));
+      requestAnimationFrame(drawRecordedWaveforms);
+    }
+
+    async function drawRecordedWaveforms() {
+      for (const canvas of document.querySelectorAll('.waveform')) {
+        const key = canvas.closest('.word').dataset.key;
+        const item = pack.words[key];
+        if (!item?.normalized || !canvas.isConnected) continue;
+        try {
+          audioContext ??= new AudioContext();
+          const buffer = await audioContext.decodeAudioData(await item.blob.arrayBuffer());
+          if (!canvas.isConnected) continue;
+          drawWaveform(canvas, mixDown(buffer), item.onsetMs / item.durationMs);
+        } catch { /* 試聴時に詳細なエラーを表示する */ }
+      }
+    }
+
+    function mixDown(buffer) {
+      const result = new Float32Array(buffer.length);
+      for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+        const data = buffer.getChannelData(channel);
+        for (let index = 0; index < data.length; index += 1) result[index] += data[index] / buffer.numberOfChannels;
+      }
+      return result;
+    }
+
+    function drawWaveform(canvas, samples, onsetRatio) {
+      const context = canvas.getContext('2d');
+      const { width, height } = canvas;
+      context.clearRect(0, 0, width, height);
+      context.strokeStyle = '#5d79d9';
+      context.lineWidth = 1.4;
+      context.beginPath();
+      const bucketSize = Math.max(1, Math.floor(samples.length / width));
+      for (let x = 0; x < width; x += 1) {
+        let peak = 0;
+        const end = Math.min(samples.length, (x + 1) * bucketSize);
+        for (let index = x * bucketSize; index < end; index += 1) peak = Math.max(peak, Math.abs(samples[index]));
+        const amplitude = peak * (height * .46);
+        context.moveTo(x + .5, height / 2 - amplitude);
+        context.lineTo(x + .5, height / 2 + amplitude);
+      }
+      context.stroke();
+      context.strokeStyle = '#26734a';
+      context.lineWidth = 1;
+      const onsetX = Math.max(0, Math.min(width, onsetRatio * width));
+      context.beginPath();
+      context.moveTo(onsetX, 2);
+      context.lineTo(onsetX, height - 2);
+      context.stroke();
+    }
+
+    async function prepareMicrophone() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        document.querySelector('#microphone').textContent = t('prepareMicrophone');
+        document.querySelector('#microphone').classList.add('primary');
+        showStatus(t('microphoneStopped'));
+        render();
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia || !globalThis.MediaRecorder) {
+        showStatus(t('unsupportedRecorder'), true);
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        document.querySelector('#microphone').textContent = t('stopMicrophone');
+        document.querySelector('#microphone').classList.remove('primary');
+        showStatus(t('microphoneReady'));
+        render();
+      } catch (error) {
+        showStatus(error.name === 'NotAllowedError' ? t('microphoneDenied') : t('microphoneError', { message: error.message }), true);
+      }
+    }
+
+    function startRecording(key) {
+      if (!stream || recorder?.state === 'recording') return;
+      const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'].find(type => MediaRecorder.isTypeSupported(type));
+      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const chunks = [];
+      const labels = labelsForPack();
+      recordingKey = key;
+      recorder.addEventListener('dataavailable', event => { if (event.data.size) chunks.push(event.data); });
+      recorder.addEventListener('stop', async () => {
+        const savedKey = recordingKey;
+        recordingKey = null;
+        const blob = new Blob(chunks, { type: recorder.mimeType });
+        try {
+          audioContext ??= new AudioContext();
+          pack.words[savedKey] = await normalizeRecordingBlob(audioContext, blob, savedKey);
+          pack.name = document.querySelector('#packName').value.trim() || t(packDefinitions[pack.id]?.nameKey ?? 'title');
+          pack.updatedAt = new Date().toISOString();
+          await saveLocalRecordedPack(pack);
+          showStatus(t('savedWord', { word: labels[savedKey][0] }));
+        } catch (error) {
+          showStatus(t('saveError', { message: error.message }), true);
+        }
+        render();
+      }, { once: true });
+      recorder.start();
+      showStatus(t('recordingWord', { word: labels[key][0] }));
+      render();
+    }
+
+    function stopRecording() {
+      if (recorder?.state === 'recording') recorder.stop();
+    }
+
+    function previewWord(key) {
+      const item = pack.words[key];
+      if (!item) return;
+      const url = URL.createObjectURL(item.blob);
+      const audio = new Audio(url);
+      audio.addEventListener('ended', () => URL.revokeObjectURL(url), { once: true });
+      audio.play().catch(error => showStatus(t('previewError', { message: error.message }), true));
+    }
+
+    async function normalizeExistingRecordings() {
+      const pending = REQUIRED_VOICE_KEYS.filter(key => pack.words[key] && !pack.words[key].normalized);
+      if (!pending.length) return;
+      showStatus(`${pending.length}件の録音からクリック音と余分な無音を取り除いています…`);
+      try {
+        audioContext ??= new AudioContext();
+        for (const key of pending) pack.words[key] = await normalizeRecordingBlob(audioContext, pack.words[key].blob, key);
+        pack.updatedAt = new Date().toISOString();
+        await saveLocalRecordedPack(pack);
+        showStatus(`既存の録音${pending.length}件を自動カットしました。試聴して確認できます。`);
+        render();
+      } catch (error) {
+        showStatus(`既存録音の自動カットに失敗しました。再録音してください：${error.message}`, true);
+      }
+    }
+
+    document.querySelector('#microphone').addEventListener('click', prepareMicrophone);
+    document.querySelector('#uiLocale').addEventListener('change', event => {
+      translator = createTranslator(MESSAGES, resolveUiLocale(event.target.value));
+      localStorage.setItem(uiLocaleStorageKey, translator.locale);
+      applyUiLocale();
+      render();
+      showStatus(pack.vocabularyId === 'ja-JP' ? t('japaneseIntro') : t('englishIntro'));
+    });
+    document.querySelector('#packChoice').addEventListener('change', async event => {
+      if (recorder?.state === 'recording') {
+        event.target.value = pack.id;
+        showStatus(t('switchWhileRecording'), true);
+        return;
+      }
+      try {
+        pack = await loadOrCreatePack(event.target.value);
+        localStorage.setItem(activePackKey, pack.id);
+        await saveLocalRecordedPack(pack);
+        document.querySelector('#packName').value = pack.name;
+        render();
+        showStatus(pack.vocabularyId === 'ja-JP' ? t('japaneseIntro') : t('englishIntro'));
+        await normalizeExistingRecordings();
+      } catch (error) { showStatus(error.message, true); }
+    });
+    document.querySelector('#packName').addEventListener('change', async event => {
+      pack.name = event.target.value.trim() || t(packDefinitions[pack.id]?.nameKey ?? 'title');
+      event.target.value = pack.name;
+      pack.updatedAt = new Date().toISOString();
+      try { await saveLocalRecordedPack(pack); showStatus(t('nameSaved')); }
+      catch (error) { showStatus(error.message, true); }
+    });
+    document.querySelector('#export').addEventListener('click', async () => {
+      try {
+        pack = await loadLocalRecordedPack(pack.id) ?? pack;
+        render();
+        const blob = new Blob([await exportRecordedVoicePack(pack)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const filenameLocale = canonicalLanguageTag(pack.locale).toLowerCase().replaceAll('-', '_');
+        const link = Object.assign(document.createElement('a'), { href: url, download: `dance-count-${filenameLocale}-voice-pack.json` });
+        link.click();
+        URL.revokeObjectURL(url);
+        showStatus(t('exported'));
+      } catch (error) { showStatus(error.message, true); }
+    });
+    addEventListener('focus', async () => {
+      if (recordingKey) return;
+      try {
+        const latestPack = await loadLocalRecordedPack(pack.id);
+        if (latestPack?.updatedAt !== pack.updatedAt) {
+          pack = latestPack;
+          document.querySelector('#packName').value = pack.name;
+          render();
+        }
+      } catch { /* 現在表示中の録音セットはそのまま使用する */ }
+    });
+    document.querySelector('#import').addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const imported = importRecordedVoicePack(await file.text());
+        const importedVocabulary = getCountVocabulary(imported.vocabularyId ?? imported.locale);
+        const targetId = importedVocabulary.id === 'ja-JP' ? JAPANESE_RECORDED_PACK_ID : LOCAL_RECORDED_PACK_ID;
+        const existing = await loadLocalRecordedPack(targetId);
+        const language = vocabularyDisplayName(importedVocabulary, translator.locale);
+        if (recordedPackProgress(existing).recorded && !confirm(t('replaceConfirm', { language }))) return;
+        pack = { ...imported, id: targetId, locale: importedVocabulary.locale, vocabularyId: importedVocabulary.id };
+        await saveLocalRecordedPack(pack);
+        document.querySelector('#packChoice').value = pack.id;
+        localStorage.setItem(activePackKey, pack.id);
+        document.querySelector('#packName').value = pack.name;
+        showStatus(t('imported'));
+        render();
+        await normalizeExistingRecordings();
+      } catch (error) { showStatus(t('importError', { message: error.message }), true); }
+      finally { event.target.value = ''; }
+    });
+    addEventListener('beforeunload', () => stream?.getTracks().forEach(track => track.stop()));
+  </script>
+</body>
+</html>

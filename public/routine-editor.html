@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>ルーティン練習・編集 | Dance Count</title>
+  <script>
+    if (location.protocol === 'file:') location.replace('http://localhost:4173/public/routine-editor.html');
+  </script>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #192238; background: #f3f5f9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input, select { font: inherit; }
+    :focus-visible { outline: 3px solid #315fe84d; outline-offset: 2px; }
+    .app { max-width: 940px; margin: auto; padding: 25px 18px 120px; }
+    header { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+    .ui-locale { width: 150px; margin: 12px 0 0 auto; }
+    h1 { margin: 0; font-size: clamp(24px, 5vw, 36px); }
+    .notice { margin: 18px 0; padding: 12px 15px; border: 1px solid #ead4a1; border-radius: 11px; color: #684b11; background: #fff9e7; font-size: 13px; line-height: 1.6; }
+    .top { display: grid; grid-template-columns: 1.2fr 1fr .8fr; gap: 13px; padding: 18px; border: 1px solid #dce2eb; border-radius: 15px; background: white; }
+    label { display: grid; gap: 6px; color: #647087; font-size: 12px; font-weight: 700; }
+    select, input { width: 100%; padding: 10px 11px; border: 1px solid #bdc6d5; border-radius: 9px; color: #182238; background: white; }
+    .counts[readonly] { color: #44516a; border-color: #d4dae5; background: #f3f5f8; cursor: default; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
+    button { padding: 9px 13px; border: 1px solid #c6cfdd; border-radius: 9px; color: #334057; background: white; cursor: pointer; }
+    button:disabled { opacity: .4; cursor: default; }
+    button.primary { color: white; border-color: #315fe8; background: #315fe8; font-weight: 800; }
+    button.danger { color: #9a3541; }
+    .status { min-height: 22px; margin: 10px 0; color: #28704a; font-size: 13px; font-weight: 700; }
+    .status.error { color: #b13342; }
+    .status.warning { color: #815f18; }
+    .load-error { display: none; margin: 12px 0; padding: 14px 16px; border: 1px solid #e5a7af; border-radius: 11px; color: #7e2632; background: #fff2f4; line-height: 1.65; }
+    .load-error.visible { display: block; }
+    .load-error a { display: inline-block; margin-top: 8px; padding: 8px 12px; border-radius: 8px; color: white; background: #315fe8; font-weight: 800; text-decoration: none; }
+    .list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 22px 2px 10px; }
+    .list-head h2 { margin: 0; font-size: 19px; }
+    .list-head span { color: #68748a; font-size: 13px; font-weight: 750; }
+    .figures { display: grid; gap: 11px; padding-left: 46px; }
+    .figure { position: relative; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(145px, .55fr) auto auto; align-items: end; gap: 8px; padding: 16px 13px 13px; border: 1px solid #dce2eb; border-radius: 12px; background: white; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .12s; }
+    .figure:hover { transform: translateY(-2px); border-color: #bbc8df; box-shadow: 0 7px 20px #26395f12; }
+    .figure.active { border-color: #315fe8; box-shadow: 0 0 0 2px #315fe829; }
+    .figure.invalid { border-color: #d45a69; box-shadow: 0 0 0 2px #d45a6926; }
+    .figure.dragging { opacity: .38; transform: scale(.985); box-shadow: none; }
+    .figure.drag-before::before, .figure.drag-after::after { content: "ここへ移動"; position: absolute; z-index: 2; left: 8px; right: 8px; height: 3px; border-radius: 3px; color: #315fe8; background: #315fe8; font-size: 10px; line-height: 1; text-align: center; text-indent: -9999px; box-shadow: 0 0 0 4px #315fe820; }
+    .figure.drag-before::before { top: -7px; }
+    .figure.drag-after::after { bottom: -7px; }
+    .figure.just-moved { animation: moved-highlight .65s ease-out; }
+    @keyframes moved-highlight { 0% { transform: scale(1.012); border-color: #315fe8; box-shadow: 0 0 0 5px #315fe82c; } 100% { transform: none; } }
+    .drag-handle { position: absolute; left: -43px; top: 50%; display: grid; place-items: center; width: 34px; height: 48px; padding: 0; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: grab; touch-action: none; transform: translateY(-50%); transition: color .16s, background .16s, border-color .16s, transform .16s, box-shadow .16s; }
+    .drag-handle::before { content: ""; width: 16px; height: 24px; background: radial-gradient(circle, currentColor 2px, transparent 2.5px) 0 0 / 8px 8px; color: #8792a6; }
+    .figure:hover .drag-handle { color: #315fe8; border-color: #b7c6f6; background: #f5f7ff; transform: translateY(-50%) translateX(-2px); box-shadow: 0 4px 12px #315fe81c; }
+    .drag-handle:hover::before, .drag-handle:focus-visible::before { color: #315fe8; }
+    .drag-handle:focus-visible { outline: 3px solid #315fe833; border-color: #315fe8; background: #f5f7ff; }
+    .drag-handle:active { cursor: grabbing; }
+    .number { position: absolute; top: -9px; left: 12px; min-width: 24px; height: 19px; padding: 0 6px; border: 1px solid #d8dfeb; border-radius: 10px; color: #657187; background: #f7f8fb; font-size: 11px; font-weight: 800; line-height: 17px; text-align: center; }
+    .beat-timeline { grid-column: 1 / -1; min-width: 0; padding-top: 3px; }
+    .timeline-track { display: flex; min-height: 48px; overflow-x: auto; border: 1px solid #dce3ee; border-radius: 9px; background: #f8faff; scrollbar-width: thin; }
+    .beat-cell { position: relative; isolation: isolate; flex: 1 0 54px; min-width: 54px; overflow: hidden; border-left: 1px solid #dce3ee; background: linear-gradient(90deg, transparent 49.4%, #d9e0ed80 50%, transparent 50.6%); transition: background-color .1s ease, box-shadow .1s ease; }
+    .beat-cell:first-child { border-left: 0; }
+    .beat-cell.bar-start { border-left: 2px solid #7184a8; }
+    .beat-cell:first-child.bar-start { border-left: 0; }
+    .beat-cell::after { content: ""; position: absolute; z-index: -1; inset: 0 auto 0 0; width: var(--beat-progress, 0%); background: #dce6ff; opacity: 0; transition: width .06s linear; }
+    .beat-cell.active-beat { background-color: #eef3ff; box-shadow: inset 0 0 0 2px #315fe8; }
+    .beat-cell.active-beat::after { opacity: 1; }
+    .beat-number { position: absolute; z-index: 1; right: 5px; bottom: 3px; color: #8a95a9; font-size: 9px; font-weight: 750; }
+    .beat-cell.active-beat .beat-number { color: #3153a5; }
+    .beat-event { position: absolute; z-index: 1; top: 6px; display: grid; place-items: center; min-width: 24px; height: 25px; padding: 0 6px; border-radius: 7px; color: #244fc9; background: #e8eeff; font-size: 12px; font-weight: 850; transform: translateX(2px); }
+    .beat-cell.active-beat .beat-event { color: white; background: #315fe8; box-shadow: 0 2px 7px #315fe84a; }
+    .timeline-error { color: #a53342; font-size: 11px; font-weight: 700; }
+    .remove { padding: 10px; }
+    .preview { color: #315fe8; border-color: #aebff4; font-weight: 750; }
+    .card-actions { display: flex; align-items: center; gap: 4px; }
+    .card-actions button { padding: 10px; }
+    .icon-button { display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0 !important; color: #59677e; border-color: transparent; background: transparent; }
+    .icon-button:hover, .icon-button:focus-visible { color: #315fe8; border-color: #bdcaf0; background: #f2f5ff; }
+    .icon-button.danger:hover, .icon-button.danger:focus-visible { color: #a83242; border-color: #edbdc4; background: #fff2f4; }
+    .icon-button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .add-icon { display: inline-block; width: 18px; height: 18px; margin-right: 5px; vertical-align: -3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .figure-note { grid-column: 1 / -1; display: none; align-items: center; gap: 7px; margin-top: -1px; padding: 7px 9px; border-radius: 8px; color: #59677e; background: #f3f5f9; font-size: 11px; font-weight: 700; }
+    .figure-note.visible { display: flex; }
+    .figure-note.warning { color: #7b5510; background: #fff5d9; }
+    .figure-note.error { color: #9d3040; background: #fff0f2; }
+    .bpm-row { display: flex; align-items: center; gap: 7px; }
+    .bpm-row input { width: 78px; }
+    .practice-panel { margin: 14px 0 16px; padding: 16px 18px; border: 1px solid #d7e0ef; border-radius: 15px; background: linear-gradient(135deg, #f8faff, #fff); }
+    .practice-panel h2 { margin: 0 0 12px; font-size: 16px; }
+    .practice-settings { display: grid; grid-template-columns: minmax(190px, 1fr) auto auto; align-items: end; gap: 12px 18px; }
+    .practice-settings a { align-self: center; color: #315fe8; font-size: 12px; font-weight: 750; }
+    .check { display: flex; align-items: center; gap: 7px; min-height: 40px; color: #3b475e; font-size: 13px; }
+    .check input { width: 18px; accent-color: #315fe8; }
+    .timing-details { margin-top: 13px; padding-top: 12px; border-top: 1px solid #e1e6ee; }
+    .timing-details summary { cursor: pointer; color: #4b5870; font-size: 13px; font-weight: 800; }
+    .timing-grid { display: grid; grid-template-columns: minmax(230px, 1fr) auto; align-items: end; gap: 10px 14px; margin-top: 13px; }
+    .timing-guide { grid-column: 1 / -1; margin: 0; color: #6c778d; font-size: 11px; line-height: 1.6; }
+    .offset-scale { display: flex; justify-content: space-between; color: #7b8497; font-size: 10px; }
+    .word-offset-heading { grid-column: 1 / -1; padding-top: 4px; color: #4d5a71; font-size: 12px; font-weight: 800; }
+    .word-offsets { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 16px; padding-top: 2px; }
+    .word-offset { display: grid; grid-template-columns: 60px 1fr 55px auto; align-items: center; gap: 8px; }
+    .word-offset strong { font-size: 11px; }
+    .word-offset input { padding: 0; accent-color: #315fe8; }
+    .word-offset output { color: #657087; font-size: 10px; text-align: right; }
+    .word-preview { min-width: 54px; padding: 6px 8px; color: #315fe8; border-color: #b8c6ef; font-size: 11px; font-weight: 800; }
+    .timing-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+    .commit-timing { color: white; border-color: #287552; background: #287552; font-weight: 850; }
+    .commit-timing:disabled { color: #7c879a; border-color: #d6dce6; background: #edf0f4; }
+    .commit-hint { grid-column: 1 / -1; margin: -2px 0 0; color: #6c778d; font-size: 11px; line-height: 1.5; text-align: right; }
+    .commit-hint.saved { color: #287552; font-weight: 750; }
+    .transport { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 13px 18px calc(13px + env(safe-area-inset-bottom)); border-top: 1px solid #d9dfe9; background: #fffffff2; backdrop-filter: blur(14px); }
+    .transport-inner { display: flex; align-items: center; justify-content: center; gap: 13px; max-width: 900px; margin: auto; }
+    .transport label { min-width: 120px; }
+    .transport select { padding: 8px 10px; }
+    .play { min-width: min(310px, 60vw); min-height: 50px; border: 0; border-radius: 13px; color: white; background: #315fe8; font-size: 17px; font-weight: 850; }
+    .play.stop { background: #d44755; }
+    .now { min-width: 180px; color: #315fe8; font-size: 13px; font-weight: 750; }
+    dialog { width: min(430px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 16px; color: #192238; box-shadow: 0 24px 70px #14203b45; }
+    dialog::backdrop { background: #15203870; backdrop-filter: blur(2px); }
+    .dialog-body { padding: 24px; }
+    .dialog-body h2 { margin: 0 0 8px; font-size: 20px; }
+    .dialog-body p { margin: 0; color: #667188; line-height: 1.65; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; padding: 14px 24px; border-top: 1px solid #e5e9f0; background: #f8f9fb; }
+    .confirm-delete { color: white; border-color: #c83f4f; background: #c83f4f; font-weight: 800; }
+    .create-fields { display: grid; gap: 14px; margin-top: 18px; }
+    .field-help { min-height: 18px; margin: 0; color: #68748a; font-size: 11px; line-height: 1.5; }
+    .field-help.error { color: #a22f3f; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    @media (max-width: 650px) { .app { padding-bottom: 35px; } .top { grid-template-columns: 1fr; } .practice-settings { grid-template-columns: 1fr; } .timing-grid { grid-template-columns: 1fr; } .timing-guide, .word-offsets { grid-column: auto; } .word-offsets { grid-template-columns: 1fr; } .word-offset { grid-template-columns: 50px minmax(0, 1fr) 48px; } .word-preview { grid-column: 2 / 4; justify-self: start; } .figures { padding-left: 39px; } .figure { grid-template-columns: 1fr auto auto; } .figure label:nth-of-type(2) { grid-column: 1 / 4; } .drag-handle { left: -38px; width: 31px; } .transport { position: static; padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); } .transport-inner { flex-direction: column; } .play { width: 100%; min-width: 0; } .now { min-width: 0; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><div><h1 data-i18n="title">ルーティン練習・編集</h1></div><a href="./practice.html" data-i18n="simplePlayer">シンプル再生へ</a></header>
+    <label class="ui-locale"><span data-i18n="interfaceLanguage">画面表示</span><select id="uiLocale"><option value="en">English</option><option value="ja-JP">日本語</option></select></label>
+    <p class="notice" data-i18n="notice">ここに表示するのは機械的に拍計算できた旧データです。ダンス内容は未監修のため、初心者向けプリセットとしてはまだ公開しません。</p>
+    <section class="top">
+      <label><span data-i18n="sourceRoutine">元ルーティン</span><select id="routine"></select></label>
+      <label><span data-i18n="draftName">下書き名</span><input id="routineName" maxlength="80"></label>
+      <label><span data-i18n="previewSpeed">試聴速度（BPM）</span>
+        <span class="bpm-row"><input id="routineBpm" type="number" min="40" max="220"><button id="resetBpm" type="button" data-i18n="standard">標準</button></span>
+      </label>
+    </section>
+    <section class="practice-panel" aria-labelledby="practiceSettingsTitle">
+      <h2 id="practiceSettingsTitle" data-i18n="practiceAudio">練習の音声設定</h2>
+      <div class="practice-settings">
+        <label><span data-i18n="voice">再生する音声</span><select id="editorVoicePackChoice"><option value="standard" data-i18n="standardVoice">標準音声</option></select></label>
+        <label class="check"><input id="editorMetronome" type="checkbox" checked><span data-i18n="metronome">メトロノーム</span></label>
+        <a href="./voice-recorder.html" data-i18n="manageVoice">録音・音声パック管理</a>
+      </div>
+      <details class="timing-details">
+        <summary data-i18n="timingSummary">音声タイミングを微調整</summary>
+        <div class="timing-grid">
+          <p class="timing-guide" data-i18n="timingGuide">声が拍より遅く聞こえる場合は「早く」へ。個別の「A/B比較」は、1回目に調整前、2回目に調整後を再生します。まず±40ms程度で方向を確認し、10msずつ戻すと合わせやすくなります。</p>
+          <label><span data-i18n="allVoices">すべての音声</span>
+            <input id="editorVoiceOffset" type="range" min="-150" max="150" step="5" value="0">
+            <span class="offset-scale"><span data-i18n="earlier">早く</span><span data-i18n="later">遅く</span></span>
+            <span id="editorOffsetValue">0 ms</span>
+          </label>
+          <div class="timing-actions">
+            <button id="resetEditorOffsets" type="button" data-i18n="resetOffsets">すべて0に戻す</button>
+            <button id="commitVoiceTiming" class="commit-timing" type="button" disabled data-i18n="commitTiming">音声セット調整完了</button>
+          </div>
+          <p id="commitVoiceTimingHint" class="commit-hint" data-i18n="draftTimingHint">調整値は下書きとして自動保存されます。</p>
+          <div class="word-offset-heading" data-i18n="individualVoices">個別の音声</div>
+          <div id="editorWordOffsets" class="word-offsets"></div>
+        </div>
+      </details>
+    </section>
+    <div class="toolbar">
+      <button id="undo" data-i18n="undo">↶ 元に戻す</button>
+      <button id="redo" data-i18n="redo">↷ やり直す</button>
+      <button id="add"><svg class="add-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addFigure">フィガー追加</span></button>
+      <button id="reset" data-i18n="resetData">元データに戻す</button>
+    </div>
+    <p id="status" class="status" aria-live="polite" data-i18n="loadingRoutine">ルーティンを読み込んでいます…</p>
+    <div id="loadError" class="load-error" role="alert">
+      <strong data-i18n="loadFailed">ルーティンデータを読み込めませんでした。</strong><br>
+      <span id="loadErrorDetail" data-i18n="loadDetail">この画面はファイルを直接開かず、ローカルサーバー経由で開く必要があります。</span><br>
+      <a id="loadErrorAction" href="http://localhost:4173/public/routine-editor.html" data-i18n="reopen">正しいURLで開き直す</a>
+    </div>
+    <div class="list-head"><h2 data-i18n="figureList">フィガー一覧</h2><span id="figureCount">—</span></div>
+    <section id="figures" class="figures"></section>
+  </main>
+  <footer class="transport"><div class="transport-inner">
+    <label><span data-i18n="fullCountIn">全体のカウントイン</span>
+      <select id="fullCountIn">
+        <option value="0" data-i18n="none">なし</option>
+        <option value="1" selected data-i18n="oneBar">1小節</option>
+        <option value="2" data-i18n="twoBars">2小節</option>
+      </select>
+    </label>
+    <button id="play" class="play" data-i18n="previewAll">▶ 全体を試聴</button>
+    <div id="now" class="now" data-i18n="stopped">停止中</div>
+  </div></footer>
+  <dialog id="deleteDialog" aria-labelledby="deleteTitle">
+    <div class="dialog-body">
+      <h2 id="deleteTitle" data-i18n="deleteTitle">フィガーを削除しますか？</h2>
+      <p id="deleteDescription"></p>
+    </div>
+    <div class="dialog-actions">
+      <button id="cancelDelete" autofocus data-i18n="cancel">キャンセル</button>
+      <button id="confirmDelete" class="confirm-delete" data-i18n="delete">削除する</button>
+    </div>
+  </dialog>
+  <dialog id="createDialog" aria-labelledby="createTitle">
+    <div class="dialog-body">
+      <h2 id="createTitle" data-i18n="createTitle">フィガーを追加</h2>
+      <p id="createDescription" data-i18n="createEnd">名前とカウントを設定して、ルーティンの末尾へ追加します。</p>
+      <div class="create-fields">
+        <label><span data-i18n="figureName">フィガー名</span><select id="createFigureName"></select></label>
+        <label><span data-i18n="count">カウント</span><input id="createFigureCounts" class="counts" readonly aria-readonly="true"></label>
+        <p id="createCountHelp" class="field-help" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button id="cancelCreate" type="button" data-i18n="cancel">キャンセル</button>
+      <button id="confirmCreate" type="button" class="primary" data-i18n="add">追加する</button>
+    </div>
+  </dialog>
+
+  <script>
+    function showLoadError(message) {
+      const isFile = location.protocol === 'file:';
+      document.querySelector('#status').textContent = `読み込みエラー：${message}`;
+      document.querySelector('#status').classList.add('error');
+      document.querySelector('#loadError').classList.add('visible');
+      document.querySelector('#figureCount').textContent = '未読込';
+      if (!isFile) {
+        document.querySelector('#loadErrorDetail').textContent = 'データの読み込みに失敗しました。開発サーバーを確認してから再読み込みしてください。';
+        const action = document.querySelector('#loadErrorAction');
+        action.textContent = '再読み込みする';
+        action.href = location.href;
+      }
+    }
+    if (location.protocol === 'file:') showLoadError('ファイルを直接開いています');
+    window.addEventListener('error', event => showLoadError(event.message || '初期化に失敗しました'));
+    window.addEventListener('unhandledrejection', event => showLoadError(event.reason?.message || '初期化に失敗しました'));
+  </script>
+
+  <script type="module">
+    import { compileRoutine } from '../src/v2/rhythm-compiler.js';
+    import { loadVoicePack, scheduleVoiceEvent } from '../src/v2/voice-pack-loader.js?v=20260713-overlap-fade';
+    import { effectiveVoiceOffsetMs, PracticeAudioEngine } from '../src/v2/audio-engine.js?v=20260713-overlap-fade';
+    import { createVoiceTimingAdjustments, decodeRecordedVoicePack, recordedPackProgress, REQUIRED_VOICE_KEYS, voiceTimingAdjustmentsEqual } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
+    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
+    import { RoutineEditorState } from '../src/v2/routine-editor-state.js';
+    import { getDanceProfile } from '../src/v2/dance-profiles.js';
+    import { beatPositionAtTick, buildFigureTimeline } from '../src/v2/timeline-view-model.js';
+    import { buildFigureCatalog } from '../src/v2/figure-catalog.js';
+    import { readRoutineDraft } from '../src/v2/routine-draft.js';
+    import { dropDestination } from '../src/v2/routine-editor-order.js';
+    import { createEditorTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260713-global-4';
+    import { figureDisplayName } from '../src/v2/figure-terminology.js?v=20260713-verified-1';
+
+    let translator = createEditorTranslator(localStorage.getItem(UI_LOCALE_STORAGE_KEY) || navigator.language);
+    const t = (key, variables) => translator.t(key, variables);
+    const recordedLanguage = pack => vocabularyDisplayName(getCountVocabulary(pack?.vocabularyId ?? pack?.locale), translator.locale);
+    const localizedFigureName = name => figureDisplayName(state?.value?.danceId, name, translator.locale);
+
+    const response = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`ルーティンデータの取得に失敗しました（HTTP ${response.status}）`);
+    const report = await response.json();
+    const sources = report.routines.filter(item => item.status === 'mechanically-valid-unreviewed');
+    const sourceById = new Map(sources.map(item => [item.id, item]));
+    const selector = document.querySelector('#routine');
+    const status = document.querySelector('#status');
+    const play = document.querySelector('#play');
+    const storagePrefix = 'dance-count-v2-routine-draft:';
+    const audioPreferencesKey = 'dance-count-v2-preferences';
+    const audioPreferences = loadAudioPreferences();
+    let state;
+    let compiled;
+    let audioContext;
+    let voicePack;
+    let engine;
+    let pendingDeleteIndex = null;
+    let draggedFigureIndex = null;
+    let createInsertIndex = null;
+    let storageWarning = '';
+    let pointerDropTargetIndex = null;
+    let pointerDropAfter = false;
+    let recordedVoicePack = null;
+    let recordedPacks = [];
+    let wordOffsetsMs = { ...(audioPreferences.wordOffsetsMs ?? {}) };
+    let voiceTimingAdjustedAt = audioPreferences.voiceTimingAdjustedAt ?? null;
+    let timingPreferencesChanged = false;
+    let editorVoiceInitialized = false;
+
+    applyUiLocale();
+
+    document.querySelector('#editorMetronome').checked = audioPreferences.metronome ?? true;
+    document.querySelector('#editorVoiceOffset').value = audioPreferences.voiceOffsetMs ?? 0;
+    document.querySelector('#editorOffsetValue').textContent = `${document.querySelector('#editorVoiceOffset').value} ms`;
+    await refreshEditorVoiceOption();
+
+    populateRoutineOptions();
+    if (sourceById.has(audioPreferences.routineId)) selector.value = audioPreferences.routineId;
+    if (timingPreferencesChanged) saveAudioPreferences();
+
+    function applyUiLocale() {
+      document.documentElement.lang = translator.locale;
+      document.title = `${t('title')} | Dance Count`;
+      document.querySelector('#uiLocale').value = translator.locale;
+      document.querySelectorAll('[data-i18n]:not(#status)').forEach(element => { element.textContent = t(element.dataset.i18n); });
+    }
+
+    function populateRoutineOptions() {
+      const selected = selector.value;
+      selector.replaceChildren(...sources.map(routine => new Option(`${routine.name} (${routine.figureCount})`, routine.id)));
+      if (sourceById.has(selected)) selector.value = selected;
+    }
+
+    function draftFor(source) {
+      return readRoutineDraft(localStorage, storagePrefix + source.id, source);
+    }
+
+    function loadAudioPreferences() {
+      try { return JSON.parse(localStorage.getItem(audioPreferencesKey)) ?? {}; }
+      catch { return {}; }
+    }
+
+    function saveAudioPreferences() {
+      try {
+        const current = loadAudioPreferences();
+        localStorage.setItem(audioPreferencesKey, JSON.stringify({
+          ...current,
+          schemaVersion: 2,
+          routineId: selector.value,
+          metronome: document.querySelector('#editorMetronome').checked,
+          voicePackId: document.querySelector('#editorVoicePackChoice').value,
+          voiceOffsetMs: Number(document.querySelector('#editorVoiceOffset').value),
+          wordOffsetsMs,
+          voiceTimingAdjustedAt
+        }));
+      } catch { storageWarning = translator.locale === 'en' ? 'Audio settings could not be saved on this device.' : '音声設定を端末へ保存できません。'; }
+    }
+
+    async function refreshEditorVoiceOption() {
+      const select = document.querySelector('#editorVoicePackChoice');
+      const requested = editorVoiceInitialized
+        ? select.value
+        : audioPreferences.voicePackId === 'recorded' ? `recorded:${LOCAL_RECORDED_PACK_ID}` : audioPreferences.voicePackId;
+      try {
+        recordedPacks = await listLocalRecordedPacks();
+        select.querySelectorAll('option[value^="recorded:"]').forEach(option => option.remove());
+        for (const loaded of recordedPacks.sort((a, b) => (a.locale ?? 'en').localeCompare(b.locale ?? 'en'))) {
+          const progress = recordedPackProgress(loaded);
+          const language = recordedLanguage(loaded);
+          const option = new Option(t('voiceOption', { name: loaded.name, language, recorded: progress.recorded }), `recorded:${loaded.id}`);
+          option.disabled = !progress.complete;
+          select.add(option);
+        }
+        if (requested && [...select.options].some(option => option.value === requested && !option.disabled)) select.value = requested;
+        else select.value = 'standard';
+        recordedVoicePack = select.value.startsWith('recorded:')
+          ? recordedPacks.find(item => `recorded:${item.id}` === select.value) ?? null
+          : null;
+        const committed = recordedVoicePack?.timingAdjustments;
+        const committedRevision = committed?.adjustedAt ?? null;
+        if (recordedVoicePack && committedRevision !== voiceTimingAdjustedAt) {
+          const globalOffsetMs = committed?.globalOffsetMs ?? 0;
+          document.querySelector('#editorVoiceOffset').value = globalOffsetMs;
+          document.querySelector('#editorOffsetValue').textContent = `${globalOffsetMs} ms`;
+          wordOffsetsMs = { ...(committed?.wordOffsetsMs ?? {}) };
+          voiceTimingAdjustedAt = committedRevision;
+          timingPreferencesChanged = true;
+          if (compiled) renderEditorWordOffsets();
+        }
+      } catch {
+        recordedPacks = [];
+        recordedVoicePack = null;
+      }
+      editorVoiceInitialized = true;
+      updateVoiceTimingCommitState();
+    }
+
+    function currentVoiceTimingAdjustments(adjustedAt = voiceTimingAdjustedAt) {
+      return createVoiceTimingAdjustments(document.querySelector('#editorVoiceOffset').value, wordOffsetsMs, adjustedAt);
+    }
+
+    function updateVoiceTimingCommitState(saved = false) {
+      const button = document.querySelector('#commitVoiceTiming');
+      const hint = document.querySelector('#commitVoiceTimingHint');
+      const selectedRecorded = document.querySelector('#editorVoicePackChoice').value.startsWith('recorded:');
+      const dirty = Boolean(recordedVoicePack) && !voiceTimingAdjustmentsEqual(currentVoiceTimingAdjustments(), recordedVoicePack.timingAdjustments);
+      button.disabled = !selectedRecorded || !dirty;
+      hint.classList.toggle('saved', saved || (selectedRecorded && Boolean(recordedVoicePack) && !dirty));
+      if (!recordedVoicePack) hint.textContent = t('timingNeedsPack');
+      else if (!selectedRecorded) hint.textContent = t('timingSelectPack');
+      else if (dirty) hint.textContent = t('timingDirty');
+      else hint.textContent = t('timingSaved');
+    }
+
+    async function commitVoiceTiming() {
+      if (!recordedVoicePack || !document.querySelector('#editorVoicePackChoice').value.startsWith('recorded:')) return;
+      const button = document.querySelector('#commitVoiceTiming');
+      button.disabled = true;
+      try {
+        const adjustedAt = new Date().toISOString();
+        recordedVoicePack = {
+          ...recordedVoicePack,
+          timingAdjustments: currentVoiceTimingAdjustments(adjustedAt),
+          updatedAt: adjustedAt
+        };
+        await saveLocalRecordedPack(recordedVoicePack);
+        voiceTimingAdjustedAt = adjustedAt;
+        saveAudioPreferences();
+        updateVoiceTimingCommitState(true);
+        status.textContent = t('timingCommitted');
+      } catch (error) {
+        updateVoiceTimingCommitState();
+        status.textContent = t('timingCommitError', { message: error.message });
+      }
+    }
+
+    function loadRoutine(id) {
+      stop();
+      const source = sourceById.get(id);
+      state = new RoutineEditorState(draftFor(source));
+      render();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(storagePrefix + state.value.id, JSON.stringify(state.value));
+        storageWarning = '';
+      } catch {
+        storageWarning = t('draftStorageError');
+      }
+    }
+
+    function mutate(mutator) {
+      stop();
+      state.update(mutator);
+      save();
+      render();
+    }
+
+    function render() {
+      const routine = state.value;
+      const profile = getDanceProfile(routine.danceId);
+      const figureOptions = buildFigureCatalog(sources, routine);
+      document.querySelector('#loadError').classList.remove('visible');
+      document.querySelector('#routineName').value = routine.name;
+      document.querySelector('#figureCount').textContent = t('figureCount', { count: routine.figures.length });
+      document.querySelector('#undo').disabled = !state.canUndo;
+      document.querySelector('#redo').disabled = !state.canRedo;
+      document.querySelector('#figures').replaceChildren(...routine.figures.map((figure, index) => {
+        const row = document.createElement('article');
+        const displayName = localizedFigureName(figure.name);
+        row.className = 'figure';
+        row.dataset.index = index;
+        row.innerHTML = `<span class="number" aria-hidden="true">${index + 1}</span><button class="drag-handle" draggable="true" aria-label="${escapeHtml(t('moveFigure', { name: displayName }))}" title="${escapeHtml(t('moveTitle'))}"></button>
+          <label>${escapeHtml(t('figureLabel'))}<select class="figure-name" aria-label="${escapeHtml(t('figureLabel'))}">${figureOptions.map((option, optionIndex) => `<option value="${optionIndex}"${option.name === figure.name && option.counts === figure.counts ? ' selected' : ''}>${escapeHtml(figureDisplayName(routine.danceId, option.name, translator.locale))} (${escapeHtml(option.counts)})</option>`).join('')}</select></label>
+          <label>${escapeHtml(t('countsLabel'))}<input class="counts" value="${escapeHtml(figure.counts)}" readonly aria-readonly="true"></label>
+          <div class="card-actions">
+            <button class="preview" aria-label="${escapeHtml(t('previewFigure', { name: displayName }))}">${escapeHtml(t('previewButton'))}</button>
+            <button class="duplicate icon-button" aria-label="${escapeHtml(t('duplicateFigure', { name: displayName }))}" title="${escapeHtml(t('duplicate'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2M13.5 11v5M11 13.5h5"/></svg></button>
+            <button class="remove danger icon-button" aria-label="${escapeHtml(t('deleteFigure', { name: displayName }))}" title="${escapeHtml(t('deleteShort'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>
+            <button class="insert-after icon-button" aria-label="${escapeHtml(t('insertAfterFigure', { name: displayName }))}" title="${escapeHtml(t('insertAfter'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M20 8v8M16 12h8"/></svg></button>
+          </div>
+          <div class="beat-timeline" data-timeline-index="${index}" aria-label="${escapeHtml(t('timeline', { name: displayName }))}"></div>`;
+        row.querySelector('.figure-name').addEventListener('change', event => {
+          const selected = figureOptions[Number(event.target.value)];
+          if (selected) mutate(value => {
+            value.figures[index].name = selected.name;
+            value.figures[index].counts = selected.counts;
+          });
+        });
+        const handle = row.querySelector('.drag-handle');
+        handle.addEventListener('dragstart', event => {
+          draggedFigureIndex = index;
+          row.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', String(index));
+        });
+        handle.addEventListener('dragend', clearDragState);
+        handle.addEventListener('pointerdown', event => {
+          if (event.pointerType === 'mouse') return;
+          event.preventDefault();
+          draggedFigureIndex = index;
+          pointerDropTargetIndex = index;
+          pointerDropAfter = false;
+          handle.setPointerCapture(event.pointerId);
+          row.classList.add('dragging');
+        });
+        handle.addEventListener('pointermove', event => {
+          if (draggedFigureIndex === null || event.pointerType === 'mouse') return;
+          event.preventDefault();
+          const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.figure');
+          if (!target) return;
+          pointerDropTargetIndex = Number(target.dataset.index);
+          pointerDropAfter = event.clientY >= target.getBoundingClientRect().top + target.offsetHeight / 2;
+          clearDropMarkers();
+          target.classList.add(pointerDropAfter ? 'drag-after' : 'drag-before');
+        });
+        handle.addEventListener('pointerup', finishPointerDrag);
+        handle.addEventListener('pointercancel', clearDragState);
+        handle.addEventListener('keydown', event => {
+          const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+          if (!direction) return;
+          event.preventDefault();
+          const destination = Math.max(0, Math.min(routine.figures.length - 1, index + direction));
+          if (destination !== index) moveFigure(index, destination, destination);
+        });
+        row.addEventListener('dragover', event => {
+          if (draggedFigureIndex === null) return;
+          event.preventDefault();
+          clearDropMarkers();
+          row.classList.add(event.clientY < row.getBoundingClientRect().top + row.offsetHeight / 2 ? 'drag-before' : 'drag-after');
+        });
+        row.addEventListener('drop', event => {
+          event.preventDefault();
+          if (draggedFigureIndex === null) return;
+          const from = draggedFigureIndex;
+          const destination = dropDestination(from, index, event.clientY >= row.getBoundingClientRect().top + row.offsetHeight / 2, routine.figures.length);
+          clearDragState();
+          if (from !== destination) moveFigure(from, destination, destination);
+        });
+        row.querySelector('.preview').addEventListener('click', () => startFigure(index));
+        row.querySelector('.duplicate').addEventListener('click', () => duplicateFigure(index));
+        row.querySelector('.remove').addEventListener('click', () => requestDelete(index));
+        row.querySelector('.insert-after').addEventListener('click', () => openCreateDialog(index + 1));
+        return row;
+      }));
+      document.querySelector('#routineBpm').value = routine.bpm ?? profile.practiceBpm;
+      document.querySelector('#fullCountIn').value = String(routine.countInBars ?? 1);
+      validate();
+    }
+
+    function validate() {
+      const routine = state.value;
+      try {
+        if (!routine.figures.length) throw new Error(t('noFigures'));
+        compiled = compileRoutine({ danceId: routine.danceId, figures: routine.figures });
+        const beats = compiled.durationTicks / 960;
+        status.textContent = t('validRoutine', { figures: routine.figures.length, beats, warning: storageWarning ? ` · ⚠ ${storageWarning}` : '' });
+        status.classList.remove('error', 'warning');
+        status.classList.toggle('warning', Boolean(storageWarning));
+        play.disabled = false;
+        renderTimelines();
+        renderFigureNotes();
+        renderEditorWordOffsets();
+      } catch (error) {
+        compiled = null;
+        const message = formatRhythmError(error, getDanceProfile(routine.danceId));
+        status.textContent = t('needsFix', { message });
+        status.classList.remove('warning');
+        status.classList.add('error');
+        play.disabled = true;
+        const invalidRow = document.querySelector(`.figure[data-index="${error.details?.figureIndex}"]`);
+        invalidRow?.classList.add('invalid');
+        if (invalidRow) {
+          const note = document.createElement('div');
+          note.className = 'figure-note visible error';
+          note.textContent = `⚠ ${message}`;
+          invalidRow.append(note);
+        }
+      }
+    }
+
+    function renderTimelines() {
+      for (const [index, figure] of compiled.figures.entries()) {
+        const target = document.querySelector(`[data-timeline-index="${index}"]`);
+        const timeline = buildFigureTimeline(compiled, index);
+        const track = document.createElement('div');
+        track.className = 'timeline-track';
+        track.setAttribute('role', 'img');
+        const displayName = localizedFigureName(figure.name);
+        track.setAttribute('aria-label', translator.locale === 'en'
+          ? `${displayName}: ${timeline.beats.map(beat => `beat ${beat.beatInBar} ${beat.events.map(event => event.token).join(', ')}`).join('; ')}`
+          : `${figure.name}：${timeline.beats.map(beat => `拍${beat.beatInBar} ${beat.events.map(event => event.token).join('・')}`).join('、')}`);
+        for (const beat of timeline.beats) {
+          const cell = document.createElement('div');
+          cell.className = `beat-cell${beat.startsBar ? ' bar-start' : ''}`;
+          cell.dataset.startTick = beat.startTick;
+          cell.innerHTML = `<span class="beat-number">${beat.beatInBar}</span>${beat.events.map(event => `<span class="beat-event" style="left:${event.offset * 100}%">${escapeHtml(event.token)}</span>`).join('')}`;
+          track.append(cell);
+        }
+        target.replaceChildren(track);
+      }
+    }
+
+    function renderFigureNotes() {
+      const barTicks = compiled.profile.beatsPerBar * 960;
+      for (const [index, figure] of compiled.figures.entries()) {
+        const remainder = ((figure.endTick % barTicks) + barTicks) % barTicks;
+        if (!remainder) continue;
+        const row = document.querySelector(`.figure[data-index="${index}"]`);
+        const note = document.createElement('div');
+        const isLast = index === compiled.figures.length - 1;
+        note.className = `figure-note visible${isLast ? ' warning' : ''}`;
+        note.textContent = isLast ? t('barEndsEarly', { beat: remainder / 960 }) : t('barContinues');
+        row.append(note);
+      }
+    }
+
+    function renderEditorWordOffsets() {
+      document.querySelector('#editorWordOffsets').replaceChildren(...REQUIRED_VOICE_KEYS.map(key => {
+        const row = document.createElement('div');
+        row.className = 'word-offset';
+        row.dataset.voiceKey = key;
+        const value = wordOffsetsMs[key] ?? 0;
+        const label = voiceKeyLabel(key);
+        row.innerHTML = `<strong>${label}</strong><input type="range" min="-100" max="100" step="5" value="${value}" aria-label="${escapeHtml(t('timingAria', { label }))}"><output>${value} ms</output><button type="button" class="word-preview" aria-label="${escapeHtml(t('abAria', { label }))}">${escapeHtml(t('abCompare'))}</button>`;
+        const input = row.querySelector('input');
+        input.addEventListener('input', event => {
+          wordOffsetsMs[key] = Number(event.target.value);
+          row.querySelector('output').textContent = `${event.target.value} ms`;
+          saveAudioPreferences();
+          updateVoiceTimingCommitState();
+        });
+        input.addEventListener('change', () => previewVoiceKey(key));
+        row.querySelector('.word-preview').addEventListener('click', () => previewVoiceKey(key));
+        return row;
+      }));
+    }
+
+    async function previewVoiceKey(key) {
+      stop();
+      const label = voiceKeyLabel(key);
+      const button = document.querySelector(`.word-offset[data-voice-key="${key}"] .word-preview`);
+      if (button) button.disabled = true;
+      try {
+        await prepareAudio();
+        const firstTargetTime = audioContext.currentTime + 0.22;
+        const secondTargetTime = firstTargetTime + 0.85;
+        const globalOffsetMs = Number(document.querySelector('#editorVoiceOffset').value);
+        schedulePreviewClick(firstTargetTime);
+        scheduleVoiceEvent({
+          audioContext,
+          voicePack,
+          event: { voiceKey: key },
+          targetTime: firstTargetTime,
+          userOffsetMs: globalOffsetMs
+        });
+        schedulePreviewClick(secondTargetTime);
+        scheduleVoiceEvent({
+          audioContext,
+          voicePack,
+          event: { voiceKey: key },
+          targetTime: secondTargetTime,
+          userOffsetMs: effectiveVoiceOffsetMs(globalOffsetMs, wordOffsetsMs, key)
+        });
+        const adjustment = wordOffsetsMs[key] ?? 0;
+        const direction = adjustment < 0 ? t('faster', { ms: Math.abs(adjustment) }) : adjustment > 0 ? t('slower', { ms: adjustment }) : t('noChange');
+        status.textContent = t('firstOriginal', { label, direction });
+        status.classList.remove('error', 'warning');
+      } catch (error) {
+        status.textContent = t('previewError', { message: error.message });
+        status.classList.add('error');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    function schedulePreviewClick(time) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.frequency.value = 1100;
+      gain.gain.setValueAtTime(0.13, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
+      oscillator.connect(gain).connect(audioContext.destination);
+      oscillator.start(time);
+      oscillator.stop(time + 0.045);
+    }
+
+    function voiceKeyLabel(key) {
+      const labels = { slow: 'Slow', quick: 'Quick', and: 'And', ah: 'a' };
+      return labels[key] ?? key.replace(/^./, letter => letter.toUpperCase());
+    }
+
+    function formatRhythmError(error, profile) {
+      const token = error.details?.token;
+      if (error.details?.code === 'TOKEN_NOT_ALLOWED_FOR_DANCE') return t('tokenNotAllowed', { dance: danceDisplayName(profile.id, translator.locale), token });
+      if (error.details?.code === 'AMBIGUOUS_LEADING_SUBDIVISION') return t('ambiguousLeading', { token });
+      if (error.message?.startsWith('Unsupported count token')) return t('unsupportedToken', { token });
+      return error.message;
+    }
+
+    async function prepareAudio() {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      await audioContext.resume();
+      if (!voicePack) voicePack = document.querySelector('#editorVoicePackChoice').value.startsWith('recorded:')
+        ? await decodeRecordedVoicePack(audioContext, recordedVoicePack)
+        : await loadVoicePack(audioContext, new URL('./audio/default-en-female-v1/manifest.json', location.href));
+      if (!engine) engine = new PracticeAudioEngine(audioContext, { voicePack, onFrame });
+    }
+
+    function moveFigure(fromIndex, toIndex, focusIndex = null) {
+      stop();
+      state.moveFigure(fromIndex, toIndex);
+      save();
+      render();
+      if (focusIndex !== null) {
+        const movedRow = document.querySelector(`.figure[data-index="${focusIndex}"]`);
+        movedRow?.classList.add('just-moved');
+        movedRow?.querySelector('.drag-handle')?.focus();
+      }
+    }
+
+    function duplicateFigure(index) {
+      stop();
+      state.duplicateFigure(index, `${state.value.id}-copy-${Date.now()}`);
+      save();
+      render();
+      const copy = document.querySelector(`.figure[data-index="${index + 1}"]`);
+      copy?.classList.add('just-moved');
+      copy?.querySelector('.figure-name')?.focus();
+    }
+
+    function openCreateDialog(insertionIndex = state.value.figures.length) {
+      const routine = state.value;
+      const options = buildFigureCatalog(sources, routine);
+      const name = document.querySelector('#createFigureName');
+      const counts = document.querySelector('#createFigureCounts');
+      name.replaceChildren(new Option(t('chooseFigure'), ''), ...options.map((figure, index) => {
+        const option = new Option(`${figureDisplayName(routine.danceId, figure.name, translator.locale)} (${figure.counts})`, String(index));
+        option.dataset.name = figure.name;
+        option.dataset.counts = figure.counts;
+        return option;
+      }));
+      name.value = '';
+      counts.value = '';
+      createInsertIndex = Math.max(0, Math.min(routine.figures.length, insertionIndex));
+      document.querySelector('#createDescription').textContent = createInsertIndex === routine.figures.length
+        ? t('createEnd')
+        : t('createBefore', { index: createInsertIndex + 1 });
+      validateCreateFigure();
+      document.querySelector('#createDialog').showModal();
+      name.focus();
+    }
+
+    function closeCreateDialog() {
+      createInsertIndex = null;
+      document.querySelector('#createDialog').close();
+    }
+
+    function validateCreateFigure() {
+      const counts = document.querySelector('#createFigureCounts').value.replaceAll(' ', '');
+      const selectedName = document.querySelector('#createFigureName').selectedOptions[0]?.dataset.name;
+      const help = document.querySelector('#createCountHelp');
+      const confirm = document.querySelector('#confirmCreate');
+      try {
+        if (!selectedName || !counts) throw new Error(t('selectFigureError'));
+        const result = compileRoutine({
+          danceId: state.value.danceId,
+          figures: [{ id: 'new-figure-preview', name: '新しいフィガー', counts }]
+        });
+        help.textContent = t('countValid', { beats: result.durationTicks / 960 });
+        help.classList.remove('error');
+        confirm.disabled = false;
+        return true;
+      } catch (error) {
+        help.textContent = formatRhythmError(error, getDanceProfile(state.value.danceId));
+        help.classList.add('error');
+        confirm.disabled = true;
+        return false;
+      }
+    }
+
+    function createFigure() {
+      if (!validateCreateFigure()) return;
+      const index = createInsertIndex ?? state.value.figures.length;
+      const name = document.querySelector('#createFigureName').selectedOptions[0]?.dataset.name;
+      const counts = document.querySelector('#createFigureCounts').value.replaceAll(' ', '');
+      stop();
+      state.addFigure({ id: `${state.value.id}-draft-${Date.now()}`, name, counts }, index);
+      save();
+      closeCreateDialog();
+      render();
+      const added = document.querySelector(`.figure[data-index="${index}"]`);
+      added?.classList.add('just-moved');
+      added?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      added?.querySelector('.figure-name')?.focus();
+    }
+
+    function clearDropMarkers() {
+      document.querySelectorAll('.drag-before, .drag-after').forEach(item => item.classList.remove('drag-before', 'drag-after'));
+    }
+
+    function clearDragState() {
+      draggedFigureIndex = null;
+      pointerDropTargetIndex = null;
+      pointerDropAfter = false;
+      document.querySelectorAll('.dragging').forEach(item => item.classList.remove('dragging'));
+      clearDropMarkers();
+    }
+
+    function finishPointerDrag(event) {
+      if (draggedFigureIndex === null || event.pointerType === 'mouse') return;
+      const from = draggedFigureIndex;
+      const destination = dropDestination(from, pointerDropTargetIndex ?? from, pointerDropAfter, state.value.figures.length);
+      clearDragState();
+      if (from !== destination) moveFigure(from, destination, destination);
+    }
+
+    async function start(rangeStartTick = 0, rangeEndTick = compiled.durationTicks, countInBars = Number(document.querySelector('#fullCountIn').value)) {
+      play.disabled = true;
+      try {
+        await prepareAudio();
+        const profile = getDanceProfile(state.value.danceId);
+        engine.start({
+          compiled,
+          bpm: state.value.bpm ?? profile.practiceBpm,
+          loop: false,
+          metronome: document.querySelector('#editorMetronome').checked,
+          voiceOffsetMs: Number(document.querySelector('#editorVoiceOffset').value),
+          wordOffsetsMs,
+          countInBars,
+          rangeStartTick,
+          rangeEndTick
+        });
+        play.textContent = t('stop');
+        play.classList.add('stop');
+      } catch (error) {
+        status.textContent = t('playError', { message: error.message });
+        status.classList.add('error');
+      } finally { play.disabled = false; }
+    }
+
+    async function startFigure(index) {
+      if (!compiled) return;
+      const figure = compiled.figures[index];
+      await start(figure.startTick, figure.endTick, 0);
+    }
+
+    function requestDelete(index) {
+      pendingDeleteIndex = index;
+      document.querySelector('#deleteDescription').textContent = t('deleteDescription', { name: localizedFigureName(state.value.figures[index].name) });
+      document.querySelector('#deleteDialog').showModal();
+    }
+
+    function closeDeleteDialog() {
+      pendingDeleteIndex = null;
+      document.querySelector('#deleteDialog').close();
+    }
+
+    function stop() {
+      engine?.stop();
+      play.textContent = t('previewAll');
+      play.classList.remove('stop');
+      document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
+      clearActiveBeat();
+      document.querySelector('#now').textContent = t('stopped');
+    }
+
+    function onFrame({ playing, event, countIn, originalTick }) {
+      if (!playing) { stopDisplay(); return; }
+      if (countIn) { clearActiveBeat(); document.querySelector('#now').textContent = t('countInStatus'); return; }
+      document.querySelectorAll('.figure').forEach((item, index) => item.classList.toggle('active', index === event?.figureIndex));
+      renderActiveBeat(originalTick);
+      document.querySelector('#now').textContent = event ? `${localizedFigureName(event.figureName)} · ${event.token}` : '';
+    }
+
+    function renderActiveBeat(originalTick) {
+      const position = beatPositionAtTick(originalTick);
+      if (!position) { clearActiveBeat(); return; }
+      const active = document.querySelector(`.beat-cell[data-start-tick="${position.startTick}"]`);
+      document.querySelectorAll('.beat-cell.active-beat').forEach(cell => {
+        if (cell !== active) {
+          cell.classList.remove('active-beat');
+          cell.style.removeProperty('--beat-progress');
+        }
+      });
+      if (active) {
+        active.classList.add('active-beat');
+        active.style.setProperty('--beat-progress', `${Math.min(1, Math.max(0, position.progress)) * 100}%`);
+      }
+    }
+
+    function clearActiveBeat() {
+      document.querySelectorAll('.beat-cell.active-beat').forEach(cell => {
+        cell.classList.remove('active-beat');
+        cell.style.removeProperty('--beat-progress');
+      });
+    }
+
+    function stopDisplay() {
+      play.textContent = t('previewAll');
+      play.classList.remove('stop');
+      document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
+      clearActiveBeat();
+      document.querySelector('#now').textContent = t('stopped');
+    }
+
+    function escapeHtml(value) {
+      return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    }
+
+    document.querySelector('#uiLocale').addEventListener('change', async event => {
+      stop();
+      translator = createEditorTranslator(event.target.value);
+      localStorage.setItem(UI_LOCALE_STORAGE_KEY, translator.locale);
+      applyUiLocale();
+      populateRoutineOptions();
+      await refreshEditorVoiceOption();
+      render();
+      updateVoiceTimingCommitState();
+    });
+    selector.addEventListener('change', () => { loadRoutine(selector.value); saveAudioPreferences(); });
+    document.querySelector('#routineName').addEventListener('change', event => mutate(value => { value.name = event.target.value.trim() || sourceById.get(value.id).name; }));
+    document.querySelector('#routineBpm').addEventListener('change', event => {
+      const bpm = Math.max(40, Math.min(220, Number(event.target.value) || getDanceProfile(state.value.danceId).practiceBpm));
+      mutate(value => { value.bpm = bpm; });
+    });
+    document.querySelector('#resetBpm').addEventListener('click', () => mutate(value => { value.bpm = getDanceProfile(value.danceId).practiceBpm; }));
+    document.querySelector('#fullCountIn').addEventListener('change', event => mutate(value => { value.countInBars = Number(event.target.value); }));
+    document.querySelector('#editorVoicePackChoice').addEventListener('change', async () => {
+      stop();
+      voicePack = null;
+      engine = null;
+      await refreshEditorVoiceOption();
+      saveAudioPreferences();
+      status.textContent = recordedVoicePack ? t('usingRecorded', { language: recordedLanguage(recordedVoicePack) }) : t('usingStandard');
+      updateVoiceTimingCommitState();
+    });
+    document.querySelector('#editorMetronome').addEventListener('change', () => {
+      if (engine?.playing) stop();
+      saveAudioPreferences();
+    });
+    document.querySelector('#editorVoiceOffset').addEventListener('input', event => {
+      document.querySelector('#editorOffsetValue').textContent = `${event.target.value} ms`;
+      saveAudioPreferences();
+      updateVoiceTimingCommitState();
+    });
+    document.querySelector('#editorVoiceOffset').addEventListener('change', () => { if (engine?.playing) stop(); });
+    document.querySelector('#resetEditorOffsets').addEventListener('click', () => {
+      if (engine?.playing) stop();
+      wordOffsetsMs = {};
+      document.querySelector('#editorVoiceOffset').value = 0;
+      document.querySelector('#editorOffsetValue').textContent = '0 ms';
+      renderEditorWordOffsets();
+      saveAudioPreferences();
+      updateVoiceTimingCommitState();
+    });
+    document.querySelector('#commitVoiceTiming').addEventListener('click', commitVoiceTiming);
+    document.querySelector('#undo').addEventListener('click', () => { stop(); state.undo(); save(); render(); });
+    document.querySelector('#redo').addEventListener('click', () => { stop(); state.redo(); save(); render(); });
+    document.querySelector('#add').addEventListener('click', () => openCreateDialog());
+    document.querySelector('#createFigureName').addEventListener('change', event => {
+      document.querySelector('#createFigureCounts').value = event.target.selectedOptions[0]?.dataset.counts ?? '';
+      validateCreateFigure();
+    });
+    document.querySelector('#cancelCreate').addEventListener('click', closeCreateDialog);
+    document.querySelector('#confirmCreate').addEventListener('click', createFigure);
+    document.querySelector('#createDialog').addEventListener('cancel', event => {
+      event.preventDefault();
+      closeCreateDialog();
+    });
+    document.querySelector('#reset').addEventListener('click', () => {
+      stop();
+      try { localStorage.removeItem(storagePrefix + selector.value); storageWarning = ''; }
+      catch { storageWarning = '保存済み下書きを削除できませんでした。'; }
+      state.replace(sourceById.get(selector.value));
+      render();
+    });
+    document.querySelector('#cancelDelete').addEventListener('click', closeDeleteDialog);
+    document.querySelector('#confirmDelete').addEventListener('click', () => {
+      const index = pendingDeleteIndex;
+      closeDeleteDialog();
+      if (index !== null) mutate(value => { value.figures.splice(index, 1); });
+    });
+    document.querySelector('#deleteDialog').addEventListener('cancel', event => {
+      event.preventDefault();
+      closeDeleteDialog();
+    });
+    play.addEventListener('click', () => engine?.playing ? stop() : start());
+    addEventListener('focus', refreshEditorVoiceOption);
+
+    loadRoutine(sources[0].id);
+  </script>
+</body>
+</html>

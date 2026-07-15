@@ -1,0 +1,193 @@
+
+<style>
+* { box-sizing: border-box; }
+.wrap { padding: 1rem 0; font-size: 13px; color: var(--color-text-primary); }
+.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+.ctrl { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.ctrl input[type=range] { width: 100px; }
+.ctrl span.val { font-family: var(--font-mono); min-width: 40px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; font-weight: 500; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-secondary); padding: 5px 8px; }
+td { padding: 5px 8px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+code { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: 1px 4px; border-radius: 3px; }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.ok   { background: #E1F5EE; color: #085041; }
+.warn { background: #FAEEDA; color: #854F0B; }
+.bad  { background: #FCEBEB; color: #791F1F; }
+.bar-wrap { display: flex; align-items: center; gap: 6px; }
+.bar { height: 8px; border-radius: 4px; min-width: 2px; }
+.bar-voice { background: #1D9E75; }
+.bar-beat  { background: #E6F1FB; border: 1px solid #B5D4F4; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin: 1rem 0 0.3rem; letter-spacing: 0.04em; }
+.note { font-size: 11px; color: var(--color-text-secondary); margin-top: 0.5rem; }
+.input-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.input-group { display: flex; flex-direction: column; gap: 2px; }
+.input-group label { font-size: 11px; color: var(--color-text-secondary); }
+.input-group input[type=number] { width: 70px; padding: 4px 6px; border: 1px solid var(--color-border-secondary); border-radius: 6px; background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 12px; font-family: var(--font-mono); }
+</style>
+
+<div class="wrap">
+
+<div class="controls">
+  <div class="ctrl">
+    <span>BPM</span>
+    <input type="range" id="bpmSlider" min="60" max="220" value="120" step="1" oninput="update()">
+    <span class="val" id="bpmVal">120</span>
+  </div>
+  <div class="ctrl">
+    <span>発声時間の計測値を編集</span>
+    <button onclick="toggleEdit()" style="padding:3px 10px;border-radius:5px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:11px;cursor:pointer" id="editBtn">編集</button>
+  </div>
+</div>
+
+<div id="edit-area" style="display:none;background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;margin-bottom:1rem;">
+  <div class="note" style="margin-bottom:8px">計測ツールで得た発声時間(ms)を入力してね</div>
+  <div class="input-row" id="edit-inputs"></div>
+</div>
+
+<div class="section-label">S/Q系（タンゴ・スローフォックス・クイックステップ）</div>
+<table id="tbl-sq"></table>
+
+<div class="section-label">数字系（ルンバ・チャチャ・サンバ・ジャイブ等）</div>
+<table id="tbl-num"></table>
+
+<div class="section-label">計算式</div>
+<div class="note">
+  拍の長さ = 60000 / BPM × 拍数 (ms)<br>
+  理想発火タイミング = 拍の長さ × 発声開始余裕率（推奨: 音声長さの約半分前）<br>
+  必要early = 発声時間(ms) ÷ 2　← これをextraの基準にする
+</div>
+</div>
+
+<script>
+// 計測値（デフォルト：ひとみうさの計測結果）
+const measured = {
+  slow:     988,
+  quick:    401,
+  slowah:   556,
+  quickah:  525,
+  and:      347,
+  one:      389,
+  two:      342,
+  three:    377,
+  four:     387,
+  five:     415,
+  six:      464,
+  seven:    434,
+  eight:    341,
+  nine:     402,
+  fouren:   565,
+  threeen:  544,
+  ah:       329,
+};
+
+// 音符定義
+const SQ_ROWS = [
+  { word:'slow',    beats:2,   label:'S',   desc:'スロー' },
+  { word:'quick',   beats:1,   label:'Q',   desc:'クイック' },
+  { word:'slowah',  beats:1.5, label:'S&',  desc:'スロー・アンド' },
+  { word:'quickah', beats:0.5, label:'Q&',  desc:'クイック・アンド（前半）' },
+  { word:'and',     beats:0.5, label:'&',   desc:'アンド' },
+];
+const NUM_ROWS = [
+  { word:'one',    beats:1,   label:'1' },
+  { word:'two',    beats:1,   label:'2' },
+  { word:'three',  beats:1,   label:'3' },
+  { word:'four',   beats:1,   label:'4' },
+  { word:'five',   beats:1,   label:'5' },
+  { word:'six',    beats:1,   label:'6' },
+  { word:'seven',  beats:1,   label:'7' },
+  { word:'eight',  beats:1,   label:'8' },
+  { word:'nine',   beats:1,   label:'9' },
+  { word:'fouren',  beats:0.5, label:'4&', desc:'フォー・アンド（前半）' },
+  { word:'threeen', beats:0.5, label:'3&', desc:'スリー・アンド（前半）' },
+  { word:'ah',      beats:0.25,label:'a',  desc:'ア' },
+];
+
+function getBPM() { return parseInt(document.getElementById('bpmSlider').value); }
+
+function beatMs(beats) {
+  return (60000 / getBPM()) * beats;
+}
+
+function tag(voiceMs, beatMs) {
+  const ratio = voiceMs / beatMs;
+  if (ratio <= 0.6) return '<span class="tag ok">余裕あり</span>';
+  if (ratio <= 0.9) return '<span class="tag warn">ぎりぎり</span>';
+  return '<span class="tag bad">はみ出し！</span>';
+}
+
+function makeRow(row) {
+  const bpm = getBPM();
+  const one = 60000 / bpm;
+  const bMs = one * row.beats;
+  const vMs = measured[row.word] || 0;
+  const early = Math.round(vMs / 2);
+  const ratio = vMs / bMs;
+  const barScale = 120; // px for full beat
+  const vBar = Math.round(Math.min(vMs / bMs, 1.2) * barScale);
+  const bBar = barScale;
+  return `<tr>
+    <td><code>${row.label}</code></td>
+    <td style="color:var(--color-text-secondary)">${row.word}</td>
+    <td>${Math.round(bMs)}ms</td>
+    <td>${vMs}ms</td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar bar-beat" style="width:${bBar}px" title="拍の長さ"></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:2px">
+        <div class="bar bar-voice" style="width:${Math.min(vBar,bBar+30)}px;${ratio>1?'background:#E24B4A':''}" title="発声時間"></div>
+      </div>
+    </td>
+    <td>${tag(vMs, bMs)}</td>
+    <td><strong>${early}ms</strong></td>
+  </tr>`;
+}
+
+function makeHeader() {
+  return `<thead><tr>
+    <th>符号</th><th>単語</th><th>拍の長さ</th><th>発声時間</th>
+    <th style="min-width:140px">█ 拍　▮ 声</th>
+    <th>余裕</th><th>推奨early</th>
+  </tr></thead>`;
+}
+
+function update() {
+  const bpm = getBPM();
+  document.getElementById('bpmVal').textContent = bpm;
+
+  document.getElementById('tbl-sq').innerHTML =
+    makeHeader() + '<tbody>' + SQ_ROWS.map(makeRow).join('') + '</tbody>';
+  document.getElementById('tbl-num').innerHTML =
+    makeHeader() + '<tbody>' + NUM_ROWS.map(makeRow).join('') + '</tbody>';
+}
+
+// 編集パネル
+function toggleEdit() {
+  const area = document.getElementById('edit-area');
+  const btn = document.getElementById('editBtn');
+  if (area.style.display === 'none') {
+    area.style.display = 'block';
+    btn.textContent = '閉じる';
+    buildEditInputs();
+  } else {
+    area.style.display = 'none';
+    btn.textContent = '編集';
+  }
+}
+
+function buildEditInputs() {
+  const all = [...SQ_ROWS, ...NUM_ROWS];
+  document.getElementById('edit-inputs').innerHTML = all.map(row => `
+    <div class="input-group">
+      <label>${row.word}</label>
+      <input type="number" id="edit-${row.word}" value="${measured[row.word]||0}" min="0" max="2000" step="10"
+        oninput="measured['${row.word}']=+this.value;update()">
+    </div>
+  `).join('');
+}
+
+update();
+</script>

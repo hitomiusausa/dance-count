@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-15T05:45:00.000Z",
+  "routines": {
+    "samba_silver": {
+      "status": "expert-review-needed",
+      "region": "UK/国際 (参照資料の地域)",
+      "authority": "ISTD (名称・級・タイミング語彙のみ公式確認)",
+      "evidenceUrls": [
+        "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf",
+        "https://www.dancecentral.info/ballroom/international-style/samba/volta-movements",
+        "https://www.dancecentral.info/ballroom/international-style/samba/samba-technique",
+        "https://sosadance.co.uk/wp-content/uploads/2017/07/Samba-Footwork-Manual-3.pdf",
+        "http://ballroomatuva.org/wp-content/uploads/2015/06/ISTD-Latin-Syllabus.pdf"
+      ],
+      "notes": "2026-07-15調査: ボルタ系タイミングは1a2a3a4（数字=3/4拍・a=1/4拍、2/4拍子で2小節）が非公式2系統＋指導者教材で一致。Spot Voltaは1a2。旧表記&&&&は数字を落とした分割拍のみの表記と強く整合するが、自動変換はしない。フィガー別カウントを載せた公式一次資料（ISTD技術書/Laird/WDSF Technique Book）は有料印刷物で未参照。ISTD級ではVolta Movements=Newcomer、Solo Spot/Criss Cross=Bronze、Circular=Silver（日本の級とは別体系）。詳細: research/primary-source-research-2026-07-15.md §1"
+    },
+    "jive_silver": {
+      "status": "expert-review-needed",
+      "region": "UK/国際 (参照資料の地域)",
+      "authority": "ISTD (名称実在のみ公式確認)",
+      "evidenceUrls": [
+        "https://www.istd.org/documents/latin-american-syllabus-outline/latin-american-syllabus-september-24.pdf",
+        "https://www.dancecentral.info/ballroom/international-style/jive/basic-in-place",
+        "https://www.dancecentral.info/ballroom/international-style/jive/fallaway-throwaway",
+        "https://www.dancecentral.info/ballroom/international-style/jive/link",
+        "https://www.dancecentral.info/ballroom/international-style/jive/change-of-places-right-to-left",
+        "https://www.dancecentral.info/ballroom/international-style/jive/change-of-places-left-to-right",
+        "https://www.dancecentral.info/ballroom/international-style/jive/american-spin",
+        "http://ballroomatuva.org/wp-content/uploads/2015/06/ISTD-Latin-Syllabus.pdf"
+      ],
+      "notes": "2026-07-15調査: 対象6フィガーとも参照資料上は QQ+QaQ+QaQ（8歩・シャッセ2回）。旧表記12&3&4はシャッセ1回欠落＋&(1/2拍)とa(1/4拍)の混同の疑い。数字の振り方は流儀差あり（ISTD系 1 2 3a4 3a4 / 米国式 1,2,3&4,5&6）。v2語彙は123a45a6。公式のフィガー別カウント表は未参照（有料技術書のみ）。ISTD級では6フィガーともPre-Bronze。詳細: research/primary-source-research-2026-07-15.md §2"
+    },
+    "tango_new_gold": {
+      "status": "expert-review-needed",
+      "region": "UK/国際 (参照資料の地域)",
+      "authority": "未特定 (ISTDシラバス外のフィガーを含む)",
+      "evidenceUrls": [
+        "https://www.dancecentral.info/ballroom/international-style/tango/five-step",
+        "https://ballroomindex.weebly.com/tango-syllabus-istd.html"
+      ],
+      "notes": "2026-07-15調査: Five Step基本はQQQQS（ISTD Gold, Alex Moore 10th ed.系）。代替QQS&S/S&QQSでは&=直前の拍から借りる1/4拍。Turning Five Stepの&QQQQS（先頭&）を裁定できる公開資料なし。一次資料候補はWDSF Technique Book (Tango)（有料・未参照）。旧アプリ実装は先頭&を「後ろの拍に丸め込む」（当該小節第1拍の前半・直後の拍を半拍短縮、dance-count-B_215.html toMeasures/getBeatSec）。前小節末アナクルーシス説とどちらが正か未裁定。詳細: research/primary-source-research-2026-07-15.md §3"
+    },
+    "tango_gold": {
+      "status": "evidence-collected",
+      "region": "日本 (旧データ由来)",
+      "authority": "未特定",
+      "evidenceUrls": [],
+      "notes": "2026-07-15調査: 小節途中終了はデータの意図ではなく旧アプリの産物。旧アプリはループ時に小節パディングなしで即先頭へ戻る（dance-count-B_215.html:2598）。小節位相の管理は表示用toMeasuresのみで再生は拍の平坦な列。対応は製品判断（休止自動挿入/明示休止フィガー/元資料確認）。詳細: research/primary-source-research-2026-07-15.md §4"
+    },
+    "quickstep_silver": {
+      "status": "evidence-collected",
+      "region": "日本 (旧データ由来)",
+      "authority": "未特定",
+      "evidenceUrls": [],
+      "notes": "2026-07-15調査: 小節途中終了は旧アプリの産物（ループ時パディングなし、dance-count-B_215.html:2598）。詳細: research/primary-source-research-2026-07-15.md §4"
+    },
+    "rumba_silver": {
+      "status": "evidence-collected",
+      "region": "日本 (旧データ由来)",
+      "authority": "未特定",
+      "evidenceUrls": [],
+      "notes": "2026-07-15調査: 小節途中終了は旧アプリの産物。加えて全フィガーが「2」開始でルンバの保持拍「1」が時間として存在せず、旧アプリでは1小節分の音楽に対し7拍で回っていた（音楽とずれる構造）。修正方向（保持拍の休止挿入等）は専門家確認と製品判断が必要。詳細: research/primary-source-research-2026-07-15.md §4"
+    },
+    "pasodoble_silver": {
+      "status": "evidence-collected",
+      "region": "日本 (旧データ由来)",
+      "authority": "未特定",
+      "evidenceUrls": [],
+      "notes": "2026-07-15調査: 小節途中終了は旧アプリの産物（ループ時パディングなし）。アペル(1拍)開始でフィガー境界が小節を跨ぐこと自体はパソの振付として通常。ルーティン合計が小節に満たない点のみ要対応。詳細: research/primary-source-research-2026-07-15.md §4"
+    },
+    "slowfox_1grade": {
+      "status": "evidence-collected",
+      "region": "日本 (旧データ由来・ISTD準拠表示は未検証)",
+      "authority": "未特定 ((ISTD)表示は自動承認しない)",
+      "evidenceUrls": [],
+      "notes": "2026-07-15調査: 小節途中終了は旧アプリの産物。先頭「予備足 @@@S」=5拍で以降の全フィガーが半小節ずれたまま進む構造。予備足の正しい拍数・小節配置は元資料確認が必要。詳細: research/primary-source-research-2026-07-15.md §4"
+    }
+  }
+}

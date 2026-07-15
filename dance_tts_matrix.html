@@ -1,0 +1,159 @@
+
+<style>
+* { box-sizing: border-box; }
+.wrap { padding: 1rem 0; font-size: 12px; color: var(--color-text-primary); }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+th { font-weight: 500; color: var(--color-text-secondary); padding: 5px 8px; border-bottom: 1px solid var(--color-border-secondary); text-align: center; }
+th.left { text-align: left; }
+td { padding: 4px 6px; border-bottom: 1px solid var(--color-border-tertiary); text-align: center; vertical-align: middle; }
+td.label { text-align: left; font-weight: 500; padding-right: 12px; white-space: nowrap; }
+td.sublabel { text-align: left; color: var(--color-text-secondary); font-size: 10px; padding-right: 12px; }
+.cell { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; min-width: 64px; }
+.ratio-bar { height: 6px; border-radius: 3px; width: 52px; background: var(--color-background-tertiary); overflow: hidden; }
+.ratio-fill { height: 100%; border-radius: 3px; }
+.tag { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 500; }
+.ok   { background: #E1F5EE; color: #085041; }
+.warn { background: #FAEEDA; color: #854F0B; }
+.bad  { background: #FCEBEB; color: #791F1F; }
+.na   { background: var(--color-background-secondary); color: var(--color-text-tertiary); }
+.ms   { font-size: 10px; color: var(--color-text-secondary); font-family: var(--font-mono); }
+.section { margin-bottom: 1.2rem; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 4px; letter-spacing: 0.04em; }
+.legend { display: flex; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--color-text-secondary); }
+</style>
+
+<div class="wrap">
+
+<div class="legend">
+  <span style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-right:4px">余裕度：</span>
+  <div class="legend-item"><span class="tag ok">余裕</span> 発声≤60%</div>
+  <div class="legend-item"><span class="tag warn">ぎりぎり</span> 60〜90%</div>
+  <div class="legend-item"><span class="tag bad">はみ出し</span> 90%超</div>
+  <div class="legend-item"><span class="tag na">—</span> その種目で使わない</div>
+</div>
+
+<div class="section">
+  <div class="section-label">S/Q系（タンゴ・スローフォックス・クイックステップ・ワルツ）</div>
+  <div class="scroll"><table id="tbl-sq"></table></div>
+</div>
+
+<div class="section">
+  <div class="section-label">数字系（ルンバ・チャチャ・サンバ・パソドブレ・ジャイブ）</div>
+  <div class="scroll"><table id="tbl-num"></table></div>
+</div>
+
+<div class="section">
+  <div class="section-label">各種目の推奨early（ms）※ 発声時間÷2 を基準に、拍長の半分を上限として算出</div>
+  <div class="scroll"><table id="tbl-early"></table></div>
+</div>
+
+</div>
+
+<script>
+const measured = {
+  slow:988, quick:401, slowah:556, quickah:525, and:347,
+  one:389, two:342, three:377, four:387, five:415,
+  six:464, seven:434, eight:341, nine:402,
+  fouren:565, threeen:544, ah:329,
+};
+
+const SQ_DANCES = [
+  { id:'tango',     name:'タンゴ',     bpm:120, countType:'sq' },
+  { id:'slowfox',   name:'スローフォックス', bpm:75, countType:'sq' },
+  { id:'quickstep', name:'クイックステップ', bpm:200, countType:'sq' },
+  { id:'waltz',     name:'ワルツ',     bpm:84,  countType:'waltz' },
+];
+const NUM_DANCES = [
+  { id:'rumba',     name:'ルンバ',     bpm:100, countType:'num4' },
+  { id:'chacha',    name:'チャチャ',   bpm:128, countType:'num4a' },
+  { id:'samba',     name:'サンバ',     bpm:100, countType:'samba' },
+  { id:'pasodoble', name:'パソドブレ', bpm:120, countType:'num8' },
+  { id:'jive',      name:'ジャイブ',   bpm:176, countType:'num6j' },
+];
+
+// 音符定義: word, beats(拍数), 使う種目のcountType
+const SQ_WORDS = [
+  { word:'slow',    beats:2,   types:['sq'], label:'S' },
+  { word:'quick',   beats:1,   types:['sq'], label:'Q' },
+  { word:'slowah',  beats:1.5, types:['sq'], label:'S&' },
+  { word:'quickah', beats:0.5, types:['sq'], label:'Q&（前半）' },
+  { word:'and',     beats:0.5, types:['sq','waltz'], label:'&' },
+];
+const NUM_WORDS_LIST = [
+  { word:'one',    beats:1,    types:['num4','num4a','num8','num6j'], label:'1' },
+  { word:'two',    beats:1,    types:['num4','num4a','num8','num6j'], label:'2' },
+  { word:'three',  beats:1,    types:['num4','num4a','num8','num6j'], label:'3' },
+  { word:'four',   beats:1,    types:['num4','num4a','num8','num6j'], label:'4' },
+  { word:'five',   beats:1,    types:['num8','num6j'], label:'5' },
+  { word:'six',    beats:1,    types:['num8','num6j'], label:'6' },
+  { word:'seven',  beats:1,    types:['num8'], label:'7' },
+  { word:'eight',  beats:1,    types:['num8'], label:'8' },
+  { word:'fouren', beats:0.5,  types:['num4a'], label:'4&（前半）' },
+  { word:'threeen',beats:0.5,  types:['num4a'], label:'3&（前半）' },
+  // サンバ: S=1拍, Q=0.5拍
+  { word:'slow',   beats:1,    types:['samba'], label:'S（サンバ）' },
+  { word:'quick',  beats:0.5,  types:['samba'], label:'Q（サンバ）' },
+  { word:'ah',     beats:0.25, types:['samba','num4a'], label:'a' },
+];
+
+function one(bpm){ return 60000/bpm; }
+
+function cell(word, beats, dance) {
+  const beatMs = one(dance.bpm) * beats;
+  const vMs = measured[word];
+  if (!vMs) return `<td><span class="tag na">—</span></td>`;
+  const ratio = vMs / beatMs;
+  let cls = ratio <= 0.6 ? 'ok' : ratio <= 0.9 ? 'warn' : 'bad';
+  const fillW = Math.round(Math.min(ratio, 1.5) / 1.5 * 52);
+  const fillColor = cls==='ok' ? '#1D9E75' : cls==='warn' ? '#EF9F27' : '#E24B4A';
+  const early = Math.round(Math.min(vMs/2, beatMs/2));
+  return `<td>
+    <div class="cell">
+      <span class="tag ${cls}">${Math.round(ratio*100)}%</span>
+      <div class="ratio-bar"><div class="ratio-fill" style="width:${fillW}px;background:${fillColor}"></div></div>
+      <span class="ms">${early}ms早</span>
+    </div>
+  </td>`;
+}
+
+function makeTable(dances, words) {
+  const bpmRow = dances.map(d => `<th>${d.name}<br><span style="font-weight:400;font-size:10px">${d.bpm}BPM</span></th>`).join('');
+  const header = `<thead><tr><th class="left">音符</th>${bpmRow}</tr></thead>`;
+  const rows = words.map(w => {
+    const cells = dances.map(d => {
+      if (!w.types.includes(d.countType)) return `<td><span class="tag na">—</span></td>`;
+      return cell(w.word, w.beats, d);
+    }).join('');
+    return `<tr><td class="label"><code>${w.label}</code> <span style="color:var(--color-text-secondary);font-size:10px">${w.word}</span></td>${cells}</tr>`;
+  }).join('');
+  return `${header}<tbody>${rows}</tbody>`;
+}
+
+// 推奨early表
+function makeEarlyTable(dances, words) {
+  const bpmRow = dances.map(d => `<th>${d.name}<br><span style="font-weight:400;font-size:10px">${d.bpm}BPM</span></th>`).join('');
+  const header = `<thead><tr><th class="left">音符</th>${bpmRow}</tr></thead>`;
+  const rows = words.map(w => {
+    const cells = dances.map(d => {
+      if (!w.types.includes(d.countType)) return `<td style="color:var(--color-text-tertiary)">—</td>`;
+      const beatMs = one(d.bpm) * w.beats;
+      const vMs = measured[w.word] || 0;
+      const early = Math.round(Math.min(vMs/2, beatMs/2));
+      const ratio = vMs/beatMs;
+      const cls = ratio<=0.6?'ok':ratio<=0.9?'warn':'bad';
+      return `<td><strong style="color:${cls==='ok'?'#085041':cls==='warn'?'#854F0B':'#791F1F'}">${early}</strong></td>`;
+    }).join('');
+    return `<tr><td class="label"><code>${w.label}</code></td>${cells}</tr>`;
+  }).join('');
+  return `${header}<tbody>${rows}</tbody>`;
+}
+
+document.getElementById('tbl-sq').innerHTML  = makeTable(SQ_DANCES,  SQ_WORDS);
+document.getElementById('tbl-num').innerHTML = makeTable(NUM_DANCES, NUM_WORDS_LIST);
+
+const ALL_DANCES = [...SQ_DANCES, ...NUM_DANCES];
+const ALL_WORDS  = [...SQ_WORDS, ...NUM_WORDS_LIST.filter((w,i,a)=>a.findIndex(x=>x.label===w.label)===i)];
+document.getElementById('tbl-early').innerHTML = makeEarlyTable(ALL_DANCES, [...SQ_WORDS, ...NUM_WORDS_LIST]);
+</script>

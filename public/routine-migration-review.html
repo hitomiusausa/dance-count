@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>旧ルーティン移行レビュー | Dance Count</title>
+  <script>if (location.protocol === 'file:') location.replace('http://localhost:4173/public/routine-migration-review.html');</script>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #192238; background: #f3f5f9; }
+    * { box-sizing: border-box; }
+    body { max-width: 1040px; margin: auto; padding: 28px 18px 70px; }
+    h1 { margin-bottom: 5px; }
+    .lead { color: #657087; line-height: 1.7; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 22px 0; }
+    .metric { padding: 17px; border: 1px solid #dde2eb; border-radius: 14px; background: white; }
+    .metric strong { display: block; font-size: 27px; }
+    .metric span { color: #68748a; font-size: 12px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+    button { padding: 9px 13px; border: 1px solid #c8d0de; border-radius: 9px; background: white; color: #344057; cursor: pointer; }
+    button.active { color: white; border-color: #315fe8; background: #315fe8; }
+    details { margin: 10px 0; border: 1px solid #dce2eb; border-radius: 13px; background: white; overflow: hidden; }
+    summary { display: flex; align-items: center; gap: 10px; padding: 15px 17px; cursor: pointer; }
+    .badge { flex: none; padding: 4px 8px; border-radius: 30px; font-size: 11px; font-weight: 800; }
+    .valid { color: #17633c; background: #dff5e9; }
+    .review { color: #8b3d13; background: #ffead9; }
+    .name { flex: 1; font-weight: 750; }
+    .meta { color: #778196; font-size: 12px; }
+    .body { padding: 0 17px 18px; border-top: 1px solid #edf0f4; }
+    .issue { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #d5dae4; background: #f7f8fb; font-size: 13px; line-height: 1.55; }
+    .issue.review, .issue.error { border-color: #db6b35; background: #fff8f2; color: #74320f; }
+    .issue code { font-weight: 800; }
+    .figures { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px; border-bottom: 1px solid #edf0f4; text-align: left; }
+    td:last-child { font-family: ui-monospace, monospace; white-space: nowrap; }
+    .research-note { margin: 20px 0 0; padding: 15px; border: 1px solid #cfd9f5; border-radius: 12px; background: #f5f8ff; }
+    .research-note h3 { margin: 0 0 6px; font-size: 16px; }
+    .research-note p { margin: 0 0 14px; color: #596780; font-size: 13px; line-height: 1.6; }
+    .research-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+    .research-grid label { display: grid; gap: 5px; color: #58657c; font-size: 12px; font-weight: 750; }
+    .research-grid .wide { grid-column: 1 / -1; }
+    input, select, textarea { width: 100%; padding: 9px 10px; border: 1px solid #c8d0de; border-radius: 8px; background: white; color: #192238; font: inherit; }
+    textarea { min-height: 74px; resize: vertical; line-height: 1.5; }
+    .save-row { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
+    .save-state { color: #68748a; font-size: 12px; }
+    .workspace-summary { color: #536079; font-size: 13px; align-self: center; }
+    @media (max-width: 680px) { .summary { grid-template-columns: repeat(2, 1fr); } .meta { display: none; } }
+    @media (max-width: 600px) { .research-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>旧ルーティン移行レビュー</h1>
+  <p class="lead">「機械的に一貫」は構文と拍位置が計算できたという意味で、ダンス内容の監修済みを意味しません。要確認項目を解決するまで初心者向け練習画面には公開しません。</p>
+  <section id="summary" class="summary"></section>
+  <nav class="toolbar" aria-label="絞り込み">
+    <button data-filter="all" class="active" aria-pressed="true">すべて</button>
+    <button data-filter="mechanically-valid-unreviewed" aria-pressed="false">機械的に一貫</button>
+    <button data-filter="needs-review" aria-pressed="false">要確認</button>
+    <button id="exportWorkspace" type="button">調査記録を書き出す</button>
+    <span id="workspaceSummary" class="workspace-summary"></span>
+  </nav>
+  <main id="routines"></main>
+
+  <script type="module">
+    import { createReviewWorkspace, normalizeReviewWorkspace, reviewWorkspaceSummary, updateReviewEntry } from '../src/v2/routine-review-workspace.js';
+
+    const STORAGE_KEY = 'dance-count-v2-routine-review-workspace';
+    const report = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' }).then(response => {
+      if (!response.ok) throw new Error(`レポートを読み込めません: ${response.status}`);
+      return response.json();
+    });
+    const summary = report.summary;
+    let workspace = loadWorkspace();
+    document.querySelector('#summary').innerHTML = [
+      ['ルーティン', summary.routineCount],
+      ['フィガー', summary.figureCount],
+      ['機械的に一貫', summary.mechanicallyValidUnreviewed],
+      ['要確認', summary.needsReview]
+    ].map(([label, value]) => `<div class="metric"><strong>${value}</strong><span>${label}</span></div>`).join('');
+
+    function render(filter = 'all') {
+      const routines = filter === 'all' ? report.routines : report.routines.filter(item => item.status === filter);
+      document.querySelector('#routines').replaceChildren(...routines.map(routine => {
+        const element = document.createElement('details');
+        const needsReview = routine.status === 'needs-review';
+        element.dataset.routineId = routine.id;
+        element.innerHTML = `<summary>
+          <span class="badge ${needsReview ? 'review' : 'valid'}">${needsReview ? '要確認' : '機械的一貫'}</span>
+          <span class="name">${routine.name}</span>
+          <span class="meta">${routine.danceId} · ${routine.figureCount}フィガー</span>
+        </summary>
+        <div class="body">
+          ${routine.issues.length ? routine.issues.map(issue => `<div class="issue ${issue.severity}"><code>${issue.code}</code> — ${issue.message}${issue.figureName ? `<br>${issue.figureName}：${issue.counts}` : ''}</div>`).join('') : '<p>機械的な問題は検出されませんでした。</p>'}
+          <table class="figures"><thead><tr><th>#</th><th>フィガー</th><th>カウント</th></tr></thead><tbody>
+          ${routine.figures.map((figure, index) => `<tr><td>${index + 1}</td><td>${figure.name}</td><td>${figure.counts}</td></tr>`).join('')}
+          </tbody></table>
+          ${needsReview ? reviewWorkspaceMarkup(routine.id) : ''}
+        </div>`;
+        if (needsReview) bindReviewWorkspace(element, routine.id);
+        return element;
+      }));
+    }
+
+    document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('[data-filter]').forEach(item => {
+        item.classList.toggle('active', item === button);
+        item.setAttribute('aria-pressed', String(item === button));
+      });
+      render(button.dataset.filter);
+    }));
+    document.querySelector('#exportWorkspace').addEventListener('click', exportWorkspace);
+    render();
+    updateWorkspaceSummary();
+
+    function reviewWorkspaceMarkup(routineId) {
+      const entry = workspace.routines[routineId] ?? {};
+      return `<section class="research-note" data-review-routine="${routineId}">
+        <h3>資料調査メモ</h3>
+        <p>候補資料を保存する場所です。ここへ記録しても、ルーティンが監修済み・公開可能になることはありません。</p>
+        <div class="research-grid">
+          <label>調査状態<select data-field="status">
+            ${[['unreviewed', '未着手'], ['researching', '調査中'], ['evidence-collected', '根拠資料あり'], ['expert-review-needed', '専門家確認待ち']].map(([value, label]) => `<option value="${value}"${entry.status === value ? ' selected' : ''}>${label}</option>`).join('')}
+          </select></label>
+          <label>地域・国<input data-field="region" value="" placeholder="例：United Kingdom / United States"></label>
+          <label>団体・資料提供元<input data-field="authority" value="" placeholder="例：ISTD / WDSF / NDCA"></label>
+          <label class="wide">根拠URL（1行に1件）<textarea data-field="evidenceUrls" placeholder="https://..."></textarea></label>
+          <label class="wide">確認メモ<textarea data-field="notes" placeholder="何を確認できたか、まだ判断できない点、先生への質問など"></textarea></label>
+        </div>
+        <div class="save-row"><button type="button" data-save-review>調査メモを保存</button><span class="save-state" role="status"></span></div>
+      </section>`;
+    }
+
+    function bindReviewWorkspace(root, routineId) {
+      const section = root.querySelector('[data-review-routine]');
+      const entry = workspace.routines[routineId] ?? {};
+      section.querySelector('[data-field="region"]').value = entry.region ?? '';
+      section.querySelector('[data-field="authority"]').value = entry.authority ?? '';
+      section.querySelector('[data-field="evidenceUrls"]').value = (entry.evidenceUrls ?? []).join('\n');
+      section.querySelector('[data-field="notes"]').value = entry.notes ?? '';
+      section.querySelector('[data-save-review]').addEventListener('click', () => {
+        workspace = updateReviewEntry(workspace, routineId, Object.fromEntries([...section.querySelectorAll('[data-field]')].map(field => [field.dataset.field, field.value])));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+        section.querySelector('.save-state').textContent = 'この端末に保存しました';
+        updateWorkspaceSummary();
+      });
+    }
+
+    function loadWorkspace() {
+      try { return normalizeReviewWorkspace(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+      catch { return createReviewWorkspace(); }
+    }
+
+    function updateWorkspaceSummary() {
+      const current = reviewWorkspaceSummary(workspace);
+      document.querySelector('#workspaceSummary').textContent = `記録 ${current.recorded}件・根拠URL ${current.evidenceUrls}件`;
+    }
+
+    function exportWorkspace() {
+      const blob = new Blob([`${JSON.stringify(workspace, null, 2)}\n`], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `dance-count-review-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    }
+  </script>
+</body>
+</html>

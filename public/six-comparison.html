@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>six 音声比較 | Dance Count</title>
+  <script>if (location.protocol === 'file:') location.replace('http://localhost:4173/public/six-comparison.html');</script>
+  <style>
+    :root { font-family: system-ui, -apple-system, sans-serif; color: #172033; background: #f4f6fa; }
+    body { max-width: 720px; margin: auto; padding: 32px 18px 60px; }
+    h1 { margin-bottom: 8px; }
+    .lead { color: #647086; line-height: 1.7; }
+    .candidate { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin: 14px 0; padding: 18px; background: white; border: 1px solid #dce1ea; border-radius: 15px; }
+    .candidate h2 { margin: 0 0 5px; font-size: 17px; }
+    .candidate p { margin: 0; color: #69748a; font-size: 13px; }
+    button { min-width: 110px; padding: 11px 15px; border: 0; border-radius: 10px; color: white; background: #315fe8; font-weight: 750; cursor: pointer; }
+    .context { background: #fff9e8; border-color: #eadcae; }
+    @media (max-width: 500px) { .candidate { grid-template-columns: 1fr; } button { width: 100%; } }
+  </style>
+</head>
+<body>
+  <h1>「six」の声を比較</h1>
+  <p class="lead">同じ音量で順番に聴いて、ほかの数字に最も近い声を選びます。文脈版は five–six–seven の中央を確認してください。</p>
+
+  <section class="candidate">
+    <div><h2>現在の音声</h2><p>いま練習画面で使っている six</p></div>
+    <button data-src="./audio/default-en-female-v1/six.wav?v=brighter-2st-20260712">▶ 聴く</button>
+  </section>
+  <div id="candidates"></div>
+
+  <script type="module">
+    const container = document.querySelector('#candidates');
+    const data = await fetch('./audio/six-candidates/candidates.json').then(response => {
+      if (!response.ok) throw new Error('候補音声がまだ生成されていません');
+      return response.json();
+    });
+    for (const candidate of data.candidates) {
+      const section = document.createElement('section');
+      section.className = `candidate ${candidate.id.includes('context') ? 'context' : ''}`;
+      section.innerHTML = `<div><h2>${candidate.label}</h2><p>${candidate.id.includes('context') ? '中央の six を確認' : 'six 単独'}</p></div><button data-src="./audio/six-candidates/${candidate.file}">▶ 聴く</button>`;
+      container.append(section);
+    }
+
+    let playing;
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-src]');
+      if (!button) return;
+      playing?.pause();
+      document.querySelectorAll('[data-src]').forEach(item => { item.textContent = '▶ 聴く'; });
+      playing = new Audio(button.dataset.src);
+      button.textContent = '■ 再生中';
+      playing.addEventListener('ended', () => { button.textContent = '▶ 聴く'; }, { once: true });
+      playing.play();
+    });
+  </script>
+</body>
+</html>

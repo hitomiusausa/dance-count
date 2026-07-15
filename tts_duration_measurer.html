@@ -1,0 +1,209 @@
+
+<style>
+* { box-sizing: border-box; }
+.wrap { padding: 1rem 0; font-size: 13px; color: var(--color-text-primary); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.card { background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: 8px; padding: 8px 10px; cursor: pointer; transition: background 0.15s; user-select: none; }
+.card:hover { background: var(--color-background-tertiary); }
+.card.speaking { border-color: #1D9E75; background: #E1F5EE; }
+.card.done { border-color: var(--color-border-secondary); }
+.word { font-size: 13px; font-weight: 500; }
+.tts-text { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; font-family: var(--font-mono); }
+.dur { font-size: 15px; font-weight: 500; margin-top: 6px; color: #1D9E75; min-height: 20px; }
+.dur.empty { color: var(--color-text-tertiary); font-size: 12px; font-weight: 400; }
+.btn-row { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+.btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 12px; cursor: pointer; }
+.btn:hover { background: var(--color-background-tertiary); }
+.btn-primary { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.btn-primary:hover { background: #0F6E56; }
+.status { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 0.5rem; min-height: 18px; }
+.rate-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; font-size: 12px; }
+.result-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.result-table th { text-align: left; font-weight: 500; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-secondary); padding: 4px 8px; }
+.result-table td { padding: 4px 8px; border-bottom: 1px solid var(--color-border-tertiary); }
+.result-table tr:last-child td { border-bottom: none; }
+.bar { height: 8px; border-radius: 4px; background: #1D9E75; display: inline-block; vertical-align: middle; margin-left: 4px; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin: 0.8rem 0 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+</style>
+
+<div class="wrap">
+
+<div class="rate-row">
+  <span>TTS rate:</span>
+  <input type="range" id="rateSlider" min="0.5" max="2.0" step="0.1" value="1.4" style="width:120px">
+  <span id="rateVal" style="font-family:var(--font-mono);min-width:28px">1.4</span>
+  <span style="color:var(--color-text-secondary)">pitch:</span>
+  <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.1" style="width:100px">
+  <span id="pitchVal" style="font-family:var(--font-mono);min-width:28px">1.1</span>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="measureAll()">▶ 全部まとめて計測</button>
+  <button class="btn" onclick="clearAll()">クリア</button>
+</div>
+<div class="status" id="status">クリックで個別計測、または「全部まとめて計測」</div>
+
+<div class="section-label">S/Q系</div>
+<div class="grid" id="grid-sq"></div>
+<div class="section-label">数字</div>
+<div class="grid" id="grid-num"></div>
+<div class="section-label">その他</div>
+<div class="grid" id="grid-other"></div>
+
+<div id="summary" style="display:none;margin-top:1rem;">
+  <div class="section-label">計測結果サマリー（長い順）</div>
+  <table class="result-table">
+    <thead><tr><th>単語</th><th>TTS発音</th><th>時間</th><th>比率</th></tr></thead>
+    <tbody id="summary-body"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+const WORDS = {
+  sq: [
+    { word: 'slow',     tts: 'slow' },
+    { word: 'quick',    tts: 'quick' },
+    { word: 'slowah',   tts: 'slow and' },
+    { word: 'quickah',  tts: 'quick and' },
+    { word: 'and',      tts: 'and' },
+  ],
+  num: [
+    { word: 'one',   tts: 'one' },
+    { word: 'two',   tts: 'two' },
+    { word: 'three', tts: 'three' },
+    { word: 'four',  tts: 'four' },
+    { word: 'five',  tts: 'five' },
+    { word: 'six',   tts: 'six' },
+    { word: 'seven', tts: 'seven' },
+    { word: 'eight', tts: 'eight' },
+    { word: 'nine',  tts: 'nine' },
+    { word: 'fouren',  tts: 'four and' },
+    { word: 'threeen', tts: 'three and' },
+  ],
+  other: [
+    { word: 'ah', tts: 'a' },
+  ],
+};
+
+const results = {};
+let selectedVoice = null;
+
+function getRate()  { return parseFloat(document.getElementById('rateSlider').value); }
+function getPitch() { return parseFloat(document.getElementById('pitchSlider').value); }
+
+document.getElementById('rateSlider').oninput  = e => { document.getElementById('rateVal').textContent  = (+e.target.value).toFixed(1); };
+document.getElementById('pitchSlider').oninput = e => { document.getElementById('pitchVal').textContent = (+e.target.value).toFixed(1); };
+
+function initVoice() {
+  const voices = speechSynthesis.getVoices();
+  const pref = ['Samantha','Karen','Moira','Google US English'];
+  for (const name of pref) {
+    const v = voices.find(v => v.name === name);
+    if (v) { selectedVoice = v; return; }
+  }
+  selectedVoice = voices.find(v => v.lang.startsWith('en-US')) || voices[0] || null;
+}
+speechSynthesis.onvoiceschanged = initVoice;
+initVoice();
+
+function makeCard(item, gridId) {
+  const grid = document.getElementById(gridId);
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'card-' + item.word;
+  div.innerHTML = `
+    <div class="word">${item.word}</div>
+    <div class="tts-text">"${item.tts}"</div>
+    <div class="dur empty" id="dur-${item.word}">—</div>
+  `;
+  div.onclick = () => measureOne(item);
+  grid.appendChild(div);
+}
+
+Object.entries(WORDS).forEach(([group, items]) => {
+  items.forEach(item => makeCard(item, 'grid-' + group));
+});
+
+function measureOne(item) {
+  return new Promise(resolve => {
+    initVoice();
+    const card = document.getElementById('card-' + item.word);
+    const durEl = document.getElementById('dur-' + item.word);
+    card.classList.add('speaking');
+    card.classList.remove('done');
+    durEl.textContent = '計測中…';
+    durEl.className = 'dur';
+
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(item.tts);
+    u.lang = 'en-US';
+    u.rate = getRate();
+    u.pitch = getPitch();
+    if (selectedVoice) u.voice = selectedVoice;
+
+    const start = performance.now();
+    u.onstart = () => {};
+    u.onend = () => {
+      const ms = Math.round(performance.now() - start);
+      results[item.word] = ms;
+      durEl.textContent = ms + ' ms';
+      durEl.className = 'dur';
+      card.classList.remove('speaking');
+      card.classList.add('done');
+      document.getElementById('status').textContent = `"${item.word}" → ${ms}ms`;
+      updateSummary();
+      resolve(ms);
+    };
+    u.onerror = () => {
+      durEl.textContent = 'エラー';
+      card.classList.remove('speaking');
+      resolve(null);
+    };
+    speechSynthesis.speak(u);
+  });
+}
+
+async function measureAll() {
+  clearAll();
+  const all = [...WORDS.sq, ...WORDS.num, ...WORDS.other];
+  document.getElementById('status').textContent = '計測中... しばらくお待ちください';
+  for (const item of all) {
+    await measureOne(item);
+    await new Promise(r => setTimeout(r, 150));
+  }
+  document.getElementById('status').textContent = '全計測完了！';
+}
+
+function clearAll() {
+  Object.keys(results).forEach(k => delete results[k]);
+  document.querySelectorAll('.dur').forEach(el => {
+    el.textContent = '—';
+    el.className = 'dur empty';
+  });
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('speaking','done'));
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('status').textContent = 'クリックで個別計測、または「全部まとめて計測」';
+}
+
+function updateSummary() {
+  const entries = Object.entries(results).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) { document.getElementById('summary').style.display = 'none'; return; }
+  document.getElementById('summary').style.display = 'block';
+  const max = Math.max(...entries.map(e => e[1]));
+  const allItems = [...WORDS.sq, ...WORDS.num, ...WORDS.other];
+  const tbody = document.getElementById('summary-body');
+  tbody.innerHTML = entries.map(([word, ms]) => {
+    const item = allItems.find(i => i.word === word);
+    const pct = Math.round(ms / max * 100);
+    const barW = Math.round(pct * 80 / 100);
+    return `<tr>
+      <td><strong>${word}</strong></td>
+      <td style="font-family:var(--font-mono);color:var(--color-text-secondary)">"${item?.tts || word}"</td>
+      <td>${ms}ms</td>
+      <td><span class="bar" style="width:${barW}px"></span> ${pct}%</td>
+    </tr>`;
+  }).join('');
+}
+</script>

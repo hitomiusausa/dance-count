@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>シンプル再生 | Dance Count</title>
+  <script>
+    if (location.protocol === 'file:') {
+      location.replace('http://localhost:4173/public/practice.html');
+    }
+  </script>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; color: #182136; background: #f3f5f9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 85% 0%, #e9efff 0, transparent 34rem), #f3f5f9; }
+    button, input, select { font: inherit; }
+    :focus-visible { outline: 3px solid #315fe84d; outline-offset: 2px; }
+    .app { width: min(800px, 100%); margin: auto; padding: 28px 18px 70px; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: clamp(24px, 6vw, 38px); letter-spacing: -.03em; }
+    .tagline { margin: 0; color: #687186; font-size: 13px; }
+    .ui-locale { width: 150px; margin: 0 0 14px auto; }
+    .card { background: #ffffffed; border: 1px solid #dce1ea; border-radius: 24px; box-shadow: 0 16px 45px #20335a12; padding: clamp(18px, 4vw, 30px); backdrop-filter: blur(8px); }
+    .selectors { display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 14px; }
+    [hidden] { display: none !important; }
+    .routine-picker { grid-column: 2 / 4; }
+    .routine-notice { margin: 14px 0 0; padding: 9px 11px; border-radius: 9px; color: #765516; background: #fff7df; font-size: 11px; line-height: 1.55; }
+    .routine-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 14px; padding: 13px; border: 1px solid #dde3ed; border-radius: 12px; background: #f8faff; }
+    .range-summary { grid-column: 1 / -1; margin: 0; color: #526078; font-size: 11px; font-weight: 700; }
+    .routine-overview { margin-top: 12px; padding: 13px; border: 1px solid #dde3ed; border-radius: 13px; background: white; }
+    .routine-overview-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+    .routine-overview-head strong { font-size: 13px; }
+    .routine-overview-head span { color: #748096; font-size: 10px; }
+    .routine-figure-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 250px; overflow-y: auto; padding: 2px; }
+    .routine-figure-button { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 7px; min-width: 0; padding: 8px 9px; border: 1px solid #e0e5ed; border-radius: 9px; color: #364258; background: #f9fafc; text-align: left; cursor: pointer; }
+    .routine-figure-button:hover { border-color: #aebff4; background: #f2f5ff; }
+    .routine-figure-button.in-range { border-color: #cfdaef; background: #f7f9ff; }
+    .routine-figure-button.current { color: #244fc9; border-color: #315fe8; background: #edf2ff; box-shadow: inset 0 0 0 1px #315fe8; }
+    .routine-figure-button .index { color: #7c879b; font-size: 10px; font-weight: 800; }
+    .routine-figure-button .name { overflow: hidden; font-size: 11px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .routine-figure-button .figure-counts { color: #69758b; font-size: 10px; font-weight: 800; }
+    label { display: grid; gap: 6px; color: #657086; font-size: 13px; font-weight: 650; }
+    select, input[type="number"] { width: 100%; min-height: 44px; border: 1px solid #bdc6d5; border-radius: 11px; padding: 11px 12px; color: #172136; background: #fff; }
+    select:hover { border-color: #8e9bb2; }
+    .stage { margin-top: 20px; padding: 34px 18px 24px; border: 1px solid #e0e6f0; border-radius: 18px; text-align: center; background: linear-gradient(180deg, #f9fbff, #fff); }
+    .dance-name { color: #5d6780; font-size: 14px; font-weight: 700; }
+    .structure { min-height: 22px; margin-top: 8px; color: #59657c; font-size: 13px; font-weight: 700; }
+    .figure-position { min-height: 18px; margin-top: 4px; color: #7a8498; font-size: 11px; font-weight: 700; }
+    .counts { min-height: 86px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+    .count { min-width: 44px; padding: 8px 7px; border-radius: 12px; font-size: clamp(32px, 8vw, 52px); font-weight: 820; line-height: 1; transition: .08s ease; }
+    .count.subdivision { min-width: 30px; font-size: clamp(24px, 6vw, 38px); color: #69738a; }
+    .count.active { color: white; background: #315fe8; transform: translateY(-3px) scale(1.05); box-shadow: 0 7px 18px #315fe84a; }
+    .group-separator { align-self: stretch; width: 1px; min-height: 54px; margin: 0 9px; background: #d8dde7; }
+    .now { min-height: 24px; color: #315fe8; font-weight: 750; }
+    .progress { height: 5px; overflow: hidden; border-radius: 10px; background: #e7eaf0; }
+    .progress > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #315fe8, #7a68ef); transition: width .08s linear; }
+    .tempo { margin-top: 26px; }
+    .tempo-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+    .tempo-value { font-size: 25px; font-weight: 800; }
+    .tempo input { width: 100%; accent-color: #315fe8; margin: 13px 0 3px; }
+    .guide { color: #70798c; font-size: 12px; }
+    .options { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 20px; margin-top: 20px; padding: 14px; border-radius: 13px; background: #f7f9fc; }
+    .check { display: flex; align-items: center; gap: 7px; color: #39445b; font-size: 14px; }
+    .check input { width: 18px; height: 18px; accent-color: #315fe8; }
+    .voice-choice { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: end; gap: 10px 14px; margin-top: 14px; padding: 14px; border: 1px solid #dce3ef; border-radius: 13px; background: #f8faff; }
+    .voice-choice a { display: inline-flex; align-items: center; min-height: 40px; color: #315fe8; font-size: 12px; font-weight: 750; }
+    .voice-choice small { grid-column: 1 / -1; color: #6f7990; font-size: 11px; line-height: 1.5; }
+    .voice-choice small.complete { color: #26734a; }
+    .transport { display: flex; justify-content: center; margin-top: 25px; }
+    .play { width: min(330px, 100%); min-height: 58px; border: 0; border-radius: 16px; background: #315fe8; color: white; font-weight: 800; font-size: 19px; cursor: pointer; box-shadow: 0 9px 22px #315fe840; }
+    .play.stop { background: #d74655; box-shadow: 0 9px 22px #d7465540; }
+    .play:disabled { opacity: .55; cursor: wait; }
+    .message { min-height: 22px; margin: 12px 0 0; text-align: center; color: #b32735; font-size: 13px; }
+    .message.info { color: #536179; }
+    .editor-link { margin: 18px 0 0; padding-top: 15px; border-top: 1px solid #e2e6ed; color: #69748a; font-size: 11px; line-height: 1.6; }
+    .editor-link a { color: #315fe8; font-weight: 800; }
+    details { margin-top: 18px; border-top: 1px solid #e2e6ed; padding-top: 16px; }
+    summary { cursor: pointer; color: #48536a; font-weight: 700; }
+    summary:hover { color: #315fe8; }
+    .advanced { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; margin-top: 15px; }
+    .advanced button { border: 0; border-radius: 9px; padding: 10px 12px; color: #2e3a53; background: #e9edf4; cursor: pointer; }
+    .offset-guide { grid-column: 1 / -1; margin: 0; color: #68738a; font-size: 12px; line-height: 1.6; }
+    .offset-scale { display: flex; justify-content: space-between; margin-top: -2px; color: #7b8497; font-size: 10px; font-weight: 600; }
+    .word-details { grid-column: 1 / -1; margin-top: 4px; padding-top: 12px; }
+    .word-offsets { display: grid; gap: 10px; margin-top: 12px; }
+    .word-offset { display: grid; grid-template-columns: 70px 1fr 58px; align-items: center; gap: 9px; }
+    .word-offset strong { color: #344058; font-size: 12px; }
+    .word-offset input { width: 100%; accent-color: #315fe8; }
+    .word-offset output { color: #5d687e; font-size: 11px; text-align: right; }
+    .word-reset { justify-self: start; border: 0; border-radius: 8px; padding: 8px 10px; color: #4c5870; background: #edf0f5; cursor: pointer; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    @media (max-width: 520px) { header { display: block; } .tagline { margin-top: 4px; } .selectors { grid-template-columns: 1fr; } .routine-picker { grid-column: auto; } .routine-range { grid-template-columns: 1fr; } .range-summary { grid-column: auto; } .routine-figure-list { grid-template-columns: 1fr; max-height: 220px; } .voice-choice { grid-template-columns: 1fr; } .voice-choice small { grid-column: auto; } .stage { padding: 28px 8px 20px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><h1 data-i18n="title">シンプル再生</h1><p class="tagline"><span data-i18n="tagline">操作を絞ったカウント練習</span> · <a href="./routine-editor.html" data-i18n="editor">一覧で練習・編集</a></p></header>
+    <label class="ui-locale"><span data-i18n="interfaceLanguage">画面表示</span><select id="uiLocale"><option value="en">English</option><option value="ja-JP">日本語</option></select></label>
+    <section class="card">
+      <div class="selectors">
+        <label><span data-i18n="practiceContent">練習内容</span><select id="practiceMode"><option value="basic" data-i18n="basicCounts">基本カウント</option><option value="routine" data-i18n="routinePractice">ルーティン練習</option></select></label>
+        <label class="basic-only"><span data-i18n="dance">種目</span><select id="dance"></select></label>
+        <label class="basic-only"><span data-i18n="count">カウント</span><select id="rhythm"></select></label>
+        <label class="routine-only routine-picker" hidden><span data-i18n="routine">ルーティン</span><select id="routine"></select></label>
+      </div>
+      <p id="routineNotice" class="routine-notice routine-only" hidden data-i18n="routineNotice">ルーティンは機械的な拍計算のみ確認済みで、ダンス内容は未監修です。現在は検証用として表示しています。</p>
+      <div class="routine-range routine-only" hidden>
+        <label><span data-i18n="startFigure">開始フィガー</span><select id="rangeStart"></select></label>
+        <label><span data-i18n="endFigure">終了フィガー</span><select id="rangeEnd"></select></label>
+        <p id="rangeSummary" class="range-summary" aria-live="polite"></p>
+      </div>
+      <section class="routine-overview routine-only" hidden aria-labelledby="routineOverviewTitle">
+        <div class="routine-overview-head"><strong id="routineOverviewTitle" data-i18n="figureList">フィガー一覧</strong><span data-i18n="chooseFigure">選ぶとそのフィガーを再生</span></div>
+        <div id="routineFigureList" class="routine-figure-list"></div>
+      </section>
+
+      <div class="stage">
+        <div id="danceName" class="dance-name"></div>
+        <div id="structure" class="structure"></div>
+        <div id="figurePosition" class="figure-position"></div>
+        <div id="counts" class="counts" aria-live="polite"></div>
+        <div id="now" class="now" aria-live="polite" data-i18n="idleCounts">再生するとカウントが光ります</div>
+        <div id="progressTrack" class="progress" role="progressbar" aria-label="再生の進み具合" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress"></span></div>
+      </div>
+
+      <div class="tempo">
+        <div class="tempo-head"><label for="bpm" data-i18n="practiceSpeed">練習速度</label><div><span id="bpmValue" class="tempo-value"></span> BPM</div></div>
+        <input id="bpm" type="range" min="40" max="220" step="1">
+        <div id="tempoGuide" class="guide"></div>
+      </div>
+
+      <div class="options">
+        <label class="check"><input id="loop" type="checkbox" checked><span data-i18n="loop">繰り返す</span></label>
+        <label class="check"><input id="metronome" type="checkbox" checked><span data-i18n="metronome">メトロノーム</span></label>
+        <label><span data-i18n="countIn">カウントイン</span>
+          <select id="countIn">
+            <option value="0" data-i18n="none">なし</option>
+            <option value="1" selected data-i18n="oneBar">1小節</option>
+            <option value="2" data-i18n="twoBars">2小節</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="voice-choice">
+        <label><span data-i18n="voice">再生する音声</span><select id="voicePackChoice"><option value="standard" data-i18n="standardVoice">標準音声</option></select></label>
+        <a href="./voice-recorder.html" data-i18n="manageVoice">録音・音声パック管理</a>
+        <small id="voiceChoiceHint" data-i18n="standardVoiceHint">標準音声は拍に合わせて調整済みです。</small>
+      </div>
+
+      <div class="transport"><button id="play" class="play">▶ 1小節数えて再生</button></div>
+      <p id="message" class="message" role="alert"></p>
+
+      <p class="editor-link"><span data-i18n="editorHelp">音声タイミングやフィガーを詳しく調整する場合は、</span><a href="./routine-editor.html" data-i18n="editor">一覧で練習・編集</a></p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { DANCE_PROFILES } from '../src/v2/dance-profiles.js';
+    import { compileRhythm, compileRoutine } from '../src/v2/rhythm-compiler.js';
+    import { loadVoicePack } from '../src/v2/voice-pack-loader.js?v=20260713-overlap-fade';
+    import { PracticeAudioEngine } from '../src/v2/audio-engine.js?v=20260713-overlap-fade';
+    import { figureRangeTicks, normalizeFigureRange } from '../src/v2/practice-range.js';
+    import { readRoutineDraft } from '../src/v2/routine-draft.js';
+    import { decodeRecordedVoicePack, recordedPackProgress } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
+    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
+    import { createPracticeTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260713-global-4';
+    import { figureDisplayName } from '../src/v2/figure-terminology.js?v=20260713-verified-1';
+
+    const $ = selector => document.querySelector(selector);
+    let translator = createPracticeTranslator(localStorage.getItem(UI_LOCALE_STORAGE_KEY) || navigator.language);
+    const t = (key, variables) => translator.t(key, variables);
+    const recordedLanguage = pack => vocabularyDisplayName(getCountVocabulary(pack?.vocabularyId ?? pack?.locale), translator.locale);
+    const localizedFigureName = name => figureDisplayName(activeRoutine?.danceId ?? compiled?.profile?.id, name, translator.locale);
+    const danceSelect = $('#dance');
+    const rhythmSelect = $('#rhythm');
+    const modeSelect = $('#practiceMode');
+    const routineSelect = $('#routine');
+    const playButton = $('#play');
+    const preferencesKey = 'dance-count-v2-preferences';
+    const preferences = loadPreferences();
+    let audioContext;
+    let voicePack;
+    let engine;
+    let compiled;
+    let firstDanceLoad = true;
+    let voiceOffsetMs = Number(preferences.voiceOffsetMs ?? 0);
+    let wordOffsetsMs = { ...(preferences.wordOffsetsMs ?? {}) };
+    let voiceTimingAdjustedAt = preferences.voiceTimingAdjustedAt ?? null;
+    let routines = [];
+    let activeRoutine = null;
+    let displayedFigureIndex = null;
+    let routineRanges = { ...(preferences.routineRanges ?? {}) };
+    let storageWarning = '';
+    let routineLoadError = '';
+    let recordedVoicePack = null;
+    let recordedPacks = [];
+    let recordedVoiceRevision = null;
+    let voiceOptionInitialized = false;
+
+    try {
+      const routineResponse = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' });
+      if (!routineResponse.ok) throw new Error(`HTTP ${routineResponse.status}`);
+      const report = await routineResponse.json();
+      routines = report.routines.filter(routine => routine.status === 'mechanically-valid-unreviewed');
+    } catch (error) {
+      routineLoadError = t('routineLoadError', { message: error.message });
+    }
+
+    applyUiLocale();
+    populateDanceOptions();
+    danceSelect.value = preferences.danceId in DANCE_PROFILES ? preferences.danceId : 'waltz';
+    modeSelect.value = preferences.practiceMode === 'routine' && routines.length ? 'routine' : 'basic';
+    modeSelect.querySelector('option[value="routine"]').disabled = !routines.length;
+    populateRoutineOptions();
+    if (routines.some(routine => routine.id === preferences.routineId)) routineSelect.value = preferences.routineId;
+    $('#loop').checked = preferences.loop ?? true;
+    $('#metronome').checked = preferences.metronome ?? true;
+    $('#countIn').value = String(preferences.countInBars ?? (preferences.countIn === false ? 0 : 1));
+    await refreshRecordedVoiceOption();
+
+    function applyUiLocale() {
+      document.documentElement.lang = translator.locale;
+      document.title = `${t('title')} | Dance Count`;
+      $('#uiLocale').value = translator.locale;
+      document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+      $('#progressTrack').setAttribute('aria-label', t('playbackProgress'));
+    }
+
+    function populateDanceOptions() {
+      const selected = danceSelect.value;
+      danceSelect.replaceChildren(...Object.values(DANCE_PROFILES).map(profile => new Option(danceDisplayName(profile.id, translator.locale), profile.id)));
+      if (selected in DANCE_PROFILES) danceSelect.value = selected;
+    }
+
+    function populateRoutineOptions() {
+      const selected = routineSelect.value;
+      routineSelect.replaceChildren(...routines.map(routine => new Option(`${routine.name} (${routine.figureCount} ${t(routine.figureCount === 1 ? 'figureSingular' : 'figurePlural')})`, routine.id)));
+      if (routines.some(routine => routine.id === selected)) routineSelect.value = selected;
+    }
+
+    function loadPreferences() {
+      try { return JSON.parse(localStorage.getItem(preferencesKey)) ?? {}; }
+      catch { return {}; }
+    }
+
+    function savePreferences() {
+      try {
+        localStorage.setItem(preferencesKey, JSON.stringify({
+          schemaVersion: 2,
+          practiceMode: modeSelect.value,
+          danceId: danceSelect.value,
+          routineId: routineSelect.value,
+          counts: rhythmSelect.value,
+          bpm: Number($('#bpm').value),
+          loop: $('#loop').checked,
+          metronome: $('#metronome').checked,
+          countInBars: Number($('#countIn').value),
+          voiceOffsetMs,
+          voicePackId: $('#voicePackChoice').value,
+          wordOffsetsMs,
+          voiceTimingAdjustedAt,
+          routineRanges
+        }));
+        storageWarning = '';
+      } catch {
+        storageWarning = t('storageError');
+        showPassiveMessage();
+      }
+    }
+
+    function showPassiveMessage() {
+      const text = storageWarning || routineLoadError;
+      if (!engine?.playing) {
+        $('#message').textContent = text;
+        $('#message').classList.toggle('info', Boolean(text));
+      }
+    }
+
+    async function refreshRecordedVoiceOption() {
+      const select = $('#voicePackChoice');
+      const requested = voiceOptionInitialized
+        ? select.value
+        : preferences.voicePackId === 'recorded' ? `recorded:${LOCAL_RECORDED_PACK_ID}` : preferences.voicePackId;
+      try {
+        recordedPacks = await listLocalRecordedPacks();
+        select.querySelectorAll('option[value^="recorded:"]').forEach(option => option.remove());
+        for (const loaded of recordedPacks.sort((a, b) => (a.locale ?? 'en').localeCompare(b.locale ?? 'en'))) {
+          const progress = recordedPackProgress(loaded);
+          const language = recordedLanguage(loaded);
+          const option = new Option(t('voiceOption', { name: loaded.name, language, recorded: progress.recorded }), `recorded:${loaded.id}`);
+          option.disabled = !progress.complete;
+          select.add(option);
+        }
+        if (requested && [...select.options].some(option => option.value === requested && !option.disabled)) select.value = requested;
+        else select.value = 'standard';
+        recordedVoicePack = select.value.startsWith('recorded:')
+          ? recordedPacks.find(item => `recorded:${item.id}` === select.value) ?? null
+          : null;
+        const progress = recordedPackProgress(recordedVoicePack);
+        const completePackCount = recordedPacks.filter(item => recordedPackProgress(item).complete).length;
+        $('#voiceChoiceHint').textContent = recordedVoicePack
+          ? t('voiceRecordedHint', { language: recordedLanguage(recordedVoicePack) })
+          : completePackCount ? t('voiceCompleteHint') : recordedPacks.length ? t('voiceIncompleteHint') : t('voiceNoneHint');
+        $('#voiceChoiceHint').classList.toggle('complete', progress.complete);
+        const committed = recordedVoicePack?.timingAdjustments;
+        if (committed?.adjustedAt && committed.adjustedAt !== voiceTimingAdjustedAt) {
+          voiceOffsetMs = Number(committed.globalOffsetMs);
+          wordOffsetsMs = { ...committed.wordOffsetsMs };
+          voiceTimingAdjustedAt = committed.adjustedAt;
+          if (voiceOptionInitialized) savePreferences();
+        }
+        if (recordedVoicePack && recordedVoiceRevision !== recordedVoicePack.updatedAt) {
+          stop();
+          voicePack = null;
+          engine = null;
+        }
+        recordedVoiceRevision = recordedVoicePack?.updatedAt ?? null;
+      } catch {
+        recordedPacks = [];
+        recordedVoicePack = null;
+        $('#voiceChoiceHint').textContent = t('voiceStorageError');
+        $('#voiceChoiceHint').classList.remove('complete');
+      }
+      voiceOptionInitialized = true;
+    }
+
+    function updateDance() {
+      stop();
+      const profile = DANCE_PROFILES[danceSelect.value];
+      rhythmSelect.replaceChildren(...profile.templates.map(counts => new Option(friendlyCounts(counts), counts)));
+      if (firstDanceLoad && preferences.danceId === profile.id && profile.templates.includes(preferences.counts)) rhythmSelect.value = preferences.counts;
+      $('#bpm').value = firstDanceLoad && preferences.practiceMode === 'basic' && preferences.danceId === profile.id && preferences.bpm ? preferences.bpm : profile.practiceBpm;
+      firstDanceLoad = false;
+      updatePattern();
+    }
+
+    function updateMode() {
+      stop();
+      const routineMode = modeSelect.value === 'routine';
+      document.querySelectorAll('.basic-only').forEach(element => { element.hidden = routineMode; });
+      document.querySelectorAll('.routine-only').forEach(element => { element.hidden = !routineMode; });
+      if (routineMode) updateRoutine();
+      else updateDance();
+      savePreferences();
+      showPassiveMessage();
+    }
+
+    function routineDraft(source) {
+      return readRoutineDraft(localStorage, `dance-count-v2-routine-draft:${source.id}`, source);
+    }
+
+    function updateRoutine() {
+      stop();
+      const source = routines.find(routine => routine.id === routineSelect.value) ?? routines[0];
+      if (!source) {
+        $('#message').textContent = t('noRoutine');
+        return;
+      }
+      activeRoutine = routineDraft(source);
+      compiled = compileRoutine({ danceId: activeRoutine.danceId, figures: activeRoutine.figures });
+      $('#bpm').value = activeRoutine.bpm ?? compiled.profile.practiceBpm;
+      displayedFigureIndex = null;
+      renderRoutineRange();
+      updateTempo();
+      savePreferences();
+    }
+
+    function renderRoutineRange() {
+      const saved = routineRanges[activeRoutine.id] ?? {};
+      const range = normalizeFigureRange(compiled.figures.length, saved.startIndex, saved.endIndex ?? compiled.figures.length - 1);
+      const options = compiled.figures.map((figure, index) => new Option(t('figureOption', { index: index + 1, name: localizedFigureName(figure.name) }), String(index)));
+      $('#rangeStart').replaceChildren(...options.map(option => option.cloneNode(true)));
+      $('#rangeEnd').replaceChildren(...options);
+      $('#rangeStart').value = String(range.startIndex);
+      $('#rangeEnd').value = String(range.endIndex);
+      renderRoutineOverview();
+      updateRoutineRange(false);
+    }
+
+    function renderRoutineOverview() {
+      $('#routineFigureList').replaceChildren(...compiled.figures.map((figure, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'routine-figure-button';
+        button.dataset.figureIndex = index;
+        const displayName = localizedFigureName(figure.name);
+        button.innerHTML = `<span class="index">${index + 1}</span><span class="name">${escapeHtml(displayName)}</span><span class="figure-counts">${escapeHtml(activeRoutine.figures[index]?.counts ?? '')}</span>`;
+        button.setAttribute('aria-label', t('chooseOnly', { index: index + 1, name: displayName }));
+        button.addEventListener('click', () => {
+          $('#rangeStart').value = String(index);
+          $('#rangeEnd').value = String(index);
+          updateRoutineRange();
+        });
+        return button;
+      }));
+    }
+
+    function updateRoutineRange(shouldSave = true) {
+      stop();
+      const range = normalizeFigureRange(compiled.figures.length, Number($('#rangeStart').value), Number($('#rangeEnd').value));
+      $('#rangeStart').value = String(range.startIndex);
+      $('#rangeEnd').value = String(range.endIndex);
+      const ticks = figureRangeTicks(compiled, range);
+      routineRanges[activeRoutine.id] = range;
+      const figureCount = range.endIndex - range.startIndex + 1;
+      $('#rangeSummary').textContent = t('rangeSummary', { figures: figureCount, figureWord: t(figureCount === 1 ? 'figureSingular' : 'figurePlural'), beats: (ticks.endTick - ticks.startTick) / 960 });
+      renderRoutineFigure(range.startIndex);
+      updatePlayLabel();
+      if (shouldSave) savePreferences();
+    }
+
+    function updatePattern() {
+      stop();
+      const profile = DANCE_PROFILES[danceSelect.value];
+      compiled = compileRhythm({ danceId: profile.id, counts: rhythmSelect.value });
+      $('#danceName').textContent = t('meter', { dance: danceDisplayName(profile.id, translator.locale), beats: profile.beatsPerBar });
+      $('#structure').textContent = structureLabel(profile.id, rhythmSelect.value);
+      $('#figurePosition').textContent = '';
+      const separators = groupSeparators(profile.id, rhythmSelect.value);
+      renderCountEvents(compiled.events, separators);
+      updateTempo();
+      savePreferences();
+    }
+
+    function renderCountEvents(events, separators = []) {
+      const countNodes = [];
+      events.forEach((event, index) => {
+        const span = document.createElement('span');
+        span.className = `count ${['&', 'a', 'e'].includes(event.token) ? 'subdivision' : ''}`;
+        span.textContent = displayToken(event.token);
+        span.dataset.absoluteTick = event.absoluteTick;
+        countNodes.push(span);
+        if (separators.includes(index)) {
+          const separator = document.createElement('span');
+          separator.className = 'group-separator';
+          separator.setAttribute('aria-hidden', 'true');
+          countNodes.push(separator);
+        }
+      });
+      $('#counts').replaceChildren(...countNodes);
+    }
+
+    function renderRoutineFigure(index) {
+      const figure = compiled.figures[index];
+      if (!figure) return;
+      displayedFigureIndex = index;
+      const events = compiled.events.filter(event => event.figureIndex === index);
+      $('#danceName').textContent = `${danceDisplayName(compiled.profile.id, translator.locale)} · ${activeRoutine.name}`;
+      const savedRange = routineRanges[activeRoutine.id] ?? {};
+      const range = normalizeFigureRange(compiled.figures.length, savedRange.startIndex, savedRange.endIndex ?? compiled.figures.length - 1);
+      const next = index < range.endIndex ? compiled.figures[index + 1] : null;
+      $('#structure').textContent = next
+        ? t('nextFigure', { figure: localizedFigureName(figure.name), next: localizedFigureName(next.name) })
+        : t($('#loop').checked ? 'rangeLoop' : 'rangeEnd', { figure: localizedFigureName(figure.name) });
+      $('#figurePosition').textContent = t('figurePosition', { index: index + 1, total: compiled.figures.length, start: range.startIndex + 1, end: range.endIndex + 1 });
+      document.querySelectorAll('.routine-figure-button').forEach((button, buttonIndex) => {
+        button.classList.toggle('current', buttonIndex === index);
+        button.classList.toggle('in-range', buttonIndex >= range.startIndex && buttonIndex <= range.endIndex);
+        button.setAttribute('aria-current', buttonIndex === index ? 'true' : 'false');
+      });
+      renderCountEvents(events);
+    }
+
+    function updateTempo() {
+      const profile = compiled?.profile ?? DANCE_PROFILES[danceSelect.value];
+      const bpm = Number($('#bpm').value);
+      $('#bpmValue').textContent = bpm;
+      const percent = Math.round(bpm / profile.competitionBpm.min * 100);
+      $('#tempoGuide').textContent = t('tempoGuide', { min: profile.competitionBpm.min, max: profile.competitionBpm.max, percent });
+      savePreferences();
+    }
+
+    function friendlyCounts(value) {
+      return value.replaceAll('S', 'Slow ').replaceAll('Q', 'Quick ').replaceAll('&', ' & ').replaceAll('a', ' a ').trim();
+    }
+
+    function displayToken(token) {
+      return token === 'S' ? 'S' : token === 'Q' ? 'Q' : token;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    }
+
+    function structureLabel(danceId, counts) {
+      if (danceId === 'jive' && counts === '123a45a6') return t('jiveStructure');
+      if (danceId === 'chacha' && counts === '234&1') return t('chachaStructure');
+      if (danceId === 'slowfox' || danceId === 'quickstep' || danceId === 'tango') return t('sqStructure');
+      if (danceId === 'samba' && counts === '1a2') return t('sambaStructure');
+      return '';
+    }
+
+    function groupSeparators(danceId, counts) {
+      if (danceId === 'jive' && counts === '123a45a6') return [1, 4];
+      if (danceId === 'chacha' && counts === '234&1') return [1];
+      return [];
+    }
+
+    async function prepareAudio() {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      await audioContext.resume();
+      if (!voicePack) {
+        $('#message').textContent = t('preparingAudio');
+        voicePack = $('#voicePackChoice').value.startsWith('recorded:')
+          ? await decodeRecordedVoicePack(audioContext, recordedVoicePack)
+          : await loadVoicePack(audioContext, new URL('./audio/default-en-female-v1/manifest.json', location.href));
+      }
+      if (!engine) engine = new PracticeAudioEngine(audioContext, { voicePack, onFrame });
+    }
+
+    async function start() {
+      playButton.disabled = true;
+      try {
+        await prepareAudio();
+        $('#message').textContent = '';
+        $('#message').classList.remove('info');
+        engine.start({
+          compiled,
+          bpm: Number($('#bpm').value),
+          loop: $('#loop').checked,
+          metronome: $('#metronome').checked,
+          voiceOffsetMs,
+          wordOffsetsMs,
+          countInBars: Number($('#countIn').value),
+          ...(modeSelect.value === 'routine' ? (() => {
+            const range = figureRangeTicks(compiled, routineRanges[activeRoutine.id]);
+            return { rangeStartTick: range.startTick, rangeEndTick: range.endTick };
+          })() : {})
+        });
+        playButton.textContent = t('stop');
+        playButton.classList.add('stop');
+      } catch (error) {
+        $('#message').textContent = t('playError', { message: error.message });
+      } finally {
+        playButton.disabled = false;
+      }
+    }
+
+    function stop() {
+      engine?.stop();
+      updatePlayLabel();
+      playButton.classList.remove('stop');
+      $('#progress').style.width = '0%';
+      $('#progressTrack').setAttribute('aria-valuenow', '0');
+      document.querySelectorAll('.count.active').forEach(node => node.classList.remove('active'));
+      $('#now').textContent = t('idleCounts');
+    }
+
+    function updatePlayLabel() {
+      const bars = Number($('#countIn').value);
+      const action = modeSelect.value === 'routine' ? t('playRange').replace(/^▶\s*/, '') : t('play').replace(/^▶\s*/, '');
+      const barWord = bars === 1 ? 'bar' : 'bars';
+      playButton.textContent = bars ? t('playAfterBars', { bars, barWord, action }) : modeSelect.value === 'routine' ? t('playRange') : t('play');
+    }
+
+    function onFrame({ playing, event, progress, countIn, iteration = 0 }) {
+      if (!playing) {
+        updatePlayLabel();
+        playButton.classList.remove('stop');
+        return;
+      }
+      $('#progress').style.width = `${progress * 100}%`;
+      $('#progressTrack').setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+      if (modeSelect.value === 'routine' && event && displayedFigureIndex !== event.figureIndex) renderRoutineFigure(event.figureIndex);
+      document.querySelectorAll('.count').forEach(node => node.classList.toggle('active', event && Number(node.dataset.absoluteTick) === event.absoluteTick));
+      $('#now').textContent = countIn
+        ? t('countInStatus')
+        : event
+          ? `${event.figureName ? `${localizedFigureName(event.figureName)} · ` : t('current')}${displayToken(event.token)}${$('#loop').checked ? t('loopNumber', { iteration: iteration + 1 }) : ''}`
+          : '';
+    }
+
+    $('#uiLocale').addEventListener('change', async event => {
+      stop();
+      translator = createPracticeTranslator(event.target.value);
+      localStorage.setItem(UI_LOCALE_STORAGE_KEY, translator.locale);
+      applyUiLocale();
+      populateDanceOptions();
+      populateRoutineOptions();
+      await refreshRecordedVoiceOption();
+      if (modeSelect.value === 'routine') updateRoutine();
+      else updatePattern();
+      updatePlayLabel();
+    });
+    modeSelect.addEventListener('change', updateMode);
+    danceSelect.addEventListener('change', updateDance);
+    rhythmSelect.addEventListener('change', updatePattern);
+    routineSelect.addEventListener('change', updateRoutine);
+    $('#rangeStart').addEventListener('change', () => updateRoutineRange());
+    $('#rangeEnd').addEventListener('change', () => updateRoutineRange());
+    $('#bpm').addEventListener('input', updateTempo);
+    $('#bpm').addEventListener('change', () => { if (engine?.playing) start(); });
+    $('#loop').addEventListener('change', () => {
+      savePreferences();
+      if (modeSelect.value === 'routine' && displayedFigureIndex !== null) renderRoutineFigure(displayedFigureIndex);
+    });
+    $('#metronome').addEventListener('change', savePreferences);
+    $('#countIn').addEventListener('change', () => {
+      savePreferences();
+      if (!engine?.playing) updatePlayLabel();
+    });
+    playButton.addEventListener('click', () => engine?.playing ? stop() : start());
+    $('#voicePackChoice').addEventListener('change', async () => {
+      stop();
+      voicePack = null;
+      engine = null;
+      await refreshRecordedVoiceOption();
+      savePreferences();
+      $('#message').textContent = recordedVoicePack ? t('usingRecorded', { language: recordedLanguage(recordedVoicePack) }) : t('usingStandard');
+      $('#message').classList.add('info');
+    });
+    addEventListener('focus', refreshRecordedVoiceOption);
+
+    updatePlayLabel();
+    updateMode();
+  </script>
+</body>
+</html>
