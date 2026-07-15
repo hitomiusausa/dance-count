@@ -21,7 +21,7 @@
     header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
     h1 { margin: 0; font-size: clamp(24px, 6vw, 38px); letter-spacing: -.03em; }
     .tagline-group { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-    .tagline { margin: 0; color: #687186; font-size: 13px; text-align: right; }
+    .tagline { margin: 0; color: var(--dc-text-sub); font-size: 13px; text-align: right; }
     .ui-locale { display: flex; margin: 0 0 14px auto; }
     .card { background: #ffffffed; border: 1px solid #dce1ea; border-radius: 24px; box-shadow: 0 16px 45px #20335a12; padding: clamp(18px, 4vw, 30px); backdrop-filter: blur(8px); }
     .selectors { display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 14px; }
@@ -65,8 +65,8 @@
     .options { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 20px; margin-top: 20px; padding: 14px; border-radius: 13px; background: #f7f9fc; }
     .count-in-label { min-width: 130px; }
     .voice-choice { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: end; gap: 10px 14px; margin-top: 14px; padding: 14px; border: 1px solid #dce3ef; border-radius: 13px; background: #f8faff; }
-    .voice-choice a { display: inline-flex; align-items: center; min-height: 40px; color: #315fe8; font-size: 12px; font-weight: 750; }
-    .voice-choice small { grid-column: 1 / -1; color: #6f7990; font-size: 11px; line-height: 1.5; }
+    .voice-choice a { display: inline-flex; align-items: center; min-height: var(--dc-tap); color: #315fe8; font-size: 12px; font-weight: 750; }
+    .voice-choice small { grid-column: 1 / -1; color: var(--dc-text-sub); font-size: 11px; line-height: 1.5; }
     .voice-choice small.complete { color: #26734a; }
     .play { width: min(420px, 100%); }
     .play.stop { background: #d74655; box-shadow: 0 9px 22px #d7465540; }

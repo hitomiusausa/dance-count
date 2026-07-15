@@ -22,10 +22,10 @@
     .notice { margin: 18px 0; padding: 12px 15px; border: 1px solid #ead4a1; border-radius: 11px; color: #684b11; background: #fff9e7; font-size: 13px; line-height: 1.6; }
     .top { display: grid; grid-template-columns: 1.2fr 1fr; gap: 13px; padding: 18px; border: 1px solid #dce2eb; border-radius: 15px; background: white; }
     label { display: grid; gap: 6px; color: #647087; font-size: 12px; font-weight: 700; }
-    select, input { width: 100%; padding: 10px 11px; border: 1px solid #bdc6d5; border-radius: 9px; color: #182238; background: white; }
+    select, input { width: 100%; min-height: var(--dc-tap); padding: 10px 11px; border: 1px solid #bdc6d5; border-radius: 9px; color: #182238; background: white; }
     .counts[readonly] { color: #44516a; border-color: #d4dae5; background: #f3f5f8; cursor: default; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
-    button { padding: 9px 13px; border: 1px solid #c6cfdd; border-radius: 9px; color: #334057; background: white; cursor: pointer; }
+    button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--dc-tap); padding: 9px 13px; border: 1px solid #c6cfdd; border-radius: 9px; color: #334057; background: white; cursor: pointer; }
     button:disabled { opacity: .4; cursor: default; }
     button.primary { color: white; border-color: #315fe8; background: #315fe8; font-weight: 800; }
     button.danger { color: #9a3541; }
@@ -37,7 +37,7 @@
     .load-error a { display: inline-block; margin-top: 8px; padding: 8px 12px; border-radius: 8px; color: white; background: #315fe8; font-weight: 800; text-decoration: none; }
     .list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 22px 2px 10px; }
     .list-head h2 { margin: 0; font-size: 19px; }
-    .list-head span { color: #68748a; font-size: 13px; font-weight: 750; }
+    .list-head span { color: var(--dc-text-sub); font-size: 13px; font-weight: 750; }
     .figures { display: grid; gap: 11px; padding-left: 52px; }
     .figure { position: relative; display: grid; gap: 8px; padding: 12px 13px; border: 1px solid #dce2eb; border-radius: 12px; background: white; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .12s; }
     .figure-summary { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: var(--dc-tap); padding: 4px 2px; border: 0; background: transparent; color: var(--dc-text); font-size: 15px; font-weight: 750; text-align: left; cursor: pointer; }
@@ -91,10 +91,10 @@
     .check { display: flex; align-items: center; gap: 7px; min-height: 40px; color: #3b475e; font-size: 13px; }
     .check input { width: 18px; accent-color: #315fe8; }
     .timing-details { margin-top: 13px; padding-top: 12px; border-top: 1px solid #e1e6ee; }
-    .timing-details summary { cursor: pointer; color: #4b5870; font-size: 13px; font-weight: 800; }
+    .timing-details summary { display: flex; align-items: center; min-height: var(--dc-tap); cursor: pointer; color: #4b5870; font-size: 13px; font-weight: 800; }
     .timing-grid { display: grid; grid-template-columns: minmax(230px, 1fr) auto; align-items: end; gap: 10px 14px; margin-top: 13px; }
-    .timing-guide { grid-column: 1 / -1; margin: 0; color: #6c778d; font-size: 11px; line-height: 1.6; }
-    .offset-scale { display: flex; justify-content: space-between; color: #7b8497; font-size: 10px; }
+    .timing-guide { grid-column: 1 / -1; margin: 0; color: var(--dc-text-sub); font-size: 11px; line-height: 1.6; }
+    .offset-scale { display: flex; justify-content: space-between; color: var(--dc-text-sub); font-size: 10px; }
     .word-offset-heading { grid-column: 1 / -1; padding-top: 4px; color: #4d5a71; font-size: 12px; font-weight: 800; }
     .word-offsets { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 16px; padding-top: 2px; }
     .word-offset { display: grid; grid-template-columns: 60px 1fr 55px auto; align-items: center; gap: 8px; }
@@ -105,7 +105,7 @@
     .timing-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
     .commit-timing { color: white; border-color: #287552; background: #287552; font-weight: 850; }
     .commit-timing:disabled { color: #7c879a; border-color: #d6dce6; background: #edf0f4; }
-    .commit-hint { grid-column: 1 / -1; margin: -2px 0 0; color: #6c778d; font-size: 11px; line-height: 1.5; text-align: right; }
+    .commit-hint { grid-column: 1 / -1; margin: -2px 0 0; color: var(--dc-text-sub); font-size: 11px; line-height: 1.5; text-align: right; }
     .commit-hint.saved { color: #287552; font-weight: 750; }
     .advanced-settings { margin: 18px 0 0; padding: 4px 0 0; border-top: 1px solid #e2e6ed; }
     .advanced-settings > summary { display: flex; align-items: center; gap: 8px; min-height: var(--dc-tap); cursor: pointer; color: var(--dc-text-sub); font-weight: 800; list-style: none; }
@@ -132,7 +132,7 @@
 </head>
 <body>
   <main class="app">
-    <header><div><h1 data-i18n="title">ルーティン練習・編集</h1></div><a href="./practice.html" data-i18n="simplePlayer">シンプル再生へ</a></header>
+    <header><div><h1 data-i18n="title">ルーティン練習・編集</h1></div><a href="./practice.html" class="dc-btn" data-i18n="simplePlayer">シンプル再生へ</a></header>
     <label class="ui-locale"><span data-i18n="interfaceLanguage">画面表示</span><select id="uiLocale"><option value="en">English</option><option value="ja-JP">日本語</option></select></label>
     <p class="notice" data-i18n="notice">ここに表示するのは機械的に拍計算できた旧データです。ダンス内容は未監修のため、初心者向けプリセットとしてはまだ公開しません。</p>
     <section class="top">
