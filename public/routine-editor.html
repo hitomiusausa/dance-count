@@ -472,7 +472,7 @@
         if (index === expandedFigureIndex) row.classList.add('expanded');
         row.dataset.index = index;
         row.innerHTML = `<span class="number" aria-hidden="true">${index + 1}</span><button class="drag-handle" draggable="true" aria-label="${escapeHtml(t('moveFigure', { name: displayName }))}" title="${escapeHtml(t('moveTitle'))}"><svg class="dc-icon filled" aria-hidden="true"><use href="./assets/icons.svg#i-grip"/></svg></button>
-          <button class="figure-summary" type="button" aria-expanded="${index === expandedFigureIndex}"><span class="figure-summary-name">${escapeHtml(displayName)}</span><span class="figure-summary-counts">${escapeHtml(figure.counts)}</span><svg class="dc-icon small chevron" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg></button>
+          <button class="figure-summary" type="button" draggable="true" aria-expanded="${index === expandedFigureIndex}"><span class="figure-summary-name">${escapeHtml(displayName)}</span><span class="figure-summary-counts">${escapeHtml(figure.counts)}</span><svg class="dc-icon small chevron" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg></button>
           <div class="figure-detail">
             <label>${escapeHtml(t('figureLabel'))}<select class="figure-name dc-select" aria-label="${escapeHtml(t('figureLabel'))}">${figureOptions.map((option, optionIndex) => `<option value="${optionIndex}"${option.name === figure.name && option.counts === figure.counts ? ' selected' : ''}>${escapeHtml(figureDisplayName(routine.danceId, option.name, translator.locale))} (${escapeHtml(option.counts)})</option>`).join('')}</select></label>
             <label>${escapeHtml(t('countsLabel'))}<input class="counts dc-select" value="${escapeHtml(figure.counts)}" readonly aria-readonly="true"></label>
@@ -492,13 +492,17 @@
           });
         });
         const handle = row.querySelector('.drag-handle');
-        handle.addEventListener('dragstart', event => {
-          draggedFigureIndex = index;
-          row.classList.add('dragging');
-          event.dataTransfer.effectAllowed = 'move';
-          event.dataTransfer.setData('text/plain', String(index));
-        });
-        handle.addEventListener('dragend', clearDragState);
+        // マウスのHTML5ドラッグはハンドルと行本体（summary）の両方から開始できる。
+        // タッチのポインタ操作はスクロールと競合するためハンドル限定のまま。
+        for (const dragSource of [handle, row.querySelector('.figure-summary')]) {
+          dragSource.addEventListener('dragstart', event => {
+            draggedFigureIndex = index;
+            row.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(index));
+          });
+          dragSource.addEventListener('dragend', clearDragState);
+        }
         handle.addEventListener('pointerdown', event => {
           if (event.pointerType === 'mouse') return;
           event.preventDefault();
@@ -1032,7 +1036,7 @@
       document.querySelectorAll('.dc-chip[aria-controls]').forEach(chip => chip.setAttribute('aria-expanded', 'false'));
     });
 
-    loadRoutine(sources[0].id);
+    loadRoutine(sourceById.has(selector.value) ? selector.value : sources[0].id);
   </script>
 </body>
 </html>
