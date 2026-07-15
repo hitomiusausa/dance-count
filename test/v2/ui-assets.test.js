@@ -40,3 +40,18 @@ test('routine-editor.html links the shared UI assets and labels card actions', a
   assert.ok(html.includes('icons.svg#i-copy'), 'labeled duplicate action missing');
   assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}]/u.test(html), 'no emoji allowed');
 });
+
+test('shared module cache busters stay in sync across both practice pages', async () => {
+  const pages = await Promise.all([
+    fs.readFile(path.join(root, 'public/practice.html'), 'utf8'),
+    fs.readFile(path.join(root, 'public/routine-editor.html'), 'utf8')
+  ]);
+  const versions = pages.map(html => Object.fromEntries(
+    [...html.matchAll(/src\/v2\/([\w-]+\.js)\?v=([\w-]+)/g)].map(match => [match[1], match[2]])
+  ));
+  for (const [module, version] of Object.entries(versions[0])) {
+    if (versions[1][module] !== undefined) {
+      assert.equal(versions[1][module], version, `${module} の ?v= が2ページで食い違っています`);
+    }
+  }
+});
