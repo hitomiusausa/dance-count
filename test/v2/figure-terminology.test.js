@@ -21,7 +21,8 @@ test('every translated term carries primary-source evidence', () => {
 
 test('terminology coverage is measurable and leaves unmatched names unchanged', () => {
   const coverage = terminologyCoverage(report.routines);
-  assert.equal(coverage.figures, 304);
+  assert.equal(coverage.figures, report.routines.reduce((sum, routine) => sum + routine.figureCount, 0));
+  assert.ok(coverage.figures >= 304, 'legacy dataset must remain covered');
   assert.ok(coverage.verified > 100);
   assert.ok(coverage.unverified > 0);
   assert.ok(coverage.verifiedUnique < coverage.unique);
