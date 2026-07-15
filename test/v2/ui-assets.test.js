@@ -25,3 +25,10 @@ test('ui.css defines shared tokens and component classes', async () => {
   for (const token of UI_TOKENS) assert.ok(css.includes(token), `missing token ${token}`);
   for (const className of UI_CLASSES) assert.ok(css.includes(className), `missing class ${className}`);
 });
+
+test('practice.html links the shared UI assets and has no emoji', async () => {
+  const html = await fs.readFile(path.join(root, 'public/practice.html'), 'utf8');
+  assert.ok(html.includes('assets/ui.css'), 'ui.css link missing');
+  assert.ok(html.includes('assets/icons.svg#i-globe'), 'globe icon missing');
+  assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}]/u.test(html), 'no emoji allowed');
+});
