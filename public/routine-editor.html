@@ -20,7 +20,7 @@
     .ui-locale { width: 150px; margin: 12px 0 0 auto; }
     h1 { margin: 0; font-size: clamp(24px, 5vw, 36px); }
     .notice { margin: 18px 0; padding: 12px 15px; border: 1px solid #ead4a1; border-radius: 11px; color: #684b11; background: #fff9e7; font-size: 13px; line-height: 1.6; }
-    .top { display: grid; grid-template-columns: 1.2fr 1fr .8fr; gap: 13px; padding: 18px; border: 1px solid #dce2eb; border-radius: 15px; background: white; }
+    .top { display: grid; grid-template-columns: 1.2fr 1fr; gap: 13px; padding: 18px; border: 1px solid #dce2eb; border-radius: 15px; background: white; }
     label { display: grid; gap: 6px; color: #647087; font-size: 12px; font-weight: 700; }
     select, input { width: 100%; padding: 10px 11px; border: 1px solid #bdc6d5; border-radius: 9px; color: #182238; background: white; }
     .counts[readonly] { color: #44516a; border-color: #d4dae5; background: #f3f5f8; cursor: default; }
@@ -107,11 +107,13 @@
     .commit-timing:disabled { color: #7c879a; border-color: #d6dce6; background: #edf0f4; }
     .commit-hint { grid-column: 1 / -1; margin: -2px 0 0; color: #6c778d; font-size: 11px; line-height: 1.5; text-align: right; }
     .commit-hint.saved { color: #287552; font-weight: 750; }
-    .transport { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 13px 18px calc(13px + env(safe-area-inset-bottom)); border-top: 1px solid #d9dfe9; background: #fffffff2; backdrop-filter: blur(14px); }
-    .transport-inner { display: flex; align-items: center; justify-content: center; gap: 13px; max-width: 900px; margin: auto; }
-    .transport label { min-width: 120px; }
-    .transport select { padding: 8px 10px; }
-    .play { min-width: min(310px, 60vw); min-height: 50px; border: 0; border-radius: 13px; color: white; background: #315fe8; font-size: 17px; font-weight: 850; }
+    .advanced-settings { margin: 18px 0 0; padding: 4px 0 0; border-top: 1px solid #e2e6ed; }
+    .advanced-settings > summary { display: flex; align-items: center; gap: 8px; min-height: var(--dc-tap); cursor: pointer; color: var(--dc-text-sub); font-weight: 800; list-style: none; }
+    .advanced-settings[open] > summary .dc-icon { transform: rotate(180deg); }
+    .advanced-body { display: grid; gap: 14px; padding: 12px 2px; }
+    .voice-panel-toggle { margin-top: 10px; }
+    #voicePanel .dc-btn { margin-top: 10px; }
+    .play { min-width: min(260px, 40vw); }
     .play.stop { background: #d44755; }
     .now { min-width: 180px; color: #315fe8; font-size: 13px; font-weight: 750; }
     dialog { width: min(430px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 16px; color: #192238; box-shadow: 0 24px 70px #14203b45; }
@@ -125,7 +127,7 @@
     .field-help { min-height: 18px; margin: 0; color: #68748a; font-size: 11px; line-height: 1.5; }
     .field-help.error { color: #a22f3f; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
-    @media (max-width: 650px) { .app { padding-bottom: 35px; } .top { grid-template-columns: 1fr; } .practice-settings { grid-template-columns: 1fr; } .timing-grid { grid-template-columns: 1fr; } .timing-guide, .word-offsets { grid-column: auto; } .word-offsets { grid-template-columns: 1fr; } .word-offset { grid-template-columns: 50px minmax(0, 1fr) 48px; } .word-preview { grid-column: 2 / 4; justify-self: start; } .figures { padding-left: 48px; } .drag-handle { left: -46px; width: 44px; } .figure-detail { grid-template-columns: 1fr; } .transport { position: static; padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); } .transport-inner { flex-direction: column; } .play { width: 100%; min-width: 0; } .now { min-width: 0; } }
+    @media (max-width: 650px) { .top { grid-template-columns: 1fr; } .practice-settings { grid-template-columns: 1fr; } .timing-grid { grid-template-columns: 1fr; } .timing-guide, .word-offsets { grid-column: auto; } .word-offsets { grid-template-columns: 1fr; } .word-offset { grid-template-columns: 50px minmax(0, 1fr) 48px; } .word-preview { grid-column: 2 / 4; justify-self: start; } .figures { padding-left: 48px; } .drag-handle { left: -46px; width: 44px; } .figure-detail { grid-template-columns: 1fr; } .now { display: none; } .dc-chip { min-width: 56px; } .play { min-width: 0; flex: 1; } }
   </style>
 </head>
 <body>
@@ -136,40 +138,10 @@
     <section class="top">
       <label><span data-i18n="sourceRoutine">元ルーティン</span><select id="routine"></select></label>
       <label><span data-i18n="draftName">下書き名</span><input id="routineName" maxlength="80"></label>
-      <label><span data-i18n="previewSpeed">試聴速度（BPM）</span>
-        <span class="bpm-row"><input id="routineBpm" type="number" min="40" max="220"><button id="resetBpm" type="button" data-i18n="standard">標準</button></span>
-      </label>
-    </section>
-    <section class="practice-panel" aria-labelledby="practiceSettingsTitle">
-      <h2 id="practiceSettingsTitle" data-i18n="practiceAudio">練習の音声設定</h2>
-      <div class="practice-settings">
-        <label><span data-i18n="voice">再生する音声</span><select id="editorVoicePackChoice"><option value="standard" data-i18n="standardVoice">標準音声</option></select></label>
-        <label class="check"><input id="editorMetronome" type="checkbox" checked><span data-i18n="metronome">メトロノーム</span></label>
-        <a href="./voice-recorder.html" data-i18n="manageVoice">録音・音声パック管理</a>
-      </div>
-      <details class="timing-details">
-        <summary data-i18n="timingSummary">音声タイミングを微調整</summary>
-        <div class="timing-grid">
-          <p class="timing-guide" data-i18n="timingGuide">声が拍より遅く聞こえる場合は「早く」へ。個別の「A/B比較」は、1回目に調整前、2回目に調整後を再生します。まず±40ms程度で方向を確認し、10msずつ戻すと合わせやすくなります。</p>
-          <label><span data-i18n="allVoices">すべての音声</span>
-            <input id="editorVoiceOffset" type="range" min="-150" max="150" step="5" value="0">
-            <span class="offset-scale"><span data-i18n="earlier">早く</span><span data-i18n="later">遅く</span></span>
-            <span id="editorOffsetValue">0 ms</span>
-          </label>
-          <div class="timing-actions">
-            <button id="resetEditorOffsets" type="button" data-i18n="resetOffsets">すべて0に戻す</button>
-            <button id="commitVoiceTiming" class="commit-timing" type="button" disabled data-i18n="commitTiming">音声セット調整完了</button>
-          </div>
-          <p id="commitVoiceTimingHint" class="commit-hint" data-i18n="draftTimingHint">調整値は下書きとして自動保存されます。</p>
-          <div class="word-offset-heading" data-i18n="individualVoices">個別の音声</div>
-          <div id="editorWordOffsets" class="word-offsets"></div>
-        </div>
-      </details>
     </section>
     <div class="toolbar">
       <button id="undo" class="dc-btn"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-undo"/></svg><span data-i18n="undo">元に戻す</span></button>
       <button id="redo" class="dc-btn"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-redo"/></svg><span data-i18n="redo">やり直す</span></button>
-      <button id="reset" data-i18n="resetData">元データに戻す</button>
     </div>
     <p id="status" class="status" aria-live="polite" data-i18n="loadingRoutine">ルーティンを読み込んでいます…</p>
     <div id="loadError" class="load-error" role="alert">
@@ -180,18 +152,59 @@
     <div class="list-head"><h2 data-i18n="figureList">フィガー一覧</h2><span id="figureCount">—</span></div>
     <section id="figures" class="figures"></section>
     <button id="add" class="dc-add-figure"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-plus"/></svg><span data-i18n="addFigure">フィガー追加</span></button>
+    <details class="advanced-settings">
+      <summary><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-chevron"/></svg><span data-i18n="settingsSummary">詳細設定</span></summary>
+      <div class="advanced-body">
+        <details class="timing-details">
+          <summary data-i18n="timingSummary">音声タイミングを微調整</summary>
+          <div class="timing-grid">
+            <p class="timing-guide" data-i18n="timingGuide">声が拍より遅く聞こえる場合は「早く」へ。個別の「A/B比較」は、1回目に調整前、2回目に調整後を再生します。まず±40ms程度で方向を確認し、10msずつ戻すと合わせやすくなります。</p>
+            <label><span data-i18n="allVoices">すべての音声</span>
+              <input id="editorVoiceOffset" type="range" min="-150" max="150" step="5" value="0">
+              <span class="offset-scale"><span data-i18n="earlier">早く</span><span data-i18n="later">遅く</span></span>
+              <span id="editorOffsetValue">0 ms</span>
+            </label>
+            <div class="timing-actions">
+              <button id="resetEditorOffsets" type="button" data-i18n="resetOffsets">すべて0に戻す</button>
+              <button id="commitVoiceTiming" class="commit-timing" type="button" disabled data-i18n="commitTiming">音声セット調整完了</button>
+            </div>
+            <p id="commitVoiceTimingHint" class="commit-hint" data-i18n="draftTimingHint">調整値は下書きとして自動保存されます。</p>
+            <div class="word-offset-heading" data-i18n="individualVoices">個別の音声</div>
+            <div id="editorWordOffsets" class="word-offsets"></div>
+          </div>
+        </details>
+        <button id="reset" class="dc-btn danger" data-i18n="resetData">元データに戻す</button>
+      </div>
+    </details>
   </main>
-  <footer class="transport"><div class="transport-inner">
-    <label><span data-i18n="fullCountIn">全体のカウントイン</span>
-      <select id="fullCountIn">
-        <option value="0" data-i18n="none">なし</option>
-        <option value="1" selected data-i18n="oneBar">1小節</option>
-        <option value="2" data-i18n="twoBars">2小節</option>
-      </select>
-    </label>
-    <button id="play" class="play" data-i18n="previewAll">▶ 全体を試聴</button>
-    <div id="now" class="now" data-i18n="stopped">停止中</div>
-  </div></footer>
+  <footer class="transport dc-bar">
+    <div class="dc-bar-inner">
+      <button id="speedChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="speedPanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-gauge"/></svg><span data-i18n="speedShort">速度</span></button>
+      <button id="play" class="dc-btn primary play"><svg class="dc-icon filled" aria-hidden="true"><use id="playIcon" href="./assets/icons.svg#i-play"/></svg><span id="playLabel" data-i18n="previewAll">▶ 全体を試聴</span></button>
+      <button id="voiceChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="voicePanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-voice"/></svg><span data-i18n="voiceShort">音声</span></button>
+      <button id="countInChip" class="dc-chip" type="button" aria-expanded="false" aria-controls="countInPanel"><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-metronome"/></svg><span data-i18n="countInShort">カウントイン</span></button>
+      <div id="now" class="now" data-i18n="stopped">停止中</div>
+    </div>
+    <div id="speedPanel" class="dc-panel" hidden>
+      <label><span data-i18n="previewSpeed">試聴速度（BPM）</span>
+        <span class="bpm-row"><input id="routineBpm" class="dc-select" type="number" min="40" max="220"><button id="resetBpm" type="button" class="dc-btn" data-i18n="standard">標準</button></span>
+      </label>
+    </div>
+    <div id="voicePanel" class="dc-panel" hidden>
+      <label><span data-i18n="voice">再生する音声</span><select id="editorVoicePackChoice" class="dc-select"><option value="standard" data-i18n="standardVoice">標準音声</option></select></label>
+      <label class="dc-toggle voice-panel-toggle"><input id="editorMetronome" type="checkbox" checked><svg class="dc-icon" aria-hidden="true"><use href="./assets/icons.svg#i-metronome"/></svg><span data-i18n="metronome">メトロノーム</span></label>
+      <a href="./voice-recorder.html" class="dc-btn"><svg class="dc-icon small" aria-hidden="true"><use href="./assets/icons.svg#i-voice"/></svg><span data-i18n="manageVoice">録音・音声パック管理</span></a>
+    </div>
+    <div id="countInPanel" class="dc-panel" hidden>
+      <label><span data-i18n="fullCountIn">全体のカウントイン</span>
+        <select id="fullCountIn" class="dc-select">
+          <option value="0" data-i18n="none">なし</option>
+          <option value="1" selected data-i18n="oneBar">1小節</option>
+          <option value="2" data-i18n="twoBars">2小節</option>
+        </select>
+      </label>
+    </div>
+  </footer>
   <dialog id="deleteDialog" aria-labelledby="deleteTitle">
     <div class="dialog-body">
       <h2 id="deleteTitle" data-i18n="deleteTitle">フィガーを削除しますか？</h2>
@@ -825,8 +838,7 @@
           rangeStartTick,
           rangeEndTick
         });
-        play.textContent = t('stop');
-        play.classList.add('stop');
+        setPlayDisplay(t('stop'), true);
       } catch (error) {
         status.textContent = t('playError', { message: error.message });
         status.classList.add('error');
@@ -852,8 +864,7 @@
 
     function stop() {
       engine?.stop();
-      play.textContent = t('previewAll');
-      play.classList.remove('stop');
+      setPlayDisplay(t('previewAll'));
       document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
       clearActiveBeat();
       document.querySelector('#now').textContent = t('stopped');
@@ -891,11 +902,16 @@
     }
 
     function stopDisplay() {
-      play.textContent = t('previewAll');
-      play.classList.remove('stop');
+      setPlayDisplay(t('previewAll'));
       document.querySelectorAll('.figure.active').forEach(item => item.classList.remove('active'));
       clearActiveBeat();
       document.querySelector('#now').textContent = t('stopped');
+    }
+
+    function setPlayDisplay(label, playing = false) {
+      document.querySelector('#playLabel').textContent = label.replace(/^[▶■]\s*/, '');
+      document.querySelector('#playIcon').setAttribute('href', `./assets/icons.svg#i-${playing ? 'stop' : 'play'}`);
+      play.classList.toggle('stop', playing);
     }
 
     function escapeHtml(value) {
@@ -981,6 +997,22 @@
     });
     play.addEventListener('click', () => engine?.playing ? stop() : start());
     addEventListener('focus', refreshEditorVoiceOption);
+
+    for (const [chipId, panelId] of [['speedChip', 'speedPanel'], ['voiceChip', 'voicePanel'], ['countInChip', 'countInPanel']]) {
+      document.querySelector(`#${chipId}`).addEventListener('click', () => {
+        const panel = document.querySelector(`#${panelId}`);
+        const open = panel.hidden;
+        document.querySelectorAll('.dc-panel').forEach(item => { item.hidden = true; });
+        document.querySelectorAll('.dc-chip[aria-controls]').forEach(chip => chip.setAttribute('aria-expanded', 'false'));
+        panel.hidden = !open;
+        document.querySelector(`#${chipId}`).setAttribute('aria-expanded', String(open));
+      });
+    }
+    document.addEventListener('click', event => {
+      if (event.target.closest('.dc-panel, .dc-chip')) return;
+      document.querySelectorAll('.dc-panel').forEach(item => { item.hidden = true; });
+      document.querySelectorAll('.dc-chip[aria-controls]').forEach(chip => chip.setAttribute('aria-expanded', 'false'));
+    });
 
     loadRoutine(sources[0].id);
   </script>
