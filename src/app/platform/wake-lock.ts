@@ -7,7 +7,10 @@ export async function keepScreenOn(): Promise<ScreenWakeLock | null> {
   let sentinel: WakeLockSentinel | null = null;
   let released = false;
   const acquire = async () => {
-    try { sentinel = await navigator.wakeLock.request('screen'); } catch { sentinel = null; }
+    try {
+      const next = await navigator.wakeLock.request('screen');
+      if (released) { await next.release().catch(() => {}); sentinel = null; } else sentinel = next;
+    } catch { sentinel = null; }
   };
   const onVisibility = () => {
     if (!released && document.visibilityState === 'visible' && (!sentinel || sentinel.released)) void acquire();

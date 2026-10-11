@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { PracticeSession, SOUND_CHECK_DELAY_MS, type EngineFrame, type PracticeOptions, type SessionView } from '../../../src/app/practice/session.ts';
 
 // 偽の端末: AudioContext・エンジン・WakeLock・タイマーを手で進める。
-function harness({ wakeLock = true, voiceFails = false, tipShown = false } = {}) {
+function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false } = {}) {
   const audio = { state: 'running', currentTime: 0 };
   const calls: string[] = [];
   const timers: Array<{ at: number; run: () => void; cancelled: boolean }> = [];
@@ -19,9 +19,9 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false } = {})
     createEngine(_audio, _voice, frame) {
       calls.push('createEngine');
       onFrame = frame;
-      return { start(options) { starts.push(options); return 0; }, stop() { calls.push('engine.stop'); } };
+      return { start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); } };
     },
-    keepScreenOn() { calls.push('keepScreenOn'); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
+    keepScreenOn() { calls.push('keepScreenOn'); if (lockHangs) return new Promise<null>(() => {}); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
     onStateChange(_audio, listener) { stateListener = listener; return () => { stateListener = null; }; },
     setTimer(run, ms) { const timer = { at: now + ms, run, cancelled: false }; timers.push(timer); return () => { timer.cancelled = true; }; }
   }, { wakeTipAlreadyShown: () => tip, markWakeTipShown: () => { tip = true; } });
@@ -190,4 +190,22 @@ test('a second ▶ while the first is still loading wins; the first never starts
   await Promise.all([first, second]);
   assert.equal(h.starts.length, 1);
   assert.equal(h.starts[0]!.bpm, 90);
+});
+
+test('an engine that throws on start releases the wake lock and ends in a stopped notice', async () => {
+  const h = harness({ startThrows: true });
+  await h.session.play(WALTZ);
+  assert.equal(h.releases, 1);
+  assert.equal(h.session.current.starting, false);
+  assert.equal(h.session.current.playing, false);
+  assert.equal(h.session.current.notice, 'stopped');
+});
+
+test('a wake lock request that never settles does not delay the no-sound banner', async () => {
+  const h = harness({ lockHangs: true });
+  h.audio.state = 'suspended';
+  void h.session.play(WALTZ);
+  await new Promise(resolve => setImmediate(resolve));
+  h.advance(SOUND_CHECK_DELAY_MS);
+  assert.equal(h.session.current.notice, 'no-sound');
 });

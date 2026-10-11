@@ -114,6 +114,8 @@ export class PracticeSession<A extends AudioLike, V> {
     this.stop();
     this.unsubscribeState?.();
     this.unsubscribeState = null;
+    this.audio = null;
+    this.engine = null;
     this.listeners.clear();
   }
 
@@ -131,23 +133,31 @@ export class PracticeSession<A extends AudioLike, V> {
       void lockPromise.then(lock => lock?.release());
       return;
     }
-    this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
     const startedAt = audio.currentTime;
-    this.engine.start({
-      compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }),
-      bpm: options.bpm,
-      loop: options.loop,
-      metronome: options.metronome,
-      countInBars: options.countInBars
-    });
+    try {
+      this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
+      this.engine.start({
+        compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }),
+        bpm: options.bpm,
+        loop: options.loop,
+        metronome: options.metronome,
+        countInBars: options.countInBars
+      });
+    } catch {
+      void lockPromise.then(lock => lock?.release());
+      if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'stopped' });
+      return;
+    }
     this.update({ ...IDLE_VIEW, playing: true, countIn: options.countInBars > 0 });
+    let lockOutcome: 'pending' | 'held' | 'unavailable' = 'pending';
+    this.cancelSoundCheck = this.deps.setTimer(() => this.checkSound(generation, audio, startedAt, lockOutcome === 'unavailable'), SOUND_CHECK_DELAY_MS);
     const lock = await lockPromise;
+    lockOutcome = lock === null ? 'unavailable' : 'held';
     if (generation !== this.generation) {
       void lock?.release();
       return;
     }
     this.wakeLock = lock;
-    this.cancelSoundCheck = this.deps.setTimer(() => this.checkSound(generation, audio, startedAt, lock === null), SOUND_CHECK_DELAY_MS);
   }
 
   // 2秒判定（Ruling 6-2）。鳴っていれば、WakeLock が取れなかった時の案内を1回だけ出す（Ruling 30）。
