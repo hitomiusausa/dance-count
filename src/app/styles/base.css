@@ -177,6 +177,13 @@ button { cursor: pointer; }
 .dc-hint { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 16px; font-weight: 400; color: var(--ink2); }
 .dc-hint--bad { font-weight: 700; color: var(--warn-ink); }
 .dc-reason { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 16px; font-weight: 700; color: var(--warn-ink); }
+/* 小節の注意（D16・Ruling 52）。止めない知らせなので 400。行の注意は閉じた行の見出しボタンの 3 行目（S3 の .dc-row-note とは別の形）。
+   見出しの幅いっぱい（番号の下から）に折り返して置く: 名前の列（375 幅で約 200px）の中だと全文が 3 行になり U10（ボタンの文字は 2 行まで）を超えるため。
+   全体の注意は一覧の直下に 1 行（意図的な並びもあるので責めない --ink2・アイコンなし。補助の文字 16px なので p ではなく div＝U1 の本文 18px の規則の外）。 */
+.dc-figure-head { flex-wrap: wrap; row-gap: 2px; }  /* 行の注意が来た時だけ折り返す（名前の列は min-width:0 なので普段は 1 段） */
+.dc-figure-head > small.dc-row-note { flex: 1 0 100%; display: flex; align-items: center; gap: 6px; margin: 0; font-size: 16px; font-weight: 400; line-height: 1.3; color: var(--warn-ink); }
+.dc-row-note .dc-ic { width: 20px; height: 20px; }
+.dc-bar-note { margin: 8px 2px 0; font-size: 16px; font-weight: 400; color: var(--ink2); }
 .dc-suggestions { display: flex; flex-direction: column; margin-top: 6px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); }
 .dc-suggestion { min-height: 48px; padding: 0 12px; border: none; border-bottom: var(--bw) solid var(--soft); background: none; text-align: left; font-size: 18px; color: var(--ink); }
 .dc-suggestion:last-child { border-bottom: none; }

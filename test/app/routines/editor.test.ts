@@ -18,9 +18,9 @@ const names = (e: RoutineEditor) => e.routine.figures.map(figure => `${figure.na
 test('add: the form opens empty, "Add" works only when valid, the counts are normalized', () => {
   const e = editor([]);
   e.openAdd();
-  assert.deepEqual(e.check(), { valid: false, counts: '', reason: null, action: 'add' });
+  assert.deepEqual(e.check(), { valid: false, counts: '', reason: null, action: 'add', note: null });
   e.setDraft({ name: 'ウィスク', counts: '１２ａ３' });
-  assert.deepEqual(e.check(), { valid: false, counts: '12a3', reason: 'symbols', action: 'add' });
+  assert.deepEqual(e.check(), { valid: false, counts: '12a3', reason: 'symbols', action: 'add', note: null });
   assert.equal(e.decide(), false);
   e.setDraft({ counts: '１２＆３' });
   assert.equal(e.decide(), true);
@@ -300,4 +300,41 @@ test('the open row is not its own same name; old mismatched data stays until tou
   assert.deepEqual([old.check().valid, old.check().action], [true, 'done']); // 触るまで何もしない
   old.setDraft({ counts: '1&23' });
   assert.equal(old.check().action, 'updateAll');
+});
+
+test('off-bar note: a waltz count that is not 3 beats is a note, not a reason, and "Done" stays pressable (Ruling 52-3)', () => {
+  const e = editor([['ナチュラルターン', '123'], ['ウィスク', '12']]);
+  e.openRow(1);
+  assert.deepEqual([e.check().valid, e.check().reason, e.check().note], [true, null, 'offBar']);
+  e.setDraft({ counts: '１２３' });
+  assert.equal(e.check().note, null);
+  e.close();
+  e.openAdd();
+  e.setDraft({ name: 'シャッセ', counts: '12' });
+  assert.deepEqual([e.check().valid, e.check().reason, e.check().note], [true, null, 'offBar']);
+  e.setDraft({ name: '' });
+  assert.deepEqual([e.check().reason, e.check().note], ['name', 'offBar']); // 画面は reason が null の時だけ note を描く
+  e.setDraft({ name: 'シャッセ', counts: '12a' });
+  assert.equal(e.check().note, null); // 数えられない時は出さない
+  assert.equal(e.decide(), false);
+  e.setDraft({ counts: '12' });
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e).at(-1), 'シャッセ:12');
+});
+
+test('note order: the "others will change" notice comes before the off-bar note (Ruling 52-3)', () => {
+  const e = editor([['ウィスク', '123'], ['ウィスク', '123']]);
+  e.openRow(0);
+  e.setDraft({ counts: '12' });
+  assert.deepEqual([e.check().valid, e.check().action, e.check().note], [true, 'updateAll', 'othersWillChange']);
+});
+
+test('the off-bar note is only for waltz and Viennese waltz (D16)', () => {
+  const routine: Routine = {
+    ...createRoutine({ id: 'r-bbbbbbbb', danceId: 'tango', name: 'タンゴ', now: NOW }),
+    figures: [{ id: 'f-00000000', name: 'プログレッシブリンク', counts: 'QQ' }]
+  };
+  const e = new RoutineEditor(routine, () => 'f-new00000');
+  e.openRow(0);
+  assert.deepEqual([e.check().valid, e.check().note], [true, null]);
 });

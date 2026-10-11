@@ -5,7 +5,7 @@
 // つかみで引いて並べ替える・元に戻す・再読み込みで残る・軽く押すと行が開く（Ruling 49）→
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
-// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）。
+// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium } from 'playwright-core';
 
@@ -189,6 +189,34 @@ try {
   await copyButton.click();
   const copied = await page.locator('.dc-figure-head').nth(1).textContent().catch(() => '');
   if (!copied?.includes('ウィスク') || !copied.includes('1 2 3')) errors.push(`"Add a copy" should add ウィスク 1 2 3 as the 2nd row ("${copied}")`);
+
+  // 小節の注意（D16・Ruling 52）: ワルツで 12 のフィガーを 2 件 → 1 件目（3 行目）に全文・2 件目に短い形・一覧の下に全体の注意。止めない。
+  const FULL = '3拍のカウントではありません。必要なら編集してください。';
+  const SHORT = '3拍のカウントではありません';
+  const rowNote = index => page.locator(`.dc-row[data-index="${index}"] .dc-row-note`).textContent({ timeout: 500 }).then(text => text.trim()).catch(() => null);
+  const barNote = () => page.locator('.dc-bar-note').count();
+  await page.locator('.dc-add-tail').click();
+  await addFigure(page, 'クローズドチェンジ', '12');
+  await page.locator('.dc-add-tail').click();
+  await addFigure(page, 'リバースターン', '12');
+  if ((await page.locator('.dc-figure-head').count()) !== 4) errors.push('a 2-beat waltz figure must still be added (D16: not blocked)');
+  if (await rowNote(2) !== FULL || await rowNote(3) !== SHORT) errors.push(`row notes should be full then short: ${JSON.stringify([await rowNote(2), await rowNote(3)])}`);
+  if (await barNote() !== 1) errors.push('the mid-bar note should show under the list');
+  // 1 件目を開く: 見出しの注意は消え、入力欄の下に短い形・「決定」は押せる。全文は 2 件目へ移る
+  await page.locator('.dc-figure-head').nth(2).click();
+  const offForm = page.locator('.dc-row[data-index="2"] .dc-figure-form');
+  if (await rowNote(2) !== null) errors.push('the open row should not show the note in its heading');
+  if ((await offForm.locator('.dc-reason').textContent())?.trim() !== SHORT) errors.push('the open row should show the short note under the counts');
+  if (await offForm.locator('.dc-primary').isDisabled()) errors.push('"Done" must stay pressable with an off-bar count');
+  if (await rowNote(3) !== FULL) errors.push(`the full note should move to the next closed row ("${await rowNote(3)}")`);
+  await offForm.locator('input').nth(1).fill('123');
+  if (await offForm.locator('.dc-reason').count()) errors.push('the note under the counts should go away for 123');
+  await offForm.locator('.dc-primary').click();
+  if (await rowNote(2) !== null || await rowNote(3) !== FULL) errors.push(`after fixing the 1st, the 2nd should be full: ${JSON.stringify([await rowNote(2), await rowNote(3)])}`);
+  await page.locator('.dc-figure-head').nth(3).click();
+  await page.locator('.dc-row[data-index="3"] .dc-figure-form input').nth(1).fill('123');
+  await page.locator('.dc-row[data-index="3"] .dc-figure-form .dc-primary').click();
+  if ((await page.locator('.dc-row-note').count()) || await barNote()) errors.push('all notes should be gone after fixing both');
   await context.close();
 } finally {
   await browser.close();
@@ -198,4 +226,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy, bar notes inform without blocking');

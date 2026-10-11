@@ -9,6 +9,7 @@ import { MoreOptions, NoticeBox, type AlertNotice } from '../practice/controls.t
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
 import { BPM_MAX, BPM_MIN, clampBpm, type SpeedProfile } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
+import { beatsPerBar, offBarIndexes, routineEndsMidBar } from '../routines/bar-check.ts';
 import { RoutineEditor } from '../routines/editor.ts';
 import { useReorderDrag } from '../routines/useReorderDrag.ts';
 import { FigureForm } from '../routines/FigureForm.tsx';
@@ -155,6 +156,12 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const playing = view.playing || view.starting;
   const notice: AlertNotice = saveFailed ? 'save-failed' : view.notice;
   const sounding = (index: number) => view.playing && view.figureIndex === index;
+  // 小節の注意（D16・Ruling 52）。閉じた行のうち上から最初の1件だけ全文（「必要なら編集してください。」つき）、残りは短い形。
+  // 開いている行は見出しに出さない（入力欄の下に短い形。FigureForm）。「最初」は閉じた行の中で数えるので、全文は常に1つ。
+  const openIndex = open?.kind === 'edit' ? open.index : null;
+  const offBar = offBarIndexes(routine.danceId, routine.figures).filter(index => index !== openIndex);
+  const barBeats = beatsPerBar(routine.danceId);
+  const endsMidBar = routineEndsMidBar(routine.danceId, routine.figures);
 
   // 種目の「変える」: 開いている行を原則どおり閉じて（有効なら確定して保存）から。確定でフィガーができたら種目は変えられないので、選び直しは出さない（Ruling 36-1・段3 Task 7 の裁定）。
   const changeDance = () => {
@@ -227,6 +234,12 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
                       <small>{formatCounts(routine.danceId, figure.counts)}</small>
                     </span>
                     <Icon name="chevron" class="dc-row-chev" />
+                    {!isOpen && offBar.includes(index) && (
+                      <small class="dc-row-note">
+                        <Icon name="alert" />
+                        <span>{translator.t(offBar[0] === index ? 'offBarFigureEdit' : 'offBarFigure', { beats: barBeats })}</span>
+                      </small>
+                    )}
                   </button>
                   {count > 1 && (
                     <button type="button" class="dc-grip" aria-keyshortcuts="ArrowUp ArrowDown"
@@ -277,6 +290,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
           )}
         </div>
       )}
+      {endsMidBar && <div class="dc-bar-note">{translator.t('routineEndsMidBar')}</div>}
       {count > 0 && open?.kind !== 'add' && (
         <button type="button" class="dc-button dc-button--secondary dc-wide dc-add-tail" disabled={!current.canAdd} onClick={() => act(editor => editor.openAdd())}>
           <Icon name="plus" /><span>{translator.t('addFigure')}</span>

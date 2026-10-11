@@ -1,4 +1,5 @@
 import { RoutineEditorState } from '../../engine/routine-editor-state.js';
+import { isOffBar } from './bar-check.ts';
 import { checkCounts, normalizeCounts, type CountsProblem } from './counts.ts';
 import { foldFigureName } from './figure-names.ts';
 import { FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
@@ -18,7 +19,10 @@ export type DraftReason = CountsProblem | 'sameName' | 'name' | null;
 export type DraftAction = 'add' | 'done' | 'addCopy' | 'matchCounts' | 'updateAll';
 // 同じ名前の代表（番号の若い行）と、自分以外で同じ名前の件数（Ruling 50-1）。
 export interface SameName { index: number; name: string; counts: string; others: number }
-export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason; action: DraftAction; same?: SameName }
+// 止めない知らせ（Ruling 52-3）。理由の行の順位は 記号 → 先頭 → 並び → 同じ名前 → 名前が空 → まとめて変更の予告 → 小節の注意。
+// 画面は reason が null の時だけ note を描く。valid には関わらない（小節の注意があっても「決定」は押せる）。
+export type DraftNote = 'othersWillChange' | 'offBar' | null;
+export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason; action: DraftAction; note: DraftNote; same?: SameName }
 
 type Meta = Omit<Routine, 'id' | 'danceId' | 'name' | 'bpm' | 'countInBars' | 'source' | 'status' | 'figures'>;
 
@@ -49,6 +53,14 @@ export class RoutineEditor {
   // 同じ名前（Ruling 50）: 名前の仲間に入る時はその仲間のカウントを受け取る。仲間のカウントを変える時は仲間ごと変わる。
   // 追加の行は「同じ名前」がカウントの理由より先、編集の行はカウントの理由が先。
   check(draft: FigureDraft = this.open?.draft ?? { name: '', counts: '' }, open: OpenRow | null = this.open): DraftCheck {
+    const check = this.checkReason(draft, open);
+    const counted = check.counts !== '' && check.reason !== 'symbols' && check.reason !== 'leading' && check.reason !== 'invalid';
+    const note: DraftNote = check.action === 'updateAll' ? 'othersWillChange'
+      : counted && isOffBar(this.routine.danceId, check.counts) ? 'offBar' : null;
+    return { ...check, note };
+  }
+
+  private checkReason(draft: FigureDraft, open: OpenRow | null): Omit<DraftCheck, 'note'> {
     const editIndex = open?.kind === 'edit' ? open.index : null;
     const plain: DraftAction = editIndex === null ? 'add' : 'done';
     const counts = checkCounts(this.routine.danceId, draft.counts);

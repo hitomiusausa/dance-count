@@ -44,6 +44,8 @@ const STATES = [
   { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 7 },
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
+  { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
+  // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
@@ -112,7 +114,7 @@ try {
   // S4・S5 は検査用のルーティンが要る（無いと S3 へ置き換わる）。先に入れて読み直してから全画面を回る。
   await page.goto(BASE);
   await page.waitForSelector('[data-screen]');
-  await page.evaluate(seedRoutinesInPage, SEEDED);
+  await page.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
   await page.reload();
   await page.waitForSelector('[data-screen]');   // アプリがハッシュの変化を聞き始めてから次のハッシュへ
   for (const state of CHECKED) {
@@ -411,6 +413,16 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (document.querySelector('.dc-reason')) issues.push('R50 a reason line is shown under the red allowed-symbols line');
     const decide = [...document.querySelectorAll('.dc-figure-form .dc-primary')].pop();
     if (!decide?.disabled) issues.push('R36 "Add" is pressable with invalid counts');
+  }
+  // Ruling 52・D16: 行の注意は 2 つで、依頼（「してください」）はちょうど 1 つ（Ruling 7 の機械判定）。全体の注意は一覧の下に 1 つ
+  if (state.barNote) {
+    const notes = [...document.querySelectorAll('.dc-row-note')].filter(visible);
+    if (notes.length !== 2) issues.push(`R52 ${notes.length} row notes, expected 2`);
+    const requests = notes.filter(note => note.textContent.includes('してください')).length;
+    if (requests !== 1) issues.push(`R52 ${requests} row notes ask to edit, expected exactly 1 (Ruling 7)`);
+    const barNotes = [...document.querySelectorAll('.dc-bar-note')].filter(visible);
+    if (barNotes.length !== 1) issues.push(`R52 ${barNotes.length} mid-bar notes, expected 1`);
+    else if (barNotes[0].closest('[data-list]')) issues.push('R52 the mid-bar note is inside the list');
   }
   return issues;
 }

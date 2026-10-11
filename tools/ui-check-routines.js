@@ -41,8 +41,18 @@ export const UI_CHECK_ROUTINES = {
   waltz13: routine('r-uicheck-waltz13', 'waltz', 'ワルツの練習', 13, 0),
   empty: routine('r-uicheck-empty00', 'tango', 'タンゴの練習', 0, 1),
   longJa: routine('r-uicheck-longja40', 'waltz', LONG_JA, 3, 2, LONG_FIGURE),
-  longEn: routine('r-uicheck-longen40', 'jive', LONG_EN, 3, 3)
+  longEn: routine('r-uicheck-longen40', 'jive', LONG_EN, 3, 3),
+  waltzOffBar: offBarRoutine()
 };
+
+// 小節の注意（D16・Ruling 52-5）の検査用。わざと 3 拍の倍数でないカウント（12）を 2 件入れる＝行の注意 2 件（全文 1・短い形 1）、
+// 全体は 6+2+2=10 拍で小節の途中で終わる。templates の外のカウントだが、注意を出すための「打ち間違い」の見本で、正しいカウントを名乗らない。
+// 名前は照合済みの語だけ（「シャッセ」単独は未照合なので「シャッセ フロム PP」）。
+function offBarRoutine() {
+  const base = routine('r-uicheck-waltzoff', 'waltz', 'ワルツの小節の確認', 0, 4);
+  const figures = [['ナチュラルターン', '123123'], ['ウィスク', '12'], ['シャッセ フロム PP', '12']];
+  return { ...base, figures: figures.map(([name, counts], index) => ({ id: `f-uicheck-${String(index).padStart(4, '0')}`, name, counts })) };
+}
 
 // ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB（dance-count-v2 v2）の routines へ直接書く。
 export async function seedRoutinesInPage(routines) {

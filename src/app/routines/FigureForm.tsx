@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { useI18n } from '../state/i18n.ts';
+import { beatsPerBar } from './bar-check.ts';
 import { allowedSymbols } from './counts.ts';
 import type { IconName } from '../components/icon-names.ts';
 import type { DraftAction, DraftCheck, DraftReason, FigureDraft } from './editor.ts';
@@ -12,6 +13,7 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // 開いた行の入力（Ruling 36-3・38・39・50）。名前（候補は verified 名だけ）・カウント（種目のよく使うカウント）・主ボタン。
 // 全部で1つの [data-group="figure-form"]（名前・カウント・候補5・よく使う2・主ボタン＝最大10で U5 に収まる）。
 // カウント欄の下には常に「使える文字：…」（Ruling 50 D14）。文字の誤りはこの行が赤くなり、ほかの理由はその下に1行。
+// 理由が無い時だけ、止めない知らせ（まとめて変更の予告 → 小節の注意の短い形。Ruling 52-3）を同じ位置に出す。
 // 主ボタンは editor の action で文字・アイコンを替えるだけ（ボタンは増やさない。Ruling 50-6）。
 const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | null>, MessageKey> = {
   leading: 'startWithBeat', invalid: 'countsInvalid', sameName: 'sameNameExists', name: 'nameNeeded'
@@ -36,7 +38,8 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
   const others = check.same?.others ?? 0;
   const reasonText = check.reason && check.reason !== 'symbols'
     ? translator.t(REASON_TEXT[check.reason], { counts: check.same ? formatCounts(danceId, check.same.counts) : '' })
-    : check.action === 'updateAll' ? translator.t('othersWillChange', { count: others }) : null;
+    : check.note === 'othersWillChange' ? translator.t('othersWillChange', { count: others })
+    : check.note === 'offBar' ? translator.t('offBarFigure', { beats: beatsPerBar(danceId) }) : null;
   const primary = PRIMARY[check.action];
   const alwaysPressable = check.action === 'addCopy' || check.action === 'matchCounts';
   return (
