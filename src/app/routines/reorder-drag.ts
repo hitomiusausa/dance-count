@@ -28,3 +28,24 @@ export function autoScrollStep(y: number, visibleTop: number, visibleBottom: num
   if (y > visibleBottom - AUTO_SCROLL_EDGE_PX) return AUTO_SCROLL_STEP_PX;
   return 0;
 }
+
+// つかんだ行の持ち上げ量 dy（Ruling 51-2・4）。押した点からの指の移動量＋ドラッグ開始からのスクロール量。
+// rowTop0/rowBottom0 は開始時の行の矩形、listTop/listBottom は今の一覧の矩形（どちらも画面の座標）。
+// 行の上端が一覧の上端より上へ・下端が一覧の下端より下へ出ないように止める（末尾の追加ボタン・固定の帯にかぶらない）。
+export interface LiftInput {
+  pointerY: number; pressY: number; scrollY: number; scrollY0: number;
+  rowTop0: number; rowBottom0: number; listTop: number; listBottom: number;
+}
+
+export function liftOffset(input: LiftInput): number {
+  const scrolled = input.scrollY - input.scrollY0;
+  const dy = input.pointerY - input.pressY + scrolled;
+  const min = input.listTop - input.rowTop0 + scrolled;
+  const max = input.listBottom - input.rowBottom0 + scrolled;
+  return Math.min(Math.max(dy, min), Math.max(min, max));
+}
+
+// 動かしている行の矩形を元の（並びの中の）位置に戻す。dropTargetFromY と線の位置はこの矩形で決める（Ruling 51-3）。
+export function unliftBox(box: RowBox, dy: number): RowBox {
+  return { top: box.top - dy, bottom: box.bottom - dy };
+}

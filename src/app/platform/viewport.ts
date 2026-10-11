@@ -1,6 +1,11 @@
-// ドラッグ（Ruling 49）が触る画面の面はここだけ: 見えている高さ・ページのスクロール・毎フレーム・中断の知らせ。
+// ドラッグ（Ruling 49・51）が触る画面の面はここだけ: 見えている高さ・ページのスクロール・毎フレーム・中断の知らせ。
 export function viewportHeight(): number {
   return window.innerHeight;
+}
+
+// ページの縦スクロール量。つかんだ行を自動スクロール中も指の下に留める（Ruling 51-2）。
+export function pageScrollY(): number {
+  return window.scrollY;
 }
 
 export function scrollPageBy(dy: number): void {

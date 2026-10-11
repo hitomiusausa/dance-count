@@ -85,17 +85,30 @@ try {
   const names = () => page.locator('.dc-figure-head b').allTextContents();
   if ((await names()).length !== 3) errors.push(`expected 3 figures, found ${(await names()).length}`);
 
-  // ドラッグ（Ruling 49）: 3行目のつかみを先頭より上へ引く → 並びが変わり、枠と線が消える → 元に戻す → やり直す
+  // ドラッグ（Ruling 49・51）: 3行目のつかみを先頭より上へ引く → 途中は行が浮いて指についてくる → 並びが変わり、浮き・枠・線が消える → 元に戻す → やり直す
   const grip = await page.locator('.dc-grip').nth(2).boundingBox();
   const firstRow = await page.locator('.dc-row[data-index]').first().boundingBox();
-  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  const thirdTop = (await page.locator('.dc-row[data-index="2"]').boundingBox()).y;
+  const pressY = grip.y + grip.height / 2;
+  await page.mouse.move(grip.x + grip.width / 2, pressY);
   await page.mouse.down();
   await page.mouse.move(grip.x + grip.width / 2, grip.y - 30, { steps: 3 });
+  const lifted = await page.evaluate(() => {
+    const row = document.querySelector('.dc-row[data-index="2"]');
+    return { top: row.getBoundingClientRect().top, shadow: getComputedStyle(row).boxShadow, dragging: row.classList.contains('dc-row--dragging'),
+      line: document.querySelectorAll('.dc-drop-line').length };
+  });
+  const moved = grip.y - 30 - pressY;
+  if (Math.abs(lifted.top - (thirdTop + moved)) > 1) errors.push(`the lifted row should follow the finger: top ${lifted.top}, expected ${thirdTop + moved}`);
+  if (!lifted.dragging || lifted.shadow === 'none') errors.push(`the lifted row should float with a shadow (shadow ${lifted.shadow})`);
+  if (lifted.line !== 1) errors.push('the drop line should show while dragging');
   await page.mouse.move(grip.x + grip.width / 2, firstRow.y - 10, { steps: 3 });
   await page.mouse.up();
   const dragged = ['クローズドチェンジ', 'ナチュラルターン', 'ウィスク'];
   if (JSON.stringify(await names()) !== JSON.stringify(dragged)) errors.push(`drag did not reorder: ${JSON.stringify(await names())}`);
   if (await page.locator('.dc-row--dragging, .dc-drop-line').count()) errors.push('drag marks are left after the drop');
+  const transforms = await page.locator('.dc-row[data-index]').evaluateAll(rows => rows.map(row => getComputedStyle(row).transform + (row.style.getPropertyValue('--dy') || '')));
+  if (transforms.some(value => value !== 'none')) errors.push(`rows keep a transform after the drop: ${JSON.stringify(transforms)}`);
   await page.locator('[data-group="history"] button').first().click();   // 元に戻す
   if ((await names())[0] !== 'ナチュラルターン') errors.push('undo did not restore the order before the drag');
   await page.locator('[data-group="history"] button').last().click();    // やり直す
@@ -185,4 +198,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy');
