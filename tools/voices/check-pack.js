@@ -15,6 +15,10 @@ export const STANDARD_VOICES_PATH = path.join(root, 'src/app/voices/standard-voi
 // 英パックは gate 欄が無いまま既承認とみなす唯一の例外（作り直す日に gate を書いて例外を消す）
 export const GRANDFATHERED_PACK_ID = 'default-en-female-v1';
 const ONSET_METHODS = new Set(['rms-auto-v1', 'manual']);
+// 音の拡張子。dist では audio/<standard-voices.json の ID>/ の下にしか置けない（段6a 修正便 I-2）
+export const AUDIO_EXT = /\.(wav|mp3|m4a|ogg|aac|webm|flac)$/i;
+// Finder の .DS_Store などの隠しファイルは検査で数えない
+const isDotfile = name => name.startsWith('.');
 // 鍵の漏れ（Ruling 65-3・68-3）: Google API キー・サービスアカウント鍵・OAuth アクセストークン
 export const SECRET_PATTERNS = Object.freeze([
   { name: 'Google API key (AIza…)', pattern: /AIza[0-9A-Za-z_-]{20,}/ },
@@ -90,12 +94,14 @@ export async function checkPack(packDir, { expectedId = path.basename(packDir), 
     if (peak > PEAK_CEILING_DBFS + 0.01) problems.push(`${label}/${key}: ピーク ${peak.toFixed(2)} dBFS が ${PEAK_CEILING_DBFS} を超えています`);
   }
   for (const entry of await fs.readdir(packDir)) {
+    if (isDotfile(entry)) continue;
     if (!expectedFiles.has(entry)) problems.push(`${label}: manifest に無いファイルがあります: ${entry}`);
   }
   return { ok: problems.length === 0, problems, manifest };
 }
 
 // dist/audio/ の番人（Ruling 68-3）: (a) JSON の各 ID に manifest がある (b) JSON に無いパックは出荷しない (c) 各パックが checkPack を通る
+// (d) 音のファイルは dist のどこであっても audio/<JSON の ID>/ の直下にしか置けない（I-2。別の場所に置いた候補の素通りを塞ぐ）
 export async function checkDistAudio(distDir, standardVoices) {
   const problems = [];
   const audioDir = path.join(distDir, 'audio');
@@ -103,6 +109,7 @@ export async function checkDistAudio(distDir, standardVoices) {
   let entries = [];
   try { entries = await fs.readdir(audioDir, { withFileTypes: true }); } catch { /* 無ければ下の missing で落ちる */ }
   for (const entry of entries) {
+    if (isDotfile(entry.name)) continue;
     if (!ids.has(entry.name)) problems.push(`must not ship audio/${entry.name}${entry.isDirectory() ? '/' : ''} (not in src/app/voices/standard-voices.json)`);
   }
   for (const id of ids) {
@@ -114,6 +121,12 @@ export async function checkDistAudio(distDir, standardVoices) {
       continue;
     }
     problems.push(...(await checkPack(packDir, { expectedId: id })).problems);
+  }
+  const allowed = new RegExp(`^audio/(${[...ids].map(id => id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})/[^/]+$`);
+  const all = (await fs.readdir(distDir, { recursive: true, withFileTypes: true })).filter(entry => entry.isFile());
+  for (const entry of all) {
+    const file = path.relative(distDir, path.join(entry.parentPath, entry.name)).split(path.sep).join('/');
+    if (AUDIO_EXT.test(file) && !(ids.size && allowed.test(file))) problems.push(`must not ship ${file} (audio only under audio/<id in standard-voices.json>/)`);
   }
   return problems;
 }

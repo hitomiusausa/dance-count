@@ -88,6 +88,7 @@ test('the page is self-contained, large enough to tap, and copies a Markdown tab
   assert.doesNotMatch(html, /<(script|link|img)[^>]+(src|href)=["']https?:/i, 'no external resources');
   assert.match(html, /min-height:\s*56px/);
   assert.match(html, /font-size:\s*18px/);
+  assert.doesNotMatch(html, /font-size:\s*1[0-7]px/, "no text under 18px");
   assert.match(html, /結果をコピー/);
   assert.match(html, /\| # \| 語 \| 候補 \| 自然／気になる／だめ \| メモ \|/);
   assert.match(html, /\| # \| 候補 \| 種目・型・速さ \| ずれない／ずれる \| メモ \|/);

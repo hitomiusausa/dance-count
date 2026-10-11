@@ -103,3 +103,37 @@ test('findSecrets spots API keys, private keys and OAuth tokens', () => {
   assert.equal(findSecrets('{"private' + '_key": "-----BEGIN"}').length, 1);
   assert.equal(findSecrets('Bearer ya' + '29.a0Af').length, 1);
 });
+
+test('audio files anywhere outside dist/audio/<listed id>/ must not ship (I-2)', async () => {
+  const dist = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-dist-place-'));
+  try {
+    await fs.cp(englishPack, path.join(dist, 'audio/default-en-female-v1'), { recursive: true });
+    const voices = [{ id: 'default-en-female-v1', locale: 'en' }];
+    assert.deepEqual(await checkDistAudio(dist, voices), []);
+    for (const file of ['voices-ja/one.wav', 'audio-ja/default-ja-female-v1/one.mp3', 'assets/two.m4a', 'x.ogg', 'a/b.aac', 'c.webm', 'd.FLAC']) {
+      await fs.mkdir(path.dirname(path.join(dist, file)), { recursive: true });
+      await fs.writeFile(path.join(dist, file), 'x');
+    }
+    const problems = await checkDistAudio(dist, voices);
+    for (const file of ['voices-ja/one.wav', 'audio-ja/default-ja-female-v1/one.mp3', 'assets/two.m4a', 'x.ogg', 'a/b.aac', 'c.webm', 'd.FLAC']) {
+      assert.ok(problems.some(problem => problem.includes(`must not ship ${file}`)), `${file}\n${problems.join('\n')}`);
+    }
+  } finally {
+    await fs.rm(dist, { recursive: true, force: true });
+  }
+});
+
+test('Finder dotfiles (.DS_Store) are ignored by the pack checks', async () => {
+  await withPack('default-ja-female-v1', async (_, dir) => fs.writeFile(path.join(dir, '.DS_Store'), 'x'), async (dir, base) => {
+    assert.deepEqual((await checkPack(dir)).problems, []);
+  });
+  const dist = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-dist-dot-'));
+  try {
+    await fs.cp(englishPack, path.join(dist, 'audio/default-en-female-v1'), { recursive: true });
+    await fs.writeFile(path.join(dist, 'audio/.DS_Store'), 'x');
+    await fs.writeFile(path.join(dist, 'audio/default-en-female-v1/.DS_Store'), 'x');
+    assert.deepEqual(await checkDistAudio(dist, [{ id: 'default-en-female-v1', locale: 'en' }]), []);
+  } finally {
+    await fs.rm(dist, { recursive: true, force: true });
+  }
+});

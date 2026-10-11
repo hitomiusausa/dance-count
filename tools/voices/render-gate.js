@@ -229,10 +229,10 @@ h2 { font-size: 22px; overflow-wrap: anywhere; margin: 32px 0 8px; padding-top: 
 h3 { font-size: 20px; margin: 24px 0 8px; }
 p, li { font-size: 18px; }
 .steps { padding-left: 1.4em; margin: 0 0 8px; }
-.note { color: var(--muted); font-size: 16px; }
+.note { color: var(--muted); font-size: 18px; }
 .row { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0; }
 .label { font-size: 22px; font-weight: 700; margin: 0 0 8px; overflow-wrap: anywhere; }
-.label small { display: block; font-size: 16px; font-weight: 400; color: var(--muted); }
+.label small { display: block; font-size: 18px; font-weight: 400; color: var(--muted); }
 button, input { font: inherit; font-size: 18px; }
 button { min-height: 56px; border-radius: 10px; border: 2px solid var(--fg); background: var(--card); color: var(--fg); padding: 8px 12px; cursor: pointer; }
 .play { width: 100%; background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 700; }
@@ -245,8 +245,8 @@ button { min-height: 56px; border-radius: 10px; border: 2px solid var(--fg); bac
 .memo { width: 100%; min-height: 56px; margin-top: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff; color: var(--fg); }
 .copy { width: 100%; background: var(--fg); color: var(--bg); font-weight: 700; font-size: 20px; }
 .status { min-height: 1.6em; font-weight: 700; color: var(--chosen); }
-textarea { width: 100%; min-height: 160px; font-size: 16px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #ffffff; color: var(--fg); }
-.machine { font-size: 16px; color: var(--muted); }
+textarea { width: 100%; min-height: 160px; font-size: 18px; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #ffffff; color: var(--fg); }
+.machine { font-size: 18px; color: var(--muted); }
 </style>
 </head>
 <body>

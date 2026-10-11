@@ -20,7 +20,7 @@
     "timing:audit": "node tools/audit-all-dance-timing.js",
     "terminology:audit": "node tools/audit-figure-terminology.js",
     "audio:subdivision-review": "node tools/render-subdivision-audio-review.js",
-    "voices:build": "npm run voices:generate && npm run voices:measure",
+    "voices:build": "node tools/generate-google-voices.js --measure",
     "voices:plan": "node tools/voices/generate.js --dry-run",
     "voices:synth": "node tools/voices/generate.js",
     "voices:process": "node tools/voices/process.js",

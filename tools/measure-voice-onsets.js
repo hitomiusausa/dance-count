@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { measureOnset } from '../src/engine/onset-detector.js';
+import { isShippedAudioDir, OVERWRITE_SHIPPED_FLAG } from './voices/paid-guard.js';
 
 export { measureOnset };
 
@@ -51,7 +52,11 @@ export function parsePcm16Wav(buffer) {
   return { ...format, samples };
 }
 
-export async function measureVoicePack(packDir = DEFAULT_PACK_DIR) {
+// 出荷中のパック（public/audio/ の下）の manifest を書き直すのは overwriteShipped の時だけ（段6a 修正便 I-1）。write:false なら測るだけ。
+export async function measureVoicePack(packDir = DEFAULT_PACK_DIR, { write = true, overwriteShipped = false } = {}) {
+  if (write && isShippedAudioDir(packDir) && !overwriteShipped) {
+    throw new Error(`${packDir} は出荷中の音です。manifest を書き直すなら ${OVERWRITE_SHIPPED_FLAG} を付けてください`);
+  }
   const manifestPath = path.join(packDir, 'manifest.json');
   const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
   const measurements = {};
@@ -65,18 +70,23 @@ export async function measureVoicePack(packDir = DEFAULT_PACK_DIR) {
     measurements[key] = measurement;
   }
 
+  if (!write) return { manifestPath, measurements, written: false };
   manifest.status = 'auto-onset-measured';
   manifest.onsetMeasuredAt = new Date().toISOString();
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  return { manifestPath, measurements };
+  return { manifestPath, measurements, written: true };
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (isMain) {
-  const packDir = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_PACK_DIR;
-  const { manifestPath, measurements } = await measureVoicePack(packDir);
+  const args = process.argv.slice(2);
+  const target = args.find(arg => !arg.startsWith('--'));
+  const packDir = target ? path.resolve(target) : DEFAULT_PACK_DIR;
+  const overwriteShipped = args.includes(OVERWRITE_SHIPPED_FLAG);
+  const write = !isShippedAudioDir(packDir) || overwriteShipped;
+  const { manifestPath, measurements, written } = await measureVoicePack(packDir, { write, overwriteShipped });
   for (const [key, result] of Object.entries(measurements)) {
     console.log(`${key.padEnd(7)} ${String(result.onsetMs).padStart(4)} ms`);
   }
-  console.log(`Updated ${manifestPath}`);
+  console.log(written ? `Updated ${manifestPath}` : `測っただけです（出荷中の音なので書き直していません。書くなら ${OVERWRITE_SHIPPED_FLAG}）: ${manifestPath}`);
 }
