@@ -17,6 +17,8 @@ interface CommonOptions {
   voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
   voiceOffsetMs: number;       // 声のタイミング（practice/voice-offset.ts の voiceOffsetFor。Ruling 62）
 }
+// 鳴らす声とその声のタイミングの組（選んだ録音の声を端末から読み終える前に ▶ が押された時、play に Promise で渡す）
+export type VoiceChoice = Pick<CommonOptions, 'voice' | 'voiceOffsetMs'>;
 export interface FigureLike { id: string; name: string; counts: string }
 
 // 2つの形（Ruling 40）。counts＝S2 のカウントの型。routine＝S4 の試聴・S5（range はフィガーの番号、0 始まり・両端を含む）。
@@ -110,7 +112,8 @@ export class PracticeSession<A extends AudioLike, V> {
   }
 
   // ▶ のクリック処理から同期で呼ぶ。unlock と WakeLock の request は最初の await より前に発行される。
-  play(options: PracticeOptions): Promise<void> {
+  // pendingVoice: 選んだ声がまだ解けていない時の解決。解けるのを待ってその声で鳴らす。失敗した時だけ options の声（標準）で鳴らす（Ruling 61-2）。
+  play(options: PracticeOptions, pendingVoice?: Promise<VoiceChoice>): Promise<void> {
     if (options.track !== null) throw new Error('Playing with a track is not supported in v1');
     if (typeof options.bpm !== 'number' || !Number.isFinite(options.bpm)) throw new TypeError('bpm must be a finite number');
     this.halt();
@@ -119,7 +122,7 @@ export class PracticeSession<A extends AudioLike, V> {
     this.attach(audio);
     const wakeLockRequest = this.deps.keepScreenOn();
     this.update({ ...IDLE_VIEW, starting: true });
-    return this.begin(generation, audio, options, wakeLockRequest);
+    return this.begin(generation, audio, options, wakeLockRequest, pendingVoice);
   }
 
   // ■・戻る・画面を離れる。出ている案内はそのまま（no-sound のバナーは次の ▶ で消える）。
@@ -142,8 +145,15 @@ export class PracticeSession<A extends AudioLike, V> {
     this.listeners.clear();
   }
 
-  private async begin(generation: number, audio: A, options: PracticeOptions, wakeLockRequest: Promise<WakeLockLike | null>) {
+  private async begin(generation: number, audio: A, options: PracticeOptions, wakeLockRequest: Promise<WakeLockLike | null>, pendingVoice?: Promise<VoiceChoice>) {
     const lockPromise = wakeLockRequest.catch(() => null);
+    if (pendingVoice) {
+      try { options = { ...options, ...(await pendingVoice) }; } catch { /* 解けなかった時だけ options の声（標準）のまま */ }
+      if (generation !== this.generation) {
+        void lockPromise.then(lock => lock?.release());
+        return;
+      }
+    }
     let voicePack: V;
     try {
       voicePack = await this.deps.loadVoice(audio, options.voice);

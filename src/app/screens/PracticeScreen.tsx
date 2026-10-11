@@ -4,9 +4,9 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
-import type { PracticeOptions, SessionNotice } from '../practice/session.ts';
+import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -35,7 +35,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   const [forcedDismissed, setForcedDismissed] = useState(false);
   const [dragBpm, setDragBpm] = useState<number | null>(null);
 
-  // 声は解き終わるまで標準（英語）で鳴らす（録音の声を端末から読むのは数十ミリ秒。Ruling 61-4）。
+  // voice は解けた声。まだ解けていない時は標準（英語）を置き、start が pending の解決を待って差し替える（Ruling 61-2）。
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
@@ -56,6 +56,8 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   }, [session, playback.voice]);
 
   const isPlaying = () => latest.current.view.playing || latest.current.view.starting;
+  // ▶・再開はすべてここから（選んだ録音の声がまだ読み終わっていなければ、それを待ってその声で鳴らす）。
+  const start = (next: AppSettings) => session.play(optionsFrom(next), latest.current.voice ? undefined : playback.pending(next));
 
   // 設定を変える。再生中なら止めて適用して再開（このクリックの中で行うので音の解除も保たれる）。
   const change = (patch: Partial<AppSettings>) => {
@@ -63,7 +65,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
     const next = { ...latest.current.settings, ...patch };
     latest.current.settings = next;
     update(patch);
-    if (isPlaying()) void session.play(optionsFrom(next));
+    if (isPlaying()) void start(next);
   };
 
   // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
@@ -72,18 +74,18 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
     if (!result) return;
     latest.current.voice = result.voice;
     if (Object.keys(result.patch).length > 0) change(result.patch);
-    else if (isPlaying()) void session.play(optionsFrom(latest.current.settings));
+    else if (isPlaying()) void start(latest.current.settings);
   };
 
   const togglePlay = () => {
     setForcedDismissed(true);
     if (isPlaying()) session.stop();
-    else void session.play(optionsFrom(latest.current.settings));
+    else void start(latest.current.settings);
   };
 
   const current = () => latest.current.settings;
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
-  const notice: SessionNotice = forced && !forcedDismissed ? forced : view.notice;
+  const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
   const beat = view.playing && !view.countIn ? beatIndexInBar(view.originalTick, profile.beatsPerBar) : null;
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。

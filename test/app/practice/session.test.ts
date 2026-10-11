@@ -308,3 +308,35 @@ test('the voice timing reaches the engine; per-word offsets only from a pack (Ru
   assert.equal(h.starts[1]!.voiceOffsetMs, 30);
   assert.deepEqual(h.starts[1]!.wordOffsetsMs, { slow: 15 });
 });
+
+test('▶ before the chosen recorded voice resolves: unlock stays in the tap, then it plays that voice, not the standard one (Ruling 61-2)', async () => {
+  const h = harness();
+  const pack = { ...packFixture('en', 12), timingAdjustments: { globalOffsetMs: 30, wordOffsetsMs: { slow: 15 }, adjustedAt: 'x' } };
+  let resolve!: (choice: { voice: VoiceSelection; voiceOffsetMs: number }) => void;
+  const pending = new Promise<{ voice: VoiceSelection; voiceOffsetMs: number }>(done => { resolve = done; });
+  const played = h.session.play(WALTZ, pending);
+  assert.deepEqual(h.calls, ['unlock', 'keepScreenOn'], 'unlock and the wake lock happen synchronously, before the voice is known');
+  resolve({ voice: packSelection(pack), voiceOffsetMs: 30 });
+  await played;
+  assert.deepEqual(h.voices.map(voice => voice.id), ['user-recorded-v1']);
+  assert.equal(h.starts[0]!.voiceOffsetMs, 30);
+  assert.deepEqual(h.starts[0]!.wordOffsetsMs, { slow: 15 });
+  assert.equal(h.session.current.playing, true);
+});
+
+test('▶ before the voice resolves: a failed resolve falls back to the standard voice; ■ while waiting starts nothing', async () => {
+  const h = harness();
+  await h.session.play(WALTZ, Promise.reject(new Error('idb')));
+  assert.deepEqual(h.voices.map(voice => voice.id), ['default-en-female-v1']);
+  assert.equal(h.session.current.playing, true);
+
+  const g = harness();
+  let resolve!: (choice: { voice: VoiceSelection; voiceOffsetMs: number }) => void;
+  const played = g.session.play(WALTZ, new Promise(done => { resolve = done; }));
+  g.session.stop();
+  resolve({ voice: packSelection(packFixture('en', 12)), voiceOffsetMs: 0 });
+  await played;
+  assert.equal(g.voices.length, 0);
+  assert.equal(g.starts.length, 0);
+  assert.equal(g.session.current.playing, false);
+});

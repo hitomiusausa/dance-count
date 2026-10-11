@@ -6,9 +6,9 @@ import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
-import type { PracticeOptions, SessionNotice } from '../practice/session.ts';
+import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -86,7 +86,9 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const isPlaying = () => latest.current.view.playing || latest.current.view.starting;
   const current = () => latest.current.settings;
 
-  const restart = (next: AppSettings, nextRange: Range) => { if (isPlaying()) void session.play(optionsFrom(next, nextRange)); };
+  // ▶・再開はすべてここから（選んだ録音の声がまだ読み終わっていなければ、それを待ってその声で鳴らす。Ruling 61-2）。
+  const start = (next: AppSettings, nextRange: Range) => session.play(optionsFrom(next, nextRange), latest.current.voice ? undefined : playback.pending(next));
+  const restart = (next: AppSettings, nextRange: Range) => { if (isPlaying()) void start(next, nextRange); };
 
   const change = (patch: Partial<AppSettings>) => {
     if (Object.keys(patch).length === 0) return;
@@ -113,11 +115,11 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const togglePlay = () => {
     setForcedDismissed(true);
     if (isPlaying()) session.stop();
-    else void session.play(optionsFrom(latest.current.settings, latest.current.range));
+    else void start(latest.current.settings, latest.current.range);
   };
 
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
-  const notice: SessionNotice = forced && !forcedDismissed ? forced : view.notice;
+  const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
   const beat = view.playing && !view.countIn ? beatIndexInBar(view.originalTick, profile.beatsPerBar) : null;
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   const sounding = view.playing && !view.countIn && view.figureIndex !== null ? view.figureIndex : null;

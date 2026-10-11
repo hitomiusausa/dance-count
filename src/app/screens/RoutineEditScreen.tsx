@@ -56,7 +56,12 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const { session, view } = usePracticeSession('S4');
   const playback = usePlaybackVoice();
   // 試聴の声（S2 と同じ選んだ声。解き終わる前は標準（英語）。Ruling 61-4）
-  const voiceOptions = () => { const voice = playback.voice ?? DEFAULT_VOICE; return { voice, voiceOffsetMs: voiceOffsetFor(settings, voice) }; };
+  // 続けて来るクリック（描画の前）でも最新の設定を読む（S2・S5 の latest と同じ）。
+  const latestSettings = useRef(settings);
+  latestSettings.current = settings;
+  const voiceOptions = () => { const voice = playback.voice ?? DEFAULT_VOICE; return { voice, voiceOffsetMs: voiceOffsetFor(latestSettings.current, voice) }; };
+  // まだ解けていない録音の声は、解けるのを待ってその声で試聴する（Ruling 61-2）
+  const pendingVoice = () => (playback.voice ? undefined : playback.pending(latestSettings.current));
 
   // 同じ画面のままハッシュだけ替わった（ブラウザの戻る・進む）。自分で置き換えた時（新規 → 編集）は編集を続け、
   // それ以外は、開いている行を原則どおり閉じて保存してから、新しいハッシュのルーティンで開き直す。
@@ -172,7 +177,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const open = current.open;
   const count = routine.figures.length;
   const playing = view.playing || view.starting;
-  const notice: AlertNotice = saveFailed ? 'save-failed' : view.notice;
+  const notice: AlertNotice = saveFailed || playback.saveFailed ? 'save-failed' : view.notice;
   const sounding = (index: number) => view.playing && view.figureIndex === index;
   // 小節の注意（D16・Ruling 52）。閉じた行のうち上から最初の1件だけ全文（「必要なら編集してください。」つき）、残りは短い形。
   // 開いている行は見出しに出さない（入力欄の下に短い形。FigureForm）。「最初」は閉じた行の中で数えるので、全文は常に1つ。
@@ -202,7 +207,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     void session.play({
       kind: 'routine', danceId: routine.danceId, figures: preview.figures, range: { startIndex: preview.index, endIndex: preview.index },
       bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: 0, loop: false, track: null, ...voiceOptions()
-    });
+    }, pendingVoice());
   };
 
   const previewAll = () => {
@@ -212,7 +217,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     void session.play({
       kind: 'routine', danceId: routine.danceId, figures: current.routine.figures,
       bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: routine.countInBars, loop: false, track: null, ...voiceOptions()
-    });
+    }, pendingVoice());
   };
 
   return (
@@ -330,8 +335,11 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
         <RoutineSpeedField profile={profile} bpm={routine.bpm} onChange={bpm => act(editor => editor.setBpm(bpm))} />
         <VoiceOffsetRow idPrefix="dc-s4" offsetMs={playback.offsetMs} onStep={direction => {
           session.stop();   // 試聴中なら止める（ほかの操作と同じ。Ruling 36）
-          const result = playback.step(settings, direction);
-          if (result && Object.keys(result.patch).length > 0) update(result.patch);
+          const result = playback.step(latestSettings.current, direction);
+          if (result && Object.keys(result.patch).length > 0) {
+            latestSettings.current = { ...latestSettings.current, ...result.patch };
+            update(result.patch);
+          }
         }} />
       </MoreOptions>
       {!(count === 0 && open?.kind === 'add') && (
