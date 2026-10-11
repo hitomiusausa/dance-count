@@ -15,15 +15,16 @@ import { recordedPackIdFor, type VoiceLocale } from '../voices/ids.ts';
 import { processTake, type DecodeContext } from '../voices/normalize.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
-import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, renamePack, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
+import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
-import { defaultVoiceName, nextStep, previousStep, stepAfterStart, takeErrorOutcome, wordPrompts, type RecordStep } from '../voices/wizard.ts';
+import { defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts, type RecordStep } from '../voices/wizard.ts';
 
 // S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語 → 完成。
 // 1 語ごとに端末へ保存（戻る・電話・落ちるのどれでも録った語が残る）。「‹ 戻る」は S8 を出る（確認なし）。
 // マイクが使えない（拒否・ほかのアプリや通話が使用中）は別画面にせず、説明の画面の説明 3 行の場所に枠を出す。
 // 言葉の 2 択と「録音をはじめる」は残す＝もう一度は同じボタン（D30・Fable Q2/Q4）。
 // ui-state: mic-denied（説明の画面に拒否の枠）・no-voice（1 語目に「声が入っていませんでした」）・no-recorder（非対応の枠）。見た目だけ（Ruling 63-3）。
+// ui-state の時は録っても名前を変えても端末の声・設定に書かない（画面の中だけ。最終レビュー M5）。no-voice は英語の声があればその写しから。
 const PROGRESS_TICK_MS = 100;   // 録音中の輪を描き直す間隔（1.5 秒の動きは transition ではなく描画の更新で。U8）
 const LANGUAGES: readonly VoiceLocale[] = ['en', 'ja-JP'];
 
@@ -54,6 +55,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const stopListening = useRef<(() => void) | null>(null);
   const abortTake = useRef<AbortController | null>(null);   // 録音中の 1 語をやめる（マイクを閉じ、音声セッションを戻す）
   const persisted = useRef(false);
+  const persists = savesVoices(uiState);
   const { session, view } = usePracticeSession('S8');
   const [comparing, setComparing] = useState<'mine' | 'standard' | null>(null);
   const comparePlaying = view.playing || view.starting;
@@ -64,7 +66,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     void Promise.all(LANGUAGES.map(locale => loadVoicePack(storage, recordedPackIdFor(locale)))).then(([en, ja]) => {
       if (!alive) return;
       setSaved({ en: en ?? null, 'ja-JP': ja ?? null });
-      if (uiState === 'no-voice') setPack(newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString()));
+      if (uiState === 'no-voice') setPack(uiStateStartPack(en ?? null, newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString())));
     });
     // 画面を離れた: 届く結果を捨て、録音中ならやめて（マイクを閉じ・音声セッションを「再生」に戻す）、「聞く」も止める。
     return () => { alive = false; generation.current += 1; abortTake.current?.abort(); abortTake.current = null; stopListening.current?.(); };
@@ -139,8 +141,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         if (mine !== generation.current) return;
         if (!result.ok) { setAlert('no-voice'); return; }   // 前の録音は残す（Ruling 58-2）
         const next = withWord(pack, word, result.word, new Date().toISOString());
-        if (!(await saveVoicePack(storage, next))) { if (mine === generation.current) setAlert('save-failed'); return; }
-        if (!persisted.current) { persisted.current = true; void requestPersistentStorage(); }
+        if (persists) {
+          if (!(await saveVoicePack(storage, next))) { if (mine === generation.current) setAlert('save-failed'); return; }
+          if (!persisted.current) { persisted.current = true; void requestPersistentStorage(); }
+        }
         if (mine !== generation.current) return;
         setAlert('none');
         setPack(next);
@@ -164,8 +168,9 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   };
 
   // 「▶ 聞く」: 録れた WAV をそのまま 1 回。鳴っている間にもう一度押すと止める（マイクは閉じている。Ruling 57-4）。
+  // 録音中は押せない（マイクが開いている間に前の声を鳴らすと、新しい録音に入ってしまう。最終レビュー M2）。
   const listen = () => {
-    if (!take) return;
+    if (!take || recording) return;
     if (listening) { stopListening.current?.(); return; }
     let audio: AudioContext;
     try { audio = unlockAudioInsideTap(); } catch { return; }
@@ -184,18 +189,20 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     void session.play(voicePreviewOptions(which === 'mine' ? packSelection(pack) : DEFAULT_VOICE, 0, 2));
   };
 
-  const rename = (value: string) => {
+  // 空にしたら既定名に戻し、欄にも書き戻す（名前が変わらず描き直されない時も欄が空のまま見えない。最終レビュー M1）。
+  const rename = (input: HTMLInputElement) => {
     if (!pack) return;
-    const next = renamePack(pack, value) ?? { ...pack, name: defaultVoiceName(translator, pack.locale) };
-    if (next.name === pack.name) return;
+    const { next, shown } = nameAfterEdit(pack, input.value, defaultVoiceName(translator, pack.locale));
+    input.value = shown;
+    if (!next) return;
     setPack(next);
-    void saveVoicePack(storage, next).then(ok => setAlert(ok ? 'none' : 'save-failed'));
+    if (persists) void saveVoicePack(storage, next).then(ok => setAlert(ok ? 'none' : 'save-failed'));
   };
 
   const finish = () => {
     if (!pack) return;
     session.stop();
-    update(chooseVoice(packSelection(pack)));
+    if (persists) update(chooseVoice(packSelection(pack)));
     replaceRoute({ screen: 'S7', params: {} });
   };
 
@@ -274,7 +281,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         <div class="dc-field">
           <div class="dc-field-label" id="dc-s8-name-label">{translator.t('voiceName')}</div>
           <input id="dc-s8-name" class="dc-input" type="text" maxLength={40} value={pack.name} enterKeyHint="done" aria-labelledby="dc-s8-name-label"
-            onBlur={event => rename((event.currentTarget as HTMLInputElement).value)}
+            onBlur={event => rename(event.currentTarget as HTMLInputElement)}
             onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
         </div>
         <h2 class="dc-field-label" id="dc-s8-compare">{translator.t('compareTitle')}</h2>
@@ -305,7 +312,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const onsetAt = take ? Math.min(1, take.onsetMs / take.durationMs) : 0;
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'}
-      data-taken={take ? 'true' : 'false'}>
+      data-taken={take ? 'true' : 'false'} data-notice={alert !== 'none' ? alert : undefined}>
       {header}
       <div class="dc-record-progress" role="progressbar" aria-valuemin={0} aria-valuemax={VOICE_KEYS.length} aria-valuenow={index + 1}
         aria-label={translator.t('wordProgress', { index: index + 1 })}>
@@ -338,7 +345,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             {peaks.map((peak, bar) => <rect key={bar} x={bar * 4 + 1} y={20 - Math.max(1, peak * 19)} width="2" height={Math.max(2, peak * 38)} />)}
             <rect class="dc-wave-onset" x={onsetAt * WAVE_BARS * 4} y="0" width="1.5" height="40" />
           </svg>
-          <button type="button" class="dc-chip dc-listen" aria-pressed={listening ? 'true' : 'false'} onClick={listen}>
+          <button type="button" class="dc-chip dc-listen" aria-pressed={listening ? 'true' : 'false'} disabled={recording} onClick={listen}>
             <Icon name={listening ? 'stop' : 'play'} /><span>{translator.t('listenTake')}</span>
           </button>
         </div>

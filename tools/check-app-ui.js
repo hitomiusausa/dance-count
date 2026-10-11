@@ -97,6 +97,9 @@ const STATES = [
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
   { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60 },
+  // 最終レビュー M3: 録れた語で枠が出ても、丸と波形・「聞く」は初期表示に入ったまま（375×548 では枠を進み具合の行に重ねる）。ui-state は声を書かない（M5）
+  { name: 'S8 録れた語で声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], alert: true, total: 3,
+    recordButton: true, takeShown: true, steps: [{ wait: '.dc-wave rect:nth-of-type(41)' }] },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];

@@ -98,6 +98,12 @@ export async function deleteVoicePack(storage: AppStorage | null, id: string): P
   try { await storage.delete('voice-packs', id); return true; } catch { return false; }
 }
 
+// 一覧から消す（最終レビュー M4）。端末から消えたと確かめてから、消した後の一覧を返す。消せなければ null（行は残す）。
+export async function removeVoicePack(storage: AppStorage | null, packs: readonly VoicePackRecord[], id: string): Promise<VoicePackRecord[] | null> {
+  if (!(await deleteVoicePack(storage, id))) return null;
+  return packs.filter(pack => pack.id !== id);
+}
+
 // その言語の録音の声を新しく作る（まだ語は無い）。名前は既定名（D23「自分の声（英語）」）を呼び出し側が渡す。
 export function newRecordedPack(locale: VoiceLocale, name: string, now: string): VoicePackRecord {
   const base = createRecordedVoicePack(name, { id: recordedPackIdFor(locale), locale });

@@ -7,8 +7,9 @@ import { STANDARD_VOICES, findStandardVoice } from '../../../src/app/voices/stan
 import { STANDARD_VOICE_ID } from '../../../src/app/settings/settings.ts';
 import {
   VOICE_KEYS, VOICE_LIMITS, deleteVoicePack, isCompletePack, listVoicePacks, loadVoicePack, newRecordedPack, normalizeVoicePackRecord,
-  packProgress, renamePack, saveVoicePack, withWord
+  packProgress, removeVoicePack, renamePack, saveVoicePack, withWord
 } from '../../../src/app/voices/store.ts';
+import { withPackOffset } from '../../../src/app/practice/voice-offset.ts';
 
 const NOW = '2026-10-12T00:00:00.000Z';
 
@@ -123,4 +124,30 @@ test('renamePack trims, keeps 40 characters and refuses an empty name', () => {
   assert.equal([...renamePack(pack, 'あ'.repeat(50))!.name].length, 40);
   assert.equal(renamePack(pack, '   '), null);
   assert.equal(renamePack(pack, 'x')?.updatedAt, pack.updatedAt, 'renaming does not touch the sound');
+});
+
+test('the timing offset survives a re-record and a rename, also through save and load (final review M6)', async () => {
+  const tuned = withPackOffset(packFixture('en', 12), -20, NOW);
+  const rerecorded = withWord(tuned, 'one', wordFixture(55), '2026-10-12T01:00:00.000Z');
+  assert.equal(rerecorded.timingAdjustments?.globalOffsetMs, -20);
+  assert.equal(rerecorded.words.one?.onsetMs, 55);
+  const renamed = renamePack(rerecorded, '山田先生');
+  assert.equal(renamed?.timingAdjustments?.globalOffsetMs, -20);
+  assert.equal(renamed?.name, '山田先生');
+  const { storage } = memoryStorage();
+  assert.equal(await saveVoicePack(storage, renamed!), true);
+  assert.equal((await loadVoicePack(storage, 'user-recorded-v1'))?.timingAdjustments?.globalOffsetMs, -20);
+});
+
+test('delete returns the list without the voice only after storage confirms; a failure keeps the row (final review M4)', async () => {
+  const en = packFixture('en', 12);
+  const ja = packFixture('ja-JP', 7);
+  const { storage, data } = memoryStorage();
+  await saveVoicePack(storage, en);
+  await saveVoicePack(storage, ja);
+  assert.deepEqual((await removeVoicePack(storage, [en, ja], en.id))?.map(pack => pack.id), [ja.id]);
+  assert.equal(data.has(`voice-packs/${en.id}`), false);
+  const failing = memoryStorage({}, { failWrites: true });
+  assert.equal(await removeVoicePack(failing.storage, [en, ja], en.id), null);
+  assert.equal(await removeVoicePack(null, [en], en.id), null);
 });

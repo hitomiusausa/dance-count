@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
@@ -14,7 +14,7 @@ import { useStorage } from '../state/storage.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packDisplayName, packSelection, standardSelection, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { STANDARD_VOICES } from '../voices/standard.ts';
-import { deleteVoicePack, isCompletePack, listVoicePacks, packProgress, type VoicePackRecord } from '../voices/store.ts';
+import { isCompletePack, listVoicePacks, packProgress, removeVoicePack, type VoicePackRecord } from '../voices/store.ts';
 
 // S7 声（仕様 §4 S7・Ruling 60・61）。一覧 [data-group="voice"]（role="radiogroup"）: 標準 → 自分の声（完成）→ 受け取った声 → 途中の声。
 // 1 回目のタップで選ぶ（selectedVoiceId と voiceLocale を一緒に書く）。選んだ行には「▶ 試聴」（ワルツ 1 小節）。
@@ -31,6 +31,8 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const { session, view } = usePracticeSession('S7');
   const previewing = view.playing || view.starting;
+  const latestSettings = useRef(settings);
+  latestSettings.current = settings;
 
   useEffect(() => {
     let alive = true;
@@ -64,9 +66,13 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
     session.stop();
     setDeleting(null);
     setOpenId(null);
-    setPacks(packs.filter(item => item.id !== pack.id));
-    update(forgetVoiceSettings(settings, pack.id));
-    void deleteVoicePack(storage, pack.id).then(ok => setDeleteFailed(!ok));
+    // 端末から消えたと確かめてから一覧と設定を変える。消せなければ行を残し「保存できませんでした」（最終レビュー M4）。
+    void removeVoicePack(storage, packs, pack.id).then(next => {
+      setDeleteFailed(next === null);
+      if (next === null) return;
+      setPacks(current => (current ? current.filter(item => item.id !== pack.id) : next));
+      update(forgetVoiceSettings(latestSettings.current, pack.id));
+    });
   };
 
   const radioRow = (voice: VoiceSelection, name: string) => {

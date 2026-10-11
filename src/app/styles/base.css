@@ -400,5 +400,10 @@ button { cursor: pointer; }
   .dc-record-word { margin: 8px 0 4px; }
   .dc-record-slot { margin-bottom: 8px; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行は役目を終えている */
+  /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 のます）の場所に重ねる（最終レビュー M3）。
+     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 56px＝上の余白 8＋戻るの行 48 */
+  .dc-record[data-step="word"][data-taken="true"][data-notice] { position: relative; }
+  .dc-record[data-taken="true"][data-notice] .dc-record-progress { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 0; margin: 0; }
   .dc-take { margin-top: 8px; padding: 4px 0; }
 }

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { packFixture } from '../helpers/voice-fixtures.ts';
 import { createAppTranslator } from '../../../src/app/i18n/index.ts';
-import { defaultVoiceName, firstMissingIndex, nextStep, previousStep, stepAfterStart, takeErrorOutcome, wordPrompts } from '../../../src/app/voices/wizard.ts';
+import { defaultVoiceName, firstMissingIndex, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts } from '../../../src/app/voices/wizard.ts';
 
 test('start goes to the first missing word, or to the finished screen when all 12 are there (D25)', () => {
   assert.deepEqual(stepAfterStart(null), { kind: 'word', index: 0 });
@@ -40,4 +40,26 @@ test('a failed take mid-word stays on the word as "no voice"; only denied/unsupp
   assert.equal(takeErrorOutcome('failed'), 'no-voice');
   assert.equal(takeErrorOutcome(null), 'no-voice');
   assert.equal(takeErrorOutcome('something-else'), 'no-voice');
+});
+
+test('the name field never stays empty: cleared → the default name is shown and saved only when it changes (final review M1)', () => {
+  const named = packFixture('en', 12, { name: '山田先生' });
+  const cleared = nameAfterEdit(named, '   ', '自分の声（英語）');
+  assert.equal(cleared.shown, '自分の声（英語）');
+  assert.equal(cleared.next?.name, '自分の声（英語）');
+  const already = packFixture('en', 12, { name: '自分の声（英語）' });
+  assert.deepEqual(nameAfterEdit(already, '', '自分の声（英語）'), { next: null, shown: '自分の声（英語）' }, 'nothing to save, but the field is written back');
+  assert.deepEqual(nameAfterEdit(named, '  山田先生 ', '自分の声（英語）'), { next: null, shown: '山田先生' }, 'trimmed value written back');
+  const renamed = nameAfterEdit(named, ' 鈴木先生 ', '自分の声（英語）');
+  assert.equal(renamed.shown, '鈴木先生');
+  assert.equal(renamed.next?.name, '鈴木先生');
+});
+
+test('ui-state URLs never write voices; no-voice starts from a copy of the saved English voice when there is one (final review M5)', () => {
+  assert.equal(savesVoices(undefined), true);
+  for (const state of ['no-voice', 'mic-denied', 'no-recorder']) assert.equal(savesVoices(state), false, state);
+  const fresh = packFixture('en', 0);
+  const saved = packFixture('en', 12);
+  assert.equal(uiStateStartPack(null, fresh), fresh);
+  assert.equal(uiStateStartPack(saved, fresh), saved);
 });
