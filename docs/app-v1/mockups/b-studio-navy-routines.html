@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dance Count — ルーティン画面（B Studio Navy）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--font:"Inter","Noto Sans JP",sans-serif;--page:#F2F3F6;--bg:#FFFFFF;--surface:#FFFFFF;--ink:#14213D;--ink2:#4A5670;
+ --primary:#1B2A4A;--on-primary:#FFFFFF;--soft:#EEF0F5;--line:#8790A3;--frame:#1B2A4A;--focus:#B45309;
+ --sel:#1B2A4A;--sel-ink:#FFFFFF;--sel-line:#1B2A4A;--count:96px;--count-d:200px;--count-ink:#A54D06;--beat-on:#A54D06;
+ --warn-bg:#FFFFFF;--warn-ink:#7A3A05;--warn-line:#A54D06;--dockbg:#FFFFFF;
+ --r:6px;--r-s:4px;--tabh:68px;--track:-0.015em}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.5}
+button,a,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.fill{fill:currentColor;stroke:none}
+.wrap{max-width:1260px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.top h2{margin:0;font-size:28px;line-height:1.25}.top p{margin:4px 0 0;color:var(--ink2);font-size:16px;max-width:60em}
+.checks{margin:12px 0 0;padding:12px 16px 12px 36px;border-left:4px solid var(--primary);background:var(--surface);font-size:16px;max-width:60em}
+.checks li{margin:4px 0}
+.viewsw{display:flex;gap:8px}.viewsw button{min-height:48px;padding:0 16px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:16px;font-weight:700}
+.viewsw button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.frames{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+.frames figure{margin:0}.frames figcaption{margin:0 0 8px;font-size:16px;font-weight:700;color:var(--ink2);max-width:391px}
+.frames figcaption .n{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px}
+.phone{position:relative;display:flex;flex-direction:column;width:375px;height:667px;box-sizing:content-box;border:8px solid var(--frame);border-radius:40px;background:var(--bg);overflow:hidden}
+.scr{flex:1;overflow-y:auto;padding:16px 16px 24px;scrollbar-width:none}.scr::-webkit-scrollbar{display:none}
+.scr-dock{padding-bottom:112px}.scr-tabs-dock{padding-bottom:24px}
+.dock{position:absolute;left:0;right:0;bottom:0;padding:12px 16px;background:var(--dockbg);border-top:1px solid var(--line)}
+.tabbar{display:flex;gap:8px;padding:0 8px;height:var(--tabh);border-top:1px solid var(--line);background:var(--surface)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;text-decoration:none;font-size:16px;font-weight:600;color:var(--ink2)}
+.tab[aria-current=page]{color:var(--primary);font-weight:800}
+.h1{margin:8px 0 12px;font-size:22px;font-weight:700;line-height:1.3;letter-spacing:var(--track)}
+.back{display:inline-flex;align-items:center;gap:2px;min-height:48px;min-width:48px;padding-right:8px;text-decoration:none;font-size:18px;font-weight:700;color:var(--primary)}
+.rechead{display:flex;align-items:center;gap:8px}.rtitle{font-size:18px;font-weight:700}
+.primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:none;border-radius:var(--r);background:var(--primary);color:var(--on-primary);font-size:20px;font-weight:800}
+.primary[disabled]{background:var(--soft);color:var(--ink2);border:1px solid var(--line);cursor:not-allowed}
+.secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 14px;border:1px solid var(--primary);border-radius:var(--r-s);background:var(--surface);color:var(--primary);font-size:18px;font-weight:700}
+.secondary[disabled]{border-color:var(--line);color:var(--ink2);cursor:not-allowed}
+.play{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:72px;border:none;border-radius:var(--r);background:var(--primary);color:var(--on-primary);font-size:24px;font-weight:800}
+.play .ic{width:32px;height:32px}
+.body{font-size:18px}.sub{font-size:16px;color:var(--ink2)}
+.note{margin:0 0 6px;font-size:16px;color:var(--ink2)}
+/* S3 */
+.rlist{margin-top:16px;border-top:1px solid var(--line)}
+.rrow{border-bottom:1px solid var(--line)}
+.rhead{display:flex;align-items:center;gap:10px;width:100%;min-height:72px;padding:8px 2px;border:none;background:none;text-align:left}
+.rhead .t{flex:1;display:flex;flex-direction:column;line-height:1.3}.rhead b{font-size:18px}.rhead small{font-size:16px;color:var(--ink2)}
+.rrow.open .rhead .ic:last-child{transform:rotate(180deg)}
+.racts{display:flex;flex-wrap:wrap;gap:8px;padding:0 2px 14px}
+.racts .primary{flex:1 1 100%}.racts .secondary{flex:1}
+/* tiles (S4 種目選択) */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-height:64px;padding:6px 2px;border:none;border-bottom:1px solid var(--line);background:var(--surface);text-align:left}
+.tile b{font-size:18px;line-height:1.3}.tile small{font-size:16px;color:var(--ink2)}
+/* S4 */
+.field{margin-top:12px}.flabel{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:16px;font-weight:700;color:var(--ink2)}
+.input{width:100%;min-height:52px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);font-size:18px}
+.input.bad{border:2px solid var(--warn-line);background:#FFF9F3}
+.reason{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:16px;font-weight:700;color:var(--warn-ink)}
+.dance-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:56px;margin-top:8px;border-bottom:1px solid var(--line)}
+.dance-row span{font-size:18px}.dance-row b{font-weight:700}
+.history{display:flex;gap:8px;margin-top:12px}.history .secondary{flex:1}
+.flist{margin:12px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.frow{border-bottom:1px solid var(--line)}
+.fhead{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:6px 2px;border:none;background:none;text-align:left}
+.fno{flex:none;width:28px;font-size:16px;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums}
+.ft{flex:1;display:flex;flex-direction:column;line-height:1.3}.ft b{font-size:18px}.ft small{font-size:16px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.frow.open{background:var(--soft);border-bottom:1px solid var(--primary);border-top:1px solid var(--primary);margin-top:-1px}
+.fform{padding:4px 10px 12px}
+.fform .field:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);font-size:18px;font-weight:700}
+.chip[aria-checked=true]{background:var(--sel);border-color:var(--sel-line);color:var(--sel-ink)}
+.chips .cap{flex-basis:100%;font-size:16px;font-weight:700;color:var(--ink2)}
+.sugg{display:flex;flex-direction:column;gap:0;margin-top:6px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface)}
+.sugg button{min-height:48px;padding:0 12px;border:none;border-bottom:1px solid var(--soft);background:none;text-align:left;font-size:18px}
+.sugg button:last-child{border-bottom:none}
+.fform .primary{margin-top:12px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.facts .secondary{padding:0 6px}
+.facts .wide{grid-column:span 3}
+.add-tail{margin-top:12px}
+.more{margin-top:12px;border-bottom:1px solid var(--line)}.more summary{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;font-size:18px;font-weight:700;color:var(--ink2);list-style:none;cursor:pointer}
+.more summary::-webkit-details-marker{display:none}
+.more-body{display:flex;flex-direction:column;gap:12px;padding:4px 0 12px}
+.more-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:56px;border-bottom:1px solid var(--line)}
+.more-row span{font-size:18px;font-weight:700}
+.range{display:flex;flex-direction:column;gap:8px}
+.rstep{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;min-height:56px;border-bottom:1px solid var(--line)}
+.rstep .k{font-size:16px;font-weight:700;color:var(--ink2);width:3.5em}
+.rstep .v{min-width:0;overflow-wrap:anywhere;font-size:18px;font-weight:700;line-height:1.25}.rstep .v small{display:block;font-size:16px;font-weight:400;color:var(--ink2)}
+.step{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--primary);border-radius:var(--r-s);background:var(--surface);color:var(--primary)}
+.step[disabled]{border-color:var(--line);color:var(--line)}
+.slider{margin:0;width:100%;accent-color:var(--primary);height:48px}
+/* S5（S2 と同じ骨格） */
+.playhead .h1{margin:4px 0 0;font-size:28px}.playhead small{display:block;font-size:16px;color:var(--ink2)}
+.author{margin:4px 0 4px;font-size:16px;color:var(--ink2)}
+.countbox{display:flex;flex-direction:column;align-items:center;padding:0 0 6px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.now{font-size:var(--count);font-weight:700;line-height:1;color:var(--count-ink);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.beats{display:flex;gap:10px;margin:8px 0 0;padding:0;list-style:none}
+.beats li{display:grid;place-items:center;width:52px;height:40px;border-bottom:3px solid var(--line);font-size:18px;font-weight:700;color:var(--ink2)}
+.beats li.on{color:#A54D06;border-bottom:6px solid #A54D06;font-weight:800}
+.nowfig{display:flex;align-items:baseline;gap:8px;align-self:stretch;margin-top:8px;padding:2px 0 2px 10px;border-left:4px solid #A54D06;font-size:18px;font-weight:700}
+.nowfig .pos{font-size:16px;color:var(--ink2);font-variant-numeric:tabular-nums;font-weight:700}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:64px;padding:4px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);line-height:1.2;position:relative}
+.opt b{font-size:18px}.opt small{font-size:16px}.opt-check{position:absolute;top:4px;left:6px;width:18px;height:18px}
+.opt[aria-checked=true]{background:var(--sel);border-color:var(--sel-line);color:var(--sel-ink)}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:4px}
+.tog{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:84px;padding:10px 2px;border:none;border-bottom:1px solid var(--line);background:var(--surface);text-align:left}
+.tog-l{font-size:18px;font-weight:700}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:800}
+.sw-k{width:40px;height:24px;border-radius:999px;background:var(--line);position:relative}
+.sw-k::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.tog[aria-checked=true] .sw-k{background:var(--primary)}.tog[aria-checked=true] .sw-k::after{left:19px}.tog[aria-checked=true] .sw-t{color:var(--primary)}
+.voice{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:0 2px;border:none;border-bottom:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;text-align:left}
+.voice span{flex:1}
+.plist{margin:16px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.plist-cap{margin-top:20px;font-size:16px;font-weight:700;color:var(--ink2)}
+.plist li{display:flex;align-items:center;gap:10px;min-height:48px;padding:4px 2px 4px 10px;border-bottom:1px solid var(--line);border-left:4px solid transparent;font-size:18px}
+.plist li small{margin-left:auto;font-size:16px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.plist li.cur{border-left-color:#A54D06;font-weight:800;background:var(--now-bg)}
+:root{--now-bg:#FBEBDD}
+.tintB{--now-bg:#E4E8F1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:760px;margin:0 auto 32px}
+.cmp figure{margin:0;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.cmp figcaption{font-size:16px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+@media (max-width:640px){.cmp{grid-template-columns:1fr}}
+.plist li.out{color:var(--ink2)}
+.plist .fno{width:24px}
+/* dialog（S3 の削除確認・参考） */
+.scrim{position:absolute;inset:0;background:rgba(20,33,61,.55);display:grid;place-items:center;padding:16px}
+.dlg{width:100%;padding:20px 16px 16px;border-radius:var(--r);background:var(--surface)}
+.dlg p{margin:0 0 4px;font-size:20px;font-weight:700}.dlg small{display:block;margin-bottom:16px;font-size:16px;color:var(--ink2)}
+.dlg .btns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg .btns .secondary{min-height:56px}
+/* S5 だけ（Ruling 46〜48）: 見出し1行省略・現在カウント 80px・余白を詰める */
+.s5 .playhead .h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s5 .now{font-size:72px}
+.s5 .countbox{margin-bottom:4px}
+.s5 .nowfig{margin-top:6px;line-height:1.3;padding:0 0 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s5 .field .flabel{margin:4px 0}
+.s5 .toggles{margin-top:8px}
+.s5 .voice{margin-top:8px}
+.s5 .playhead .h1{margin:4px 0 0}.s5 .playhead small{line-height:1.3}.s5 .back{min-height:48px}
+/* desktop */
+.deskwrap{overflow-x:auto;padding-bottom:8px}
+.desk{position:relative;width:1200px;height:800px;margin:0 auto;border:1px solid var(--line);border-radius:16px;background:var(--bg);overflow:hidden}
+.d-top{display:flex;align-items:center;gap:32px;height:72px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;line-height:1.15}.brand b{font-size:22px;font-weight:800}.brand small{font-size:16px;color:var(--ink2)}
+.d-main{display:grid;grid-template-columns:1fr 420px;gap:48px;padding:24px 48px 140px;height:calc(800px - 72px);overflow:hidden}
+.d-left .now{font-size:var(--count-d)}.d-left .beats li{width:72px;height:56px;font-size:24px}
+.d-dock{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:16px;background:var(--dockbg);border-top:1px solid var(--line)}
+.d-dock .play{width:64%;min-height:80px}
+[hidden]{display:none!important}
+@media (max-width:440px){
+ .wrap{padding:16px 0 32px}.top,.viewsw{padding:0 16px}
+ .frames{gap:32px}.frames figure{width:100%}.frames figcaption{padding:0 16px}
+ .phone{width:100%;max-width:100%;border-width:0;border-radius:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);box-sizing:border-box}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head>
+<body><svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></symbol>
+<symbol id="i-metronome" viewBox="0 0 24 24"><path d="M10 3h4l3.5 15.5a1 1 0 0 1-1 1.5h-9a1 1 0 0 1-1-1.5L10 3z"/><path d="m12 14 5-8"/></symbol>
+<symbol id="i-leadin" viewBox="0 0 24 24"><path d="M3 12h11"/><path d="m10 8 4 4-4 4"/><path d="M19 5v14"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 13 4-4"/><path d="M4.5 17a8.5 8.5 0 1 1 15 0"/></symbol>
+<symbol id="i-voice" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+</svg>
+<main class="wrap">
+ <div class="top">
+  <div>
+   <h2>ルーティンの画面（S3・S4・S5）— B Studio Navy</h2>
+   <p>段3の確認用モック（2026-10-11）。見た目は段0で決めた B のまま、ルーティンの3画面を同じ部品で組みました。正は仕様書と Ruling 35〜48。S5 の「あなたが作成」は監修済みと誤認させないための表示（受け取ったものは「○○さんが作成」）。スマホ枠は 375×667。中のカウントは見本です（監修済みの振付ではありません）。</p>
+   <ol class="checks">
+    <li><b>確認1</b>: フィガーは「行を開いて入れる → 決定」で確定する（④⑤）。決定を押し忘れても、正しく入っていれば別の行を触った時に確定します。</li>
+    <li><b>確認2</b>: 一部だけ練習したい時は「くわしく」の中で「はじめ／おわり」を ‹ › で選ぶ（⑦）。</li>
+    <li><b>確認3</b>: フィガーが0件の時は、下の大きなボタンが「＋ フィガーを追加」になる（③）。</li>
+    <li><b>確認4</b>: 再生画面（⑥）は練習画面（S2）と同じ5つの操作を1画面に収めるため、ルーティン名は1行で「…」省略、大きなカウントは少し小さめ（72px）にしています。窮屈に見えないか。</li>
+   </ol>
+  </div>
+  <div class="viewsw" role="group" aria-label="表示の切り替え">
+   <button aria-pressed="true" data-v="phones">スマホ 8画面</button>
+   <button aria-pressed="false" data-v="desk">PC 幅の再生画面</button>
+  </div>
+ </div>
+
+<h3 style="text-align:center;margin:8px 0 12px;font-size:20px">再生中のフィガーの塗り — <b>A に決定</b>（D10・2026-10-11）</h3>
+ <div class="cmp">
+  <figure><figcaption>A 琥珀のうす塗り（採用）</figcaption><ol class="plist" style="margin:0"><li><span class="fno">2</span>ナチュラルターン<small>1 2 3</small></li><li class="cur"><span class="fno">3</span>ウィスク<small>1 2 &amp; 3</small></li><li><span class="fno">4</span>シャッセ フロム PP<small>1 2 &amp; 3</small></li></ol></figure>
+  <figure class="tintB"><figcaption>B ネイビーのうす塗り（不採用）</figcaption><ol class="plist" style="margin:0"><li><span class="fno">2</span>ナチュラルターン<small>1 2 3</small></li><li class="cur"><span class="fno">3</span>ウィスク<small>1 2 &amp; 3</small></li><li><span class="fno">4</span>シャッセ フロム PP<small>1 2 &amp; 3</small></li></ol></figure>
+ </div>
+ <div id="phones" class="frames">
+
+ <!-- ① S3 -->
+ <figure><figcaption><span class="n">1</span>S3 ルーティン一覧（2本・1本を開いた状態）</figcaption>
+ <section class="phone" aria-label="S3 ルーティン一覧">
+  <div class="scr scr-tabs-dock">
+   <h1 class="h1" style="margin-top:8px">ルーティン</h1>
+   <button class="primary"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>新しいルーティン</span></button>
+   <div class="rlist" data-list>
+    <div class="rrow open">
+     <button class="rhead" aria-expanded="true"><span class="t"><b>ワルツの練習</b><small>ワルツ · 13 フィガー</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+     <div class="racts">
+      <button class="primary"><svg class="ic fill" aria-hidden="true"><use href="#i-play"/></svg><span>再生</span></button>
+      <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg><span>編集</span></button>
+      <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg><span>削除</span></button>
+     </div>
+    </div>
+    <div class="rrow">
+     <button class="rhead" aria-expanded="false"><span class="t"><b>タンゴ 発表会</b><small>タンゴ · 6 フィガー · 山田さんから</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+    </div>
+   </div>
+   <p class="sub" style="margin-top:16px">※「配る」は段5（配る機能ができた時）に開いた行へ足します。<br>※「山田さんから」は受け取ったルーティンの見本（受け取りは段5）。</p>
+  </div>
+  <nav class="tabbar" data-nav><a class="tab" href="#"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>練習</span></a><a class="tab" href="#" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>ルーティン</span></a><a class="tab" href="#"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg><span>設定</span></a></nav>
+ </section></figure>
+
+ <!-- ② S4 種目選択 -->
+ <figure><figcaption><span class="n">2</span>S4 新しいルーティン — まず種目を選ぶ</figcaption>
+ <section class="phone" aria-label="S4 種目選択">
+  <div class="scr">
+   <header class="rechead"><a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a><span class="rtitle">新しいルーティン</span></header>
+   <h1 class="h1">種目を選んでください</h1>
+   <div class="tiles" data-group="dance">
+    <button class="tile"><b>ワルツ</b><small>1 2 3</small></button><button class="tile"><b>タンゴ</b><small>S S Q Q S</small></button><button class="tile"><b>ヴィエニーズワルツ</b><small>1 2 3</small></button><button class="tile"><b>スローフォックス</b><small>S Q Q</small></button><button class="tile"><b>クイックステップ</b><small>S Q Q</small></button><button class="tile"><b>ルンバ</b><small>2 3 4 1</small></button><button class="tile"><b>チャチャチャ</b><small>2 3 4 &amp; 1</small></button><button class="tile"><b>サンバ</b><small>1 a 2</small></button><button class="tile"><b>パソドブレ</b><small>1 2 3 4</small></button><button class="tile"><b>ジャイブ</b><small>1 2 3 a 4 5 a 6</small></button>
+   </div>
+  </div>
+ </section></figure>
+
+ <!-- ③ S4 0件 -->
+ <figure><figcaption><span class="n">3</span>S4 フィガー0件（下の大ボタンが「＋ フィガーを追加」）</figcaption>
+ <section class="phone" aria-label="S4 0件">
+  <div class="scr scr-dock">
+   <header class="rechead"><a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a><span class="rtitle">ルーティンの編集</span></header>
+   <div class="field"><label class="flabel" for="n3">名前</label><input id="n3" class="input" value="ワルツのルーティン" maxlength="40"></div>
+   <div class="dance-row"><span>種目: <b>ワルツ</b></span><button class="secondary">変える</button></div>
+   <p class="body" style="margin-top:24px;color:var(--ink2)">フィガーはまだありません。</p>
+   <details class="more"><summary data-more>くわしく <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></summary></details>
+  </div>
+  <div class="dock"><button class="primary"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>フィガーを追加</span></button></div>
+ </section></figure>
+
+ <!-- ④ S4 13件・行を開いた状態 -->
+ <figure><figcaption><span class="n">4</span>S4 13件・3番目の行を開いた状態（決定で確定）</figcaption>
+ <section class="phone" aria-label="S4 行を開いた状態">
+  <div class="scr scr-dock">
+   <header class="rechead"><a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a><span class="rtitle">ルーティンの編集</span></header>
+   <div class="field"><label class="flabel" for="n4">名前</label><input id="n4" class="input" value="ワルツの練習" maxlength="40"></div>
+   <div class="dance-row"><span>種目: <b>ワルツ</b></span></div>
+   <div class="history" data-group="history">
+    <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg><span>元に戻す</span></button>
+    <button class="secondary" disabled><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg><span>やり直す</span></button>
+   </div>
+   <ol class="flist" data-list>
+    <li class="frow"><button class="fhead"><span class="fno">1</span><span class="ft"><b>クローズドチェンジ</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow"><button class="fhead"><span class="fno">2</span><span class="ft"><b>ナチュラルターン</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow open">
+     <button class="fhead" aria-expanded="true"><span class="fno">3</span><span class="ft"><b>ウィスク</b><small>1 2 &amp; 3</small></span><svg class="ic" aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-chevron"/></svg></button>
+     <div class="fform">
+      <div data-group="figure-form">
+       <div class="field"><label class="flabel" for="f4n">フィガーの名前</label><input id="f4n" class="input" value="ウィスク" maxlength="40"></div>
+       <div class="field"><label class="flabel" for="f4c">カウント</label><input id="f4c" class="input" value="12&amp;3" maxlength="32" inputmode="text"></div>
+       <div class="chips"><span class="cap">よく使うカウント</span><button class="chip">1 2 3</button><button class="chip">1 2 &amp; 3</button></div>
+       <button class="primary"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>決定</span></button>
+      </div>
+      <div class="facts" data-group="figure-actions">
+       <button class="secondary wide"><svg class="ic fill" aria-hidden="true"><use href="#i-play"/></svg><span>このフィガーを試聴</span></button>
+       <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg><span>上へ</span></button>
+       <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg><span>下へ</span></button>
+       <button class="secondary"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>複製</span></button>
+       <button class="secondary wide"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg><span>削除</span></button>
+      </div>
+     </div>
+    </li>
+    <li class="frow"><button class="fhead"><span class="fno">4</span><span class="ft"><b>シャッセ フロム PP</b><small>1 2 &amp; 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow"><button class="fhead"><span class="fno">5</span><span class="ft"><b>ナチュラルターン</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow"><button class="fhead"><span class="fno">6</span><span class="ft"><b>アウトサイドチェンジ</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+   </ol>
+   <p class="sub" style="text-align:center;margin:8px 0">（7〜13 は省略）</p>
+   <button class="secondary add-tail" style="width:100%"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>フィガーを追加</span></button>
+   <details class="more"><summary data-more>くわしく <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></summary></details>
+  </div>
+  <div class="dock"><button class="play" style="min-height:56px;font-size:20px"><svg class="ic fill" aria-hidden="true"><use href="#i-play"/></svg><span>全体を試聴</span></button></div>
+ </section></figure>
+
+ <!-- ⑤ S4 追加中・不正カウント -->
+ <figure><figcaption><span class="n">5</span>S4 フィガーを追加中 — 名前の候補・カウントの間違い</figcaption>
+ <section class="phone" aria-label="S4 不正カウント">
+  <div class="scr scr-dock">
+   <header class="rechead"><a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a><span class="rtitle">ルーティンの編集</span></header>
+   <ol class="flist" data-list start="13" style="margin-top:4px">
+    <li class="frow"><button class="fhead"><span class="fno">12</span><span class="ft"><b>ナチュラルターン</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow"><button class="fhead"><span class="fno">13</span><span class="ft"><b>クローズドチェンジ</b><small>1 2 3</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></li>
+    <li class="frow open">
+     <div class="fhead"><span class="fno">14</span><span class="ft"><b>新しいフィガー</b></span></div>
+     <div class="fform">
+      <div data-group="figure-form">
+       <div class="field"><label class="flabel" for="f5n">フィガーの名前</label><input id="f5n" class="input" value="ウィ" maxlength="40">
+        <div class="sugg" aria-label="名前の候補"><button>ウィスク</button><button>ウィーブ フロム PP</button><button>バックウィスク</button></div></div>
+       <div class="field"><label class="flabel" for="f5c">カウント</label><input id="f5c" class="input bad" value="12a3" maxlength="32" aria-invalid="true" aria-describedby="r5">
+        <div class="reason" id="r5"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span>使える記号: 1 2 3 &amp;</span></div></div>
+       <div class="chips"><span class="cap">よく使うカウント</span><button class="chip">1 2 3</button><button class="chip">1 2 &amp; 3</button></div>
+       <button class="primary" disabled><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>追加する</span></button>
+      </div>
+     </div>
+    </li>
+   </ol>
+   <p class="sub" style="margin-top:12px">※ 名前は ISTD の資料と照合済みの語だけを候補に出します（カウントは出しません）。候補に無い名前も自由に入れられます。<br>※ 全角の「１２３」や小文字の「sqq」も、そのまま正しく受け付けます。</p>
+  </div>
+  <div class="dock"><button class="play" style="min-height:56px;font-size:20px"><svg class="ic fill" aria-hidden="true"><use href="#i-play"/></svg><span>全体を試聴</span></button></div>
+ </section></figure>
+
+ <!-- ⑥ S5 再生 -->
+ <figure><figcaption><span class="n">6</span>S5 ルーティン再生（3番目のフィガーを再生中）</figcaption>
+ <section class="phone s5" aria-label="S5 再生">
+  <div class="scr scr-dock">
+   <a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a>
+   <header class="playhead"><h1 class="h1" data-ellipsis title="ワルツの練習（金曜クラス・発表会に向けて）">ワルツの練習（金曜クラス・発表会に向けて）</h1><small>ワルツ · あなたが作成</small></header>
+   <div class="countbox">
+    <div class="now" aria-hidden="true">&amp;</div>
+    <ol class="beats" aria-hidden="true"><li>1</li><li class="on">2</li><li>3</li></ol>
+    <div class="nowfig" data-figure-now data-ellipsis><span class="pos">3 / 13</span><span>ウィスク</span></div>
+   </div>
+   <div class="field" style="margin-top:4px"><div class="flabel"><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg><span>速さ</span></div>
+    <div class="seg" role="radiogroup" data-group="speed">
+     <button class="opt" role="radio" aria-checked="false"><b>ゆっくり</b></button>
+     <button class="opt" role="radio" aria-checked="true"><svg class="ic opt-check" aria-hidden="true"><use href="#i-check"/></svg><b>標準</b><small>♩=84</small></button>
+     <button class="opt" role="radio" aria-checked="false"><b>速め</b></button>
+    </div></div>
+   <div class="toggles">
+    <button class="tog" role="switch" aria-checked="true"><svg class="ic" aria-hidden="true"><use href="#i-metronome"/></svg><span class="tog-l">メトロノーム</span><span class="sw"><span class="sw-k"></span><span class="sw-t">オン</span></span></button>
+    <button class="tog" role="switch" aria-checked="true"><svg class="ic" aria-hidden="true"><use href="#i-leadin"/></svg><span class="tog-l">はじめの合図</span><span class="sw"><span class="sw-k"></span><span class="sw-t">オン</span></span></button>
+   </div>
+   <button class="voice"><svg class="ic" aria-hidden="true"><use href="#i-voice"/></svg><span>声: 標準（英語）</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+   <details class="more"><summary data-more>くわしく <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></summary></details>
+   <div class="plist-cap">フィガー</div>
+   <ol class="plist" data-list>
+    <li><span class="fno">1</span>クローズドチェンジ<small>1 2 3</small></li>
+    <li><span class="fno">2</span>ナチュラルターン<small>1 2 3</small></li>
+    <li class="cur"><span class="fno">3</span>ウィスク<small>1 2 &amp; 3</small></li>
+    <li><span class="fno">4</span>シャッセ フロム PP<small>1 2 &amp; 3</small></li>
+    <li><span class="fno">5</span>ナチュラルターン<small>1 2 3</small></li>
+   </ol>
+  </div>
+  <div class="dock"><button class="play" data-play><svg class="ic fill" aria-hidden="true"><use href="#i-stop"/></svg><span>停止</span></button></div>
+ </section></figure>
+
+ <!-- ⑦ S5 くわしく開 -->
+ <figure><figcaption><span class="n">7</span>S5「くわしく」を開いた状態（範囲を 3〜8 に）</figcaption>
+ <section class="phone s5" aria-label="S5 くわしく">
+  <div class="scr scr-dock" style="padding-top:8px">
+   <button class="voice"><svg class="ic" aria-hidden="true"><use href="#i-voice"/></svg><span>声: 標準（英語）</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+   <details class="more" open><summary data-more>くわしく <svg class="ic" aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-chevron"/></svg></summary>
+    <div class="more-body">
+     <div><div class="flabel"><span>練習する範囲</span></div>
+      <div class="range" data-group="range">
+       <div class="rstep"><span class="k">はじめ</span><span class="v">3 ウィスク</span><button class="step" aria-label="はじめを前へ"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button><button class="step" aria-label="はじめを次へ"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button></div>
+       <div class="rstep"><span class="k">おわり</span><span class="v">8 ヘジテーションチェンジ</span><button class="step" aria-label="おわりを前へ"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button><button class="step" aria-label="おわりを次へ"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button></div>
+      </div></div>
+     <div data-group="speed-fine"><div class="flabel" style="justify-content:space-between"><span>速さの細かい調整</span><span>♩=84</span></div>
+      <input class="slider" type="range" min="40" max="220" value="84" aria-label="速さの細かい調整"></div>
+     <div class="more-row"><span>繰り返す</span><button class="chip" role="switch" aria-checked="true">オン</button></div>
+    </div></details>
+   <div class="plist-cap">フィガー</div>
+   <ol class="plist" data-list>
+    <li class="out"><span class="fno">1</span>クローズドチェンジ<small>1 2 3</small></li>
+    <li class="out"><span class="fno">2</span>ナチュラルターン<small>1 2 3</small></li>
+    <li><span class="fno">3</span>ウィスク<small>1 2 &amp; 3</small></li>
+    <li><span class="fno">4</span>シャッセ フロム PP<small>1 2 &amp; 3</small></li>
+   </ol>
+   <p class="sub" style="margin-top:12px">※ 範囲は記憶しません（次に開くと全体に戻る）。範囲の外の行は灰色。<br>※ 段4で「声のタイミング」がここに1つ増えます。</p>
+  </div>
+  <div class="dock"><button class="play" data-play><svg class="ic fill" aria-hidden="true"><use href="#i-play"/></svg><span>再生</span></button></div>
+ </section></figure>
+
+ <!-- ⑧ S3 削除の確認（参考） -->
+ <figure><figcaption><span class="n">8</span>参考: S3 削除の確認（やめるが左）</figcaption>
+ <section class="phone" aria-label="S3 削除の確認">
+  <div class="scr scr-tabs-dock">
+   <h1 class="h1" style="margin-top:8px">ルーティン</h1>
+   <button class="primary"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>新しいルーティン</span></button>
+   <div class="rlist"><div class="rrow"><button class="rhead"><span class="t"><b>ワルツの練習</b><small>ワルツ · 13 フィガー</small></span><svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button></div></div>
+  </div>
+  <nav class="tabbar" data-nav><a class="tab" href="#"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>練習</span></a><a class="tab" href="#" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>ルーティン</span></a><a class="tab" href="#"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg><span>設定</span></a></nav>
+  <div class="scrim"><div class="dlg" role="alertdialog" aria-label="削除の確認">
+   <p>このルーティンを削除しますか？</p><small>ワルツの練習</small>
+   <div class="btns"><button class="secondary">やめる</button><button class="primary">削除する</button></div>
+  </div></div>
+ </section></figure>
+ </div>
+
+ <div id="desk" class="deskwrap" hidden>
+ <section class="desk" aria-label="S5 再生（PC 幅）">
+  <header class="d-top">
+   <a class="back" href="#" data-back><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg><span>戻る</span></a>
+   <div class="brand" style="flex:1"><b>Dance Count</b><small>for Ballroom</small></div>
+  </header>
+  <div class="d-main">
+   <div class="d-left">
+    <header class="playhead"><h1 class="h1">ワルツの練習</h1><small>ワルツ · あなたが作成</small></header>
+    <div class="countbox">
+     <div class="now" aria-hidden="true">&amp;</div>
+     <ol class="beats" aria-hidden="true"><li>1</li><li class="on">2</li><li>3</li></ol>
+    </div>
+    <ol class="plist" data-list style="margin-top:8px">
+     <li><span class="fno">2</span>ナチュラルターン<small>1 2 3</small></li>
+     <li class="cur"><span class="fno">3</span>ウィスク<small>1 2 &amp; 3</small></li>
+     <li><span class="fno">4</span>シャッセ フロム PP<small>1 2 &amp; 3</small></li>
+    </ol>
+   </div>
+   <div class="d-right">
+    <div class="field" style="margin-top:0"><div class="flabel"><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg><span>速さ</span></div>
+     <div class="seg" data-group="speed">
+      <button class="opt" aria-checked="false"><b>ゆっくり</b></button>
+      <button class="opt" aria-checked="true"><svg class="ic opt-check" aria-hidden="true"><use href="#i-check"/></svg><b>標準</b><small>♩=84</small></button>
+      <button class="opt" aria-checked="false"><b>速め</b></button>
+     </div></div>
+    <div class="toggles">
+     <button class="tog" role="switch" aria-checked="true"><svg class="ic" aria-hidden="true"><use href="#i-metronome"/></svg><span class="tog-l">メトロノーム</span><span class="sw"><span class="sw-k"></span><span class="sw-t">オン</span></span></button>
+     <button class="tog" role="switch" aria-checked="true"><svg class="ic" aria-hidden="true"><use href="#i-leadin"/></svg><span class="tog-l">はじめの合図</span><span class="sw"><span class="sw-k"></span><span class="sw-t">オン</span></span></button>
+    </div>
+    <button class="voice"><svg class="ic" aria-hidden="true"><use href="#i-voice"/></svg><span>声: 標準（英語）</span><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+    <details class="more"><summary data-more>くわしく <svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></summary></details>
+   </div>
+  </div>
+  <div class="d-dock"><button class="play" data-play><svg class="ic fill" aria-hidden="true"><use href="#i-stop"/></svg><span>停止</span></button></div>
+ </section></div>
+</main>
+<script>
+document.querySelectorAll('.viewsw button').forEach(function(b){b.addEventListener('click',function(){
+ document.querySelectorAll('.viewsw button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+ document.getElementById('phones').hidden=b.dataset.v!=='phones';document.getElementById('desk').hidden=b.dataset.v!=='desk';})});
+// ④⑤は開いた行が見える位置までスクロールして見せる（各スマホ枠の中は指でスクロールできます）
+['S4 行を開いた状態','S4 不正カウント'].forEach(function(label){
+ var ph=document.querySelector('[aria-label="'+label+'"]');var scr=ph.querySelector('.scr');var row=ph.querySelector('.frow.open');
+ scr.scrollTop=row.offsetTop-scr.offsetTop-(label==='S4 不正カウント'?-24:8);});
+if(location.hash==='#desk')document.querySelector('[data-v=desk]').click();
+</script>
+</body></html>
