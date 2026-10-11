@@ -25,6 +25,8 @@
     "voices:synth": "node tools/voices/generate.js",
     "voices:process": "node tools/voices/process.js",
     "voices:check": "node tools/voices/check-pack.js",
+    "voices:gate": "node tools/voices/render-gate.js",
+    "voices:adopt": "node tools/voices/adopt.js",
     "voices:six-candidates": "node tools/generate-six-candidates.js",
     "ui:check": "node tools/check-app-ui.js",
     "ui:check:legacy": "node tools/check-ui-accessibility.js",

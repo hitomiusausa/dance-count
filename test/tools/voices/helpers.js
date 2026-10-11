@@ -29,3 +29,23 @@ export function syntheticWord(options = {}) {
   const rate = options.rate ?? RATE;
   return concat(silence(options.headMs ?? 300, rate), voiced(options.voiceMs ?? 400, { ...options, rate }), silence(options.tailMs ?? 200, rate));
 }
+
+// 12 語の合成パック（処理経路を通した物）をフォルダに書く。聴感ゲートの道具のテスト用（音が無い今は合成音で）。
+export async function writeSyntheticPack(dir, id, { gate = { status: 'pending' }, locale = 'ja-JP' } = {}) {
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const { processWords, buildManifest } = await import('../../../tools/voices/pipeline.js');
+  const { REQUIRED_VOICE_KEYS } = await import('../../../src/engine/recorded-voice-pack.js');
+  const raw = Object.fromEntries(REQUIRED_VOICE_KEYS.map((key, index) => [key, {
+    samples: syntheticWord({ frequency: 180 + index * 15, voiceMs: 260 + index * 10 }), sampleRate: RATE
+  }]));
+  const result = processWords(raw, { refPeakRms: 0.2 });
+  const packDir = path.join(dir, id);
+  await fs.mkdir(packDir, { recursive: true });
+  for (const key of REQUIRED_VOICE_KEYS) await fs.writeFile(path.join(packDir, `${key}.wav`), result.words[key].wav);
+  const manifest = buildManifest({ id, name: '合成テスト', provider: 'google-cloud-tts', locale, voiceName: 'ja-JP-Neural2-B', speakingRate: 1,
+    generatedAt: '2026-10-12T00:00:00.000Z', words: result.words });
+  manifest.gate = gate;
+  await fs.writeFile(path.join(packDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  return packDir;
+}
