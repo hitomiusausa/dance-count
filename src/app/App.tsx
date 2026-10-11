@@ -1,5 +1,6 @@
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { IconSprite } from './components/Icon.tsx';
 import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
 import { forgetLegacyUiLocale, readLegacyUiLocale } from './platform/legacy-locale.ts';
@@ -61,6 +62,7 @@ export function App() {
     <I18nContext.Provider value={i18n}>
       <SettingsContext.Provider value={{ settings, update }}>
         <div class="dc-shell" lang={locale}>
+          <IconSprite />
           <Simple />
           {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
         </div>

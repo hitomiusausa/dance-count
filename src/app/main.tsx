@@ -1,5 +1,6 @@
 import { render } from 'preact';
 import { App } from './App.tsx';
+import './styles/fonts.css';
 import './styles/base.css';
 
 const root = document.getElementById('app');

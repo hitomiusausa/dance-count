@@ -25,6 +25,8 @@
     "timing:compare": "node tools/compare-timing-audit.js"
   },
   "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/noto-sans-jp": "5.3.0",
     "preact": "10.29.8"
   },
   "devDependencies": {
