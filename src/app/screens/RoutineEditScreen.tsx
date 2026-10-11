@@ -43,7 +43,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   if (routineId !== shownFor.current) {
     shownFor.current = routineId;
     if (!(routineId && editor.current?.routine.id === routineId)) {
-      if (editor.current?.close() && saved.current) void save({ ...editor.current.routine, updatedAt: new Date().toISOString() });
+      if (editor.current?.close()) persist({ replace: false });   // 離れる時の保存: 未保存の新規でも確定した行は残す（ハッシュは置き換えない）
       editor.current = null;
       saved.current = false;
     }
@@ -59,16 +59,17 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const defaultName = (danceId: string, others: readonly Routine[]) =>
     uniqueRoutineName(translator.t('defaultRoutineName', { dance: danceName(danceId, locale) }), others.map(item => item.name));
 
-  const persist = () => {
+  // （関数宣言: 上のハッシュ切り替えからも呼ぶ）replace:false は画面を離れる時の保存（最初の保存でもハッシュを編集の形に置き換えない）。
+  function persist({ replace = true }: { replace?: boolean } = {}) {
     const current = editor.current;
     if (!current) return;
     const routine = { ...current.routine, updatedAt: new Date().toISOString() };
     void save(routine).then(ok => setSaveFailed(!ok));
     if (!saved.current) {
       saved.current = true;
-      replaceRoute({ screen: 'S4', params: { routineId: routine.id } });
+      if (replace) replaceRoute({ screen: 'S4', params: { routineId: routine.id } });
     }
-  };
+  }
 
   // 操作の共通の入口: 試聴を止めて、変えて、変わったら保存して、描き直す。
   const act = (change: (current: RoutineEditor) => boolean) => {
@@ -99,7 +100,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   // 戻る（端末の戻る・タブ移動も）: 開いている行は原則どおり閉じて（有効なら確定）保存する（Ruling 36-1）。
   useEffect(() => () => {
     const current = editor.current;
-    if (current && current.close()) persist();
+    if (current && current.close()) persist({ replace: false });
   }, []);
 
   // 種目を選ぶ（新規）・選び直す（フィガー0件の「変える」）。選び直しで、名前が前の種目の既定のままなら新しい種目の既定に。

@@ -60,7 +60,12 @@ export function useReorderDrag(options: ReorderDragOptions) {
     setView(null);
   };
 
-  useEffect(() => onDragInterrupt(() => { if (press.current) finish(); }), []);
+  // 中断で捨てる時、ドラッグが始まっていたら離した時の click で行を開かない（つかみがまだ pointer を掴んでいる）。
+  useEffect(() => onDragInterrupt(() => {
+    if (!press.current) return;
+    if (press.current.dragging) ignoreClick.current = true;
+    finish();
+  }), []);
   useEffect(() => () => stopLoop.current?.(), []);
 
   const gripProps = (index: number) => ({
