@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
-import { revealScrollBy } from '../lib/reveal.ts';
-import { nextFrame, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
+import { revealScrollBy, throttleToFrame } from '../lib/reveal.ts';
+import { nextFrame, onVisibleViewportChange, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
 import { useI18n } from '../state/i18n.ts';
 import { beatsPerBar } from './bar-check.ts';
 import { countPatterns, pressedPattern } from './count-patterns.ts';
@@ -60,26 +60,32 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
   const alwaysPressable = check.action === 'addCopy' || check.action === 'matchCounts';
   const pressed = pressedPattern(draft.counts, check.action);
   const patternsLabel = translator.t('commonCounts');
-  // 複製の形に切り替わった時、名前の欄を打っている最中なら主ボタンをキーボードの上へ（D19 の (3)・F6 の iOS シミュレーターの所見）。
-  // iOS はフォーカスのある欄だけを見える所へ動かすので、ボタンはキーボードの付属の帯の下に残る。動きは付けない（すぐ動かす）。
+  // 複製の形の間、名前の欄を打っている最中は主ボタンをキーボードの上へ（D19 の (3)・F6 の iOS シミュレーターの所見）。
+  // iOS はフォーカスのある欄だけを見える所へ動かすので、ボタンはキーボードの付属の帯の下に残る。キーボードは形が変わった後に
+  // 出たり高さを変えたりするので、形が変わった時に加えて、見えている範囲の resize・scroll のたびにも 1 フレーム 1 回やり直す。
+  // 名前の欄は見える範囲の上から出さない（revealScrollBy の上限）。動きは付けない（すぐ動かす）。
+  // 解除: 名前の欄から離れた時・複製の形でなくなった時・行を閉じた時（effect の後片付け）。
   const nameInput = useRef<HTMLInputElement>(null);
   const primaryButton = useRef<HTMLButtonElement>(null);
+  const [nameFocused, setNameFocused] = useState(false);
   const copying = layout.sameName === 'copy';
   useEffect(() => {
-    const input = nameInput.current;
-    if (!copying || !input || input.ownerDocument.activeElement !== input) return undefined;
+    if (!copying || !nameFocused) return undefined;
     const reveal = () => {
+      const input = nameInput.current;
       const button = primaryButton.current;
-      if (!button) return;
+      if (!input || !button) return;
       const visible = visibleViewport();
-      const dock = button.ownerDocument.querySelector('.dc-dock');
       const dy = revealScrollBy({ bottom: button.getBoundingClientRect().bottom, keepTop: input.getBoundingClientRect().top,
-        visibleTop: visible.top, visibleBottom: visible.bottom, coverTop: dock?.getBoundingClientRect().top });
+        visibleTop: visible.top, visibleBottom: visible.bottom });
       if (dy > 0) scrollPageBy(dy);
     };
+    const throttled = throttleToFrame(reveal, nextFrame);
     reveal();
-    return nextFrame(reveal);   // キーボードの高さが描画の後で決まる端末のために、次の描画の前にもう 1 回
-  }, [copying]);
+    throttled.request();   // キーボードの高さが描画の後で決まる端末のために、次の描画の前にもう 1 回
+    const unsubscribe = onVisibleViewportChange(() => throttled.request());
+    return () => { unsubscribe(); throttled.cancel(); };
+  }, [copying, nameFocused]);
   return (
     <div class="dc-figure-form">
       <div class="dc-figure-fields" data-group="figure-form">
@@ -87,7 +93,8 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
           <div class="dc-field-label" id={`${idPrefix}-name-label`}>{translator.t('figureName')}</div>
           <input ref={nameInput} class="dc-input" type="text" aria-labelledby={`${idPrefix}-name-label`} value={draft.name} maxLength={FIGURE_NAME_MAX}
             aria-describedby={layout.sameName === 'copy' ? `${sameId} ${renameId}` : layout.sameName ? sameId : undefined}
-            autocomplete="off" onInput={event => onDraft({ name: (event.currentTarget as HTMLInputElement).value })} />
+            autocomplete="off" onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)}
+            onInput={event => onDraft({ name: (event.currentTarget as HTMLInputElement).value })} />
           {sameText && (
             <div class="dc-reason" id={sameId}>
               <Icon name="alert" /><span>{sameText}</span>

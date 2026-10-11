@@ -45,8 +45,9 @@ const STATES = [
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true, patterns: 8, pressed: 0,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
   // D19: 追加の行に既にある名前（1 件目＝templates[0] の 123）→ 複製専用の形。カウント欄・使える文字・形は出ず、注意は名前の欄の下、主ボタンは「1 2 3 で複製して追加」。
-  // total 6＝閉じた 13 件の画面の 5 から「＋ フィガーを追加」が消え（追加の行を開いている間は出ない）、追加の行の 2 グループ（figure-form・count-patterns）が足される。D19 で数は変わらない
-  { name: 'S4 同じ名前（追加）', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, sameNameCopy: '1 2 3 で複製して追加',
+  // total 5＝閉じた 13 件の画面の 5 から「＋ フィガーを追加」が消え（追加の行を開いている間は出ない）、追加の行の 2 グループ（figure-form・count-patterns）が足され（6）、
+  // 名前の欄を打っている間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6 round 2）ので 1 つ減る。何も打っていない S4 の状態（13件・閉 等）は帯が出たまま
+  { name: 'S4 同じ名前（追加）', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5, sameNameCopy: '1 2 3 で複製して追加', typingHidesDock: true,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', R.waltz13.figures[0].name] }] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
@@ -434,6 +435,12 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (button?.disabled) issues.push('D19 the copy button is not pressable');
     const requests = (document.body.innerText.match(/してください/g) ?? []).length;
     if (requests > 1) issues.push(`R52 ${requests} requests on one screen (Ruling 7)`);
+  }
+  // D19・F6 round 2: 文字を打つ欄にフォーカスがある間、S4 の下の帯は出さない
+  if (state.typingHidesDock) {
+    const dock = document.querySelector('.dc-dock');
+    if (!dock) issues.push('F6 the bottom dock is missing from the page');
+    else if (visible(dock)) issues.push('F6 the bottom dock is shown while typing in a text field');
   }
   // Ruling 53・D18: カウントの形はワルツで 8 個・欄と一致するチップだけ押された印（開いた行は 1 個・不正なカウントは 0 個）・文字はチップの中で折れない
   if (state.patterns !== undefined) {

@@ -196,6 +196,10 @@ try {
   if (notice !== '同じ名前があります：ウィスク（1 2 3）') errors.push(`the same-name notice should sit under the name field ("${notice}")`);
   if (await addForm.locator('.dc-input--counts').count()) errors.push('the counts field should be hidden while adding a copy');
   if (await addForm.locator('[data-group="count-patterns"] .dc-chip').count()) errors.push('count patterns should be hidden while adding a copy');
+  // 打っている間は下の帯（「▶ 全体を試聴」）を出さない。欄から離れると戻る（D19・F6 round 2）
+  if (await page.locator('.dc-dock').isVisible()) errors.push('the bottom dock should hide while typing in the name field');
+  await nameInput.blur();
+  if (!(await page.locator('.dc-dock').isVisible())) errors.push('the bottom dock should come back when nothing is being typed');
   await nameInput.fill('ウィスク（短）');
   const kept = await addForm.locator('.dc-input--counts').inputValue().catch(() => null);
   if (kept !== '&123') errors.push(`a different name should bring the counts back as typed ("${kept}")`);

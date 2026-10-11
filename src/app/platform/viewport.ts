@@ -38,3 +38,16 @@ export function visibleViewport(): { top: number; bottom: number } {
   if (!visual) return { top: 0, bottom: window.innerHeight };
   return { top: visual.offsetTop, bottom: visual.offsetTop + visual.height };
 }
+
+// 見えている範囲が変わった時（キーボードが出る・高さが変わる・iOS が見える範囲を動かす）の知らせ。戻り値で解除。
+// visualViewport が無い環境では何もしない（窓の高さはキーボードで変わらない）。
+export function onVisibleViewportChange(listener: () => void): () => void {
+  const visual = window.visualViewport;
+  if (!visual) return () => {};
+  visual.addEventListener('resize', listener);
+  visual.addEventListener('scroll', listener);
+  return () => {
+    visual.removeEventListener('resize', listener);
+    visual.removeEventListener('scroll', listener);
+  };
+}
