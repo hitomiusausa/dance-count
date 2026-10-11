@@ -1,0 +1,75 @@
+import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
+import type { AppLocale } from '../i18n/index.ts';
+import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
+
+// 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
+// 段2で使う項目だけを持つ（selectedVoiceId・voiceOffsetMsByVoiceId・バックアップの案内は段4・段5で足す）。
+export const SETTINGS_KEY = 'app';
+export const STANDARD_VOICE_ID = 'default-en-female-v1';
+
+export interface AppSettings {
+  uiLocale: AppLocale | null;               // null = 端末の言語に従う
+  voiceLocale: 'en' | 'ja-JP';              // D3: 初期値は UI 言語に関わらず英語
+  selectedVoiceId: string;
+  lastDanceId: string | null;               // 「前回」カード（無ければ出さない）
+  lastTemplateByDance: Record<string, string>;
+  speedPresetByDance: Record<string, SpeedChoice>;
+  customBpmByDance: Record<string, number>;
+  metronome: boolean;
+  countInBars: 0 | 1;                       // はじめの合図 オン=1小節 / オフ=0
+  loop: boolean;
+  hints: { wakeLockTipShown: boolean };
+}
+
+export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
+  uiLocale: null,
+  voiceLocale: 'en',
+  selectedVoiceId: STANDARD_VOICE_ID,
+  lastDanceId: null,
+  lastTemplateByDance: {},
+  speedPresetByDance: {},
+  customBpmByDance: {},
+  metronome: true,
+  countInBars: 1,
+  loop: true,
+  hints: { wakeLockTipShown: false }
+}) as AppSettings;
+
+const SPEED_CHOICES: readonly SpeedChoice[] = ['slow', 'standard', 'fast', 'custom'];
+const DANCES = DANCE_PROFILES as Record<string, { templates: readonly string[] }>;
+
+// 保存されていた値を信用しない: 型・種目・カウントの型・速さの範囲を確かめ、外れた項目だけ既定に戻す。
+export function normalizeSettings(raw: unknown): AppSettings {
+  const source = isRecord(raw) ? raw : {};
+  const hints = isRecord(source.hints) ? source.hints : {};
+  return {
+    uiLocale: source.uiLocale === 'en' || source.uiLocale === 'ja-JP' ? source.uiLocale : null,
+    voiceLocale: source.voiceLocale === 'ja-JP' ? 'ja-JP' : 'en',
+    selectedVoiceId: STANDARD_VOICE_ID,
+    lastDanceId: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) ? source.lastDanceId : null,
+    lastTemplateByDance: pickByDance(source.lastTemplateByDance, (danceId, value) =>
+      typeof value === 'string' && DANCES[danceId]!.templates.includes(value) ? value : undefined),
+    speedPresetByDance: pickByDance(source.speedPresetByDance, (_danceId, value) =>
+      SPEED_CHOICES.find(choice => choice === value)),
+    customBpmByDance: pickByDance(source.customBpmByDance, (_danceId, value) => clampBpm(value) ?? undefined),
+    metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
+    countInBars: source.countInBars === 0 ? 0 : 1,
+    loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
+    hints: { wakeLockTipShown: hints.wakeLockTipShown === true }
+  };
+}
+
+function pickByDance<T>(value: unknown, accept: (danceId: string, item: unknown) => T | undefined): Record<string, T> {
+  const result: Record<string, T> = {};
+  if (!isRecord(value)) return result;
+  for (const [danceId, item] of Object.entries(value)) {
+    if (!Object.hasOwn(DANCES, danceId)) continue;
+    const accepted = accept(danceId, item);
+    if (accepted !== undefined) result[danceId] = accepted;
+  }
+  return result;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
