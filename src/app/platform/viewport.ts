@@ -52,7 +52,10 @@ export function onVisibleViewportChange(listener: () => void): () => void {
   };
 }
 
-// いまフォーカスのある要素（F6 round 3）。WebKit は消えた欄の focusout を出さないので、S4 の「打っている」をこれで確かめ直す。
-export function focusedElement(): Element | null {
-  return typeof document === 'undefined' ? null : document.activeElement;
+// キーボードの判定に使う高さ（D19・F6 round 4）。レイアウトの高さ＝documentElement.clientHeight（iOS ではキーボードで
+// 変わらない）と visualViewport の高さ・拡大率。visualViewport が無い環境は null（判定は lib/keyboard.ts の isKeyboardOpen）。
+export function viewportHeights(): { layoutHeight: number; visualHeight: number; scale: number } | null {
+  const visual = typeof window === 'undefined' ? null : window.visualViewport;
+  if (!visual) return null;
+  return { layoutHeight: document.documentElement.clientHeight, visualHeight: visual.height, scale: visual.scale };
 }

@@ -26,9 +26,25 @@ async function addFigure(page, name, counts) {
   await form.locator('.dc-primary').click();
 }
 
-// 下の帯（▶ 全体を試聴）が 500ms 以内に戻るか（D19・F6 round 3: 打っている状態が残り続けない）。
+// 下の帯（▶ 全体を試聴）が 500ms 以内に戻るか（D19・F6: キーボードが閉じたら帯が戻る）。
 async function dockBackSoon(page) {
   return page.locator('.dc-dock').waitFor({ state: 'visible', timeout: 500 }).then(() => true, () => false);
+}
+
+async function dockHiddenSoon(page) {
+  return page.locator('.dc-dock').waitFor({ state: 'hidden', timeout: 500 }).then(() => true, () => false);
+}
+
+// 画面のキーボードの代わり（D19・F6 round 4）。アプリは「レイアウトの高さ − visualViewport の高さ」で開いているか決める
+// （lib/keyboard.ts）。窓を縮める（setViewportSize）とレイアウトの高さも一緒に縮んで差が出ないので、iOS と同じく
+// visualViewport の高さだけを px ぶん縮め、resize を送る。0 で元に戻す（閉じる）。
+async function fakeKeyboard(page, px) {
+  await page.evaluate(height => {
+    const visual = window.visualViewport;
+    if (height > 0) Object.defineProperty(visual, 'height', { configurable: true, get: () => document.documentElement.clientHeight - height });
+    else delete visual.height;
+    visual.dispatchEvent(new Event('resize'));
+  }, px);
 }
 
 async function expectSounding(page, label) {
@@ -202,16 +218,21 @@ try {
   if (notice !== '同じ名前があります：ウィスク（1 2 3）') errors.push(`the same-name notice should sit under the name field ("${notice}")`);
   if (await addForm.locator('.dc-input--counts').count()) errors.push('the counts field should be hidden while adding a copy');
   if (await addForm.locator('[data-group="count-patterns"] .dc-chip').count()) errors.push('count patterns should be hidden while adding a copy');
-  // 打っている間は下の帯（「▶ 全体を試聴」）を出さない。欄から離れると戻る（D19・F6 round 2）
-  if (await page.locator('.dc-dock').isVisible()) errors.push('the bottom dock should hide while typing in the name field');
-  await nameInput.blur();
-  if (!(await page.locator('.dc-dock').isVisible())) errors.push('the bottom dock should come back when nothing is being typed');
+  // 下の帯（「▶ 全体を試聴」）は画面のキーボードが開いている間だけ隠す（D19・F6 round 4）。フォーカスだけでは隠さない（キーボードの無い PC）
+  if (!(await page.locator('.dc-dock').isVisible())) errors.push('the bottom dock should stay while the name field has focus but no on-screen keyboard is open');
+  await fakeKeyboard(page, 100);   // ツールバーの出し入れ程度の差（KEYBOARD_MIN_PX 未満）では隠さない
+  if (!(await page.locator('.dc-dock').isVisible())) errors.push('a 100px viewport difference (toolbar) should not hide the dock');
+  await fakeKeyboard(page, 300);
+  if (!(await dockHiddenSoon(page))) errors.push('the bottom dock should hide while the on-screen keyboard is open');
   await nameInput.fill('ウィスク（短）');
   const kept = await addForm.locator('.dc-input--counts').inputValue().catch(() => null);
   if (kept !== '&123') errors.push(`a different name should bring the counts back as typed ("${kept}")`);
   await nameInput.fill('ウィスク');
-  await copyButton.click();
-  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after "Add a copy"');
+  // iOS ではボタンを押してもフォーカスは名前の欄に残り、キーボードは click の後に閉じる。click だけを送って同じ順にする
+  await copyButton.dispatchEvent('click');
+  if (!(await page.locator('.dc-dock').isHidden())) errors.push('the bottom dock should stay hidden while the keyboard is still open after "Add a copy"');
+  await fakeKeyboard(page, 0);
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after the keyboard closes');
   const copied = await page.locator('.dc-figure-head').nth(1).textContent().catch(() => '');
   if (!copied?.includes('ウィスク') || !copied.includes('1 2 3')) errors.push(`"Add a copy" should add ウィスク 1 2 3 as the 2nd row ("${copied}")`);
 
@@ -261,9 +282,9 @@ try {
   await page.locator('.dc-add-tail').click();
   const thirdForm = page.locator('.dc-figure-form').last();
   await thirdForm.locator('input').nth(0).fill('ウィスク');
-  // iOS ではボタンを押してもフォーカスは名前の欄に残り、行が閉じて欄が消えても focusout が来ない。click だけを送って同じ形にする（F6 round 3）
+  // フォーカスのある名前の欄が行ごと消えても（WebKit は focusout を出さない）、帯はフォーカスでは決まらないので出たまま（F6 round 4）
   await thirdForm.locator('.dc-primary').dispatchEvent('click');   // 1 2 3 で複製して追加
-  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms when the focused name field is removed by "Add a copy"');
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should be shown when the focused name field is removed by "Add a copy" without a keyboard');
   const whiskCounts = async () => (await page.locator('.dc-figure-head').evaluateAll(heads => heads
     .filter(head => head.querySelector('b')?.textContent.trim() === 'ウィスク').map(head => head.querySelector('small')?.textContent.trim())));
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`expected 3 ウィスク rows at 1 2 3: ${JSON.stringify(await whiskCounts())}`);
@@ -276,21 +297,14 @@ try {
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 & 3', '1 2 & 3', '1 2 & 3'])) errors.push(`"Update all 3" should change every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
   await page.locator('[data-group="history"] button').first().click();   // 元に戻す（1 回で 3 行とも）
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`one undo should restore every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
-  // Esc（F6 round 3）: S4 の Esc は何も閉じないので、欄にフォーカスがある間は帯は隠れたまま。欄から離れると 500ms 以内に戻る
-  await page.locator('.dc-add-tail').click();
-  const escName = page.locator('.dc-figure-form').last().locator('input').nth(0);
-  await escName.fill('ナチュラルターン');
-  await page.keyboard.press('Escape');
-  if (await page.locator('.dc-dock').isVisible()) errors.push('the bottom dock should stay hidden while the name field still has focus after Esc');
-  await escName.blur();
-  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after Esc and leaving the field');
   await context.close();
 } finally {
   await browser.close();
 }
 
 // WebKit（iOS Safari と同じエンジン）: フォーカスのある名前の欄が「複製して追加」で消えても focusout が来ない（Chrome は来る）。
-// 帯が 500ms 以内に戻ることをここで確かめる（F6 round 3）。WebKit が入っていない時は飛ばす（npx playwright-core install webkit）。
+// 帯はキーボード（visualViewport の高さ）だけで決まるので、キーボードの代わりを開く → 隠れる → click だけで複製（フォーカスは欄のまま）
+// → 開いている間は隠れたまま → 閉じると 500ms 以内に戻る、を確かめる（F6 round 4）。WebKit が入っていない時は飛ばす（npx playwright-core install webkit）。
 let webkitNote = 'webkit skipped (not installed)';
 const wk = await webkit.launch().catch(() => null);
 if (wk) {
@@ -306,11 +320,15 @@ if (wk) {
     const form = page.locator('.dc-figure-form').last();
     await form.locator('input').nth(0).click();   // 指で欄を触って打つのと同じ形（fill は WebKit で focusin を待たない）
     await page.keyboard.type(R.waltz13.figures[0].name);
-    if (await page.locator('.dc-dock').isVisible()) errors.push('webkit: the bottom dock should hide while typing');
+    if (!(await page.locator('.dc-dock').isVisible())) errors.push('webkit: focus alone (no keyboard) should not hide the dock');
+    await fakeKeyboard(page, 300);
+    if (!(await dockHiddenSoon(page))) errors.push('webkit: the bottom dock should hide while the keyboard is open');
     await form.locator('.dc-primary').dispatchEvent('click');   // iOS と同じく、フォーカスは名前の欄に残したまま押す
     if ((await page.locator('.dc-figure-head').count()) !== 14) errors.push('webkit: "Add a copy" should add the 14th figure');
-    if (!(await dockBackSoon(page))) errors.push('webkit: the bottom dock should come back within 500ms after "Add a copy" removes the focused name field');
-    webkitNote = 'webkit dock comes back after a copy';
+    if (!(await page.locator('.dc-dock').isHidden())) errors.push('webkit: the dock should stay hidden until the keyboard closes');
+    await fakeKeyboard(page, 0);
+    if (!(await dockBackSoon(page))) errors.push('webkit: the bottom dock should come back within 500ms after the keyboard closes');
+    webkitNote = 'webkit dock hides with the keyboard and comes back when it closes after a copy';
   } finally {
     await wk.close();
   }
@@ -320,4 +338,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, the dock hides while typing and comes back; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes; ${webkitNote}`);

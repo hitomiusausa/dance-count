@@ -5,8 +5,8 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
-import { isTypingInside, TypingDock } from '../lib/typing-focus.ts';
-import { focusedElement, nextFrame } from '../platform/viewport.ts';
+import { isKeyboardOpen } from '../lib/keyboard.ts';
+import { onVisibleViewportChange, viewportHeights } from '../platform/viewport.ts';
 import { MoreOptions, NoticeBox, type AlertNotice } from '../practice/controls.tsx';
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
 import { BPM_MAX, BPM_MIN, clampBpm, type SpeedProfile } from '../practice/speed.ts';
@@ -38,22 +38,15 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const saved = useRef(false);   // 端末に1回でも保存したか（新規は最初の確定まで false）
   const [saveFailed, setSaveFailed] = useState(false);
   const [choosingDance, setChoosingDance] = useState(false);   // フィガー0件の時の「変える」
-  // 文字を打つ欄にフォーカスがある間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6。iOS 26 は帯をキーボードの上へ持ち上げ、
-  // 打っている欄のすぐ下を覆う）。focusin/focusout で決める（window に触らない）。帯の隠し方は base.css の [data-typing]。
-  // 指を押している最中に欄から離れた時は、指を離した後に出す（押したボタンの上に帯が現れて別のボタンを押させない。TypingDock）。
-  const [typing, setTyping] = useState(false);
-  const typingDock = useRef(new TypingDock());
-  const applyTyping = (hidden: boolean | null) => { if (hidden !== null) setTyping(hidden); };
-  // 指を離した後の click は同じ入力の処理の中で届くので、帯を出すのは次の描画の前まで待つ（click の当たり判定の後）。
-  const screenRoot = useRef<HTMLElement>(null);
-  const typingNow = () => isTypingInside(focusedElement() as HTMLElement | null, screenRoot.current);
-  const afterPress = () => { nextFrame(() => applyTyping(typingDock.current.pointerUp(typingNow()))); };
-  // 打っている状態が残り続けない（F6 round 3）: WebKit は行を閉じて消えた欄の focusout を出さない。打っている間は描画のたびに
-  // 次の描画の前で確かめ直す（決定・複製・追加で行が閉じた後の描画もここを通る）。変わらなければ描き直さないので繰り返さない。
+  // 画面のキーボードが開いている間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6 round 4。iOS 26 は帯をキーボードの上へ
+  // 持ち上げ、打っている欄のすぐ下を覆う）。フォーカスや指の動きでは決めず、見えている高さで決める（lib/keyboard.ts）。
+  // 閉じれば visualViewport の resize で戻る（押したボタンの click の後なので、指の下に帯は現れない）。隠し方は base.css の [data-keyboard]。
+  const [keyboardOpen, setKeyboardOpen] = useState(() => isKeyboardOpen(viewportHeights()));
   useEffect(() => {
-    if (!typing) return undefined;
-    return nextFrame(() => applyTyping(typingDock.current.recheck(typingNow())));
-  });
+    const check = () => setKeyboardOpen(isKeyboardOpen(viewportHeights()));
+    check();
+    return onVisibleViewportChange(check);
+  }, []);
   const mounted = useRef(true);   // 画面を離れた後（戻る・スワイプ）の保存ではハッシュを置き換えない
   const pendingName = useRef<string | null>(null);   // 名前欄の確定前の文字（離れる時に確定する。blur が来ない端末向け）
   const { session, view } = usePracticeSession('S4');
@@ -216,12 +209,8 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   };
 
   return (
-    <main ref={screenRoot} class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
-      data-typing={typing ? 'true' : undefined}
-      onFocusIn={event => applyTyping(typingDock.current.focusIn(event.target as HTMLElement | null))}
-      onFocusOut={event => { applyTyping(typingDock.current.focusOut(event.relatedTarget as HTMLElement | null)); nextFrame(() => applyTyping(typingDock.current.recheck(typingNow()))); }}
-      onPointerDown={() => typingDock.current.pointerDown()}
-      onPointerUp={afterPress} onPointerCancel={afterPress}>
+    <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
+      data-keyboard={keyboardOpen ? 'true' : undefined}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
       <NoticeBox notice={notice} onClose={() => session.dismissNotice()} />
       <RoutineNameField name={routine.name} onText={text => { pendingName.current = text; }}

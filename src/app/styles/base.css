@@ -218,8 +218,9 @@ button { cursor: pointer; }
 .dc-span3 { grid-column: span 3; }
 .dc-add-tail { margin-top: 12px; }
 .dc-dock-button { width: 100%; max-width: 608px; }
-/* 文字を打っている間は S4 の下の帯を出さない（D19・F6。iOS 26 はキーボードの上へ持ち上げて入力欄のすぐ下を覆う）。動きなし。 */
-.dc-screen[data-screen="S4"][data-typing] .dc-dock { display: none; }
+/* 画面のキーボードが開いている間は S4 の下の帯を出さない（D19・F6 round 4。iOS 26 はキーボードの上へ持ち上げて入力欄の
+   すぐ下を覆う。判定は見えている高さ＝lib/keyboard.ts）。動きなし。 */
+.dc-screen[data-screen="S4"][data-keyboard] .dc-dock { display: none; }
 
 /* S5 ルーティン再生（Ruling 40・46〜48・D10）。S2 と同じ部品。375×667 で5操作を入れるため S5 だけ詰める:
    見出し（ルーティン名）は1行で省略・副題は常に2行目、現在カウント 72px、余白 8→4・12→8（タップ間隔 8px は保つ） */

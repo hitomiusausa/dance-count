@@ -12,7 +12,7 @@ export interface RevealInput {
 }
 
 // 戻り値は下へスクロールする量（0 以上の整数）。すでに見えていれば 0。
-// 下の固定の帯（「全体を試聴」）は入力中は出さない（RoutineEditScreen・typing-focus.ts）ので、端は visualViewport の下端だけ。
+// 下の固定の帯（「全体を試聴」）はキーボードが開いている間は出さない（RoutineEditScreen・lib/keyboard.ts）ので、端は visualViewport の下端だけ。
 export function revealScrollBy({ bottom, keepTop, visibleTop, visibleBottom, margin = REVEAL_MARGIN_PX }: RevealInput): number {
   const need = bottom + margin - visibleBottom;
   if (need <= 0) return 0;
