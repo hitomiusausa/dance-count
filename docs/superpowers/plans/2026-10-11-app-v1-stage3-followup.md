@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development。この計画は段3本体（`2026-10-11-app-v1-stage3.md`）の後の小さな追加便。**完全なコードは載せない**: 正は裁定 `docs/app-v1/rulings.md` の **Ruling 50（D13・D14）・Ruling 51（D15）・Ruling 52（D16）** で、各 Ruling の末尾「計画への反映（計画者）」が触るファイルの一覧。実装者（Opus）はその Ruling を読み、既存のコード（段3）の流儀に合わせて書く。
 
-**Goal:** ひとみうさの iPhone 実機確認の4つの指摘を直す — 同じ名前のフィガーは同じカウント（D13）、使える文字を常に見せる（D14）、つかんだ行が指についてくる（D15）、3拍・小節の注意（D16）。
+**Goal:** ひとみうさの iPhone 実機確認の4つの指摘を直す（＋D17 はじめの合図2小節・D18 カウントの形を増やす） — 同じ名前のフィガーは同じカウント（D13）、使える文字を常に見せる（D14）、つかんだ行が指についてくる（D15）、3拍・小節の注意（D16）。
 
 **Spec:** `docs/superpowers/specs/2026-10-11-app-v1-design.md`（§4 S4・§5・§6）＋裁定 Ruling 50〜52・D13〜D16。迷ったら Ruling が正。見た目の選択肢は各 Ruling の「推奨」で作る（ひとみうさは実物を見て変える）。
 
@@ -42,6 +42,12 @@
 - テスト: S2 のオンで 2 小節がエンジンに渡ること（`practice` の純粋部分で）、`createRoutine` の初期値 2（`routine.test.ts` の期待値を更新）。`tools/smoke-practice.js` は最初のカウント（1〜8・S・Q・&・a）が出るまで最大 10 秒待ってから「3種類変わる」を判定（`smoke-routines.js` の `expectSounding` と同じ形）。
 - 仕様の読み替え: §4 S2 の「はじめの合図オン（1小節）」→「（2小節。D17）」。§7 のルーティンの `countInBars` の既定 2。
 - 完了: 関門すべて。
+
+## Task F5: カウントの形を増やす（D18） — Ruling 53
+
+- 正: Ruling 53 の全文（純粋関数 `countPatterns(danceId)`・`src/app/routines/count-patterns.ts`・`COUNT_PATTERNS_MAX = 8`・読むのは `DANCE_PROFILES` だけ・作り方の規則（数字の種目／S・Q の種目）・種目ごとの固定一覧の表・置き場（`[data-group="figure-form"]` と `[data-group="count-patterns"]` の 2 グループ）・見出し「カウントの形 / Count patterns」・`.dc-chip` に `white-space: nowrap`・タップで欄を置き換え・`aria-pressed`・Ruling 3 との線引き・テスト 6 件・ui:check（行を開 7→8・`patterns: 8`・不正カウントで pressed 0）・smoke 1 本・実機確認表 2 行・仕様の読み替え）。
+- TDD: `test/app/routines/count-patterns.test.ts` を先に。
+- 完了: 関門すべて（ui:check の期待値は Ruling 53 のとおりに更新）。
 
 ## 締め
 
