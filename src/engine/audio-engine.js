@@ -72,6 +72,11 @@ export class PracticeAudioEngine {
     }
     const countInBeats = countInBeatCount(compiled.profile.beatsPerBar, countInBars);
     // 既定のテンポは stop() と既存の検査（範囲・はじめの合図の小節数）の後で作る。
+    // 拍の地図（beatMap）はまだ再生に使えない: 下の計算は「範囲の頭からの tick」を位置として
+    // tickToSeconds に渡しており、一定テンポでしか正しくない。対応するまでは黙って誤った時刻にせず止める。
+    if (tempo != null && tempo.kind !== 'constant') {
+      throw new Error('beat-map tempo is not supported by the playback engine yet');
+    }
     tempo ??= constantTempo(bpm);
     const beatSeconds = tempo.tickToSeconds(TICKS_PER_BEAT);
     const patternStartTime = this.audioContext.currentTime + 0.12 + countInBeats * beatSeconds;

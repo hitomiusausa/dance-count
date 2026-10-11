@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { countInBeatCount, effectiveVoiceOffsetMs, eventOccurrenceTime, isAccentedBeat, patternDurationSeconds, rangeEventTimeSeconds } from '../../src/engine/audio-engine.js';
-import { eventTimeSeconds } from '../../src/engine/rhythm-compiler.js';
+import { PracticeAudioEngine, countInBeatCount, effectiveVoiceOffsetMs, eventOccurrenceTime, isAccentedBeat, patternDurationSeconds, rangeEventTimeSeconds } from '../../src/engine/audio-engine.js';
+import { compileRhythm, eventTimeSeconds } from '../../src/engine/rhythm-compiler.js';
 import { expectedEventTimeMs } from '../../src/engine/dance-timing-audit.js';
 import { beatMapTempo } from '../../src/engine/tempo-map.js';
 
@@ -23,10 +23,16 @@ test('non-finite BPM is now rejected with the same RangeError as BPM <= 0 (delib
   assert.throws(() => patternDurationSeconds(0, Infinity), { name: 'RangeError', message: 'Pattern duration must be greater than zero' });
 });
 
-test('an explicit tempo map replaces the constant BPM default', () => {
-  const tempo = beatMapTempo([0, 400, 1000], 4);
-  assert.equal(patternDurationSeconds(2 * 960, 999, tempo), 1);
-  assert.equal(rangeEventTimeSeconds({ event: { absoluteTick: 960 }, iteration: 0, rangeStartTick: 0, rangeDurationTicks: 1920, bpm: 999, startTime: 10, tempo }), 10.4);
+// 再生エンジンはまだ拍の地図（beatMap）を扱えない（範囲の頭からの tick を位置として変換しているため、
+// 一定テンポでしか正しくない）。誤った時刻で鳴らさず、はっきり止めることを確かめる。
+// 既存の検査（範囲）はこれより先に効く＝一定テンポの入力でのエラーの順番は変わらない。
+test('playback engine rejects a beat-map tempo until it is supported', () => {
+  const engine = new PracticeAudioEngine({ currentTime: 0 }, { voicePack: { words: new Map() } });
+  const compiled = compileRhythm({ danceId: 'waltz', counts: '123' });
+  const tempo = beatMapTempo([0, 400, 1000], 3);
+  assert.throws(() => engine.start({ compiled, bpm: 84, tempo }), { name: 'Error', message: 'beat-map tempo is not supported by the playback engine yet' });
+  assert.throws(() => engine.start({ compiled, bpm: 84, tempo, rangeStartTick: 0, rangeEndTick: 0 }), { name: 'RangeError', message: 'Invalid playback range' });
+  assert.equal(engine.playing, false);
 });
 
 test('loop occurrence time is calculated from iteration, without accumulation', () => {

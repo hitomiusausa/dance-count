@@ -12,6 +12,9 @@ import { TICKS_PER_BEAT } from './dance-profiles.js';
  */
 
 /**
+ * tickToMs / tickToSeconds は「長さ」ではなく、絶対 tick に対応する曲の時間軸上の「位置」を返す
+ * （msToTick / secondsToTick はその逆）。長さが欲しいときは位置の差をとる:
+ * tickToMs(endTick) - tickToMs(startTick)。一定テンポでは両者が一致するが、拍の地図では一致しない。
  * @typedef {object} TempoMap
  * @property {'constant' | 'beatMap'} kind
  * @property {(tick: number) => number} tickToMs
