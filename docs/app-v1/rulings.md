@@ -824,6 +824,9 @@
 - **D20 種目ごとのフィガーの一覧から選ぶ（2026-10-11）**: ひとみうさ「前に作ってたとき、フィガーの候補が出るようにしていたと思うんだけど…各種目ごとにフィガーのリストが出せたらずいぶん入力が楽になる」。A 案を採る: **追加の行（新しいフィガー）で名前の欄が空の間**、名前の欄の下にその種目の照合済み（verified）フィガー**全部**をタップできるボタンで並べる（見出しは「ワルツのフィガー（17）」の形）。タップで名前に入る。1 文字以上打ったら今までの候補（部分一致・最大 5。Ruling 39）に替わる。— 目的: **キーボードを出さずに選べる**こと。— 前提: 出すのは照合済みの名前だけ（Ruling 3・39。未監修のカタログは出さない。ヴィエニーズワルツは 0 件なので枠ごと出さない）。— 細部（置き場・`[data-group]` と U5・主要操作数・並び・英語・すでに使った名前の印）は Fable の裁定（Ruling 54）で決める。
 - **D21 ひらがなとカタカナは同じ（2026-10-11）**: 名前の照合で、ひらがなとカタカナを同じ文字として扱う（変換前の「うぃすく」で「ウィスク」が見つかる）。同じ名前の判定（Ruling 50-1 の `foldFigureName`）も同じ規則にそろえる（「べーしっく」＝「ベーシック」）。ひとみうさ「する」。— 保存した名前は変えない（表記はそのまま。比べ方だけ変わる）。
 - **D22 同じフィガーなら同じ名前（日英の対応表で判定）（2026-10-12）**: 英語表示で一覧・候補から "Whisk" を選ぶと、日本語で保存した「ウィスク」と別の名前と判定され、違うカウントの "Whisk" が足せてしまう（段3追加便の最終レビューで発見・ひとみうさ判断）。決定（A 案）: Ruling 50 の「同じ名前」の判定（sameName・カウントを合わせる・N件まとめて決定・複製の形）で、**照合済みの登録簿（`figure-terminology` の verified）で同じフィガーに当たる名前は同じ名前とみなす**（同じ種目の中だけ。日本語の別名・英語名・かなの畳み（D21）を通して当たるもの＝例: ウィスク＝Whisk＝うぃすく）。登録簿に無い自由入力の名前は今までどおり畳んだ綴りで比べる。保存データの形は変えない（名前の文字だけ。表示は保存した文字のまま）。— **B 案（行に「どのフィガーか」の印も保存し、表示を言語に合わせて切り替える）は段5（配る・受け取る）の計画で配る形式と一緒に決める**。C 案（候補を「ウィスク（Whisk）」の両方で出す）は採らない（判定のずれは直らない）。— 段3追加便の Task F8。
+- **D23（代理決定・ひとみうさ確認待ち）ステップ0 の文言と既定名**: ステップ0 の説明は 3 行「12 の言葉を、1 つずつ録音します。」「録音は、この iPhone（端末）の中にだけ残ります。」「いつでも消せます。」（英 `You will record 12 words, one at a time.` / `Recordings stay on this device only.` / `You can delete them at any time.`。依頼形なし・技術語なし・Ruling 8 の 3 点）。パックの既定名は **「自分の声（英語）」／「自分の声（日本語）」**（英 `My voice (English)` / `My voice (Japanese)`。Ruling 25 の「○○の声」の ○○＝「自分」。先生の名前は S9 で聞く＝段5。受け取った側は `distributor` から「○○さんの声」になるので、名前欄を空のまま配っても困らない）。— 代償: 先生が自分の名前を入れたければ完成画面の名前欄で打つ。
+- **D24（代理決定・ひとみうさ確認待ち）声のタイミングの形**: 「くわしく」の最後の行に「声のタイミング」＋値「±0 ms」「−20 ms」「+10 ms」＋「‹ 早く」「遅く ›」の 2 ボタン・10ms 刻み・±200。単位「ms」はそのまま出す（「ミリ秒」より短く、モックどおり。禁止語ではない）。— 代案: 値を出さず「早く ●●○○○ 遅く」の 5 段（数字を見せないが 40ms 刻みになる）。
+- **D25（代理決定・ひとみうさ確認待ち）S8 の進み方**: 帯に「‹ 前の語」を足す（2 語目以降）／語は飛ばせない／完成済みの言語で S8 を開くと完成画面から（「録り直す」で 1 語目へ）／「戻る」は S8 を出る（保存済み）。— 代案: 完成画面でなく常に 1 語目から（録り直しが近いが、完成画面に行くのに 12 回「次へ」）。
 
 ---
 
@@ -938,3 +941,271 @@
 - **見出しの数字**: 「ワルツのフィガー（17）」（推奨。全部出ていること・終わりがあることが分かる）／「ワルツのフィガー」（短いが、途中で切れていないか分からない）。
 - **すでにこのルーティンにある名前の印**: 付けない（推奨。一覧は真上に見えていて、タップすれば「1 2 3 で複製して追加」で分かる。印は色だけに頼れず文字が増える）／「済」や「×2」の小さな印を付ける（何を足したか一目で分かるが、19 個の中で 2 行の名前がさらに伸びる）。
 - **並び**: 定義順（推奨。教本の並びに近い）／五十音順（探し慣れた人には速いが、英語の画面では ABC 順になり日英で位置が変わる）。
+
+---
+
+# 段4（声 S7・S8）計画前の裁定 — Fable（2026-10-12・ひとみうさの委任により代理決定を含む）
+
+作成: 2026-10-12 / ブランチ `agent/app-v1` / 書き手: Fable（設計と裁定だけ。コードと `docs/app-v1/rulings.md` には触れていない。採用が決まったら計画者がこの文書の Ruling 55〜63 と D23〜D25 を `rulings.md` 末尾へ転記する）。
+
+前提: ひとみうさは就寝中で「止まらずに進め、迷ったら Fable に聞く」の指示。**ここでの製品判断は代理決定で、ひとみうさが起きたら §3 の一覧で見直せる形にしてある**。push・デプロイ・課金・未監修データの公開は引き続き禁止。基準は 60〜70代の先生（録音する人）と生徒（受け取る人。段5）。仕様 §4 S7/S8・§7「声のパック」「設定」・§11・Ruling 5・8・11・12・15・25・26・27・31・33・41・43・44 を前提に、計画者が止まる所だけ決める。
+
+---
+
+## 0. コードで確かめた事実（裁定の根拠。食い違いは訂正として明記）
+
+### 0-1. エンジン（`src/engine/`。段4でも無変更が原則）
+- `recorded-voice-store.js:3` は `DB_VERSION = 1` を直接開く（`:26`）。段2で DB は v2（`src/app/platform/storage.ts:6`）なので、新アプリから呼ぶと `VersionError`（`storage.ts:3-4` のコメントどおり）。エラー文は日本語固定（`:25`・`:31`・`:38`）。**新アプリはこのファイルを呼ばない**（下 Ruling 56）。`legacy/` は別オリジン（4173）でこのまま使う。
+- `recorded-voice-pack.js:5` `REQUIRED_VOICE_KEYS`（slow・quick・one〜eight・and・ah の順＝S8 の語順）。`:7` `createRecordedVoicePack(name='My recorded voice', { id='user-recorded-v1', locale='en', vocabularyId })`、`:140-143` で `ja`→`ja-JP`。`:21-49` `validateRecordedVoicePack`: `words[key].blob instanceof Blob`・`onsetMs` 有限・`normalized` なら `durationMs`／`sourceOnsetMs` 必須・`timingAdjustments` は `globalOffsetMs` と 12 語の `wordOffsetsMs` とも **±1000ms** 以内・`requireComplete` で 12 語そろい。`:51` `recordedPackProgress` → `{recorded,total,complete}`。`:56` `createVoiceTimingAdjustments(globalOffsetMs, wordOffsetsMs, adjustedAt)`。`:69-84` `exportRecordedVoicePack` は base64（段5）。`:114-134` `decodeRecordedVoicePack(audioContext, pack)` は `requireComplete:true` で検査し、標準音声と同じ `{manifest:{schemaVersion:2, id, name, locale, vocabularyId, source:'local-recording'}, words:Map}` を返す＝**エンジンの再生経路は録音パックをそのまま受け取れる**。
+- `recording-normalizer.js:3-16` `REFERENCE_VOICE_TIMING`: onset は 25〜80ms、長さは最長 **745ms**（six）。`:54-67` `normalizeRecordingBlob(audioContext, blob, key)`＝decode → `measureRecordingOnset` → `normalizeAudioBuffer` → `encodeAudioBufferAsWav`（`mimeType:'audio/wav'`・`gainDb:0`・`normalized:true`）。`:69-75` 判定は `sustainMs:50`・`relativeThreshold:0.04`・`absoluteThreshold:0.002`。`:77-109` WAV は 16bit・**チャンネル数は元のまま**（モノにしない）。`measureRecordingOnset`・`normalizeAudioBuffer`・`encodeAudioBufferAsWav` はすべて export 済み＝**アプリ側で段階ごとに呼べる**（無音判定を挟める）。
+- `onset-detector.js:20-26`: しきい値＝`max(absoluteThreshold, peakRms × relativeThreshold)`。見つからなければ `throw new Error('No sustained voice onset detected')`。戻り値に **`peakRms`** が入る。**注意**: 相対しきい値のため、声が無く一定のノイズだけの録音では `peakRms` が小さくても先頭で「見つかって」しまう（無音判定は `peakRms` の絶対値で別に要る。Ruling 58）。
+- `voice-pack-loader.js:33-64` `scheduleVoiceEvent({ userOffsetMs })`: `startTime = targetTime − onsetMs/1000 + userOffsetMs/1000`。`audio-engine.js:59-70` `start({ voiceOffsetMs=0, wordOffsetsMs={} })`、`:36-40` `effectiveVoiceOffsetMs = global + word`、`:55` `setVoicePack(voicePack)`。**声のタイミングはエンジンの既存の口で足り、予約経路は触らない**。
+- `count-vocabularies.js:4-13` `prompts[key] = [大きい表記, 小さい表記]`（en: `One`/`1`、ja-JP: `いち`/`1`、`よん`/`「し」でも可 …）。Ruling 25 の「選んだ言語の語（56px）ともう一方の言語の表記（20px）」は、**選んだ語彙の `prompts[key][0]`** と **もう一方の語彙の `prompts[key][0]`** で作る（`[1]` は補助表記で「「し」でも可」のような説明が混ざるため見出しには使わない）。
+- `audio-engine.js` は `scheduleClick`/`frame` を含め段2・3から無変更（ゴールデン `test/engine/engine-schedule.test.js`）。段4もエンジンは **0 行変更**で済む（下 Ruling 58-5）。
+
+### 0-2. アプリ（`src/app/`）
+- `platform/storage.ts:11` `voice-packs` は `keyPath:'id'` で v2 に存在。`:29-35` `AppStorage` は `get/getAll/put/delete`（`put` は keyPath のストアでは key を渡さない）。`:76-77` 書きはトランザクションの完了で返る。`test/app/helpers/memory-storage.ts` の偽物も `voice-packs` の keyPath `id` に対応済み＝**録音の保存の単体テストはすぐ書ける**。
+- `platform/recorder.ts:6-8` は `recordWord(_durationMs)` が `PlatformNotReadyError('voice recording', 4)` を投げる殻（型 `WordRecording { blob; mimeType }`）。`platform/files.ts` は段5の殻。`platform/audio-context.ts:17-29` `unlockAudioInsideTap()`＝アプリに1つの AudioContext（閉じない）。`:9-13` 起動時に `audioSession.type='playback'`。
+- `test/app/platform-boundary.test.ts:16-17`: `new MediaRecorder`・裸の `navigator`・`new Audio`・`fetch` は `platform/` 以外で落ちる＝録音・`getUserMedia`・試聴の音出しは **`platform/recorder.ts`・`platform/audio-context.ts` に閉じる**しかない（`:69` `navigator.wakeLock.request` の例と同じ）。
+- `settings/settings.ts:13-14` に `voiceLocale`・`selectedVoiceId` の欄はあるが、`:53` `normalizeSettings` が **常に `STANDARD_VOICE_ID`（`default-en-female-v1`）へ戻す**。`:91-96` `forgetRoutineSettings` の形（削除時に記憶を消す差分）がある。
+- `practice/session.ts:64-71` `SessionDeps.loadVoice(audio)` は引数に声が無く、`session-deps.ts:19` が `loadStandardVoice(audio, STANDARD_VOICE_ID)` に固定。`session.ts:157` `this.engine ??= createEngine(...)`＝同じ AudioContext では**エンジンを使い回す**ので、声を替えるには `setVoicePack` が要る。`:158-164` `engine.start` に `voiceOffsetMs` を渡していない。`:9-16` `CommonOptions` に声の欄は無い。`platform/assets.ts:7-20` は標準音声を AudioContext ごとに記憶（失敗は覚えない）。
+- `practice/controls.tsx:82-91` `VoiceChip` は文言 `standardVoiceShort`（「標準（英語）」）固定で S7 へのリンク。`:94-106` `MoreOptions`、`:133-143` `RepeatRow`（「くわしく」の 1 行＝ラベル＋チップの型）。S2 の「くわしく」は `PracticeScreen.tsx:90-107`（型・細かい調整・繰り返す＝開くと 8）、S5 は `RoutinePlayScreen.tsx:140-155`（範囲・細かい調整・繰り返す＝8）、S4 は `RoutineEditScreen.tsx` の「くわしく」（合図の小節数・速さ＝7）。
+- `screens/VoicesScreen.tsx:12-16` S7 最小版: `[data-group="voice"]` `role="radiogroup"` に `role="radio"` の行 1 つ（`.dc-radio-row`、`base.css:136` で 56px・下罫線）。`screens/SettingsScreen.tsx` は言語だけ（「声」「先生の方へ」の項目はまだ無い）。
+- `router/routes.ts:7` `UiState = 'no-sound'|'wakelock-tip'|'confirm-delete'`（Ruling 33: 4つ目以降は裁定が要る）。`:22-23` S7＝`list`（親 S6）・S8＝`focus`（親 S7）・ハッシュ `#/voices`・`#/voices/record`。`App.tsx:43-48` `SIMPLE_SCREENS` に S7。`App.tsx:61-72` は起動時に設定とルーティンだけ読む（声のパックは読まない＝Blob を起動時に持ち上げない。今後もそうする）。
+- `i18n/messages.ts:48-49` `voicesTitle`・`standardVoiceEnglish`、`:30` `standardVoiceShort`。禁止語テスト（`i18n/forbidden-words.ts`）は「音声パック」「ストレージ」「読み込み」「書き出し」「エラーコード」「Import/Export/Storage/Voice pack」を落とす＝文言は「声」「受け取る」「配る」「ファイルに保存」で書く。
+- `tools/check-app-ui.js:80` `chromium.launch({ channel:'chrome' })`（args 無し）、`:98` `newContext({ viewport, locale, reducedMotion })`（permissions 無し）、`:107` seed は `page.evaluate(seedRoutinesInPage, …)` で IndexedDB に直接書く（`tools/ui-check-routines.js`）、`:160-162` 主要操作の対象・除外。`:12-23` `LIMITS`。S7 は `{ name:'S7', hash:'#/voices', screen:'S7', kind:'list' }` の 1 行だけ（期待値なし）。
+- `legacy/voice-recorder.html:302` mimeType の優先順 `['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg;codecs=opus']` を `MediaRecorder.isTypeSupported` で選ぶ。`:290` `getUserMedia({ audio:true, video:false })`。`:300-331` 録音は人が止める（自動停止なし）。`:333-340` 試聴は `new Audio(URL.createObjectURL(blob))`（新アプリでは platform の AudioContext で鳴らす）。`:342-356` 既存録音の後正規化（新アプリは録音時に必ず正規化するので不要）。
+- モック `docs/app-v1/mockups/b-studio-navy.html:218-235` S8（1/12）: 戻る＋「自分の声を録音」・「1 / 12 語」＋12 マス・語 56px＋英語 20px・「ボタンを押すと 1.5 秒だけ録音します。」・録音ボタン直径 144px（`:85` CSS・`--rec`／`--rec-ring`）・波形＋「▶ 聞く」・下固定「次へ ›」。`:213`・`:270` S2 の「くわしく」に `data-group="voice-offset"`「声のタイミング」＋チップ「±0 ms」。
+- 作業ツリー: `editor.ts`・`figure-names.ts`・テスト・`smoke-routines.js` が未コミットで変更中（Task F8＝D22）。段4は **F8 のコミット後**に枝を切る（Ruling 55）。
+
+### 0-3. 外部事実（確認済み／推測を分ける。Ruling 6 の表 F1〜F7 の続き）
+| # | 事実 | 状態 | 出典 |
+|---|---|---|---|
+| F8 | iOS Safari の MediaRecorder は 14.3 以降で既定有効。出せる形式は **MP4（音声は AAC）**。`audio/webm` を録れるという情報は無い | 確認済み（WebKit ブログは 2020 年のもの。2025〜26 の変更は未確認＝実機で `isTypeSupported` の結果を記録する） | https://webkit.org/blog/11353/mediarecorder-api/ ・ https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static |
+| F9 | `isTypeSupported` が true でも資源不足で録音は失敗しうる | 確認済み（MDN） | 同上 |
+| F10 | Chromium の偽マイク: 起動引数 `--use-fake-device-for-media-stream`・`--use-fake-ui-for-media-stream`・`--use-file-for-fake-audio-capture=<絶対パス>.wav`（WAV 推奨・末尾 `%noloop` で 1 回だけ・URL 不可・**ブラウザ 1 つにつきファイル 1 つ**・macOS の Chrome でファイル指定が効かない報告あり） | 確認済み（Autify・QAWolf の手引き・Chromium ソースのコメント）。macOS での動作は**計画者がスクラッチで実測**してから採用 | https://helpcenter.autify.com/docs/media-stream-testing ・ https://docs.qawolf.com/qawolf/web-audio-injection ・ https://chromium.googlesource.com/chromium/src/+/74.0.3729.169/media/base/media_switches.cc |
+| F11 | iOS でマイクを開くと音声セッションが録音＋再生の種類に変わり、再生の音量が下がる／出力先が変わることがある。マイクを開いたままだと AudioContext の出力が壊れる（サンプルレートが変わる）報告がある | **推測**（一般知識。今回未検索） → Ruling 57-4 で「語ごとにマイクを閉じる」構造で避け、実機確認表に入れる | — |
+| F12 | Xcode の iOS シミュレーターでは Safari の `getUserMedia` で実際の声を録る確認は信用できない（ホストのマイクが通るかは環境次第） | **推測** → シミュレーターで確かめるのは Ruling 63-6 の範囲だけ。録音そのものは実機 | — |
+
+---
+
+## 1. 計画者が止まる問い（この文書で全部答える）
+
+| # | 問い | 答えの場所 |
+|---|---|---|
+| Q1 | 段4の着手順（F8・実機再確認との前後）と範囲（「配る」「ファイルに保存」「受け取る」「バックアップの1行」は段4か段5か） | Ruling 55 |
+| Q2 | `recorded-voice-store.js` の代わり＝`platform/storage` 経由の API の形、DB の版、パックの ID、上限 | Ruling 56 |
+| Q3 | `navigator.storage.persist()` は段7のままか | Ruling 56-6 |
+| Q4 | `platform/recorder.ts` の API、mimeType の順、1.5 秒の止め方、マイクを開く／閉じる単位、`audioSession`、`getUserMedia` をタップ内で呼ぶ理由 | Ruling 57 |
+| Q5 | マイク拒否・非対応・途中失敗の分け方と §11 文言の当て方 | Ruling 57-6 |
+| Q6 | 無音・短すぎの判定のしきい値（数値）と、正規化の再利用の仕方（モノ化・サンプルレート） | Ruling 58 |
+| Q7 | エンジンの日本語固定文言の i18n 化（持ち越し表）はやるのか | Ruling 58-5 |
+| Q8 | S8 ステップ0 の文言（マイク前の説明）とタイミング、言語の2択の挙動 | Ruling 59-1・D23 |
+| Q9 | S8 の語の画面: 録音ボタンの状態、取り直し、「聞く」、「次へ」の条件、前の語へ戻れるか、「戻る」の意味 | Ruling 59-2〜4・D25 |
+| Q10 | 「完成」の定義、完成画面の中身（聞き比べ・名前・完了）、完成済みパックで S8 を開いた時 | Ruling 59-5・D25 |
+| Q11 | パックの既定名（Ruling 25 の「○○の声」の ○○） | D23 |
+| Q12 | 途中まで録ったパックの扱い（S7 の行・選べるか・消し方） | Ruling 60-2 |
+| Q13 | S7 の一覧の中身と並び、選択＝`selectedVoiceId`、`voiceLocale` の役割、試聴の中身、展開行、削除の確認 | Ruling 60 |
+| Q14 | 標準の声（日本語）の行をいつ出すか（段6が未了のとき） | Ruling 60-5 |
+| Q15 | 録音したパックが S2/S5（と S4 の試聴）で鳴る経路: `SessionDeps.loadVoice`・`setVoicePack`・声チップ・パックが消えていた時 | Ruling 61 |
+| Q16 | 声のタイミング（±200ms・1 つまみ）の見た目・刻み・保存先（標準＝設定、録音＝パック）・「くわしく」の上限 9 | Ruling 62・D24 |
+| Q17 | 画面状態ごとの主要操作数（ui:check の期待値）と `[data-group]` の切り方 | Ruling 59-6・60-6・62-4・63-1 |
+| Q18 | ui:check で S8 の状態をどう作るか（偽マイク・seed・`ui-state` の追加） | Ruling 63-1〜3 |
+| Q19 | 録音のヘッドレス検査（Playwright の偽マイク・WAV 固定ファイル・無音の本）とスモークの設計 | Ruling 63-4〜5 |
+| Q20 | iOS シミュレーターで確かめられること／実機でしか確かめられないこと | Ruling 63-6・7 |
+
+---
+
+## 2. 裁定
+
+## Ruling 55（Q1）[地図差] 段4の着手順と範囲 — F8 の後に枝を切り、ファイルに関わるものは段5へ
+
+**決定**:
+1. **順序**: 段4の詳細計画は今書いてよい。**実装の枝 `agent/app-v1-stage4` は Task F8（D22）のコミット後に `agent/app-v1` から切る**（作業ツリーの `editor.ts`・`figure-names.ts` が F8 で変更中。段4は `App.tsx`・`messages.ts`・`routes.ts`・`base.css`・`check-app-ui.js` を触るので、同じ枝で並走しない）。段3 追加便の**実機再確認（確認表 17〜41）は段4の前提にしない**（ひとみうさが起きてからまとめて見る。段4で直しが出ても S4 の話で、S7/S8 とは別ファイル）。
+2. **段4でやる**: S7（一覧・選択・試聴・途中のパック・削除）、S8（ステップ0〜12・完成）、`platform/recorder.ts`、`platform/storage` 経由の声の保存、`selectedVoiceId` の保存と再生への接続、声チップ、声のタイミング（S2・S5・S4 の「くわしく」）、S6 の「声」「先生の方へ › 自分の声を録音する」の項目、ui:check・smoke。
+3. **段5へ送る（Ruling 27「動かないボタンは見せない」のため）**: S7 の「ファイルから受け取る」、展開行の「配る」「ファイルに保存」、S8 完成画面の「配る」、**完成時の「ファイルに保存（バックアップ）」の 1 行と `hints.backupTipShownForRecording`**（ファイルを作る仕組み＝bundle は段5の物。段4で案内だけ出すと押す物が無い）。受け取ったパック（`origin:'received'`・`distributor`）は**型と S7 の表示だけ**段4で作る（データは段5。段3の `receivedFrom` と同じ扱い）。
+4. **仕様の読み替え**（計画者が §4 S7/S8・§7 に注記）: S7「ファイルから受け取る」「配る」「ファイルに保存」→「（段5で足す）」、S8 完成「配る」「ファイルに保存（バックアップ）を勧める 1 行」→「（段5で足す）」、§7 消失対策の「先生の録音完成時」→「（段5）」。Ruling 26 の `hints.backupTip*` の段の割り当て（段3・4）→ **段5**。
+
+**理由**: 段3と同じく「動かないボタンを実機確認に持ち込まない」。録音と配布を分けるのは仕様 §13 のとおりで、段4の完了条件（12 語録音 → ワルツが自分の声で鳴る）にファイルは要らない。
+
+**外れた時の代償**: 段4の実機確認で「録音したのに配れない」行き止まり（次の段で埋まる。害は無い）。段5の仕事が少し増える。
+
+## Ruling 56（Q2・Q3）[地図差] 声の保存は `platform/storage` 経由の `src/app/voices/store.ts`。DB の版は 2 のまま。`persist()` は段4へ前倒し
+
+**決定**:
+1. **エンジンの `recorded-voice-store.js` は新アプリから呼ばない・変えない・消さない**（`legacy/` が別オリジンで使う。Ruling 10）。代わりに `src/app/voices/store.ts`（純粋。`AppStorage` を引数に取り、`test/app/helpers/memory-storage.ts` で単体テスト）:
+   - `listVoicePacks(storage): Promise<VoicePackRecord[]>`＝`getAll('voice-packs')` → `normalizeVoicePackRecord` で形を検査し、外れた物は**出さない・消さない**（段3の `normalizeRoutine` と同じ）。並びは `origin`（recorded → received）→ `updatedAt` 昇順。
+   - `loadVoicePack(storage, id)`＝`get('voice-packs', id)`＋同じ検査。`saveVoicePack(storage, pack): Promise<boolean>`（`put`。失敗は `false`＝S4 と同じ「保存できませんでした」の根拠）。`deleteVoicePack(storage, id)`。
+   - `normalizeVoicePackRecord(raw)`: `validateRecordedVoicePack` を**途中のパックにも**かけ（`requireComplete:false`。Blob の検査はここで効く）、加えて `origin` が `'recorded'|'received'` でなければ **`'recorded'` と読む**（旧画面と同じオリジンで作られた v1 のデータは来ないが、型は閉じておく）。`name` は 1〜40 字（超えたら切らずに不受理）。
+2. **保存する形**（仕様 §7「声のパック」のまま、追加欄を確定）: 既存 schemaVersion 1 のパック＋`origin:'recorded'|'received'`・`distributor?:{ name }`・`consent?:{ voiceDistribution:true, consentedAt }`（後 2 つは段5が書く）。`timingAdjustments` は Ruling 62。
+3. **ID**: 録音パックは**言語ごとに 1 つ**で、ID は既存の定数を使う＝英語 `user-recorded-v1`（`LOCAL_RECORDED_PACK_ID`）・日本語 `user-recorded-ja-v1`（`JAPANESE_RECORDED_PACK_ID`。`recorded-voice-store.js:4-5` の値を `voices/ids.ts` に**写す**。エンジンの store は import しない）。同じ言語で録り直せば同じパックを上書き（「自分の声」は最大 2 行）。受け取ったパックの ID は段5で付け直す（配布ファイルの `id` は先生の端末の固定 ID なので衝突する。段5の計画に持ち越し）。`selectedVoiceId` の検査は `/^[A-Za-z0-9_-]{1,64}$/`（Ruling 61）。
+4. **上限**（`LIMITS` としてコード先頭に）: パック **20 個**（受け取りが増える段5で効く。超えたら受け取りを拒む）、名前 **40 字**（ルーティンと同じ）、1 語の WAV **2MB**・1 パック **20MB**（§7 の受理上限と同じ。録音は 1 語 ≒ 60〜130KB なので実際は届かない）。
+5. **DB の版は 2 のまま**（`voice-packs` は v2 に既にある。`storage.ts:11`）。段4で新しいストアは作らない。**版上げの方針**（今後のため明文）: 上げる時は `DB_VERSION` と `upgradeAppDatabase` の 1 か所だけ、`test/app/settings/storage-upgrade.test.ts` に 0→N・1→N・2→N の 3 経路を足す。既存ストアの削除・改名はしない。
+6. **`navigator.storage.persist()` を段4へ前倒し**: `platform/storage.ts` に `requestPersistentStorage(): Promise<void>`（無い端末・拒否は黙って無視。結果は画面に出さない）を足し、**最初の語の保存が成功した直後に 1 回**呼ぶ（録音こそ失って困るデータ。Ruling 11 の「初回の保存成功時」をこの時点と読む）。段7の持ち越し表から外す。
+7. **読む時機**: 起動時には読まない（`App.tsx` は設定とルーティンだけ）。S7 はマウント時に `listVoicePacks`、S8 は言語を選んだ時に `loadVoicePack`、再生は ▶ の時に `loadVoicePack`（Ruling 61）。Blob は IndexedDB に置いたままで、decode 済みの `VoicePack` を AudioContext ごとに記憶（`assets.ts` と同じ型。パックの `updatedAt` が変わったら捨てる）。
+
+**理由**: Ruling 26・41 の「版上げは 1 か所・1 回」を守りつつ、段3で `getAll/delete` を足した `AppStorage` がそのまま使える。ID を言語ごとに固定するのは「自分の声」が増殖せず、録り直しが上書きで済むため。
+
+**外れた時の代償**: 同じ言語で 2 種類の声（教室用・大会用）は持てない（要望が出たら ID に連番を足す。形式は変わらない）。`persist()` の前倒しで段7の仕事が 1 つ減るだけ。
+
+## Ruling 57（Q4・Q5）録音の面 — `platform/recorder.ts` の形・1.5 秒・語ごとにマイクを開閉・エラーの分け方
+
+**決定**:
+1. **API**（`platform/recorder.ts`。`window`/`navigator`/`MediaRecorder` はここだけ）:
+   ```ts
+   export const TAKE_MS = 1500;                      // 仕様 §4 S8「1.5 秒だけ録音」
+   export type RecorderUnavailable = 'unsupported' | 'denied' | 'failed';
+   export function recorderSupported(): boolean;     // navigator.mediaDevices?.getUserMedia && globalThis.MediaRecorder
+   export function pickMimeType(): string | undefined; // ['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg;codecs=opus'] を isTypeSupported で（legacy と同順。無ければ undefined＝ブラウザ既定）
+   export async function recordTake(ms = TAKE_MS): Promise<{ blob: Blob; mimeType: string }>; // getUserMedia → MediaRecorder.start() → ms 後に stop() → 'stop' で Blob → 必ず tracks を stop
+   ```
+   `recordTake` は**1 回の呼び出しでマイクを開き、録り、閉じる**（`stream.getTracks().forEach(t => t.stop())` を `finally` で）。`timeslice` は使わない（iOS の MP4 は分割すると壊れる恐れ。1 つの Blob で受ける）。失敗は `RecorderError { kind: RecorderUnavailable }` で投げる: `getUserMedia` の `NotAllowedError`／`SecurityError` → `'denied'`、`recorderSupported()` が偽 → `'unsupported'`、それ以外（`NotFoundError`・`NotReadableError`・`dataavailable` が来ない・Blob が 0 バイト）→ `'failed'`。
+2. **「録音をはじめる」のタップ内で最初の `getUserMedia`**（Ruling 8。説明画面の後）。ステップ0 の処理は `recordTake` ではなく **`requestMicrophone(): Promise<void>`**（`getUserMedia` で許可を取り、**すぐ tracks を止める**。許可の有無だけを確かめる）。拒否ならその場で §11「マイクが使えない設定になっています。」。許可が取れたら語の画面へ。語の画面の「録音する」でも毎回 `recordTake` が `getUserMedia` を呼ぶ（Chrome と iOS 15 以降の Safari は一度許可したサイトでは再度尋ねない。尋ねる端末があればそれは OS の挙動で、文言は要らない）。
+3. **1.5 秒の止め方**: `setTimeout(ms)` で `recorder.stop()`。表示は画面側（Ruling 59-2）。`REFERENCE_VOICE_TIMING` の最長は 745ms なので、先頭の無音と反応の遅れを足しても 1.5 秒で足りる（長い語「クイック」「アンド」も 1 秒未満）。
+4. **語ごとにマイクを開閉する**（F11 の回避）: 取り直しも同じ。試聴（「聞く」・完成の聞き比べ）の時に**マイクは開いていない**状態にする。`audioSession` は `recordTake`／`requestMicrophone` の間だけ `'play-and-record'` にし、閉じたら `'playback'` に戻す（`platform/audio-context.ts` に `withRecordingSession(fn)` を足す。無い端末は何もしない。Ruling 6-1 の設定を壊さない）。これで効かなければ**実機確認で発覚**し、代償は「録音の後で試聴が小さい・鳴らない」→ その時は AudioContext を閉じて作り直す経路（`platform/audio-context.ts` に `resetAudioContext()`）を足す。
+5. **`getUserMedia` の制約**は `{ audio: true, video: false }`（legacy と同じ。`echoCancellation` 等は触らない。数え言葉は短く、OS の既定が無難）。実機で頭が切れるようなら `autoGainControl:false` を試す（確認表に 1 行）。
+6. **エラーの当て方**（§11）: `'unsupported'` → 「このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。」＋ボタン「戻る」（＝`[data-back]` だけ。ほかの操作は出さない）。`'denied'` → 「マイクが使えない設定になっています。」＋`[data-alert-action]`「設定の開き方」（押すと同じ枠の中に 2 行: iPhone「設定 → Safari（ホーム画面のアプリは アプリ名）→ マイク」／Android・PC「アドレスバーの錠前 → マイク」。画面は増やさない）＋「あとで」は**戻る**で代用（ボタンを増やさない。§11 の「あとで」はこの読み替え）。`'failed'`（録音中の失敗）→ 無音と同じ「声が入っていませんでした。もう一度録音してください。」（先生に見せる違いは無い）。どれも `[data-alert]` の枠 1 つ（Ruling 30 の型）。`recorderSupported()` が偽ならステップ0 の「録音をはじめる」を**出さず**、代わりに非対応の枠（押せない物を見せない）。
+7. **録音中は「戻る」を無効にしない**（1.5 秒で終わる。押されたら `recordTake` の結果は捨てる＝`generation` で守る。Ruling 32 の印と同じ考え）。画面を離れる（アンマウント）時はマイクを閉じる（`recordTake` の `finally` で必ず閉じるので、追加の処理は「結果を捨てる」だけ）。
+
+**理由**: マイクを開きっぱなしにしない構造が、iOS の音声セッションの罠（F11）と「録音していない間もマイクの印が点く」不安の両方を消す。1 回の関数で開閉を完結させれば、画面側に `stream` の状態が残らない。
+
+**外れた時の代償**: 語ごとに `getUserMedia` を呼ぶので、1 語目に 100〜300ms の立ち上がりが入る（1.5 秒の窓は録音開始後に数えるので、先生の発声は切れない）。iOS で毎回許可を尋ねる版があれば 12 回尋ねられる（その時は `requestMicrophone` で取った stream を S8 の間だけ保持する作りに替える。`recorder.ts` の中だけで済む）。
+
+## Ruling 58（Q6・Q7）[地図差] 無音・短すぎの判定と正規化の再利用 — 数値・純粋関数・モノ WAV・エンジン無変更
+
+**決定**:
+1. **純粋関数 `src/app/voices/take-check.ts`**（`node --test`。エンジンは `measureRecordingOnset` を呼ぶだけ）。定数はファイル先頭:
+   ```ts
+   export const SILENCE_PEAK_RMS = 0.01;   // ≒ −40 dBFS。これ未満は「声が入っていない」（相対しきい値の穴を塞ぐ。0-1 参照）
+   export const LATE_ONSET_MS = 1000;      // 1.5 秒の窓でこれより後に始まった声は「短すぎ」（切り出し 745ms が収まらない）
+   export const MIN_TAKE_MS = 600;         // 録れた Blob の長さがこれ未満なら失敗扱い（iOS で稀に空の Blob）
+   export type TakeProblem = 'silent' | 'late' | 'short' | null;
+   export function checkTake(buffer: AudioBufferLike): { problem: TakeProblem; onsetMs: number | null; peakRms: number }
+   ```
+   手順: `buffer.duration*1000 < MIN_TAKE_MS` → `'short'`。`measureRecordingOnset(buffer)` が投げる、または `peakRms < SILENCE_PEAK_RMS` → `'silent'`。`onsetMs > LATE_ONSET_MS` → `'late'`。どれでもなければ `null`。テスト: 無音（全 0）→ silent、一定ノイズ 0.003 → silent（相対しきい値では「見つかる」が絶対値で落ちる）、0.5 の発声 200ms〜 → null、発声が 1200ms〜 → late、0.4 秒の buffer → short。
+2. **画面への当て方**: `'silent'`・`'late'`・`'short'`・`'failed'`（Ruling 57-6）はすべて同じ 1 文「声が入っていませんでした。もう一度録音してください。」（§11。先生に違いを説明しても直し方は同じ「もう一度」）。英 `We couldn't hear your voice. Please record again.`。その語の `[data-alert]` に出し、録音ボタンは「録音する」のまま押せる。取れていた前の録音があれば**残す**（失敗した取り直しで上書きしない）。
+3. **正規化の順**（アプリ側 `src/app/voices/normalize.ts`。全部エンジンの export を呼ぶだけ）: `audioContext.decodeAudioData(blob)` → `checkTake` → `normalizeAudioBuffer(audioContext, buffer, key, onsetMs)` → **モノにまとめる**（`mixAudioBufferToMono` の結果を `audioContext.createBuffer(1, length, sampleRate)` に写す。`platform/audio-context.ts` に `createMonoBuffer(audio, samples, sampleRate)`）→ `encodeAudioBufferAsWav` → `{ blob, mimeType:'audio/wav', onsetMs, sourceOnsetMs, durationMs, normalized:true, gainDb:0 }`（`normalizeRecordingBlob` と同じ形。`recording-normalizer.js:54-67`）。サンプルレートは録音のまま（リサンプルしない。48kHz × 16bit × モノ ≒ 61KB／語・12 語 ≒ 0.75MB・base64 で ≒ 1MB＝§7 の目安の内）。
+4. **decode は platform の AudioContext で**（`unlockAudioInsideTap()` を「録音する」のタップ内で呼んで同じ context を使う。iOS の `audio/mp4`・Chrome の `audio/webm` とも `decodeAudioData` で読める前提。読めなければ `'failed'` 扱い）。
+5. **エンジンは 0 行変更**。持ち越し表「エンジンの日本語固定文言の i18n 化（段4）」は**不要で閉じる**: 新アプリは `recorded-voice-pack.js`・`onset-detector.js` のエラー文を**画面に出さない**（種類で §11 の文言に写す。`take-check.ts`・`store.ts` が `Error` を受けて `TakeProblem`／`false` に変える）。検査: `test/app/voices/*.test.ts` に「エンジンの `Error.message` が画面の文言に含まれない」（文言は `messages.ts` のキー経由でしか出ない）を 1 件。`src/engine/` の diff ゼロを段の完了条件に入れる。
+
+**理由**: 既存の検出器は「クリックの後の持続する声」を見つける物で、「声が無い」を見つける物ではない（0-1 のとおり相対しきい値）。絶対値 0.01 は iPhone の内蔵マイクで普通に話した声（ピーク RMS 0.05〜0.3）と、静かな部屋の暗騒音（0.001〜0.005）の間に置いた**製品判断**で、実機で調整する前提（確認表に入れる）。モノにするのは配布ファイルを半分にするためで、数え言葉にステレオは要らない。
+
+**外れた時の代償**: 小声の先生で `'silent'` が出すぎる（その時は 0.005 へ。定数 1 つ）。騒がしい教室で `'silent'` が出ず、ノイズの頭が「声の頭」になる（取り直しで直る。「聞く」で分かる）。
+
+## Ruling 59（Q8〜Q10）S8 の画面 — ステップ0・語の画面・前の語・戻る・完成・主要操作数
+
+**決定**:
+1. **ステップ0（`#/voices/record`。集中画面・戻る＝S7）**: 見出し「自分の声を録音 / Record your voice」。説明は **3 行以内・依頼形なし**（D23 の文言）。その下に `[data-group="record-language"]` の大型 2 択（`role="radiogroup"`・`.dc-radio-row` の型。初期値 英語。Ruling 25 の文言）→ 下固定 `.dc-primary`「録音をはじめる / Start recording」（主要操作 2）。押すと `requestMicrophone()`（Ruling 57-2）→ 成功で、その言語のパックを `loadVoicePack`（無ければ `createRecordedVoicePack` で作る。名前は D23 の既定名・`origin:'recorded'`）→ **最初の未録音の語**へ。全部録音済みなら**完成画面へ**（D25）。言語の 2 択は**パックが途中でも切り替えられる**（英語 7/12 の途中で日本語を選べば日本語のパックの続き。進み具合は言語ごと）。行に進み具合を添える: 「英語で数える（One, Two, Slow…）」の下に補助文 16px「7 / 12 語まで録音済み」（0 なら出さない。完成なら「録音済み（12 語）」）。
+2. **語の画面（1〜12）**: 上から 戻る → 見出し「自分の声を録音」 → 進み具合 `[aria-hidden]` の 12 マスと「3 / 12 語」（`role="progressbar"`） → 語（56px・800・選んだ語彙の `prompts[key][0]`）ともう一方の語彙の `prompts[key][0]`（20px・`--ink2`。英語を選んだ時は「スロー」、日本語なら「Slow」） → 1 行「ボタンを押すと 1.5 秒だけ録音します。 / Tap to record for 1.5 seconds.」 → **録音ボタン**（直径 144px・`--rec`・mic アイコン＋文字「録音する / Record」。取れている語では「録り直す / Record again」） → 取れている時だけ「波形ミニ表示（`aria-hidden`・`<svg>` 40 本の縦線・`--line` 色・onset の位置に `--count-ink` の縦線 1 本）」と `.dc-chip` の「▶ 聞く / Play」 → `[data-alert]`（無音・失敗の文言。Ruling 58-2） → 下固定の帯に **「‹ 前の語 / Previous」（2 語目以降・`.dc-button--secondary`・48px 以上）と「次へ › / Next」（`.dc-primary`・取れている時だけ押せる。12 語目では「完成へ / Finish」）**。
+   - **録音中**（1.5 秒）: ボタンの文字を「録音中… / Recording…」にし、ボタンの輪（`--rec-ring`）を 1.5 秒で一周する `conic-gradient` の進み（**動きは 1.5 秒＝U8 の 300ms を超えるので、`transition`／`animation` ではなく 100ms ごとの描画更新で `--p` を書く**。reduced-motion では輪を動かさず文字だけ）。録音中はボタンを押せない（`disabled`。取り消しは無い＝1.5 秒待つ）。終わったら「処理中…」は出さない（正規化は 1 語 0.1 秒以下）。
+   - **取り直し**: 「録り直す」で `recordTake` → 成功したら上書き保存（`updatedAt` 更新）・失敗したら前の録音を残す（Ruling 58-2）。
+   - **「聞く」**: 正規化後の WAV をそのまま 1 回鳴らす（`platform/audio-context.ts` に `playBuffer(audio, buffer)`。`new Audio` は使わない＝境界テスト）。鳴っている間は「聞く」を `aria-pressed="true"`・もう一度押すと止める。マイクは閉じている（Ruling 57-4）。
+   - **保存の単位**: **1 語ごとに `saveVoicePack`**（取れた瞬間に端末へ。仕様 §3「S8 で戻る: 録音済みの語を保存して戻る」は、戻る時に保存するのではなく**既に保存されている**で満たす）。保存に失敗したら `[data-alert]` に「保存できませんでした。空き容量を確かめてください。」（§11。「ファイルに保存」のボタンは段5）。失敗した語は `pack.words` に入れない（メモリと端末を食い違わせない。S4 の方針と同じ）。
+3. **「‹ 戻る」（`[data-back]`）は S8 を出る**（Ruling 17 のまま＝履歴を 1 つ戻る＝S7。録音済みの語は保存済み。確認なし）。語の間の移動は帯の「前の語」「次へ」だけ（D25）。ブラウザ・端末の戻るも同じ（S8 を出る）。
+4. **「次へ」の条件**: その語が取れている時だけ押せる（`disabled`）。12 語目の「完成へ」で完成画面。**途中の語を飛ばせない**（未録音の語が残ったまま完成に行けない。先頭から順に埋めるのが最短）。「前の語」で戻った語は取れているので「次へ」で進める。
+5. **完成画面（13）**: 見出し「録音できました / Your voice is ready」 → 名前の欄（`<input>` 40 字・`.dc-input`・既定 D23・確定は blur／Enter・空なら既定名に戻す＝S4 の名前欄と同じ型） → 見出し「ワルツで聞き比べる / Compare with the waltz」＋ `[data-group="compare"]` の 2 ボタン「▶ 自分の声 / Your voice」「▶ 標準の声 / Standard voice」（押した方が鳴る。もう一方を押すと切り替え。同じ物をもう一度押すと止まる。中身は Ruling 61-5） → 「録り直す / Record again」（`.dc-button--secondary`。→ 1 語目。各語は取れているので「次へ」で通り抜けられる） → 下固定 `.dc-primary`「完了 / Done」（→ S7 へ**置き換え遷移**（`replaceRoute`）し、**このパックを選択**＝`selectedVoiceId` をこの ID に。Ruling 61）。「配る」「ファイルに保存の 1 行」は段5（Ruling 55-3）。「あとで」は「完了」に統合（仕様 §4 S8「配る／あとで」→ 段4は「完了」だけ、段5で「配る」を足す。**仕様の読み替え**）。
+   - **「完成」の定義**: `recordedPackProgress(pack).complete` かつ `validateRecordedVoicePack(pack, { requireComplete:true })` が通る（＝12 語すべて `normalized:true` の WAV と `onsetMs`）。S7 で選べる・S2 で鳴るのはこの状態だけ。途中は Ruling 60-2。
+6. **主要操作数**（`tools/check-app-ui.js` の期待値。戻る・下タブは除外。帯の中も数える）: ステップ0＝**2**（言語群 1＋はじめる 1。仕様 §6 のとおり）／語・未録音＝**2**（録音 1＋次へ 1。1 語目。`disabled` でも数える＝既存の数え方）／語・録音済み・2 語目以降＝**4**（録音 1＋聞く 1＋前の語 1＋次へ 1）／完成＝**4**（名前 1＋`compare` 群 1＋録り直す 1＋完了 1。段5で「配る」が足されて 5＝初期表示の上限ちょうど。**それ以上は足せない**）／非対応＝0（戻るだけ）／マイク拒否＝0（`[data-alert-action]` は除外）。どの状態も 375×667 の初期表示に収まること（録音ボタン 144px＋波形 48px＋帯 72px で約 560px。計画者が 375 で実測）。
+
+**理由**: 「1 画面 1 語」「押す → 1.5 秒 → 自動停止」は仕様で決まっている。足したのは「前の語」（直しに 12 タップ要らないため）と「飛ばせない」（完成の定義を単純にし、S7 の「7/12」が常に先頭からの連続になる）。保存を語ごとにしたのは、戻る・電話・落ちるのどれでも録った語が残るため。
+
+**外れた時の代償**: 「前の語」で 1 つ戻るたびに帯のボタンが 2 つになる（1 語目は 1 つ。位置は「次へ」が右で固定）。語を飛ばして後で埋める流儀は使えない。完成画面の操作は段5で上限ちょうどになり、以後「配る」以外は足せない。
+
+## Ruling 60（Q12〜Q14）S7 の一覧 — 行の種類・途中のパック・選択・試聴・展開行・削除・標準の日本語
+
+**決定**:
+1. **一覧 `[data-group="voice"]`（`role="radiogroup"`）の行**（上から・`.dc-radio-row` 56px・`role="radio"`）: ①「標準の声（英語） / Standard voice (English)」 ②「標準の声（日本語）」（5. の条件で） ③録音パック（`origin:'recorded'`・完成）＝`pack.name`（既定 D23「自分の声（英語）」）④受け取ったパック（`origin:'received'`）＝「{distributor}さんの声 / {name}'s voice」（データは段5）⑤**途中のパック**（2.）。並びは固定（標準 → 自分 → 受け取った → 途中）。選択中の行だけ `check` アイコン＋「▶ 試聴 / Preview」の小ボタン（48px・行の右端・同じ `[data-group]` の中なので主要操作は増えない）。
+2. **途中のパック**（`recordedPackProgress.complete` が偽）: 行の文字「自分の声（英語）· 7 / 12 語」。`role="radio"` ではなく**`role="button"`**で、タップすると S8（その言語の続き）。`aria-checked` は付けない。選べない（S2 で鳴らない）。同じ群の中に置く（数え方は 1 のまま）。削除は 4. と同じ展開行から。
+3. **選択**＝`selectedVoiceId` を書く（Ruling 61）。**`voiceLocale` は選択から導く派生値**: 標準（英語）→ `'en'`、標準（日本語）→ `'ja-JP'`、録音・受け取り → `pack.locale`（`ja-JP` か `en` に丸める）。`selectedVoiceId` を書く時に**必ず同時に書く**（`chooseVoice(settings, pack)` の純粋関数 1 つ）。読む側は再生では使わない（声のキーは言語非依存）。仕様 §7「言語を別に選べるのは標準音声だけ」は「標準の行が 2 つある」で満たす（別の言語セレクタは作らない。Ruling 12・25）。
+4. **展開行**（自分の声・受け取った声・途中のパックの行を**もう一度タップ**で開く。同時に 1 つ。S3 の「行を開く」と同じ型）: 段4は **「削除 / Delete」**だけ（`[data-group="voice-actions"]`。段5で「配る」「ファイルに保存」を同じ群に足す）。標準の行は開かない。削除は `<dialog data-confirm>`「この声を削除しますか？ / Delete this voice?」＋名前、左「やめる」右「削除する」（Ruling 44 の型）。削除したパックが選択中なら **`selectedVoiceId` を標準（英語）へ戻す**（`forgetVoiceSettings(settings, id)`＝`voiceOffsetMsByVoiceId` からも消す。Ruling 44 の `forgetRoutineSettings` と同じ）。`ui-state=confirm-delete` は S7 でも使う（値は既存。画面ごとに対象が違うだけ）。
+5. **標準の声（日本語）の行**: `src/app/voices/standard.ts` に `STANDARD_VOICES = [{ id:'default-en-female-v1', locale:'en' }, …]` を置き、**日本語は段6のゲート通過後に 1 行足す**（段4は英語だけ。manifest が無い声の行を出さない＝Ruling 27）。`check-dist.js` に「`STANDARD_VOICES` の ID ごとに `dist/audio/<id>/manifest.json` がある」を足す（段6で足した時に落ちない番人）。
+6. **主要操作数**: 閉＝**2**（一覧 1＋「自分の声を録音する」1。「ファイルから受け取る」は段5で 3）／行を開＝**3**（＋`voice-actions`）／削除の確認＝ダイアログの検査（Ruling 44）。S7 は `list` なので下タブあり・戻るあり（U11）。
+7. **下のボタン**: 「自分の声を録音する / Record your voice」（`.dc-primary` 56px・横幅いっぱい。→ S8）。段5で「ファイルから受け取る」をその上に。
+8. **S6**: 「声 › 」（→ S7。現在の声の名前を右に 16px で）と見出し「先生の方へ」の下に「自分の声を録音する ›」（→ S8）を足す（`[data-group]` は不要。S6 の主要操作は 言語 1＋声 1＋録音 1＝3）。「ルーティンを配る」は段5。
+
+**理由**: 選択と展開を「1 回目で選ぶ・2 回目で開く」にするのは、60〜70代が「選ぶ」だけで終われるように（開かなければ余計な物が出ない）。途中のパックを別種の行にしたのは、「選んだのに鳴らない」を作らないため。
+
+**外れた時の代償**: 選択中の行をもう一度押すと展開するので、「もう一度押して確かめる」人には展開が見える（害は無い。閉じるのはもう一度）。標準（日本語）は段6が終わるまで出ない（D3 の初期値は英語なので影響なし）。
+
+## Ruling 61（Q15）再生への接続 — `selectedVoiceId` の保存・`loadVoice(voice)`・`setVoicePack`・声チップ・パックが無い時
+
+**決定**:
+1. **`normalizeSettings`**（`settings.ts:53`）: `selectedVoiceId` は `/^[A-Za-z0-9_-]{1,64}$/` に合えば保存値を**そのまま**残す（合わなければ `STANDARD_VOICE_ID`）。`voiceLocale` は今のまま（`'ja-JP'` 以外は `'en'`）。`voiceOffsetMsByVoiceId: Record<string, number>` を足す（値は `clampVoiceOffset`＝整数・±200 の内。外れたキーは捨てる。Ruling 62）。`DEFAULT_SETTINGS` に `voiceOffsetMsByVoiceId: {}`。テスト: 録音 ID が残る・不正な文字列は標準へ・オフセットの範囲外は落ちる。
+2. **選んだ声の解決は再生時**（純粋関数 `resolveVoiceSelection(settings, packs): VoiceSelection`＝`{ kind:'standard', id } | { kind:'pack', id, pack }`）: `selectedVoiceId` が `STANDARD_VOICES` にあれば standard。そうでなければ `loadVoicePack(storage, id)` の結果が**完成**なら pack、無い・途中・壊れていれば **standard（英語）に黙って落とす**（設定は書き換えない。次に S7 を開いた時は標準が選択中に見える＝`resolveVoiceSelection` を S7 も使う）。
+3. **`SessionDeps`**（`session.ts:64-71`）: `loadVoice(audio, voice: VoiceSelection): Promise<V>` に広げ、`PracticeOptions` の `CommonOptions` に **`voice: VoiceSelection`** と **`voiceOffsetMs: number`** を足す。`browserSessionDeps.loadVoice` は standard → `loadStandardVoice(audio, id)`、pack → `decodeRecordedVoicePack(audio, pack)` を AudioContext ごとに記憶（`platform/assets.ts` に `loadRecordedVoice(audio, pack)`。`pack.updatedAt` をキーに含める）。`begin()` は `voicePack` を得たら **`engine.setVoicePack(voicePack)`** してから `start({ …, voiceOffsetMs })`（`EngineLike` に `setVoicePack` を足す。`audio-engine.js:55` は既存）。`loadVoice` の失敗は今までどおり `voice-missing`（録音パックの decode 失敗も同じ 1 行。文言は §11 のまま＝「この声はまだ端末に入っていません…」は録音パックには不正確だが、decode 失敗はほぼ起きない。起きたら確認表で文言を分ける）。
+4. **S2・S5・S4 の `optionsFrom`**: `voice: resolved`・`voiceOffsetMs: voiceOffsetFor(settings, resolved)`（Ruling 62-3）を足す。S2/S5 は `usePracticeSession` が `resolveVoiceSelection` を**画面のマウント時に 1 回**解決して持つ（S7 から戻って来た時はマウントし直すので最新。再生中に S7 へは行けない＝戻ると止まる）。S4 の試聴も同じ。
+5. **声チップ**（`controls.tsx:82-91`）: 文言を選択から作る＝standard en「標準（英語）」・standard ja「標準（日本語）」・pack `pack.name`（受け取りは「{distributor}さんの声」）。`voiceChip: '声: {name}'` のまま。完成画面の聞き比べ（Ruling 59-5）は `voice` を `{kind:'pack', …}`／`{kind:'standard', id:'default-en-female-v1'}` に替えた `PracticeOptions`（`kind:'counts'`・ワルツ `templates[0]`＝`123`・**2 小節**＝`counts:'123123'`・`countInBars:0`・`metronome:true`・`loop:false`・`bpm:practiceBpm`）を `PracticeSession.play` に渡す（S4 の試聴と同じ型。Ruling 36-7）。S7 の「▶ 試聴」はワルツ **1 小節**（`counts:'123'`・合図なし・繰り返しなし）。
+6. **「前回」カードの即再生**（Ruling 32）はそのまま（S2 のマウント時に解決した声で鳴る。パックの読み込みが 1 回増えるが `loadVoice` は `begin()` の中で待つ）。
+
+**理由**: 解決を「再生時・画面のマウント時」に限れば、起動時に Blob を読まずに済み、S7 で消した直後の S2 も矛盾しない。エンジンの `setVoicePack` を使えば `this.engine ??=` の使い回しを壊さない。
+
+**外れた時の代償**: 録音パックの decode（12 語の WAV）が ▶ の後に入るので、最初の ▶ が 100〜300ms 遅れる（2 回目からは記憶）。「この声はまだ端末に入っていません」の文言が録音パックの decode 失敗にも出る（実機で起きたら文言を分ける）。
+
+## Ruling 62（Q16）[仕様差] 声のタイミング — ‹ 早く／遅く › 10ms 刻み・±200・標準は設定・録音は `timingAdjustments.globalOffsetMs`
+
+**決定**:
+1. **部品 `VoiceOffsetRow`**（`practice/controls.tsx`。S2・S5・S4 の「くわしく」の最後の行。`[data-group="voice-offset"]`）: ラベル「声のタイミング / Voice timing」、値の表示（18px・`tabular-nums`。D24 の形）、2 つの `.dc-chip`「‹ 早く / Earlier」「遅く › / Later」（48px 以上・間隔 8px）。刻み **10ms**、範囲 **−200〜+200**（定数 `VOICE_OFFSET_STEP_MS=10`・`VOICE_OFFSET_MAX_MS=200` を `practice/voice-offset.ts` の先頭に）。端では当該ボタンを `disabled`。スライダーは使わない（10ms を指で合わせられない）。
+2. **意味**: 負＝声が早く鳴る（`userOffsetMs` が負なら `startTime` が早まる。`voice-pack-loader.js:51`）。「早く」で −10。再生中に押せば停止 → 適用 → 再開（S2 の `change` と同じ）。
+3. **保存先**（`voiceOffsetFor(settings, voice)` / `chooseVoiceOffset(...)` の純粋関数）: standard → `settings.voiceOffsetMsByVoiceId[id]`（0 なら消す）。pack → **`pack.timingAdjustments.globalOffsetMs`**（`createVoiceTimingAdjustments(value, {}, now)`＝`wordOffsetsMs` は 12 語 0）に書いて `saveVoicePack`（値 0 なら `timingAdjustments` を外す）。**[仕様差]** §7「`wordOffsetsMs` に 12 語同じ値で保存」→ 1 つまみは `globalOffsetMs` に保存（`effectiveVoiceOffsetMs` は `global + word` なので効果は同じ。12 語に写すより壊れにくく、`validateRecordedVoicePack` の ±1000 の内）。エンジンの `start({ voiceOffsetMs })` に渡す（`wordOffsetsMs` は常に `{}`）。受け取ったパックも同じ欄（配った先生の値は配布ファイルに乗る＝段5の確認事項）。
+4. **主要操作数**: S2 くわしく開 8 → **9**、S5 くわしく開 8 → **9**（上限ちょうど。Ruling 31 のとおり**以後の追加は裁定が要る**）、S4 くわしく開 7 → **8**。初期表示は不変（くわしくは閉じている）。`check-app-ui.js` の `total` を 3 行書き換え。
+5. **`timingAdjustments` の互換**: 旧画面で語ごとに調整した `wordOffsetsMs` を持つパックが来ても（段5の受け取り）、エンジンにはそのまま `wordOffsetsMs` を渡して効かせる（捨てない）。つまみは `globalOffsetMs` だけを動かす。
+
+**理由**: 1 つまみ＝global が最も素直で、表示の「±0 ms」（モック）とも一致する。刻み 10ms は Bluetooth 以外の実用域（人が聞き分けられる差）で、±200 は仕様。
+
+**外れた時の代償**: 語ごとの調整は新アプリではできない（旧画面の機能。要望が出たら段8以降）。「ms」の語（D24）。
+
+## Ruling 63（Q17〜Q20）検査 — ui:check の状態表・seed・`ui-state` の追加・偽マイクのスモーク・iOS シミュレーターの範囲・実機確認表
+
+**決定**:
+1. **`tools/ui-check-voices.js`**（`ui-check-routines.js` と同型）: `seedVoicePacksInPage(page, packs)` が**ブラウザの中で WAV の Blob を合成**（RIFF 44 バイト＋16bit モノ 48kHz・0.6 秒の 220Hz 正弦＋倍音。`encodeAudioBufferAsWav` と同じ並びを 30 行で書く。dist でも動くよう import しない）し、`voice-packs` に `put`。固定データ: `V.completeEn`（`user-recorded-v1`・12 語・`origin:'recorded'`・名前「自分の声（英語）」）、`V.partialJa`（`user-recorded-ja-v1`・7 語）、`V.receivedJa`（`v-uicheck-recv`・12 語・`origin:'received'`・`distributor:{name:'山田'}`。段5の表示の型を段4で検査）。
+2. **状態表に足す行**（375×667・1280×900・reduced-motion の両方。期待値は Ruling 59-6・60-6・62-4）:
+   - `S7 標準だけ`（ops 2・total 2）／`S7 3 本`（seed 3 本・total 2・行の文字「自分の声（英語）」「山田さんの声」「自分の声（日本語）· 7 / 12 語」）／`S7 行を開`（steps: 自分の声の行を 2 回クリック・total 3）／`S7 削除の確認`（`?ui-state=confirm-delete`・`confirm:true`）
+   - `S8 ステップ0`（ops 2・total 2・`record-language` の初期値が英語＝`aria-checked`）／`S8 1 語目・未録音`（steps: 英語 → 録音をはじめる。**偽マイク**＝3. ・total 2・録音ボタン 144px・帯に「前の語」が**無い**）／`S8 8 語目・録音済みから前の語へ`（seed `partialJa`・steps: 日本語 → はじめる → 前の語・total 4・波形と「聞く」がある）／`S8 完成`（seed `completeEn`・steps: 英語 → はじめる・total 4・`compare` 2 ボタン・名前欄の値「自分の声（英語）」）／`S8 マイク拒否`（`#/voices/record?ui-state=mic-denied`・`alert:true`）／`S8 声が入っていない`（`?ui-state=no-voice`・`alert:true`・1 語目の画面に枠）／`S8 非対応`（`?ui-state=no-recorder`・戻るだけ・主要操作 0）
+   - `S2 くわしく開` total 8 → **9**、`S5 くわしく開` 8 → **9**、`S4 13件・くわしく開` 7 → **8**。
+   - `S6`（ops 3）。
+3. **`UiState` に 3 つ足す**（Ruling 33 の「3 つ目以降は裁定」をここで満たす）: `'mic-denied'`（S8 の拒否の枠）・`'no-voice'`（S8 の語の画面に無音の枠）・`'no-recorder'`（S8 の非対応）。表示だけを変え、設定・パック・マイクには触らない。`routes.test.ts` に 3 件。S8 以外の画面では無視。
+4. **ui:check の起動**: `chromium.launch({ channel:'chrome', args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'] })` と `newContext({ …, permissions:['microphone'] })`（F10。既存の状態には無害）。偽マイクの既定音（ファイル指定なし）で `S8 1 語目` に入れる（録音はしない。入るだけ）。
+5. **スモーク `tools/smoke-voice.js`**（`npm run smoke:voice`。dev 起動中に）: Chrome を `--use-file-for-fake-audio-capture=<repo>/test/fixtures/voice/fake-mic.wav`（**計画者が `tools/make-fake-mic-wav.js` で生成して commit**: 1.5 秒・48kHz・モノ・0.3 秒無音 → 0.6 秒の 220Hz＋倍音 → 0.6 秒無音。ループで何度も鳴る）で起動 → S1「先生の声で練習」→ S7「自分の声を録音する」→ 英語 →「録音をはじめる」→ 12 語とも「録音する」→「聞く」が出る → 「次へ」 → 完成 → 「▶ 自分の声」で `.dc-now` が 3 種類変わる（`smoke-practice.js` の `expectSounding` を共有）→「完了」→ S7 で「自分の声（英語）」が `aria-checked` → S2 ワルツ ▶ で鳴り、チップが「声: 自分の声（英語）」→ 再読み込みしても S2 のチップが同じ（`selectedVoiceId` 永続）→ くわしくの「早く」×2 で「−20 ms」→ S7 で削除 → チップが「標準（英語）」。**無音の本**: 2 つ目のブラウザを `…/silence.wav`（1.5 秒の全 0。同じく生成）で起動 → 1 語目「録音する」→ 枠に「声が入っていませんでした」・「次へ」が押せない。F10 の「macOS の Chrome でファイル指定が効かない」は**計画者がスクラッチで先に実測**し、効かなければ既定の偽音（周期的なビープ）で「鳴る」まで、無音は `ui-state=no-voice` の表示検査だけで妥協（台帳に記す）。
+6. **iOS シミュレーター（iPhone 16e・iOS 26.3。HANDOVER §8 の手順）で確かめられること**: S7/S8 の見た目と帯・キーボード（完成画面の名前欄）・ステップ0 → OS のマイク許可ダイアログが**説明の後に**出る順番・`MediaRecorder.isTypeSupported('audio/mp4')` が true（Safari の JS で確認し F8 を更新）・`?ui-state=` の 3 状態・`decodeAudioData` が seed の WAV を読める・声のタイミングの行。**確かめられないこと**: 実際の声の録音と無音判定・録音後の再生の音量（F11）・Bluetooth。
+7. **実機確認表 `docs/app-v1/stage4-device-check.md`**（ひとみうさの iPhone。§3 の一覧と同じ内容を行にする）: (1) 「先生の声で練習」→ S7 → 録音する → ステップ0 の説明が**OS のマイク許可の前**に出る (2) 1.5 秒で自動で止まり、波形と「聞く」が出る (3) 「聞く」で自分の声が普通の音量で鳴る（F11） (4) 無音のまま押すと「声が入っていませんでした」・小声でも通る（Ruling 58 の 0.01） (5) 12 語 → 完成 → 聞き比べ → 完了 → S2 ワルツが自分の声で鳴る・合図とメトロノームとずれない (6) 「前の語」で戻って録り直し → 上書き (7) 戻る → S7 に「7 / 12 語」→ 続きから (8) 声のタイミング「早く」×2 で早まる (9) 削除 → 標準に戻る (10) 日本語で録音（「よん」「なな」） (11) AirPods で録音・再生（ずれ・音量）。
+
+**理由**: 実経路で作れる状態は実経路で（Ruling 43）。偽マイクは Chromium の公式の仕組みで、Playwright からは起動引数で渡せる。無音と拒否は経路で作ると 1 ブラウザ 1 ファイルの制約と権限の切替が要るので、`ui-state` で表示だけ固定する（Ruling 33 の考え）。
+
+**外れた時の代償**: `ui:check` の起動引数が増える。`UiState` の列挙が 6 つになる（以後の追加はまた裁定）。macOS の Chrome で偽音ファイルが効かない場合、スモークの無音の本が表示検査に落ちる。
+
+---
+
+## ひとみうさの決定（代理）— 起きたら見直してもらう
+
+- **D23（代理決定・ひとみうさ確認待ち）ステップ0 の文言と既定名**: ステップ0 の説明は 3 行「12 の言葉を、1 つずつ録音します。」「録音は、この iPhone（端末）の中にだけ残ります。」「いつでも消せます。」（英 `You will record 12 words, one at a time.` / `Recordings stay on this device only.` / `You can delete them at any time.`。依頼形なし・技術語なし・Ruling 8 の 3 点）。パックの既定名は **「自分の声（英語）」／「自分の声（日本語）」**（英 `My voice (English)` / `My voice (Japanese)`。Ruling 25 の「○○の声」の ○○＝「自分」。先生の名前は S9 で聞く＝段5。受け取った側は `distributor` から「○○さんの声」になるので、名前欄を空のまま配っても困らない）。— 代償: 先生が自分の名前を入れたければ完成画面の名前欄で打つ。
+- **D24（代理決定・ひとみうさ確認待ち）声のタイミングの形**: 「くわしく」の最後の行に「声のタイミング」＋値「±0 ms」「−20 ms」「+10 ms」＋「‹ 早く」「遅く ›」の 2 ボタン・10ms 刻み・±200。単位「ms」はそのまま出す（「ミリ秒」より短く、モックどおり。禁止語ではない）。— 代案: 値を出さず「早く ●●○○○ 遅く」の 5 段（数字を見せないが 40ms 刻みになる）。
+- **D25（代理決定・ひとみうさ確認待ち）S8 の進み方**: 帯に「‹ 前の語」を足す（2 語目以降）／語は飛ばせない／完成済みの言語で S8 を開くと完成画面から（「録り直す」で 1 語目へ）／「戻る」は S8 を出る（保存済み）。— 代案: 完成画面でなく常に 1 語目から（録り直しが近いが、完成画面に行くのに 12 回「次へ」）。
+
+---
+
+## 3. ひとみうさに後で見てもらうこと（段4の間に溜める。判断でなく確認）
+
+1. D23 の文言（マイク前の説明 3 行・既定名「自分の声（英語）」）。法務の芯（Ruling 8）に沿うか。
+2. D24 の形（「−20 ms」の表記・2 ボタン・10ms 刻み）。
+3. D25（前の語・飛ばせない・完成画面から・戻るは出る）。
+4. 無音のしきい値 `SILENCE_PEAK_RMS = 0.01`（実機: 小声で通るか・無音で止まるか。Ruling 58）。
+5. 録音後の再生の音量が下がらないか（F11。Ruling 57-4 の開閉で足りるか）。
+6. 1.5 秒で「クイック」「アンド」「なな」が切れないか（Ruling 57-3）。
+7. S7 の「もう一度押すと展開」の型（Ruling 60-4）と、途中のパックの行「· 7 / 12 語」の見え方。
+8. 「標準（日本語）」が段6まで出ないこと（Ruling 60-5。D3 の初期値は英語なので練習には影響なし）。
+9. 「くわしく」が 9（S2/S5）で上限ちょうどになること（Ruling 62-4。以後は裁定）。
+10. 段5送り（配る・ファイルに保存・受け取る・バックアップの 1 行）に異存がないか（Ruling 55-3）。
+11. 波形ミニ表示の見た目（40 本の縦線・onset の琥珀の 1 本。アニメーションなし）。
+12. 録音中の輪の進み（1.5 秒・reduced-motion では文字だけ）が「押した感」として足りるか。
+13. 実機確認表 `stage4-device-check.md`（Ruling 63-7 の 11 行）。段3 追加便の 17〜41 と一緒に。
+
+---
+
+## 4. 計画への反映（計画者）
+
+- **順序**: F8 のコミットを待って枝を切る（Ruling 55-1）。計画の手順はスクラッチのコピーで実際に動かしてから書く（段1〜3と同じ）。**先に実測する 3 点**: (a) macOS の Chrome で `--use-file-for-fake-audio-capture` が効くか（F10）、(b) iOS シミュレーターの Safari で `MediaRecorder.isTypeSupported('audio/mp4')` と `decodeAudioData(mp4)`（F8）、(c) 375×667 で S8 の語の画面（144px のボタン＋波形＋帯）が初期表示に収まるか（Ruling 59-6）。
+- **新規ファイル**: `src/app/voices/store.ts`（Ruling 56）・`voices/ids.ts`（定数）・`voices/standard.ts`（`STANDARD_VOICES`）・`voices/take-check.ts`（Ruling 58-1）・`voices/normalize.ts`（58-3）・`voices/selection.ts`（`resolveVoiceSelection`・`chooseVoice`・`forgetVoiceSettings`。Ruling 60-3・61-2）・`practice/voice-offset.ts`（Ruling 62）・`screens/RecordVoiceScreen.tsx`（S8）・`tools/ui-check-voices.js`・`tools/smoke-voice.js`・`tools/make-fake-mic-wav.js`・`test/fixtures/voice/{fake-mic,silence}.wav`・`docs/app-v1/stage4-device-check.md`・テスト `test/app/voices/*.test.ts`・`test/app/practice/voice-offset.test.ts`。
+- **変更するファイル**: `platform/recorder.ts`（Ruling 57-1）・`platform/audio-context.ts`（`withRecordingSession`・`playBuffer`・`createMonoBuffer`。Ruling 57-4・58-3・59-2）・`platform/storage.ts`（`requestPersistentStorage`。Ruling 56-6）・`platform/assets.ts`（`loadRecordedVoice`。Ruling 61-3）・`settings/settings.ts`（`selectedVoiceId` を残す・`voiceOffsetMsByVoiceId`。Ruling 61-1）・`practice/session.ts`（`CommonOptions.voice/voiceOffsetMs`・`loadVoice(audio, voice)`・`setVoicePack`・`EngineLike`）・`practice/session-deps.ts`・`practice/use-session.ts`（声の解決）・`practice/controls.tsx`（`VoiceChip` の文言・`VoiceOffsetRow`）・`screens/PracticeScreen.tsx`／`RoutinePlayScreen.tsx`／`RoutineEditScreen.tsx`（`optionsFrom` に声と offset・「くわしく」に 1 行）・`screens/VoicesScreen.tsx`（S7 本体）・`screens/SettingsScreen.tsx`（声・先生の方へ）・`App.tsx`（S8 の登録）・`router/routes.ts`（`UiState` 3 つ。Ruling 63-3）・`i18n/messages.ts`（S7/S8/声チップ/タイミング/§11 の文言。禁止語に注意）・`components/icons.svg`（`mic` は既存。`rec` は不要）・`styles/base.css`（録音ボタン・波形・進み具合・`compare`）・`tools/check-app-ui.js`（起動引数・permissions・状態表・`total` 3 行の書き換え。Ruling 63-1〜4）・`tools/check-dist.js`（`STANDARD_VOICES` と manifest。Ruling 60-5）・`package.json`（`smoke:voice`）・`test/app/routes.test.ts`。
+- **触らない**: `src/engine/*`（diff ゼロを完了条件に。Ruling 58-5）・ゴールデン・`output/timing-audit-before.json`・`legacy/*`。
+- **文書**: 仕様 §4 S7/S8・§7「声のパック」「設定」・§6 の期待値（S7＝2/3・S8＝2/2/4/4・S2/S5 くわしく 9・S4 8）・§11（「あとで」→ 戻る、「設定の開き方」は枠の中）・全体地図の持ち越し表（`recorded-voice-store` → 済・エンジン i18n → 不要で閉じる・`persist()` → 段4で済・「くわしく」9 → 済・`selectedVoiceId` → 済・`hints.backupTip*` → 段5）・HANDOVER §5（段5送りの一覧）・`rulings.md`（本ドラフトの Ruling 55〜63・D23〜D25 を転記。番号が衝突したら本ドラフトの番号を後ろへずらす）。
+- **完了条件（段の終わり・別エージェントが再実行）**: `npm test`（件数）・`typecheck`・`build`（`check-dist` の manifest 検査込み）・`timing:audit && timing:compare` 一致・ゴールデン不変・`src/engine` diff ゼロ・`ui:check` 全 PASS（新 13 状態込み）・`smoke:voice`・`smoke:practice`・`smoke:routines` OK・iOS シミュレーターで Ruling 63-6 の 6 点・375/1280 のスクロール領域ごとの撮影。iPhone 実機（Ruling 63-7）はひとみうさが起きてから。
