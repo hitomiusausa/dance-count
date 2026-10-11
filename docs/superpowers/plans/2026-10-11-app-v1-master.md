@@ -34,7 +34,7 @@
 |---|---|---|---|---|---|
 | 1 | 器: Vite＋Preact＋TS、`src/engine` 移設、`legacy/` 退避、platform の空実装、i18n 基盤、ハッシュルーター、`tempo-map.js`＋集約 | — | — | **Opus**（エンジン移設） | `npm test` 149件緑（移設前95＋新規54）、`npm run timing:compare` 一致（2回: 移設直後と集約直後）、エンジン予約時刻のゴールデン一致、`npm run typecheck`・`npm run build`（`check-dist` 込み）成功、`npm run dev` で下タブ3つの空画面（375/1280 のスクショ） |
 | 2 | 生徒の再生（S1・S2）: タイル、前回・先生カード、戻る／タブ出し分け、再生、速さ3択、トグル、現在カウント、くわしく、iOS 解除、WakeLock、警告バナー、`ui:check` 移植 | 1 | 6 と並列可 | **Opus**（音声・iOS） | G1・G2、`ui:check` で S1/S2 の U1〜U15 通過（S1=3・S2=5・U12）、**iPhone 実機でマナーモード時に鳴る** |
-| 3 | ルーティン（S3・S4・S5）: IndexedDB v2 と移行、編集、試聴、名前補完、範囲 | 2 | 6 と並列可 | Sonnet | 作成→保存→再読み込みで残る、不正カウントの赤枠、`ui:check` 通過 |
+| 3 | ルーティン（S3・S4・S5）: IndexedDB の routines、編集、試聴、名前補完、範囲 | 2 | 6 と並列可 | Sonnet | 作成→保存→再読み込みで残る、不正カウントの赤枠、`ui:check` 通過（詳細計画 `2026-10-11-app-v1-stage3.md`） |
 | 4 | 声（S7・S8）: 一覧、録音ウィザード、正規化再利用、試聴・聞き比べ、声のタイミング | 2（3 の後に着手） | 6 と並列可 | **Opus**（録音・音声） | iPhone/Chrome で12語録音→ワルツが自分の声で鳴る、無音判定、`ui:check` 通過 |
 | 5 | 配る・受け取る（S9・S10）: bundle、share／download、share_target、取り込み検証、案内文 | 3・4 | — | Sonnet | G6、壊れた／大きすぎ／新しすぎるファイルの画面 |
 | 6 | 日本語標準音声: 生成・onset 実測・聴感ゲート・同梱 | 1 | 2〜5 と並列可（`tools/`・`public/audio/` のみ） | Sonnet ＋ ひとみうさ試聴 | Ruling 5 のゲート3点 |
@@ -114,19 +114,22 @@
 | 書体の同梱 | 済（段2）・7 | `@fontsource/inter`・`@fontsource/noto-sans-jp`。段1はシステム書体のまま |
 | アイコン | 済（段2） | モックの `<symbol>` を `src/app/components/icons.svg` へ。段1の下タブは文字だけ（アイコン単独は禁止、文字は必須） |
 | 「戻る」の動き | 済（段2） | 段1の `routes.ts` に親画面の表（`parentScreen`）と `platform/hash.ts` の `setHash(…, {replace:true})` は用意済み。履歴の有無で親へ置き換える処理は段2 |
-| エンジンの日本語固定文言の i18n 化 | 3（「（コピー）」）・4（recorded-voice-store/pack のエラー） | 仕様 §10 で `src/engine` を変えてよい数少ない例外 |
+| エンジンの日本語固定文言の i18n 化 | 4（recorded-voice-store/pack のエラー） | 仕様 §10 で `src/engine` を変えてよい数少ない例外。「（コピー）」は段3で不要に（複製は接尾辞なし。Ruling 39） |
 | IndexedDB の版上げ（v1→v2） | 3 | **注意**: 版を上げると、同じオリジンで開いた `legacy/` の旧画面（`recorded-voice-store.js` は version 1 を指定）が `VersionError` になる。開発用の旧画面だけの問題だが、段3の計画で「旧画面は別ポート（`npm run legacy` = 4173、新アプリ = 5173）なのでオリジンが別」であることを確認し、同一オリジンで開かない運用を明記する |
 | 標準音声 URL の `?v=<revision>` | 7 | `voice-pack-loader.js` は manifest の `revision` を音声 URL の `?v=` に付ける（差し替え時のキャッシュ対策。段1では残した）。Workbox の precache は既定でこのクエリを無視しないため、**オフライン再生でキャッシュに当たらない恐れ**。段7で `ignoreURLParametersMatching` に `/^v$/` を足すか、precache 側の URL に revision を合わせるかを決める |
 | `fetch` のキャッシュ方針 | 済（段2）・7 | 段1で `cache:'no-store'` を外した。新アプリは `fetchImpl` を platform から渡す。旧画面は既定の HTTP キャッシュになる（旧画面の保守は止める方針: Ruling 10） |
 | 案内文の `PUBLIC_APP_URL` | 5 | ビルド時定数。空なら行ごと出さない（§16-1） |
 | 速さ3択の定数 | 済（段2） | `SPEED_SLOW_RATIO=0.8`・`SPEED_FAST_RATIO=1.1` と10種目の単体テスト（Ruling 24） |
-| `recorded-voice-store.js` の IndexedDB v1 直開き | 3 | 段2で DB は v2 になった。`platform/storage`（`openAppStorage()`・`put(store, value)`）経由に作り直す（新アプリから呼ぶと `VersionError`） |
-| `dance-count-v2-routine-draft:*` の移行 | 3 | localStorage から移行（段2は表示言語だけ移行済み） |
-| `SIMPLE_SCREENS` に S3〜S5 | 3 | `resolveScreen` に S4/S5 の ID 検査を足す（S2 と同じ形） |
-| `PracticeScreen` を S5 で再利用か分けるか | 3 | 段3の計画で決める。`[data-alert]` の1枠・`PracticeSession` はそのまま使える。範囲再生は `start()` の `rangeStartTick/rangeEndTick` を `PracticeOptions` に足す |
+| `recorded-voice-store.js` の IndexedDB v1 直開き | 4（Ruling 41） | 段2で DB は v2 になった。`platform/storage`（`openAppStorage()`・`getAll`・`put`・`delete`）経由に作り直す（新アプリから呼ぶと `VersionError`）。使うのは段4（S7・S8）なので段4の計画者が API の形を決める |
+| `dance-count-v2-routine-draft:*` の移行 | 不要（Ruling 41） | 旧画面（別オリジン）の旧ルーティン（`legacy-import`）の下書きで、新アプリには来ず、来ても受理しない |
+| `SIMPLE_SCREENS` に S3〜S5 | 済（段3） | `router/resolve.ts` の `resolveScreen(route, routines)` に移した（S4/S5 の ID・存在・鳴らせるかを検査し、外れたら S3 へ置き換え） |
+| `PracticeScreen` を S5 で再利用か分けるか | 済（段3・Ruling 42） | 分ける。部品は `practice/controls.tsx` で共有。範囲は `PracticeOptions` の `kind:'routine'` の `range` |
+| `provenance.sourceKind:'received'` の列挙追加 | 5（Ruling 41） | `routine-provenance.js` の列挙（`legacy-import`・`reviewed-preset`・`user-created`）に足す。受け取ったルーティンを編集できるかは段5で裁定 |
+| `UiState` に `confirm-delete` | 済（段3・Ruling 43） | S3 の削除確認を見た目だけ出す。4つ目以降は裁定してから足す |
+| 書き込みの確定前にアプリを閉じると失われうる | 7 | 段3計画の発見 #8。書きはトランザクションの完了で `true`。PWA 化の時に `visibilitychange: hidden` で開いている行を確定する案を検討 |
 | 「くわしく」の主要操作の上限 | 4 | 段4で 9（上限ちょうど）。以後の追加は裁定が要る（Ruling 31） |
 | `selectedVoiceId` の保存 | 4 | `normalizeSettings` が標準音声へ戻す処理を緩める |
-| S2 連打で change/toggle が古い settings を使う穴 | 3以降 | 小さな穴（保存は正しい） |
+| S2 連打で change/toggle が古い settings を使う穴 | 済（段3・Ruling 42） | `latest` で最新の設定と再生状態を読む |
 | 前回カードの即再生 | 実機 | iPhone 実機で要確認（解除はタップ内・再生開始はマウント後） |
 | 禁止語テスト | 段1で土台 | `src/app/i18n/forbidden-words.ts` と `test/app/i18n.test.ts`。以後の段は文言を `messages.ts` に足すだけで自動的に検査される |
 

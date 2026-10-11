@@ -161,23 +161,28 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - WakeLock が取れない端末: 初回再生時に一度だけ「練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です」。
 
 ### S3 ルーティン一覧（ルート）
-- 「＋ 新しいルーティン / New routine」（横幅いっぱい・56px 以上、0件でも同じ位置）→ ルーティンの行（名前・種目・フィガー数・▶）。受け取ったものには副題「○○さんから / From ○○」。
-- 行をタップで展開: ▶ 再生・「編集」・「配る」・「削除」。削除は確認ダイアログ（質問1つ・ボタン2つ・取り消しが左）。
+- 「＋ 新しいルーティン / New routine」（横幅いっぱい・56px 以上、0件でも同じ位置）→ ルーティンの行（名前・種目・フィガー数・▶）。受け取ったものには副題「○○さんから / From ○○」。並び順は作った順（新しいものが下。Ruling 44）。
+- 行をタップで展開（同時に1つ）: ▶ 再生（S5 へ遷移してすぐ鳴る。Ruling 40）・「編集」・「配る」（**段5で足す**。Ruling 41）・「削除」。削除は確認ダイアログ（`<dialog>`・質問1つ・ボタン2つ・取り消しが左。Ruling 44）。フィガー0件・保存されていたカウントが通らないルーティンは ▶ の代わりに説明の1行（「フィガーを追加すると再生できます。」「カウントに直す所があります。」）。
 - 0件の時: 「まだルーティンはありません」の1行。
 - 載せない: 旧24本、provenance・レビュー状態の表示。
 
 ### S4 ルーティン編集（集中）
-- 名前、種目（フィガー0件の時だけ変更可）、フィガーの行（番号・名前・カウント・▶ 試聴）、行の並べ替えは ↑↓ ボタン（ドラッグは補助）、末尾「＋ フィガーを追加」、元に戻す／やり直す、下固定「全体を試聴」。
-- フィガー名の入力補助: `figure-terminology` の verified 名（日英）だけを候補に出す。カウントは付けない（Ruling 3）。
-- カウントの入力: その種目の `templates` を「よく使うカウント」ボタンで出す＋手入力。`rhythm-parser` で即検証し、不正なら行を赤枠＋警告アイコン＋「使える記号: 1〜8, S, Q, &, a」の1行。
-- 「くわしく」: はじめの合図の小節数、速さ指定（空なら種目の標準）、声のタイミング。
-- 保存: 端末内（§7）。初回保存時に1回だけ「ファイルに保存（バックアップ）しておくと安心です」の1行。
+- 新規（`#/routines/new`）はまず種目を選ぶ（10種目・S1 と同じ並び）。既定の名前「ワルツのルーティン / Waltz routine」（同じ名前があれば「 2」…）。種目を選んだだけでは保存しない（Ruling 37）。
+- 名前（常に表示の入力欄。確定は blur か Enter、空なら直前の名前に戻す）、種目（フィガー0件の時だけ「変える」）、フィガーの行（番号・名前・カウント）、元に戻す／やり直す（1件以上の時）、末尾「＋ フィガーを追加」、下固定「全体を試聴」（0件の時は下固定が「＋ フィガーを追加」。Ruling 36-4）。
+- **行を開いて決定**（Ruling 36）: 行をタップすると名前・カウント・よく使うカウント・「決定 / Done」（新規の行は「追加する / Add」）と、「▶ このフィガーを試聴」「上へ」「下へ」「複製」（名前はそのまま。Ruling 39）「削除」（確認なし・元に戻すで戻る）が出る。並べ替えは「上へ」「下へ」だけで行い、ドラッグは作らない（段3計画の発見 #21。要望があれば後で補助として足す）。開ける行は同時に1つ。**閉じ方の原則**: どんな閉じ方（決定・別の行・追加・全体を試聴・戻る）でも、有効なら確定・無効なら捨てる（確認なし）。行を開くと「くわしく」は閉じ、「くわしく」を開くと開いている行を原則どおり閉じる（排他）。
+- フィガー名の入力補助: `figure-terminology` の verified 名（日英）だけを候補に出す（最大5件・48px のボタン）。カウントは付けない（Ruling 3）。ヴィエニーズワルツは verified 名が0件なので候補の枠を出さない。打った名前が verified 名とぴったり同じなら候補は出さない（Ruling 39）。
+- カウントの入力: その種目の `templates` を「よく使うカウント」ボタンで出す＋手入力。入力は NFKC で半角に直し、`s`/`q` は大文字・`A` は小文字、空白と `|` は除いてから検証・保存（`１２＆３` → `12&3`。Ruling 38）。不正なら入力欄を赤枠＋警告アイコン＋理由の1行（同時に1つ）: その種目で使えない記号は「使える記号: ＜種目の `allowedTokens`（`@` を除く）＞」（ワルツ「1 2 3 &」）、先頭の `&`・`a` は「最初は数字か S・Q から」、数えられない並びは「この並びでは数えられません」、名前が空なら「名前を入れると決定できます」。空のカウントには何も出さない。不正な間は「決定／追加する」が押せない。
+- 試聴（Ruling 36-7）: 行の試聴はその行の入力値（確定前でも有効なら）で、はじめの合図なし・繰り返しなし・1回。「全体を試聴」は `routine.countInBars` の合図つき・繰り返しなし・1回。鳴っている行は琥珀の左線＋うす塗り（D10）。
+- 「くわしく」: はじめの合図の小節数（1小節 / 2小節）、速さ指定（「種目の標準（♩=84）」とスライダー。標準と同じ値は空として持つ）、声のタイミング（段4）。
+- 保存: 端末内（§7）。確定のたびに自動保存（保存ボタンなし。Ruling 37）。最初の確定で ID を発行し、ハッシュを `#/routines/<id>/edit` に置き換える。保存に失敗したら §11 の文言を `[data-alert]` に。初回保存時に1回だけ「ファイルに保存（バックアップ）しておくと安心です」の1行（**段5で足す**。Ruling 41）。
 - 載せない: 旧カタログ由来の候補カウント、reviewStatus の編集。
 
 ### S5 ルーティン再生（集中）
-- S2 と同じ骨格（主要操作も同じ5つ）。見出し下に注意文1行「このルーティンはあなたが作ったものです」／受け取ったものは「このルーティンは○○さんが作ったものです」（監修済みと誤認させない。Ruling 8）。
-- フィガー一覧: 鳴っている行をハイライト（琥珀の左線＋太字）、自動スクロール（reduced-motion 時は瞬時）。
-- 「くわしく」: 範囲（開始・終了フィガー）、繰り返す、速さの細かい調整、声のタイミング。
+- S2 と同じ骨格（主要操作も同じ5つ。部品は S2 と共通で、画面は分ける。Ruling 42）。見出しはルーティン名（28px・**1行で「…」省略**、全文は `title`／`aria-label`）。副題は**常に独立した行**で「ワルツ · あなたが作成 / Waltz · made by you」、受け取ったものは「ワルツ · ○○さんが作成」（監修済みと誤認させない。Ruling 8 の注意文をこの副題で満たす。Ruling 46）。見出しの塊の余白は上 4・下 0、副題の line-height 1.3（Ruling 48）。
+- 現在カウントは **72px**（S2 は 96、PC は両方 200。Ruling 47・48）。拍インジケータの下に表示のみの1行 `[data-figure-now]`「3 / 13 ナチュラルターン」（18px・1行省略。鳴っている間は琥珀の左線、止まっている間とはじめの合図の間は灰色で範囲のはじめ）。S5 だけ余白を詰める（カウント枠の下 4・速さラベルの上下 4・トグルと声チップの上 8。タップ間隔 8px は保つ）。
+- フィガー一覧（表示のみ）は「くわしく」の下＝画面の最後（PC は左領域の拍の下）。鳴っている行は琥珀の左線＋太字＋うす塗り（D10）、範囲の外の行は灰色。自動スクロールは一覧が画面に見えている時だけ（瞬時。Ruling 46・段3計画の発見 #1）。
+- 速さの基準は `routine.bpm`（空なら種目の `practiceBpm`）。空なら S2 と同じ3択、あるなら 基準×0.8 / 基準 / min(基準×1.1, 220)、端で標準と同じ値になる選択肢は出さない（2択）。記憶はルーティンごと（`speedPresetByRoutine`・`customBpmByRoutine`）。メトロノーム・はじめの合図のオン/オフ・繰り返すは S2 と共通の設定で、合図がオンの時の小節数は `routine.countInBars`（1 か 2）（Ruling 40）。
+- 「くわしく」: 範囲（「はじめ」「おわり」を「‹ 前」「次 ›」で段送り・1グループ。記憶しない）、速さの細かい調整、繰り返す、声のタイミング（段4）。
 
 ### S6 設定（ルート）
 - 項目（上から）: 言語（日本語 / English）、声（→ S7）、ホーム画面に追加する方法（→ S12）、音が鳴らない時（→ S11）、見出し「先生の方へ / For teachers」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9）、プライバシー・アプリについて（→ S13、版番号を併記）。
@@ -232,8 +237,10 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 | `--on-primary` | #FFFFFF | 主ボタン上の文字 | — |
 | `--soft` | #EEF0F5 | PC のタブ選択背景・進捗の現在マス | （ネイビー文字 12.47） |
 | `--line` | #8790A3 | 罫線・枠・未選択スイッチ | 3.21（3:1 以上） |
+| `--line-on-soft` | #7D8699 | `--soft` の背景（開いた行）の上の罫線・枠（段3計画の発見 #5） | `--soft` 上で 3.21 |
 | `--sel` / `--sel-line` / `--sel-ink` | #1B2A4A / #1B2A4A / #FFFFFF | 選択中の選択肢 | — |
-| `--count-ink` / `--beat-on` | #A54D06 | **現在の拍だけ**（琥珀）。他の用途に使わない | 5.73 |
+| `--count-ink` / `--beat-on` | #A54D06 | **今鳴っているものだけ**（現在の拍・現在のフィガーの線と文字。琥珀）。他の用途に使わない | 5.73 |
+| `--now-bg` | #FBEBDD | 鳴っているフィガーの行の背景だけ（D10） | （`--ink` 13.71・`--ink2` 6.31・琥珀 4.92） |
 | `--focus` | #B45309 | フォーカス枠 3px・offset 2px | 5.02 |
 | `--warn-bg` / `--warn-ink` / `--warn-line` | #FFFFFF / #7A3A05 / #A54D06 | 警告バナー（左線 4px） | 8.62 |
 | `--rec` / `--rec-ring` | #1B2A4A / #E4E7EE | 録音ボタン（輪の外側に `--line` 1px） | — |
@@ -256,7 +263,8 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 | 画面見出し（S1） | 22（700） | 同 |
 | 種目名見出し（S2） | 28 | 28 |
 | 前回カードの種目名 | 24 | 24 |
-| 現在カウント | 96（700・字間 -0.04em） | 200 |
+| 現在カウント | S2 96・S5 72（700・字間 -0.04em。Ruling 47・48） | 200 |
+| 今のフィガーの1行（S5 `[data-figure-now]`） | 18（700） | 同 |
 | 拍インジケータ | 52×40・18 | 72×56・24 |
 | 録音の語 / 英語表記 | 56（800）/ 20 | 同 |
 | ▶ 再生ボタン | 高さ 72・文字 24（800）・アイコン 32 | 高さ 80・幅 64% |
@@ -270,7 +278,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 境界: 線 1px（`--bw`・`--hair`）。**カードを使わず罫線で区切る**（種目タイル・トグル・声チップは下罫線、先生カードは上下罫線）。
 
 ### 現在拍の琥珀
-- 現在カウントの数字と、拍インジケータの現在拍（下線 6px＋太字 800）、S5 の現在フィガーの左線にだけ #A54D06 を使う。点滅させない。拍の移り変わりのハイライト以外は自動で動かさない。
+- 現在カウントの数字と、拍インジケータの現在拍（下線 6px＋太字 800）、S5・S4（試聴中）の現在フィガーの左線とうす塗り（`--now-bg`。D10）にだけ琥珀を使う。点滅させない。拍の移り変わりのハイライト以外は自動で動かさない。
 
 ### アイコン
 - SVG 線画、24px、`stroke-width: 2`、角・端は丸、`stroke: currentColor`（再生・停止のみ塗り）。モックの `<symbol>`（play・stop・globe・chevron・chev-r・chev-l・repeat・metronome・gauge・voice・check・mic・alert・home・list・gear）を `src/app/components/icons.svg` に移す。
@@ -288,12 +296,12 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 | U2 | 主要ボタン（R7） | `.dc-primary` は高さ 56px 以上。▶／■は 72px 以上かつ幅が画面幅の 60% 以上 | `.dc-primary` と `[data-play]` の rect |
 | U3 | タップ対象（R7） | 48×48px 以上、隣接するタップ対象との間隔 8px 以上 | `button, a, select, summary, input, label[for], [role=button], [role=switch], [role=radio]` の rect。隣接距離は rect 同士の最短距離 |
 | U4 | 主要操作数（R18） | 初期ビューポート 5 以下、画面全体 9 以下 | 下の数え方 |
-| U5 | 選択肢の数（R7・R18） | 1つの `[data-group]`・`.dc-choice` の選択肢は 10 以下、`<select>` は使わない（使うなら option 10 以下） | 子の数 |
+| U5 | 選択肢の数（R7・R18・R35） | 1つの `[data-group]`・`.dc-choice` の選択肢は 10 以下、`<select>` は使わない（使うなら option 10 以下）。一覧 `[data-list]` には当てない | 子の数 |
 | U6 | 「くわしく」（R18） | `summary[data-more]` は1画面に1個まで | 個数 |
 | U7 | コントラスト（R7） | 文字 4.5:1 以上（24px 以上の太字は 3:1）、アイコン・枠線・無効状態 3:1 以上 | 既存の相対輝度計算を、文字色/背景色とボーダー色/背景色に適用 |
 | U8 | 動き（R7） | `transition-duration`・`animation-duration` 300ms 以下。reduced-motion 時は 0 | 全要素の computed style。`emulateMedia({reducedMotion:'reduce'})` で再検査 |
 | U9 | 拡大（R7） | viewport meta に `user-scalable=no`・`maximum-scale` が無い。200%拡大相当で横スクロールなし | meta の文字列検査。1280×900 の半分＝640×450 で `scrollWidth <= clientWidth` |
-| U10 | はみ出し（R7） | 文字の切れ・はみ出しなし、ボタン文言は最大2行 | `scrollWidth > clientWidth`（既存）＋ボタン内テキストの行数（高さ÷line-height） |
+| U10 | はみ出し（R7・R47） | 文字の切れ・はみ出しなし、ボタン文言は最大2行。例外は `[data-ellipsis]` を付けた要素（S5 の見出し・副題・今のフィガーの1行）の「…」省略だけ。S5 閉は声チップの下端〜▶ の帯の上端に 8px 以上の余裕、見出しは1行 | `scrollWidth > clientWidth`（既存）＋ボタン内テキストの行数（高さ÷line-height） |
 | U11 | 下タブと戻る（R17） | 集中画面に `[data-nav]` が可視で無いこと、`[data-back]` が可視で 48px 以上・文字を含むこと。ルート画面に `[data-back]` が無いこと | 画面種別の表（§3）と照合 |
 | U12 | 先生カードと10種目（R16） | S1 で 375×667 の初期ビューポートに `[data-teacher-card]` と `[data-group="dance"]` の子10個の rect が完全に入る | rect.bottom ≤ (innerHeight − タブ高さ) |
 | U13 | 固定バー（既存） | 下固定の帯が画面下端に接していること | 既存 BAR-POSITION 判定 |
@@ -305,7 +313,8 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 2. 初期ビューポート判定は rect がビューポートに**完全に**入るものだけ（スクロール0の状態）。
 3. 除外: `[data-nav]`（下タブ）、`[data-back]`（戻る）、`[data-utility]`（言語切替など右上の補助）、`summary[data-more]`（くわしく）、`[data-alert-action]`（警告バナー内の唯一のリンク。Ruling 23）。
 4. 同じ `[data-group]` 祖先を持つ要素は合わせて **1**。
-5. 当てはめ（期待値）: S1＝3（初回2）、S2＝5、S5＝5、S8 ステップ0＝2。
+5. 一覧 `[data-list]` は閉じた行（行の見出し）をまとめて **1**。開いた行の中身 `[data-row-body]` は 4. の規則で数える。`[data-list]` は `[data-group]`・`[data-list]` の中に置かない（Ruling 35）。一覧の行は `li` にしない（補助文 16px が U1 の本文の規則に当たるため。`div role="list"`）。
+6. 当てはめ（期待値）: S1＝3（初回2）、S2＝5、S3＝1（0件）・3（行を開く）、S4＝1（種目選択）・3（0件）・5（1件以上）・7（行を開く・くわしく開）、S5＝5（くわしく開 8）、S8 ステップ0＝2。
 
 ### 手動レビュー項目（チェックリスト）
 - 状態を色だけで示していない（色＋形＋文字）。
@@ -330,23 +339,24 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 
 ### 保存先（Ruling 11）
 - IndexedDB `dance-count-v2` を version 1 → 2 に上げる。既存 `voice-packs` ストアを維持し、`routines`・`settings` を追加。
-- 移行: localStorage の `dance-count-v2-routine-draft:*` と `dance-count-v2-ui-locale` は初回起動時に読み取って IndexedDB へ移し、移せたものだけ消す（読み取り互換のみ）。
+- 移行: localStorage の `dance-count-v2-ui-locale` は初回起動時に読み取って IndexedDB へ移し、移せたら消す（段2で済）。`dance-count-v2-routine-draft:*` は旧画面（別オリジン）の旧ルーティン（`legacy-import`）の下書きなので移行しない（Ruling 41）。
 - 初回の保存成功時に `navigator.storage.persist()` を要求（結果は画面に出さない）。
 - 消失対策: 先生の録音完成時とルーティンの初回保存時に「ファイルに保存（バックアップ）」を勧める1行を各1回だけ出す。「ファイルに保存」は配布ファイルと同じ形式（§7 配布ファイル）で、同意欄は付けない。
 - Service Worker のキャッシュにユーザーデータは入れない。
 
 ### ルーティン（既存形式を拡張。既存キーは変えない）
 ```
-{ id, danceId, name, bpm|null, countInBars, source, status,
-  figures:[{ id, name, counts }],                // counts は既存の文字列（例 "123a45a6"）。パーサのトークンは変えない
-  provenance:{ sourceKind:'user-created'|'received', authority:null,
-               authorityClaimStatus:'none', reviewStatus:'unreviewed' },
+{ id, danceId, name, bpm|null, countInBars:1|2, source:'user-created', status:'ready',
+  figures:[{ id, name, counts }],                // counts は正規化した文字列（例 "123a45a6"）。パーサのトークンは変えない
+  provenance:{ sourceKind:'user-created', authority:null,
+               authorityClaimStatus:'not-applicable', reviewStatus:'unreviewed' },   // 'received' は段5で足す
   receivedFrom?:{ distributor, receivedAt },
-  createdWith:{ app:'dance-count', version },
-  updatedAt }
+  createdWith:{ app:'dance-count', version },    // version は package.json（ビルド時に埋める）
+  createdAt, updatedAt }                         // createdAt が無い古い値は updatedAt で代用
 ```
-- `source:'legacy-import'` は受理しない（旧24本は開発用ツールだけで扱う。Ruling 3・10）。
-- 「（コピー）」等の日本語固定文言は i18n キーに置き換える。
+- ID は `r-`／`f-` ＋ UUID（`/^[rf]-[A-Za-z0-9-]{8,}$/`。`'new'` にはならない。Ruling 37）。上限: 名前 40 字・カウント 32 文字・フィガー 64・ルーティン 200。
+- 読み込み時に `normalizeRoutine` で型・ID・種目・上限・出どころを検査し、外れたものは一覧に出さない（消さない・上書きもしない。Ruling 44）。`source:'legacy-import'` は受理しない（旧24本は開発用ツールだけで扱う。Ruling 3・10）。
+- 複製は名前を変えずに行う（「（コピー）」を付けない。エンジンの既定値つき引数に `''` を渡す。i18n キーは作らない。Ruling 39）。
 
 ### 声のパック
 - 端末内: 既存 `recorded-voice-pack` schemaVersion 1（語ごとに Blob・onsetMs・gainDb・normalized・sourceOnsetMs・durationMs、`wordOffsetsMs`）。追加フィールド `origin:'recorded'|'received'`、`distributor?`、`consent?`。録音は MediaRecorder（iOS `audio/mp4`、Chrome `audio/webm;codecs=opus`）→ `recording-normalizer` で WAV 化して保存（Ruling 15）。
@@ -356,6 +366,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 ```
 { uiLocale, voiceLocale:'en', selectedVoiceId, lastDanceId,
   lastTemplateByDance:{}, speedPresetByDance:{}, customBpmByDance:{},
+  speedPresetByRoutine:{}, customBpmByRoutine:{},  // S5 の速さはルーティンごと（Ruling 40）。ルーティン削除で消す
   metronome:true, countInBars:1, loop:true,
   voiceOffsetMsByVoiceId:{},                     // 標準音声の「声のタイミング」（読み取り専用パックのため設定側に持つ）
   hints:{ homeScreenCardDismissed, wakeLockTipShown, backupTipShownForRecording, backupTipShownForRoutine } }
@@ -547,7 +558,7 @@ App: <public URL>
 | 0 | 見た目の決定 | — | — | — | **完了**（D8・モック更新済み） |
 | 1 | 器: Vite＋Preact＋TS、`src/engine` 移設（§10 の手順）、`legacy/` 退避、platform アダプタの空実装、i18n 基盤、ハッシュルーター（§3）、`tempo-map.js`＋テスト＋tick→秒の集約 | — | — | Opus | `npm test` 全緑（95＋新規）、`timing:audit` が `generatedAt` 以外 diff ゼロ、`npm run dev` で下タブ3つの空画面 |
 | 2 | 生徒の再生（S1・S2）: タイル、前回・先生カード、戻る／タブ出し分け、PC（1024px 以上）の上部タブ、再生、速さ3択、トグル、現在カウント、くわしく、iOS 解除、WakeLock、警告バナー、`ui:check` 移植 | 1 | 3・6 と並列可（別ディレクトリ） | Opus | G1・G2、`ui:check` で S1/S2 の U1〜U15 通過（S1=3・S2=5・U12）、iPhone 実機でマナーモード時に鳴る |
-| 3 | ルーティン（S3・S4・S5）: IndexedDB v2 と移行、編集、試聴、名前補完、範囲 | 1 | 2・6 と並列可 | Sonnet | 作成→保存→再起動で残る、不正カウントの赤枠、`ui:check` 通過 |
+| 3 | ルーティン（S3・S4・S5）: IndexedDB の routines、編集、試聴、名前補完、範囲（下書きの移行は不要。Ruling 41） | 1 | 2・6 と並列可 | Sonnet | 作成→保存→再起動で残る、不正カウントの赤枠、`ui:check` 通過 |
 | 4 | 声（S7・S8）: 一覧、録音ウィザード、正規化再利用、試聴・聞き比べ、声のタイミング | 2 | 6 と並列可 | Opus | iPhone/Chrome で12語録音→ワルツが自分の声で鳴る、無音判定、`ui:check` 通過 |
 | 5 | 配る・受け取る（S9・S10）: bundle、share／download、share_target、取り込み検証、案内文 | 3・4 | — | Sonnet | G6、壊れた／大きすぎ／新しすぎるファイルの画面 |
 | 6 | 日本語標準音声: 生成・onset 実測・聴感ゲート・同梱 | 1 | 2〜5 と並列可（tools のみ） | Sonnet＋ひとみうさ試聴 | Ruling 5 のゲート3点 |
