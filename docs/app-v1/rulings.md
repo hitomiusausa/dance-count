@@ -1488,3 +1488,5 @@
 - **6b（ひとみうさの GO の後）**: 候補生成の便は**く！ちゃん（Opus）が自分で打つ**（課金の伴う操作は委譲しない。`voices:plan` の表を ひとみうさに見せてから `--yes`）。処理・ゲート描画は Sonnet でよい。
 - **6c（段4統合後）**: `standard-voices.json` に日本語の行・`messages.ts` 2 鍵・`check-dist` は自動（JSON 由来）・`ui:check` の S7 の期待値（行 2 つ・ops 2）・`smoke-voice.js` に日本語 1 場面・`stage6-listening-check.md` 表 D。`public/audio/default-ja-female-v1/` の採用コミットと同じ便（番人のため）。
 - **完了条件**: Ruling 70-1〜3 をそのまま各段の「段の終わり」に。
+
+**コントローラーの注記（2026-10-12・段6a の実装後）**: (1) Ruling 66-1 の英パック slow の onset「25」は「30」の誤記（manifest と実測が 30。回帰テストは 30）。(2) Ruling 67-4 の「練習の速さで重なり 0」は、出荷済みの英語の声でも満たせない（サンバ `1a2`・80bpm で「ア」が「2」に 83ms 食い込む。既存の `timing:audit` と同じ）。機械の確認は「英語より悪くない」（`practiceNotWorseThanEnglish`）で判定し、文字どおりの数（`practiceRisksZero`）も `gate-report.json` に残す。厳しくするかは 6b の前に Fable が見直す。
