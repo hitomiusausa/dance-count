@@ -63,7 +63,7 @@
 - `src/engine/` … 旧 `src/v2/` を無改変で移設。tick↔時刻は **`src/engine/tempo-map.js` だけ**（例外: 検算用の `tools/audit-all-dance-timing.js` と開発用 `tools/render-subdivision-audio-review.js`）
 - `src/app/` … Vite 8.3.4・Preact 10.29.8・TypeScript 6.0.3。i18n（日英）・ハッシュルーター（純粋関数）・platform アダプタ（hash/locale は実装、音声・録音・保存・ファイル・WakeLock は「未実装」を投げる空実装）・下タブ3つの空画面
 - `legacy/` … 旧画面（保守停止）。標準音声は `public/audio/default-en-female-v1/` のまま
-- テスト 224件（段2時点。段3で 291件。段2で 154 → 224。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
+- テスト 292件（段3で 224 → 292。段3の最終レビューの修正便で +1。段2で 154 → 224。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
 
 ### 番人（壊したら自動で止まるもの）
 
@@ -75,7 +75,7 @@
 | `test/app/platform-boundary.test.ts` | window/navigator/storage/AudioContext 等は `src/app/platform/` からだけ |
 | `test/meta/test-glob.test.js` | テストファイルが `npm test` から漏れない |
 | `tools/smoke-app-shell.js` | 375/1280 × 日英で殻が動く・旧画面の標準音声13ファイルが 200 |
-| `npm run ui:check`（`tools/check-app-ui.js`） | 新アプリの U1〜U15（文字・タップ・主要操作数・コントラスト・動き・折り返し等）を S1/S2/S3/S6/S7/S11 × 375/1280 で検査（dev も preview ビルドも 41項目 PASS。段3で 93項目に） |
+| `npm run ui:check`（`tools/check-app-ui.js`） | 新アプリの U1〜U15（文字・タップ・主要操作数・コントラスト・動き・折り返し等）を S1〜S5/S6/S7/S11 × 375/1280 で検査（dev も preview ビルドも 93項目 PASS。段2時点は 41項目） |
 | `npm run smoke:practice` | G1（初回2タップで鳴る）・G2（前回カード1タップで鳴る）・再読み込みで勝手に鳴らない・戻るの置き換え |
 
 **ゴールデンと基準は書き換え禁止**。作り直すのは rulings.md に理由と差分の要約を書いた時だけ。
@@ -84,8 +84,8 @@
 
 - **S3 ルーティン一覧**（作成順・行を開いて ▶ 再生／編集／削除・削除は確認つき）・**S4 編集**（種目選択 → 0件 → フィガー追加・行を開いて「決定」・元に戻す／やり直す・「上へ」「下へ」＋**⠿ のドラッグ**・全体を試聴・不正カウントは赤枠と理由の1行で「追加する」が押せない）・**S5 ルーティン再生**（S2 と別画面。速さ・メトロノーム・はじめの合図・声・▶、「くわしく」で範囲（はじめ／おわり）・繰り返し）。保存は IndexedDB（`dance-count-v2` v2 の `routines`）。
 - 決定: Ruling 35〜49、D10（鳴っている行は琥珀のうす塗り `#FBEBDD`）、D11（ドラッグを入れる）、D12（つかみは ⠿ のアイコンだけ）。正本は `rulings.md`。
-- テスト **291件**（段2の 224 から。段3の Task 7 の修正便で +3）。`npm run ui:check` は **93 PASS**（dev と公開ビルドの両方）。S3＝1/3・S4＝1/3/5/7/7・S5＝5/8、S5 の余裕 8px 以上。
-- 新しい道具: `npm run smoke:routines`（作成 → 保存 → 再読み込みで残る → 不正カウントを止める → ドラッグ → 再生 → 削除）。`DC_ONLY=<状態名の頭>`（例 `DC_ONLY=S5`）で `ui:check` を絞れる。検査用ルーティンは `tools/ui-check-routines.js`（ui:check と smoke が共有）。
+- テスト **292件**（段2の 224 から。段3の Task 7 の修正便で +3・最終レビューの修正便で +1）。`npm run ui:check` は **93 PASS**（dev と公開ビルドの両方）。S3＝1/3・S4＝1/3/5/7/7・S5＝5/8、S5 の余裕 8px 以上。
+- 新しい道具: `npm run smoke:routines`（名前だけ打って戻る → 一覧に戻り名前が残る → 作成 → 保存 → 再読み込みで残る → 不正カウントを止める → ドラッグ → 再生 → 削除）。`DC_ONLY=<状態名の頭>`（例 `DC_ONLY=S5`）で `ui:check` を絞れる。検査用ルーティンは `tools/ui-check-routines.js`（ui:check と smoke が共有）。
 - 実行中に**レビューが見つけた本物のバグ**（すべて修正済み）:
   - Task 7: 0件で「追加」の行を開いたまま「変える」すると、前の種目でフィガーが入り種目も変わる → 先に閉じ、フィガーができたら種目は変えない。
   - Task 9: 新規で最初のフィガーを打って「追加する」を押さずに戻ると編集画面に戻される → 離れる時の保存はハッシュを置き換えない。ドラッグ中の Esc で行が開く → 開かない。
@@ -139,7 +139,7 @@
 cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
 npm run dev        # 新アプリ http://localhost:5173
 npm run legacy     # 旧画面 http://localhost:4173/legacy/practice.html
-npm test           # 291件
+npm test           # 292件
 npm run typecheck
 npm run build      # check-dist まで走る
 npm run timing:audit && npm run -s timing:compare
