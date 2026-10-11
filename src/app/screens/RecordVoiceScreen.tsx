@@ -304,7 +304,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const prompts = wordPrompts(pack.locale, word!);
   const onsetAt = take ? Math.min(1, take.onsetMs / take.durationMs) : 0;
   return (
-    <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'}>
+    <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'}
+      data-taken={take ? 'true' : 'false'}>
       {header}
       <div class="dc-record-progress" role="progressbar" aria-valuemin={0} aria-valuemax={VOICE_KEYS.length} aria-valuenow={index + 1}
         aria-label={translator.t('wordProgress', { index: index + 1 })}>
@@ -319,9 +320,12 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         <div class="dc-record-main" lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>{prompts.main}</div>
         <div class="dc-record-other" lang={pack.locale === 'ja-JP' ? 'en' : 'ja'}>{prompts.other}</div>
       </div>
-      {alert !== 'none'
-        ? <NoticeLine alert={alert} />
-        : <p class="dc-record-hint">{translator.t('recordHint')}</p>}
+      {/* 説明の 1 行と枠は同じ高さの箱（枠が出ても丸が動かない。Ruling 72-2） */}
+      <div class="dc-record-slot" data-slot={alert !== 'none' ? 'alert' : 'hint'}>
+        {alert !== 'none'
+          ? <NoticeLine alert={alert} />
+          : <p class="dc-record-hint">{translator.t('recordHint', { word: prompts.main })}</p>}
+      </div>
       <div class="dc-rec-ring" style={{ '--p': String(progress) }}>
         <button type="button" class="dc-rec" disabled={recording} onClick={record}>
           <Icon name="mic" />

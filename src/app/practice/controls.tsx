@@ -162,6 +162,7 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: numbe
           <span>{translator.t('voiceLater')}</span><Icon name="chev-r" />
         </button>
       </div>
+      <div class="dc-offset-hint">{translator.t('voiceTimingHint')}</div>
     </div>
   );
 }

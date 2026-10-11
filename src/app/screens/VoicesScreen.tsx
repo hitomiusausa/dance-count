@@ -105,7 +105,8 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
             <div key={pack.id} class="dc-voice-row" data-open={open ? '' : undefined}>
               <button type="button" class="dc-radio-row dc-voice-partial" aria-expanded={open ? 'true' : 'false'} onClick={() => { session.stop(); setOpenId(open ? null : pack.id); }}>
                 <Icon name="mic" />
-                <span class="dc-voice-name">{translator.t('voiceInProgress', { name: packDisplayName(translator, pack), count: packProgress(pack).recorded })}</span>
+                {/* 名前は押せる行の色・数だけ灰色（Ruling 73）。textContent は「名前 · 7 / 12 語」のまま */}
+                <span class="dc-voice-name"><span>{packDisplayName(translator, pack)}</span> <small class="dc-voice-count">{translator.t('voiceInProgressCount', { count: packProgress(pack).recorded })}</small></span>
                 <Icon name="chevron" class="dc-row-chev" />
               </button>
               {open && (

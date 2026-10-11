@@ -123,7 +123,7 @@ export const APP_MESSAGES = {
     distributorVoice: "{name}'s voice",
     defaultVoiceNameEn: 'My voice (English)',
     defaultVoiceNameJa: 'My voice (Japanese)',
-    voiceInProgress: '{name} · {count}\u00A0/\u00A012\u00A0words',   // 「7 / 12 words」は折らない（320 幅）
+    voiceInProgressCount: '·\u00A0{count}\u00A0/\u00A012\u00A0words',   // 途中の声の行の数（名前のあと・灰色）。「7 / 12 words」は折らない（320 幅。Ruling 73）
     previewVoice: 'Preview',
     recordVoice: 'Record your voice',
     confirmDeleteVoiceTitle: 'Delete this voice?',
@@ -139,7 +139,7 @@ export const APP_MESSAGES = {
     recordedAll: 'Recorded (12 words)',
     startRecording: 'Start recording',
     wordProgress: '{index} / 12 words',
-    recordHint: 'Tap to record for 1.5\u00A0seconds.',
+    recordHint: 'Tap the button, then say “{word}” right away.',   // {word}＝その語の画面の大きい語（Ruling 72・D34）
     recordWord: 'Record',
     recordAgain: 'Record again',
     reviewFromFirst: 'Review from word 1',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
@@ -151,7 +151,7 @@ export const APP_MESSAGES = {
     noVoiceHeard: "We couldn't hear your voice. Please record again.",
     micDenied: 'The microphone is turned off for this app.',
     micHowTo: 'How to allow it',
-    micHowToIphone: 'iPhone: Settings → Safari → Microphone (if you opened it from the Home Screen, this app’s name instead of Safari)',
+    micHowToIphone: 'iPhone: Settings → Apps → Safari → Microphone (if you opened it from the Home Screen, this app’s name instead of Safari)',   // iOS 18 以降の道順（Ruling 74）
     micHowToOther: 'Android / PC: the icon at the left of the address bar → Microphone',
     micHowToThen: 'Then tap “Start recording” again.',
     micFailed: "The microphone couldn't be used. Close other apps or end the call, then tap “Start recording” again.",
@@ -165,6 +165,7 @@ export const APP_MESSAGES = {
     voiceTiming: 'Voice timing',
     voiceEarlier: 'Earlier',
     voiceLater: 'Later',
+    voiceTimingHint: 'If the voice sounds late, press “Earlier”.',   // 向きの補助文（Ruling 75・D35）
     continueRecording: 'Continue recording'
   },
   'ja-JP': {
@@ -289,7 +290,7 @@ export const APP_MESSAGES = {
     distributorVoice: '{name}さんの声',
     defaultVoiceNameEn: '自分の声（英語）',
     defaultVoiceNameJa: '自分の声（日本語）',
-    voiceInProgress: '{name} · {count}\u00A0/\u00A012\u00A0語',   // 「7 / 12 語」は折らない（320 幅）
+    voiceInProgressCount: '·\u00A0{count}\u00A0/\u00A012\u00A0語',   // 途中の声の行の数（名前のあと・灰色）。「7 / 12 語」は折らない（320 幅。Ruling 73）
     previewVoice: '試聴',
     recordVoice: '自分の声を録音する',
     confirmDeleteVoiceTitle: 'この声を削除しますか？',
@@ -305,7 +306,7 @@ export const APP_MESSAGES = {
     recordedAll: '録音済み（12 語）',
     startRecording: '録音をはじめる',
     wordProgress: '{index} / 12 語',
-    recordHint: 'ボタンを押すと 1.5\u00A0秒だけ録音します。',   // 「1.5 秒」は折らない
+    recordHint: 'ボタンを押したら、すぐ「{word}」と言ってください。',   // {word}＝その語の画面の大きい語（Ruling 72・D34）
     recordWord: '録音する',
     recordAgain: '録り直す',
     reviewFromFirst: '1\u00A0語目から見直す',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
@@ -317,7 +318,7 @@ export const APP_MESSAGES = {
     noVoiceHeard: '声が入っていませんでした。もう一度録音してください。',
     micDenied: 'マイクが使えない設定になっています。',
     micHowTo: '設定の開き方',
-    micHowToIphone: 'iPhone：設定 → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前）',
+    micHowToIphone: 'iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前）',   // iOS 18 以降の道順（Ruling 74）
     micHowToOther: 'Android・PC：アドレスバーの左のマーク → マイク',
     micHowToThen: '許可したら、もう一度「録音をはじめる」を押してください。',
     micFailed: 'マイクを使えませんでした。ほかのアプリや通話を終えてから、もう一度「録音をはじめる」を押してください。',
@@ -331,6 +332,7 @@ export const APP_MESSAGES = {
     voiceTiming: '声のタイミング',
     voiceEarlier: '早く',
     voiceLater: '遅く',
+    voiceTimingHint: '声が遅れて聞こえたら「早く」を押します。',   // 向きの補助文。依頼の形にしない（Ruling 75・D35）
     continueRecording: '続きを録音する'
   }
 } as const satisfies Record<string, Record<string, string>>;

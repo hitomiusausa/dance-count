@@ -260,6 +260,7 @@ button { cursor: pointer; }
 .dc-offset-value { font-size: 18px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .dc-offset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dc-offset-buttons .dc-chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.dc-offset-hint { margin-top: 6px; font-size: 16px; font-weight: 400; color: var(--ink2); }  /* 向きの補助文（Ruling 75・D35） */
 .dc-chip:disabled { border-color: var(--line); background: var(--soft); color: var(--ink2); cursor: not-allowed; }
 
 /* S6 の行（Ruling 60-8）: ラベル＋右に今の値（16px）＋山形。1 行 56px・下罫線 */
@@ -277,7 +278,8 @@ button { cursor: pointer; }
 .dc-voice-line > .dc-radio-row { flex: 1; min-width: 0; }
 .dc-voice-name { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
 .dc-voice-preview { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; }
-.dc-voice-partial { color: var(--ink2); }
+.dc-voice-partial { color: var(--ink); }  /* 途中の声の行も名前は押せる行の色。数だけ灰色（Ruling 73） */
+.dc-voice-count { font-size: 18px; font-weight: 400; color: var(--ink2); white-space: nowrap; }
 .dc-voice-row[data-open] { --line: var(--line-on-soft); background: var(--soft); }
 .dc-voice-row[data-open] .dc-radio-row { background: transparent; }
 .dc-voice-row[data-open] .dc-row-chev { transform: rotate(180deg); }
@@ -309,7 +311,10 @@ button { cursor: pointer; }
 .dc-record-word { margin: 16px 0 4px; text-align: center; }
 .dc-record-main { font-size: 56px; font-weight: 800; line-height: 1.15; letter-spacing: var(--track); overflow-wrap: anywhere; }
 .dc-record-other { font-size: 20px; color: var(--ink2); }
-.dc-record-hint { margin: 4px 0 16px; text-align: center; font-size: 18px; color: var(--ink2); }
+/* 説明の 1 行と枠は同じ箱（枠の 2 行 59px 以上）。枠が出ても丸が動かない（Ruling 72-2） */
+.dc-record-slot { display: flex; flex-direction: column; justify-content: center; min-height: 60px; margin: 4px 0 12px; }
+.dc-record-hint { margin: 0; text-align: center; font-size: 18px; color: var(--ink2); }
+.dc-record[data-step="word"] .dc-alert { margin: 0; }
 .dc-record .dc-alert { margin: 4px 0 12px; }
 .dc-record[data-step="denied"] .dc-alert { margin: 16px 0 8px; }  /* 説明 3 行の場所（D30） */
 /* 録音中の輪（Ruling 59-2）: --p（0〜1）を 100ms ごとに書く。transition・animation は使わない（U8）。reduced-motion では輪を描かない */
@@ -361,4 +366,39 @@ button { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* 見える高さ 600px 未満（iPhone SE の Safari＝375×548）の詰めた配置（Ruling 71・D33）。
+   600px 以上（375×667・ホーム画面のアプリ・PC）は 1px も変えない。max-width で PC の上部タブの余白と競合させない */
+@media (max-height: 599px) and (max-width: 1023px) {
+  .dc-screen { padding-top: 8px; }
+  /* S1: 10 種目と先生カードが初期表示に入る（Ruling 16） */
+  /* 「English」・前回カード・先生カードの間は 8px のまま（U3 の下限。ui:check の 375×548 で確認）。そのぶん上の余白と見出しの行の高さで詰める */
+  .dc-home { padding-top: 4px; }
+  .dc-resume { min-height: 56px; padding: 4px 12px 4px 20px; }   /* 60 → 56（主ボタン基準 56 は守る） */
+  .dc-teacher { padding: 2px 4px; }                                /* 58 → 56 */
+  .dc-home .dc-heading { margin: 0; font-size: 20px; line-height: 1.2; }   /* 22 → 20（Ruling 71 の「外れた時」の候補を先に使う） */
+  .dc-tiles { gap: 8px 14px; }                                     /* 行間 8 は U3 の下限 */
+  .dc-tile { min-height: 48px; padding: 2px; gap: 0; }             /* 64 → 48（U3 の下限） */
+  .dc-tile b, .dc-tile small { line-height: 1.15; }
+  /* S2・S5: 速さ・トグル 2 つ・声・▶ が初期表示に入る（S5 は声チップだけスクロールを許す。Ruling 71-6） */
+  .dc-practice:not(.dc-routine-play) .dc-playhead h1 { margin: 4px 0; }   /* S2 だけ（S5 は元から 4px 0 0） */
+  .dc-routine-play .dc-figure-now { margin-top: 2px; }             /* S5 の音が出ない枠つきでも速さが入る（Ruling 23） */
+  .dc-practice .dc-now:not(.dc-now--lead) { min-height: 72px; font-size: 72px; }   /* 96 → 72（S5 と同じ） */
+  .dc-practice .dc-countbox { padding-bottom: 4px; margin-bottom: 4px; }
+  .dc-practice .dc-beats { margin-top: 4px; }
+  .dc-practice .dc-beats li { height: 28px; }
+  .dc-practice .dc-field-label { margin: 2px 0 4px; }
+  .dc-practice .dc-opt { min-height: 56px; }                       /* 64 → 56 */
+  .dc-practice .dc-toggles { margin-top: 8px; }
+  .dc-practice .dc-toggle { min-height: 0; padding: 4px 2px; gap: 2px; }   /* 108 → 83 */
+  .dc-practice .dc-toggle-label { line-height: 1.2; }
+  .dc-practice .dc-chip-row { margin-top: 8px; min-height: 48px; }  /* 56 → 48（タップ対象の下限） */
+  .dc-practice .dc-more { margin-top: 8px; }
+  /* S8 語の画面: 丸と、録れた語の波形＋「聞く」が初期表示に入る（Ruling 71-7） */
+  .dc-record-progress { margin-top: 0; }
+  .dc-record-word { margin: 8px 0 4px; }
+  .dc-record-slot { margin-bottom: 8px; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行は役目を終えている */
+  .dc-take { margin-top: 8px; padding: 4px 0; }
 }

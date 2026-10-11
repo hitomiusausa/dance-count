@@ -11,6 +11,9 @@ const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
 const ZOOM_VIEWPORT = { width: 640, height: 450 }; // 1280×900 の 200% 拡大相当（U9）
 const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
+// iOS Safari のツールバー表示時の iPhone SE の見える高さ（Task 9 の実測）。主要操作が初期表示に入る（Ruling 71）。
+// 全状態を reduced-motion 無しの 1 周だけ。期待値は opsSmall があればそれ（S5 の声チップはスクロールを許す。Ruling 71-6）、R47 は当てない
+const SE_SAFARI_VIEWPORT = { width: 375, height: 548 };
 const LIMITS = Object.freeze({
   bodyFont: 18, minFont: 16, fineprintFont: 14, // U1
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
@@ -66,11 +69,12 @@ const STATES = [
     steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
-  { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  // opsSmall: 375×548（Safari SE）では声チップが帯の下＝初期表示 4（Ruling 71-6）
+  { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
-  { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 3, total: 3 },
   // 段4（Ruling 60・63）: S7 は 一覧 1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 2, total: 2, voiceRows: ['標準の声（英語）'] },
@@ -82,15 +86,17 @@ const STATES = [
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
   { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en' },
-  { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true,
+  // Ruling 72: 説明の 1 行は「すぐ「Slow」と言って」・説明と枠は同じ 60px の箱（枠が出ても丸が動かない）
+  { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true, recordHintWord: 'Slow', recordSlot: 60,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
-  { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, takeShown: true,
+  // takeShownCompact: 600px 未満では録れた語の説明の 1 行を出さない・それ以外は出したまま（Ruling 71-7）
+  { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, takeShown: true, takeShownCompact: true,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
       { click: '.dc-record-dock .dc-button--secondary' }, { wait: '.dc-take' }] },
   { name: 'S8 完成', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 4, doneName: '自分の声（英語）',
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
-  { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true },
+  { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60 },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
@@ -113,39 +119,42 @@ const report = (label, problems) => {
 };
 
 try {
+  // 2 画面幅 × reduced-motion 有無 ＋ 375×548（Safari SE・no-preference だけ。Ruling 71-9）
+  const RUNS = [
+    ...VIEWPORTS.flatMap(viewport => ['no-preference', 'reduce'].map(reducedMotion => ({ viewport, reducedMotion, compact: false }))),
+    { viewport: SE_SAFARI_VIEWPORT, reducedMotion: 'no-preference', compact: true }
+  ];
   for (const state of CHECKED) {
-    for (const viewport of VIEWPORTS) {
-      for (const reducedMotion of ['no-preference', 'reduce']) {
-        const label = `${state.name} @ ${viewport.width}x${viewport.height}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
-        const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'] });
-        const page = await context.newPage();
-        const consoleErrors = [];
-        page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
-        page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
-        if (state.prepare || state.seed || state.voiceSeed) {
-          await page.goto(BASE + (state.prepare ?? '#/'));
-          await page.waitForSelector('[data-screen]');
-        }
-        if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
-        if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
-        await page.goto(BASE + state.hash);
-        if (state.seed || state.voiceSeed) await page.reload();
-        await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
-        for (const step of state.steps ?? []) {
-          if (step.click) await page.locator(step.click).click();
-          if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
-          if (step.wait) await page.waitForSelector(step.wait);
-        }
-        if (state.openMore) await page.locator('summary[data-more]').click();
-        if (state.confirm) await page.waitForSelector('dialog[open][data-confirm]');
-        const opened = state.openMore ? await page.locator('details[open]').count() : 0;
-        await page.evaluate(() => document.fonts.ready);
-        await page.evaluate(() => window.scrollTo(0, 0));
-        const problems = await page.evaluate(audit, { state: { ...state, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
-        const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
-        report(label, [...openFail, ...problems, ...consoleErrors]);
-        await context.close();
+    for (const { viewport, reducedMotion, compact } of RUNS) {
+      const label = `${state.name} @ ${viewport.width}x${viewport.height}${compact ? ' (Safari SE)' : ''}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
+      const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'] });
+      const page = await context.newPage();
+      const consoleErrors = [];
+      page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
+      page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
+      if (state.prepare || state.seed || state.voiceSeed) {
+        await page.goto(BASE + (state.prepare ?? '#/'));
+        await page.waitForSelector('[data-screen]');
       }
+      if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
+      if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
+      await page.goto(BASE + state.hash);
+      if (state.seed || state.voiceSeed) await page.reload();
+      await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
+      for (const step of state.steps ?? []) {
+        if (step.click) await page.locator(step.click).click();
+        if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
+        if (step.wait) await page.waitForSelector(step.wait);
+      }
+      if (state.openMore) await page.locator('summary[data-more]').click();
+      if (state.confirm) await page.waitForSelector('dialog[open][data-confirm]');
+      const opened = state.openMore ? await page.locator('details[open]').count() : 0;
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const problems = await page.evaluate(audit, { state: { ...state, compact, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
+      report(label, [...openFail, ...problems, ...consoleErrors]);
+      await context.close();
     }
   }
 
@@ -269,6 +278,7 @@ function audit({ state, LIMITS, reducedMotion }) {
     const rect = element.getBoundingClientRect();
     if (rect.width < LIMITS.tap - 0.5 || rect.height < LIMITS.tap - 0.5) issues.push(`U3 tap ${Math.round(rect.width)}x${Math.round(rect.height)} ${describe(element)}`);
   }
+  const modal = document.querySelector('dialog[open]:modal');
   for (let i = 0; i < targets.length; i += 1) {
     for (let j = i + 1; j < targets.length; j += 1) {
       const a = targets[i];
@@ -277,6 +287,8 @@ function audit({ state, LIMITS, reducedMotion }) {
       const barA = a.closest(FIXED_BARS);
       const barB = b.closest(FIXED_BARS);
       if (barA !== barB) continue; // 片方だけ固定バー、または別々の固定バー: スクロールで重なり方が変わるので対象外（同じバーの中は測る）
+      // 開いた確認ダイアログ（showModal）の外は背景で押せない（inert）。ダイアログの中と外の組は測らない（375×548 で背景の行と重なる）
+      if (modal && modal.contains(a) !== modal.contains(b)) continue;
       const ra = a.getBoundingClientRect();
       const rb = b.getBoundingClientRect();
       const dx = Math.max(0, Math.max(ra.left, rb.left) - Math.min(ra.right, rb.right));
@@ -311,7 +323,8 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (!state.afterAction && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
   if (totalOps > LIMITS.totalOps) issues.push(`U4 total operations ${totalOps} > ${LIMITS.totalOps}`);
   if (state.total !== undefined && totalOps !== state.total) issues.push(`U4 total operations ${totalOps}, expected ${state.total}`);
-  if (state.ops !== undefined && initialOps !== state.ops) issues.push(`U4 initial operations ${initialOps}, expected ${state.ops}`);
+  const expectedOps = state.compact && state.opsSmall !== undefined ? state.opsSmall : state.ops;   // 375×548 の例外（Ruling 71-6・9）
+  if (expectedOps !== undefined && initialOps !== expectedOps) issues.push(`U4 initial operations ${initialOps}, expected ${expectedOps}`);
 
   // U5 選択肢の数・U6「くわしく」は1つ
   // 照合済みの名前の一覧（[data-catalog]）は選択肢でなく一覧なので 10 を当てず、黙って増えないよう catalogChoices を当てる（Ruling 54-4）
@@ -445,7 +458,7 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.chipToDock) {
     const chip = document.querySelector('.dc-chip-row');
     const dock = document.querySelector('.dc-dock');
-    if (chip && dock && innerWidth < 1024) {
+    if (chip && dock && innerWidth < 1024 && innerHeight >= 600) {   // 600px 未満（Safari SE）は声チップのスクロールを許す（Ruling 71-6・9）
       const room = dock.getBoundingClientRect().top - chip.getBoundingClientRect().bottom;
       if (room < LIMITS.chipToDock - 0.5) issues.push(`R47 voice chip to dock ${Math.round(room)}px < ${LIMITS.chipToDock}`);
     }
@@ -579,6 +592,24 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!take || !visible(take)) issues.push('R59 the waveform and "Play" are not shown for a recorded word');
     else if (!fullyInView(take)) issues.push('R59 the waveform and "Play" are not fully in the first view');
     if (document.querySelectorAll('.dc-wave rect').length !== 41) issues.push(`R59 waveform has ${document.querySelectorAll('.dc-wave rect').length} marks, expected 40 bars + the onset line`);
+  }
+  // Ruling 72: 説明の 1 行にその語が入る・説明と枠の箱は同じ高さ（丸が動かない）
+  if (state.recordHintWord) {
+    const hint = document.querySelector('.dc-record-hint');
+    if (!hint || !visible(hint)) issues.push('R72 the record hint is not shown');
+    else if (!hint.textContent.includes(state.recordHintWord)) issues.push(`R72 the record hint "${hint.textContent.trim()}" does not include "${state.recordHintWord}"`);
+  }
+  if (state.recordSlot !== undefined) {
+    const slot = document.querySelector('.dc-record-slot');
+    const height = slot ? Math.round(slot.getBoundingClientRect().height) : 0;
+    if (height !== state.recordSlot) issues.push(`R72 the hint/alert box is ${height}px high, expected ${state.recordSlot}`);
+  }
+  // Ruling 71-7: 録れた語の説明の 1 行は 600px 未満では出さない（波形と「聞く」を初期表示に入れる）。それ以外は出したまま
+  if (state.takeShownCompact) {
+    const hint = document.querySelector('.dc-record-slot[data-slot="hint"]');
+    const shown = Boolean(hint && visible(hint));
+    if (innerHeight < 600 && shown) issues.push('R71 the record hint is shown for a recorded word below 600px');
+    if (innerHeight >= 600 && !shown) issues.push('R71 the record hint is hidden for a recorded word at 600px or more');
   }
   if (state.doneName) {
     const value = document.querySelector('#dc-s8-name')?.value;
