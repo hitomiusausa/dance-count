@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { dropDestination } from '../../engine/routine-editor-order.js';
-import { nextFrame, onDragInterrupt, pageScrollY, scrollPageBy, viewportHeight } from '../platform/viewport.ts';
-import { autoScrollStep, dropTargetFromY, isDragStart, liftOffset, unliftBox, type DropTarget } from './reorder-drag.ts';
+import { nextFrame, onDragInterrupt, pageScrollY, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
+import { autoScrollBottom, autoScrollStep, dropTargetFromY, isDragStart, liftOffset, unliftBox, type DropTarget } from './reorder-drag.ts';
 
 // S4 のフィガーのドラッグ（Ruling 49）。Pointer Events だけ（マウス・タッチ・ペン共通。HTML5 drag は iOS のタッチで来ない）。
 // つかみ（.dc-grip）を押して 8px 以上動いたらドラッグ、未満で離したら click＝タップ（行を開く）。
@@ -73,7 +73,7 @@ export function useReorderDrag(options: ReorderDragOptions) {
   const loop = () => {
     if (!press.current?.dragging) return;
     const dock = latest.current.list.current?.ownerDocument.querySelector('.dc-dock');
-    const visibleBottom = dock ? dock.getBoundingClientRect().top : viewportHeight();
+    const visibleBottom = autoScrollBottom(dock ? dock.getBoundingClientRect() : null, visibleViewport().bottom);
     const step = autoScrollStep(press.current.lastY, 0, visibleBottom);
     if (step !== 0) scrollPageBy(step);
     lift();

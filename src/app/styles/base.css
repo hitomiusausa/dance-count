@@ -117,7 +117,9 @@ button { cursor: pointer; }
 .dc-chip { min-height: 48px; min-width: 48px; padding: 0 16px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
   font-size: 18px; font-weight: 700; white-space: nowrap; }
 /* 名前の一覧（D20・Ruling 54-5）: 長い名前は 2 行に折る（375 幅で全角約 16 字／行。最長 24 字でも 2 行）。押された色は無い（「入れる」ボタン） */
-.dc-chip--name { max-width: 100%; padding: 6px 14px; line-height: 1.3; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+/* 長い名前は空白（語の切れ目）で折る（最終レビュー2 M2。「フェザ／ーエンディング」のように語の途中・行頭の「ー」にしない）。
+   空白の無い長い名前は overflow-wrap: anywhere で枠に収める。 */
+.dc-chip--name { max-width: 100%; padding: 6px 14px; line-height: 1.3; text-align: left; white-space: normal; word-break: keep-all; line-break: strict; overflow-wrap: anywhere; }
 .dc-chip[aria-checked="true"], .dc-chip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-fine { display: flex; flex-direction: column; gap: 8px; }
 .dc-fine input[type="range"] { width: 100%; min-height: 48px; accent-color: var(--primary); }
@@ -221,7 +223,7 @@ button { cursor: pointer; }
 .dc-add-tail { margin-top: 12px; }
 .dc-dock-button { width: 100%; max-width: 608px; }
 /* 画面のキーボードが開いている間は S4 の下の帯を出さない（D19・F6 round 4。iOS 26 はキーボードの上へ持ち上げて入力欄の
-   すぐ下を覆う。判定は見えている高さ＝lib/keyboard.ts）。動きなし。 */
+   すぐ下を覆う。判定は見えている高さ＝lib/keyboard.ts）。全体を鳴らしている間は付けない（■ 止めるを残す。hidesDock）。動きなし。 */
 .dc-screen[data-screen="S4"][data-keyboard] .dc-dock { display: none; }
 
 /* S5 ルーティン再生（Ruling 40・46〜48・D10）。S2 と同じ部品。375×667 で5操作を入れるため S5 だけ詰める:

@@ -24,3 +24,9 @@ export function isKeyboardOpen(heights: ViewportHeights | null): boolean {
   const shown = visualHeight * (scale > 0 ? scale : 1);
   return layoutHeight - shown > KEYBOARD_MIN_PX;
 }
+
+// 帯を隠すか（最終レビュー2 M4）。ルーティン全体を鳴らしている間は、キーボードが開いていても隠さない
+// （帯の「■ 止める」が止める唯一の近い手段。打っても試聴は止まらない）。止めると、開いていれば隠れる。
+export function hidesDock(keyboardOpen: boolean, playing: boolean): boolean {
+  return keyboardOpen && !playing;
+}

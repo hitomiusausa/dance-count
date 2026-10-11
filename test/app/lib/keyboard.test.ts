@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isKeyboardOpen, KEYBOARD_MIN_PX } from '../../../src/app/lib/keyboard.ts';
+import { hidesDock, isKeyboardOpen, KEYBOARD_MIN_PX } from '../../../src/app/lib/keyboard.ts';
 
 test('desktop and no keyboard: the visual viewport is as tall as the layout, so the dock stays', () => {
   assert.equal(isKeyboardOpen({ layoutHeight: 667, visualHeight: 667, scale: 1 }), false);
@@ -38,4 +38,11 @@ test('broken readings (zero or missing heights) never hide the dock', () => {
   assert.equal(isKeyboardOpen({ layoutHeight: 0, visualHeight: 0, scale: 1 }), false);
   assert.equal(isKeyboardOpen({ layoutHeight: 667, visualHeight: 0, scale: 1 }), false);
   assert.equal(isKeyboardOpen({ layoutHeight: 667, visualHeight: 300, scale: 0 }), true);
+});
+
+test('the dock hides for the keyboard only while nothing is playing (final review 2 M4: the stop button stays)', () => {
+  assert.equal(hidesDock(true, false), true);
+  assert.equal(hidesDock(true, true), false);
+  assert.equal(hidesDock(false, false), false);
+  assert.equal(hidesDock(false, true), false);
 });

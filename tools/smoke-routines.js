@@ -7,7 +7,8 @@
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
 // 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）→
 // 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）→
-// 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）。
+// 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）→
+// キーボードを開いたままのドラッグで画面が流れない・鳴らしている間は帯が残る（最終レビュー2 I1・M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
 import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
@@ -333,6 +334,51 @@ try {
   if ((await kanaForm.locator('input').nth(0).inputValue()) !== 'ウィスク') errors.push('tapping the suggestion should put the katakana name in');
   if ((await kanaForm.locator('.dc-primary').textContent())?.trim() !== COPY) errors.push(`the katakana name should switch to "${COPY}" ("${await kanaForm.locator('.dc-primary').textContent()}")`);
   await context.close();
+
+  // キーボードを開いたままのドラッグ（最終レビュー2 I1）: 帯が隠れている（矩形 0）間も、自動スクロールの下端は見えている範囲の下端。
+  // ルーティン名の欄にフォーカス → キーボードの代わり（300px）→ 見えている範囲の中ほどのつかみを 8px 以上動かして 800ms 止める → スクロールしない。
+  // 全体を鳴らしている間はキーボードが開いても帯（■ 止める）を隠さない（M4）。止めると隠れる。
+  const kbContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
+  const kbPage = await kbContext.newPage();
+  kbPage.on('pageerror', error => errors.push(`pageerror (keyboard drag): ${error.message}`));
+  await kbPage.goto(BASE + '#/');
+  await kbPage.waitForSelector('[data-screen]');
+  await kbPage.evaluate(seedRoutinesInPage, [R.waltz13]);
+  await kbPage.goto(BASE + `#/routines/${R.waltz13.id}/edit`);
+  await kbPage.reload();
+  await kbPage.waitForSelector('[data-screen="S4"] .dc-grip');
+  await kbPage.locator('[data-screen="S4"] .dc-field input').first().focus();
+  await fakeKeyboard(kbPage, 300);
+  if (!(await dockHiddenSoon(kbPage))) errors.push('keyboard drag: the dock should hide with the keyboard open');
+  await kbPage.evaluate(() => window.scrollTo(0, 250));   // 行が見えている範囲の中ほどに来るように（フォーカスは名前の欄のまま）
+  const kbBottom = await kbPage.evaluate(() => window.visualViewport.offsetTop + window.visualViewport.height);
+  const kbGrips = await kbPage.locator('.dc-grip').evaluateAll(list => list.map(grip => { const box = grip.getBoundingClientRect(); return { x: box.left + box.width / 2, y: box.top + box.height / 2 }; }));
+  const midGrip = kbGrips.find(point => point.y > 120 && point.y < kbBottom - 120);
+  if (!midGrip) errors.push(`keyboard drag: no grip in the middle of the visible area (bottom ${kbBottom}, grips ${JSON.stringify(kbGrips.map(point => Math.round(point.y)))})`);
+  else {
+    const scrollBefore = await kbPage.evaluate(() => window.scrollY);
+    await kbPage.mouse.move(midGrip.x, midGrip.y);
+    await kbPage.mouse.down();
+    await kbPage.mouse.move(midGrip.x, midGrip.y + 12, { steps: 3 });
+    await kbPage.waitForTimeout(800);
+    const scrollHeld = await kbPage.evaluate(() => window.scrollY);
+    await kbPage.mouse.up();
+    if (scrollHeld !== scrollBefore) errors.push(`keyboard drag: holding a row still mid-screen must not scroll (scrollY ${scrollBefore} → ${scrollHeld})`);
+  }
+  await fakeKeyboard(kbPage, 0);
+  if (!(await dockBackSoon(kbPage))) errors.push('keyboard drag: the dock should come back when the keyboard closes');
+  await kbPage.locator('.dc-dock .dc-primary').click();   // ▶ 全体を試聴
+  await kbPage.waitForSelector('[data-screen="S4"][data-playing="true"]');
+  await kbPage.locator('[data-screen="S4"] .dc-field input').first().focus();
+  await fakeKeyboard(kbPage, 300);
+  await kbPage.waitForTimeout(300);
+  if (!(await kbPage.locator('.dc-dock').isVisible())) errors.push('M4: the dock (stop) should stay while the routine plays, even with the keyboard open');
+  else {
+    await kbPage.locator('.dc-dock .dc-primary').click();   // ■ 止める
+    if (!(await dockHiddenSoon(kbPage))) errors.push('M4: after stopping with the keyboard still open, the dock should hide');
+  }
+  await fakeKeyboard(kbPage, 0);
+  await kbContext.close();
 } finally {
   await browser.close();
 }
@@ -379,4 +425,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing; ${webkitNote}`);

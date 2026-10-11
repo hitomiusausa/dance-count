@@ -5,7 +5,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
-import { isKeyboardOpen } from '../lib/keyboard.ts';
+import { hidesDock, isKeyboardOpen } from '../lib/keyboard.ts';
 import { onVisibleViewportChange, viewportHeights } from '../platform/viewport.ts';
 import { MoreOptions, NoticeBox, type AlertNotice } from '../practice/controls.tsx';
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
@@ -41,6 +41,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   // 画面のキーボードが開いている間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6 round 4。iOS 26 は帯をキーボードの上へ
   // 持ち上げ、打っている欄のすぐ下を覆う）。フォーカスや指の動きでは決めず、見えている高さで決める（lib/keyboard.ts）。
   // 閉じれば visualViewport の resize で戻る（押したボタンの click の後なので、指の下に帯は現れない）。隠し方は base.css の [data-keyboard]。
+  // 鳴らしている間は隠さない（帯の「■ 止める」を残す。最終レビュー2 M4・hidesDock）。
   const [keyboardOpen, setKeyboardOpen] = useState(() => isKeyboardOpen(viewportHeights()));
   useEffect(() => {
     const check = () => setKeyboardOpen(isKeyboardOpen(viewportHeights()));
@@ -210,7 +211,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
 
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
-      data-keyboard={keyboardOpen ? 'true' : undefined}>
+      data-keyboard={hidesDock(keyboardOpen, playing) ? 'true' : undefined}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
       <NoticeBox notice={notice} onClose={() => session.dismissNotice()} />
       <RoutineNameField name={routine.name} onText={text => { pendingName.current = text; }}

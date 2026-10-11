@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { dropDestination } from '../../../src/engine/routine-editor-order.js';
-import { AUTO_SCROLL_STEP_PX, autoScrollStep, dropTargetFromY, isDragStart, liftOffset, unliftBox } from '../../../src/app/routines/reorder-drag.ts';
+import { AUTO_SCROLL_STEP_PX, autoScrollBottom, autoScrollStep, dropTargetFromY, isDragStart, liftOffset, unliftBox } from '../../../src/app/routines/reorder-drag.ts';
 
 test('a drag starts at 8px from the press point; less is a tap (Ruling 49-4)', () => {
   assert.equal(isDragStart(7.9, 0), false);
@@ -35,6 +35,15 @@ test('auto-scroll only near the edges of the visible area, at a fixed step', () 
   assert.equal(autoScrollStep(300, 0, 570), 0);
   assert.equal(autoScrollStep(560, 0, 570), AUTO_SCROLL_STEP_PX);
   assert.equal(autoScrollStep(48, 0, 570), 0);
+});
+
+test('auto-scroll bottom: the dock edge only while the dock is laid out, otherwise the visible viewport (final review 2 I1)', () => {
+  assert.equal(autoScrollBottom({ top: 586, height: 81 }, 667), 586);      // 帯あり・キーボードなし: 帯の上端
+  assert.equal(autoScrollBottom({ top: 0, height: 0 }, 367), 367);        // キーボードで帯が display:none: 見えている範囲の下端
+  assert.equal(autoScrollBottom(null, 667), 667);                          // 帯の無い画面
+  assert.equal(autoScrollBottom({ top: 586, height: 81 }, 367), 367);      // 鳴らしていて帯が残る＋キーボード: 小さい方
+  // 隠れた帯の矩形（top 0）を使うと画面の中ほどの指でも下へ流れ続けた。今は止まる
+  assert.equal(autoScrollStep(200, 0, autoScrollBottom({ top: 0, height: 0 }, 367)), 0);
 });
 
 // つかんだ行は指についてくる（Ruling 51）。行 3（top 230・bottom 295）を y 250 で押した。一覧は 100〜945。

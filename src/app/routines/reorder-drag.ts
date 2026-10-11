@@ -29,6 +29,13 @@ export function autoScrollStep(y: number, visibleTop: number, visibleBottom: num
   return 0;
 }
 
+// 自動スクロールの下端（最終レビュー2 I1: F6 の帯隠し × F2 のドラッグ）。下の帯が描かれていれば（高さ > 0）その上端と
+// 見えている範囲の下端の小さい方。キーボードが開いて帯が display:none の時は矩形が 0（top 0）になるので使わず、
+// 見えている範囲（visualViewport）の下端だけ。帯の上端 0 を使うと指がどこにあっても下へ流れ続ける。
+export function autoScrollBottom(dock: { top: number; height: number } | null, visibleBottom: number): number {
+  return dock && dock.height > 0 ? Math.min(dock.top, visibleBottom) : visibleBottom;
+}
+
 // つかんだ行の持ち上げ量 dy（Ruling 51-2・4）。押した点からの指の移動量＋ドラッグ開始からのスクロール量。
 // rowTop0/rowBottom0 は開始時の行の矩形、listTop/listBottom は今の一覧の矩形（どちらも画面の座標）。
 // 行の上端が一覧の上端より上へ・下端が一覧の下端より下へ出ないように止める（末尾の追加ボタン・固定の帯にかぶらない）。

@@ -15,8 +15,9 @@ import { figureNameChoices, figureNameSuggestions, hasFigureNameSuggestions } fr
 import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 
 // 開いた行の入力（Ruling 36-3・38・39・50・53）。名前（候補は verified 名だけ）・カウント・カウントの形・主ボタン。
-// 外側の .dc-figure-form には data-group を付けない（入れ子にすると U5 で外側が内側ぶんも数える）。中は 2 グループ:
-// [data-group="figure-form"]＝名前・候補5・カウント欄（7）、[data-group="count-patterns"]＝形（≤8）＋主ボタン（≤9）。
+// 外側の .dc-figure-form には data-group を付けない（入れ子にすると U5 で外側が内側ぶんも数える）。中は 2〜3 グループ:
+// [data-group="figure-form"]＝名前・候補5・カウント欄（7）、[data-group="count-patterns"]＝形（≤8）＋主ボタン（≤9）、
+// 名前が空の追加の行だけ [data-group="figure-names"][data-catalog]＝種目のフィガーの一覧（下の D20 の段落）。
 // 形は countPatterns(danceId)（プロファイルの数から規則で作る。名前では変わらない＝Ruling 3 との線引き）。タップで欄を置き換える。
 // カウント欄の下には常に「使える文字：…」（Ruling 50 D14）。文字の誤りはこの行が赤くなり、ほかの理由はその下に1行。
 // 理由が無い時だけ、止めない知らせ（まとめて変更の予告 → 小節の注意の短い形。Ruling 52-3）を同じ位置に出す。
@@ -29,8 +30,9 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // [data-group="figure-names"][data-catalog]（figure-form の兄弟。入れ子にしない＝U5 は一覧の上限 20）で並べ、カウントの欄・使える文字・
 // カウントの形は出さない。タップで名前だけ入れる（counts は触らない・行は閉じない・フォーカスは動かさない）。autofocus は付けない
 // （キーボードが出て一覧が隠れるため）。すでにルーティンにある名前の印は付けない（タップすれば複製の形で分かる）。
-const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | null>, MessageKey> = {
-  leading: 'startWithBeat', invalid: 'countsInvalid', sameName: 'sameNameExists', name: 'nameNeeded'
+// 同じ名前（sameName）の注意は理由の行ではなく名前の欄の下（sameText）に出すので、ここには持たない。
+const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | 'sameName' | null>, MessageKey> = {
+  leading: 'startWithBeat', invalid: 'countsInvalid', name: 'nameNeeded'
 };
 const PRIMARY: Record<DraftAction, { text: MessageKey; icon: IconName | null }> = {
   add: { text: 'add', icon: 'plus' }, done: { text: 'done', icon: 'check' }, addCopy: { text: 'addCopy', icon: 'copy' },
