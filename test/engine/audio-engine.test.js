@@ -4,6 +4,7 @@ import { PracticeAudioEngine, countInBeatCount, effectiveVoiceOffsetMs, eventOcc
 import { compileRhythm, eventTimeSeconds } from '../../src/engine/rhythm-compiler.js';
 import { expectedEventTimeMs } from '../../src/engine/dance-timing-audit.js';
 import { beatMapTempo } from '../../src/engine/tempo-map.js';
+import { FakeAudioContext, fakeVoicePack } from './engine-schedule-harness.js';
 
 test('pattern duration is derived from integer ticks', () => {
   assert.equal(patternDurationSeconds(3 * 960, 90), 2);
@@ -70,4 +71,39 @@ test('word timing adjustment is added to the global voice adjustment', () => {
   assert.equal(effectiveVoiceOffsetMs(10, { six: -15 }, 'six'), -5);
   assert.equal(effectiveVoiceOffsetMs(10, { six: -15 }, 'one'), 10);
   assert.equal(effectiveVoiceOffsetMs(undefined, undefined, 'one'), 0);
+});
+
+// Ruling 29: Bluetooth の遅れは表示（frame）だけに効く。latency L の時刻 T の表示は、latency 0 の時刻 T−L の表示と同じ。
+// 予約（start の戻り値と音の時刻）は latency に関わらず同じ。
+test('display latency shifts only the frame, never the schedule', () => {
+  const savedRaf = globalThis.requestAnimationFrame;
+  const savedCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = () => 1;
+  globalThis.cancelAnimationFrame = () => {};
+  try {
+    const run = (latency, currentTime) => {
+      const context = new FakeAudioContext();
+      const frames = [];
+      const engine = new PracticeAudioEngine(context, { voicePack: fakeVoicePack(), onFrame: frame => frames.push(frame), displayLatencySeconds: () => latency });
+      const patternStart = engine.start({ compiled: compileRhythm({ danceId: 'waltz', counts: '123' }), bpm: 84, countInBars: 1 });
+      context.currentTime = currentTime;
+      engine.scheduleAhead();
+      engine.frame();
+      const frame = frames.at(-1);
+      engine.stop();
+      return { patternStart, log: context.log, originalTick: frame.originalTick, countIn: frame.countIn };
+    };
+    const late = run(0.2, 3.5);
+    const shifted = run(0, 3.3);
+    assert.equal(late.originalTick, shifted.originalTick);
+    assert.equal(late.countIn, shifted.countIn);
+    const noLatency = run(0, 3.5);
+    assert.equal(late.patternStart, noLatency.patternStart);
+    assert.deepEqual(late.log, noLatency.log);
+    assert.notEqual(late.originalTick, noLatency.originalTick);
+    for (const bad of [Number.NaN, -1, Infinity, undefined]) assert.equal(run(bad, 3.5).originalTick, noLatency.originalTick, String(bad));
+  } finally {
+    globalThis.requestAnimationFrame = savedRaf;
+    globalThis.cancelAnimationFrame = savedCancel;
+  }
 });

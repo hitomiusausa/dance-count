@@ -30,7 +30,7 @@ export class FakeAudioContext {
   createBufferSource() { return new FakeNode(this.log, 'voice'); }
 }
 
-function fakeVoicePack() {
+export function fakeVoicePack() {
   return { words: new Map(VOICE_KEYS.map((key, index) => [key, { buffer: { duration: 0.9 }, onsetMs: 37 + index * 3, gainDb: -1.5 }])) };
 }
 

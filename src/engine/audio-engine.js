@@ -40,10 +40,13 @@ export function effectiveVoiceOffsetMs(globalOffsetMs = 0, wordOffsetsMs = {}, v
 }
 
 export class PracticeAudioEngine {
-  constructor(audioContext, { voicePack, onFrame = () => {}, lookaheadSeconds = DEFAULT_LOOKAHEAD_SECONDS } = {}) {
+  // displayLatencySeconds: 画面のハイライトだけを遅らせる秒数（Bluetooth の outputLatency。Ruling 29）。
+  // frame() の経過時間にだけ効き、予約（scheduleAhead・scheduleClick・start の戻り値）には使わない。
+  constructor(audioContext, { voicePack, onFrame = () => {}, lookaheadSeconds = DEFAULT_LOOKAHEAD_SECONDS, displayLatencySeconds = () => 0 } = {}) {
     this.audioContext = audioContext;
     this.voicePack = voicePack;
     this.onFrame = onFrame;
+    this.displayLatencySeconds = displayLatencySeconds;
     this.lookaheadSeconds = lookaheadSeconds;
     this.sources = new Set();
     this.playing = false;
@@ -203,7 +206,7 @@ export class PracticeAudioEngine {
     if (!this.playing) return;
     const { compiled, bpm, tempo, loop, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
     const duration = patternDurationSeconds(rangeDurationTicks, bpm, tempo);
-    const elapsed = this.audioContext.currentTime - startTime;
+    const elapsed = this.audioContext.currentTime - safeLatency(this.displayLatencySeconds()) - startTime;
     if (elapsed < 0) {
       this.onFrame({ playing: true, event: null, progress: 0, countIn: true, originalTick: null });
     } else {
@@ -228,6 +231,11 @@ export class PracticeAudioEngine {
     }
     this.frameId = requestAnimationFrame(() => this.frame());
   }
+}
+
+// 0 のときは currentTime - 0 - startTime が currentTime - startTime とビット単位で同じ（ゴールデン不変）。
+function safeLatency(value) {
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 function positiveModulo(value, divisor) {
