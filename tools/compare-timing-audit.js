@@ -1,5 +1,8 @@
 // timing:audit の出力を移設前の基準と比べる。generatedAt だけを除いて完全一致でなければ終了コード1。
 // 使い方: npm run timing:audit && npm run timing:compare
+// 基準 output/timing-audit-before.json の書き直しの決まり: 書き直してよいのは docs/app-v1/rulings.md に
+// 裁定を記録したときだけ。その裁定には「何が変わったか」と「なぜ変わってよいか」の要約を必ず書く。
+// 比較を通すために基準を書き直すのは禁止。
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';

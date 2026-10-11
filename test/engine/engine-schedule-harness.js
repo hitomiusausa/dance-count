@@ -1,7 +1,6 @@
 // 再生エンジンが実際に予約する時刻を、偽の AudioContext で記録する（tempo-map 集約の前後比較用）。
 import { PracticeAudioEngine } from '../../src/engine/audio-engine.js';
 import { compileRhythm, compileRoutine } from '../../src/engine/rhythm-compiler.js';
-import { DANCE_PROFILES } from '../../src/engine/dance-profiles.js';
 
 const VOICE_KEYS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 
@@ -35,10 +34,25 @@ function fakeVoicePack() {
   return { words: new Map(VOICE_KEYS.map((key, index) => [key, { buffer: { duration: 0.9 }, onsetMs: 37 + index * 3, gainDb: -1.5 }])) };
 }
 
+// 入力は固定値で持つ（dance-profiles の練習 BPM・競技 BPM 上限・最後の標準パターンを 2026-10-11 時点で写したもの）。
+// プロフィールのデータを編集してもゴールデン比較の入力が変わらないようにするため。値と並び順を変えないこと。
+const PROFILE_CASE_INPUTS = [
+  ['waltz', [84, 90, 67], '12&3'],
+  ['tango', [112, 136, 67], 'SSQQS'],
+  ['vwaltz', [150, 180, 67], '123'],
+  ['slowfox', [80, 120, 67], 'SQQ'],
+  ['quickstep', [160, 208, 67], 'QQS'],
+  ['rumba', [80, 108, 67], '2341'],
+  ['chacha', [96, 128, 67], '234&1'],
+  ['samba', [80, 104, 67], 'SQQ'],
+  ['pasodoble', [96, 124, 67], '12345678'],
+  ['jive', [136, 176, 67], '123a45a6']
+];
+
 export const SCHEDULE_CASES = [
-  ...Object.values(DANCE_PROFILES).flatMap(profile => [profile.practiceBpm, profile.competitionBpm.max, 67].map(bpm => ({
-    name: `${profile.id}@${bpm}`,
-    compiled: () => compileRhythm({ danceId: profile.id, counts: profile.templates.at(-1) }),
+  ...PROFILE_CASE_INPUTS.flatMap(([danceId, bpms, counts]) => bpms.map(bpm => ({
+    name: `${danceId}@${bpm}`,
+    compiled: () => compileRhythm({ danceId, counts }),
     options: { bpm, countInBars: 1 }
   }))),
   {
