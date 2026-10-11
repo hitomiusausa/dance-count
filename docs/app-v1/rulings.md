@@ -827,6 +827,10 @@
 - **D23（代理決定・ひとみうさ確認待ち）ステップ0 の文言と既定名**: ステップ0 の説明は 3 行「12 の言葉を、1 つずつ録音します。」「録音は、この iPhone（端末）の中にだけ残ります。」「いつでも消せます。」（英 `You will record 12 words, one at a time.` / `Recordings stay on this device only.` / `You can delete them at any time.`。依頼形なし・技術語なし・Ruling 8 の 3 点）。パックの既定名は **「自分の声（英語）」／「自分の声（日本語）」**（英 `My voice (English)` / `My voice (Japanese)`。Ruling 25 の「○○の声」の ○○＝「自分」。先生の名前は S9 で聞く＝段5。受け取った側は `distributor` から「○○さんの声」になるので、名前欄を空のまま配っても困らない）。— 代償: 先生が自分の名前を入れたければ完成画面の名前欄で打つ。
 - **D24（代理決定・ひとみうさ確認待ち）声のタイミングの形**: 「くわしく」の最後の行に「声のタイミング」＋値「±0 ms」「−20 ms」「+10 ms」＋「‹ 早く」「遅く ›」の 2 ボタン・10ms 刻み・±200。単位「ms」はそのまま出す（「ミリ秒」より短く、モックどおり。禁止語ではない）。— 代案: 値を出さず「早く ●●○○○ 遅く」の 5 段（数字を見せないが 40ms 刻みになる）。
 - **D25（代理決定・ひとみうさ確認待ち）S8 の進み方**: 帯に「‹ 前の語」を足す（2 語目以降）／語は飛ばせない／完成済みの言語で S8 を開くと完成画面から（「録り直す」で 1 語目へ）／「戻る」は S8 を出る（保存済み）。— 代案: 完成画面でなく常に 1 語目から（録り直しが近いが、完成画面に行くのに 12 回「次へ」）。
+- **D26（代理決定・確認待ち）日本語標準の ID は `default-ja-female-v1` に固定**（声が男性でも変えない。性別は manifest の `voiceName` に残る）。— 代案: 声に合わせて `default-ja-male-v1` にする（`standard-voices.json`・`messages` は変わらず、ID の文字だけ）。
+- **D27（代理決定・確認待ち）VOICEVOX（C）と macOS `say`（D）は v1 の「標準の日本語」の候補から外す**（Ruling 69-3・69-4）。— 代案: C を候補行列に 1 声だけ足して聞き比べる（デスクトップ版の導入＋クレジット表記の受け入れが条件）。
+- **D28（代理決定・確認待ち）B（ひとみうさの録音）を採用した時の標準の表示名は「標準の声（日本語）」のまま**（manifest の `name` は「ひとみうさの声（日本語）」だが、S7 の行の文言は英語の行と対で「標準の声（日本語）」。生徒には誰の声かを出さない）。— 代案: 「ひとみうささんの声（日本語）」と出す（教室の生徒には親しみやすいが、配布物としては個人名が出る）。
+- **D29（代理決定・確認待ち）TTS に読ませる 12 語の文字は語彙の表示語そのまま**（いち・に・さん・よん・ご・ろく・なな・はち・スロー・クイック・アンド・ア）。「し」「しち」は使わない（Ruling 54・語彙の第一表記）。— 代案: 「ア」を「あ」に（TTS の読みが不自然ならその語だけ `ssml`＋`note` で）。
 
 ---
 
@@ -1211,3 +1215,276 @@
 - **触らない**: `src/engine/*`（diff ゼロを完了条件に。Ruling 58-5）・ゴールデン・`output/timing-audit-before.json`・`legacy/*`。
 - **文書**: 仕様 §4 S7/S8・§7「声のパック」「設定」・§6 の期待値（S7＝2/3・S8＝2/2/4/4・S2/S5 くわしく 9・S4 8）・§11（「あとで」→ 戻る、「設定の開き方」は枠の中）・全体地図の持ち越し表（`recorded-voice-store` → 済・エンジン i18n → 不要で閉じる・`persist()` → 段4で済・「くわしく」9 → 済・`selectedVoiceId` → 済・`hints.backupTip*` → 段5）・HANDOVER §5（段5送りの一覧）・`rulings.md`（本ドラフトの Ruling 55〜63・D23〜D25 を転記。番号が衝突したら本ドラフトの番号を後ろへずらす）。
 - **完了条件（段の終わり・別エージェントが再実行）**: `npm test`（件数）・`typecheck`・`build`（`check-dist` の manifest 検査込み）・`timing:audit && timing:compare` 一致・ゴールデン不変・`src/engine` diff ゼロ・`ui:check` 全 PASS（新 13 状態込み）・`smoke:voice`・`smoke:practice`・`smoke:routines` OK・iOS シミュレーターで Ruling 63-6 の 6 点・375/1280 のスクロール領域ごとの撮影。iPhone 実機（Ruling 63-7）はひとみうさが起きてから。
+
+---
+
+# 段6（日本語標準音声）着手前の裁定 — Fable（2026-10-12・代理決定を含む）
+
+作成: 2026-10-12 深夜 / ブランチ `agent/app-v1`（HEAD `95fc319`） / 書き手: Fable（設計と裁定だけ。コードと `docs/app-v1/rulings.md` には触れていない。採用が決まったら計画者がこの文書の Ruling 64〜70 と D26〜D29 を `rulings.md` 末尾へ転記する）。
+
+前提:
+- ひとみうさは就寝中。「止まらずに進め、Fable が決め、確認は溜めておく」の委任。**push・デプロイ・課金・外部 API 呼び出し（生成に限らず `voices.list` の類も）は禁止のまま**。
+- 今夜の新事実: **Google Cloud の無料トライアルが終了**。生成を再開するには従量課金（pay-as-you-go）への切り替えが要り、その判断はひとみうさ。代案として B）ひとみうさが段4のレコーダーで 12 語を自分で録る、C）VOICEVOX（無料・商用可・クレジット表記要・声優風）、D）macOS `say`（ライセンス不明＝公開物には使わない）が挙がっている。
+- 基準は 60〜70代の初見者・iPhone SE 375×667。Ruling 5（日本語標準音声）・Ruling 12・25・60-5・61・63 と、仕様 §9「標準音声」・§13 段6・全体地図「段6は worktree」「課金は確認後」を前提に、**今できることと、できないことを分けて**裁定する。
+
+---
+
+## 0. コードと環境で確かめた事実（裁定の根拠）
+
+### 0-1. 既存ツール（`tools/`）
+- `generate-google-voices.js`（93 行）: 認証は `GOOGLE_TTS_ACCESS_TOKEN` か **`gcloud auth application-default print-access-token`**（ADC）。API キーは使っていない。入力は `tools/voice-words.json`（英 12 語。`key → text`）、`input:{text}` のみ（SSML 不可）、`LINEAR16`・48kHz・`speakingRate`（既定 1.25）。出力は TTS の生音をそのまま `<key>.wav` に書き、manifest は `status:'needs-onset-measurement'`。**切り出し（トリム）も音量合わせもしていない**。`VOICE_OUTPUT_DIR`・`GOOGLE_TTS_VOICE`・`GOOGLE_TTS_LANGUAGE`・`GOOGLE_TTS_RATE` の環境変数で日本語にも向けられるが、dry-run・費用見積もり・提供元の切り替えは無い。
+- `generate-six-candidates.js`: SSML（`<prosody pitch="+2st">`）で six の候補 3 本を `legacy/audio/six-candidates/` に作った前例。英パックの `six.wav` は `revision:'brighter-2st-20260712'` で、この候補から差し替えた物（→ 日本語でも「語ごとに SSML で作り直す」はこの前例に沿う）。
+- `measure-voice-onsets.js`（82 行）: `parsePcm16Wav(buffer)`（RIFF 解析・16bit PCM のみ・多チャンネルは平均してモノ化）と `measureVoicePack(packDir)`（manifest の全語を `measureOnset`＝既定パラメータ `windowMs 5・sustainMs 15・relativeThreshold 0.035・absoluteThreshold 0.002` で測り、`onsetMethod:'rms-auto-v1'`・`status:'auto-onset-measured'`・`onsetMeasuredAt` を書き戻す）。CLI 引数で packDir を取れる＝**日本語パックにそのまま使える**。テストは `test/engine/voice-onset-measurement.test.js` の 3 件（合成信号のみ。実 WAV の固定は無い）。
+- `check-dist.js`: `REQUIRED = ['index.html','audio/default-en-female-v1/manifest.json']`。`public/audio/` 配下は Vite が**そのまま dist に写す**ので、途中の日本語パックを `public/` に置けば**無条件で出荷される**（番人は無い）。Ruling 60-5 は「`STANDARD_VOICES` の ID ごとに manifest がある」を足す予定だが、`STANDARD_VOICES` は段4で作る TS で、Node の `check-dist.js` からは読めない。
+- `audit-all-dance-timing.js`: packDir を **英パックに固定**（`:10`）。`output/all-dance-timing-audit.json` を書き、`timing:compare` が `output/timing-audit-before.json` と完全一致を要求（基準の書き直しは裁定が要る）。語ごとの `postOnsetMs`（onset から発声の終わりまで）を測り、`auditCompiledTransitions` で「次の語に尻尾が被る」危険を出す＝**Ruling 5 の「`timing:audit` 相当の鳴り合わせ」はこの関数を日本語パックに向ければ数値で出る**。
+- `audit-recorded-voice-pack.js`: 録音パック JSON（`type:'dance-count-recorded-voice-pack'`・`words[key].dataBase64`）を **ffmpeg** で f32le にデコードし onset と尻尾を表にする前例＝人の録音を Node の処理経路に乗せる型は既にある。
+- `render-subdivision-audio-review.js`: Node だけで `compileRhythm` → 語の WAV を onset で合わせて**カウント列を 1 本の WAV に描画**し、`legacy/audio/subdivision-review/` と `review.json` に出す前例＝**聴感ゲート用の「鳴り合わせ」音源は Node で作れる**（ブラウザも TTS も要らない）。
+
+### 0-2. エンジン（`src/engine/`。段6でも無変更）
+- `voice-pack-loader.js` `validateManifest`: 要求は `schemaVersion===2`・`id`・`words{ file, onsetMs(有限・0 以上) }` だけ。`revision` があれば `?v=` を付ける。**`locale`・`vocabularyId`・追加欄は見ない**＝manifest に段6の欄（`gate`・`provider`・`credit` 等）を足しても再生は壊れない。
+- `count-vocabularies.js` ja-JP の `prompts[key][0]`: スロー・クイック・いち・に・さん・よん・ご・ろく・なな・はち・アンド・ア（four は「よん」、seven は「なな」が正。「し」「しち」は補助表記）。
+- `recording-normalizer.js` `REFERENCE_VOICE_TIMING` は英パック実測（onset 25〜80ms・長さ 498〜745ms）。録音パックは語ごとにこの長さへ切り出される。**標準パックには適用されない**（英パックは未トリム）。
+- `recorded-voice-pack.js`: 書き出し形式（base64 WAV）と `decodeRecordedVoicePack` が標準音声と同じ `{manifest:{schemaVersion:2,…,source:'local-recording'}, words}` を返す＝人の録音を「標準の日本語」として同梱するなら、(a) 録音パック JSON を `public/` に置いて別経路で読む案と、(b) **録音パックの 12 語を WAV に展開して普通の標準パック（manifest 形式）に変換する案**がある。(b) なら `assets.ts`・`STANDARD_VOICES`・check-dist が英語と同じ型で済む。
+
+### 0-3. 英パックの現物（`public/audio/default-en-female-v1/`）
+- 12 本の WAV・48kHz・16bit・モノ・47〜72KB（≒0.5〜0.75 秒）・onset 25〜80ms。manifest の欄: `name:'Google en-US-Neural2-F'`・`source:'google-cloud-tts'`・`locale:'en-US'`・`voiceName`・`speakingRate:1.25`・`sampleRate`・`status`・`onsetMeasuredAt`、語ごとに `file/onsetMs/gainDb:0/needsOnsetMeasurement:false/onsetMethod`。日本語パックは**この欄をすべて同じ名前で持ち**、段6の欄を足す。
+
+### 0-4. アプリ（段4は未着手。`src/app/voices/` はまだ無い）
+- `settings.ts:9` `STANDARD_VOICE_ID='default-en-female-v1'`。`platform/assets.ts` `loadStandardVoice(audio, packId)` は `audio/<packId>/manifest.json` を `document.baseURI` から解決＝**ID が決まれば日本語も同じ関数で読める**。`messages.ts` に `standardVoiceEnglish`（「標準の声（英語）」）はあるが日本語の行の文言は無い。
+- Ruling 60-5: 「標準の声（日本語）」の行は **段6のゲート通過後に `STANDARD_VOICES` へ 1 行足す**（段4は英語だけ）。Ruling 61-2: `selectedVoiceId` が `STANDARD_VOICES` に無ければ標準（英語）へ黙って落ちる＝日本語の行を足す前に `default-ja-female-v1` が設定に残っていても壊れない。
+
+### 0-5. 環境（この Mac）
+- `gcloud` 575.0.1 あり。既定プロジェクト `project-cbd3f2d8-9635-49e4-83d`。**ADC の資格情報ファイルは `~/.config/gcloud/application_default_credentials.json`（権限 600）に既にある**（有効かは未確認＝呼んでいない）。リポジトリ内に鍵・トークン・`.env` は無い。`.gitignore` は `.superpowers/ dist/ node_modules/ *.bak .DS_Store .playwright-cli/`。
+- `ffmpeg` あり（`/opt/homebrew/bin`）。`sox` 無し。VOICEVOX は `/Applications` に無い。macOS `say` に ja_JP の声（Kyoko ほか）はある。
+
+### 0-6. 外部事実（確認済み／推測を分ける。F8〜F12 の続き）
+| # | 事実 | 状態 | 出典 |
+|---|---|---|---|
+| F13 | Google Cloud TTS の価格: Neural2／WaveNet は**月 100 万文字まで無料、以後 $16/100 万文字**。Standard は月 400 万文字無料・$4。Chirp 3 HD は月 100 万文字無料・$30 | **推測**（価格ページは JS 描画で取得できず。一般知識） → ひとみうさが課金画面で確認する前提で、ツールの定数に「未確認」と URL を添える | https://cloud.google.com/text-to-speech/pricing |
+| F14 | 無料トライアル終了後も、従量課金に切り替えれば**月次の無料枠（F13）は使える**。12 語 × 3 声 × 数回の作り直し ≒ 数百〜数千文字＝**無料枠の内。最悪でも $0.05 未満** | **推測**（無料枠の適用条件は Google の文書で要確認） | 同上 |
+| F15 | VOICEVOX 利用規約: 商用・非商用を問わず利用可。「VOICEVOX を利用したことがわかるクレジット表記が必要」。**作った音声は各音声ライブラリ（キャラクター）ごとの規約に従う**。具体的なクレジット書式は規約ページには無い（慣例は「VOICEVOX:キャラクター名」） | **確認済み**（規約ページ本文を取得。書式の慣例は推測） | https://voicevox.hiroshiba.jp/term/ |
+| F16 | VOICEVOX は無料のデスクトップ版（約 1GB）＋ローカル HTTP API（`localhost:50021` の `/audio_query` → `/synthesis`。24kHz WAV）で生成できる。声は声優風（アニメ寄り） | **推測**（一般知識。今回未検証） | — |
+| F17 | macOS の `say` の声（Apple 音声）を**配布物に組み込む**ことは Apple のソフトウェア使用許諾で認められていない読みが一般的 | **推測**（使用許諾の本文は今回未確認） → v1 の公開物には使わない（D） | — |
+| F18 | Google Cloud TTS で生成した音声をアプリに同梱して配ることは、英パック（既に同梱済み）と同じ前提 | 既存方針（Ruling 5・AGENTS.md「development-time asset generator」） | — |
+
+---
+
+## 1. 計画者が止まる問い（この文書で全部答える）
+
+| # | 問い | 答えの場所 |
+|---|---|---|
+| Q1 | 音声を作らずに段6の何を今やれるか。段をどう切るか | Ruling 64 |
+| Q2 | worktree を切るか、`agent/app-v1` で逐次か。段4との前後と競合（`check-dist.js`・`package.json`） | Ruling 64-3・64-4 |
+| Q3 | 生成ツールの形: 提供元（Google／VOICEVOX／人の録音）の抽象化、dry-run、費用見積もり、鍵の置き場、誤って課金しない仕組み | Ruling 65 |
+| Q4 | 処理経路（トリム → 音量合わせ → onset 実測 → manifest）の数値と、英パックとの揃え方 | Ruling 65-3〜5 |
+| Q5 | 日本語 12 語の TTS 入力文字（「よん」「なな」「ア」）と候補の声・速さの行列 | Ruling 65-6・D29 |
+| Q6 | onset 実測のテストと固定データ（WAV を commit するか） | Ruling 66 |
+| Q7 | 聴感ゲートの道具（ひとみうさが何をどこで聞いて、どう答えるか）と「鳴り合わせ」の数値化 | Ruling 67 |
+| Q8 | 途中の日本語パックが出荷されない番人（check-dist）と、`STANDARD_VOICES` の正本 | Ruling 68 |
+| Q9 | S7 に「標準の声（日本語）」が出る条件・ID・文言・`voiceLocale` | Ruling 68-4 |
+| Q10 | 何が止まっていて、ひとみうさに何を決めてもらうか（決定カード） | Ruling 69 |
+| Q11 | 段6の完了条件・関門・確認表 | Ruling 70 |
+| Q12 | `timing:audit`／`timing:compare` の基準（英）を壊さずに日本語を監査する方法 | Ruling 67-4・70-2 |
+
+---
+
+## 2. 裁定
+
+## Ruling 64（Q1・Q2）[地図差] 段6を 6a「仕組み」・6b「生成とゲート」・6c「接続」に分け、6a は今・`agent/app-v1` で逐次に進める。worktree は切らない
+
+**決定**:
+1. **段6を 3 つに分ける**（全体地図の段6行を 3 行に書き換える）:
+   - **6a 仕組み（今すぐ・音声を 1 本も作らない）**: 生成ツール（dry-run・費用見積もり・提供元の抽象化。Ruling 65）、処理経路（トリム・音量・onset・manifest）とそのテスト（Ruling 66）、聴感ゲートの描画ツールとページ（Ruling 67）、check-dist の番人と `STANDARD_VOICES` の正本（Ruling 68）、決定カードと確認表（Ruling 69・70）。触るのは `tools/`・`test/`・`docs/`・`package.json`・`.gitignore`・`tools/check-dist.js` と **`src/app/voices/standard-voices.json`（新規・1 行）** だけ。`src/app/` の TS・`src/engine/`・`public/` は触らない。
+   - **6b 生成とゲート（ひとみうさの決定の後）**: 候補の生成（A なら Google、B なら録音パックの変換）→ 処理経路 → 聴感ゲート → 採用（`public/audio/default-ja-female-v1/` へ写す）。
+   - **6c 接続（段4の統合後・app 側の 1 コミット）**: `standard-voices.json` に日本語の行、`messages.ts` に `standardVoiceJapanese`、`check-dist.js` の `REQUIRED` に日本語 manifest。S7 に「標準の声（日本語）」が出る（Ruling 60-5）。
+2. **6a は音声ファイルを一切作らず、ネットワークにも出ない**。テストと dry-run は合成信号（メモリ内）と英パックの実 WAV だけで動く。
+3. **worktree は切らない**。全体地図の「worktree を使うのは段6だけ」は**撤回**し、6a・6b・6c とも `agent/app-v1` の上で逐次に進める（コントローラーの方針と Ruling 55 の訂正に揃える）。理由: 6a の変更は `tools/`・`test/` の新規ファイルが主で、段4と重なるのは `tools/check-dist.js` と `package.json` の数行だけ。別ディレクトリで並走するほどの量がなく、worktree の運用コスト（別 `node_modules`・統合時の衝突確認）の方が高い。
+4. **順番**: 段4の詳細計画がまだ書かれていない今、**6a を先に、1 便（Sonnet・半日〜1 日）で入れてから段4の計画を書く**。段4の計画者は 6a が作った `standard-voices.json` と check-dist の番人を**前提として読む**（Ruling 60-5 の「`check-dist.js` に足す」は 6a の仕事になり、段4から外す）。もしコントローラーが段4の実装を先に始めていたら、6a は段4の統合後に回す（6a は何にも依存しないので遅らせても害は無い。ただし 6c より前）。
+5. **6b は 6a の後ならいつでも**（段4・5 の最中でも、`public/audio/default-ja-female-v1/` と `output/voices/` にしか触らないので、`agent/app-v1` 上で 1 コミットとして差し込める）。ただし **6b の採用コミット（`public/` に置く）は 6c と同じ便**にする（Ruling 68 の番人が「JSON に無いパックは出荷しない」で落とすため。番人の設計どおり）。
+
+**理由**: 止まっているのは「音を作る」1 点だけで、その前後の仕組みは全部決められる。音が来た日に残る作業を「生成 → 実測 → ページを開いて聞く → 採用」の 4 コマンドにしておけば、ひとみうさの判断（課金 or 録音）がどちらでも同じ経路で終わる。
+
+**外れた時の代償**: 6a が段4の前に入ると段4の計画が半日遅れる。ひとみうさが B（自分で録る）を選ぶと 6b は段4（レコーダー）の実装が終わるまで動かない（その間は 6a の変換経路のテストだけ）。
+
+## Ruling 65（Q3〜Q5）生成ツール — 提供元の抽象化・dry-run 既定・費用見積もり・鍵は ADC だけ・処理経路の数値
+
+**決定**:
+1. **置き場と入口**: `tools/voices/` を新設（既存の `generate-google-voices.js`・`measure-voice-onsets.js` は**残す・変えない**。英パックの再現手順を壊さない）。
+   ```
+   tools/voices/
+     generate.js        # 入口。--provider google|voicevox|recorded --voice --lang --rate --words --out [--yes]
+     providers/google.js     # fetch を注入可（テストで本物を呼ばない）
+     providers/voicevox.js   # localhost:50021。--yes 無しでは接続しない
+     providers/recorded.js   # 録音パック JSON（dataBase64）か、<key>.wav が並ぶフォルダ を読む
+     pipeline.js        # decode → trim → loudness → onset → manifest（純粋関数の列。Node のみ）
+     wav.js             # parsePcm16Wav（measure-voice-onsets.js から再 export）と encodePcm16Wav
+     check-pack.js      # パック 1 つの検査（Ruling 68-2 と共有）
+     render-gate.js     # 聴感ゲートの音源とページ（Ruling 67）
+     adopt.js           # output/voices/<候補> → public/audio/<id>/ へ写し、gate を approved にする
+     words.ja-JP.json   # 12 語の TTS 入力（Ruling 65-6）
+     pricing.js         # 価格の定数（F13。「未確認」の印と URL を添える）
+   ```
+   `package.json`: `voices:plan`（＝`generate.js --dry-run`。**既定が dry-run**）・`voices:synth`（`--yes` を要求）・`voices:process <dir>`・`voices:gate <dir>`・`voices:check <dir>`・`voices:adopt <dir>`。旧 `voices:generate`・`voices:measure`・`voices:build` は残す（英語用）。
+2. **dry-run が既定**: `--yes` が無ければ、提供元を問わず**ネットワーク・外部プロセス・ファイル書き込みをしない**で、計画だけを表に出す: 提供元・声・言語・速さ・12 語の入力文字と文字数・SSML の有無・**費用見積もり**（文字数 × 単価。無料枠の残りは分からないので「無料枠内なら ¥0 / 枠外なら $x.xx」の 2 行）・出力先・次のコマンド。`--yes` があっても、Google 提供元は **`VOICES_ALLOW_PAID=1` の環境変数が無ければ止まる**（2 重の鍵。うっかり課金を防ぐ）。費用見積もりは **SSML タグも文字数に含める保守的な数え方**（実際は Google がタグをどう数えるか未確認＝F13）。
+3. **鍵の置き場**: Google は **ADC（`gcloud auth application-default login`）だけ**。`GOOGLE_TTS_ACCESS_TOKEN` は残す（CI 用。使わない）。**API キー・サービスアカウント JSON をリポジトリに置く経路は作らない**（`.gitignore` に `*.credentials.json`・`*-key.json`・`.env`・`.env.*` を念のため足す。`public/`・`src/`・`dist/` に鍵が入ったら `check-dist` が `AIza`・`"private_key"` の文字列で落とす＝Ruling 68-3）。ADC ファイルは `~/.config/gcloud/` にあり、リポジトリの外。
+4. **提供元の契約**（`providers/*.js` が返す形。これより上は提供元を知らない）:
+   ```js
+   // provider.synthesize({ key, text, ssml?, voice, lang, rate }) → { pcm: Float32Array, sampleRate, meta }
+   // provider.describe() → { name, voiceName, credit?: string }   // manifest に写す
+   ```
+   `recorded` は decode に ffmpeg（`audit-recorded-voice-pack.js` と同じ呼び方。無ければ分かる文言で止める）。`google` は `LINEAR16`・48kHz を要求（既存どおり）。`voicevox` は 24kHz で来るので pipeline でリサンプル（ffmpeg）。
+5. **処理経路 `pipeline.js`**（定数はファイル先頭）:
+   ```js
+   export const TARGET_SAMPLE_RATE = 48_000;   // 英パックと同じ
+   export const TARGET_ONSET_MS = 40;          // 頭の無音をここまで詰める（英パックの中央値 40ms）
+   export const HEAD_FADE_MS = 5;  export const TAIL_FADE_MS = 15;   // recording-normalizer と同じ
+   export const TAIL_KEEP_MS = 60;             // 発声の終わり（threshold 以下に落ちた所）から残す尻尾
+   export const MAX_WORD_MS = 900;             // これより長い語は警告（英パック最長 745ms）
+   export const MIN_WORD_MS = 250;             // これより短い語は警告（「に」「ご」でも 250ms はある見込み。実測で見直す）
+   export const LOUDNESS_REF = 'default-en-female-v1';   // 英パックの peakRms の中央値に合わせる
+   export const PEAK_CEILING_DBFS = -1;        // 合わせた後にこれを超えるなら下げる（クリップ防止）
+   ```
+   手順: (1) モノ化・48kHz 化 → (2) `measureOnset`（既定パラメータ＝`rms-auto-v1`）で onset を測り、`onset − TARGET_ONSET_MS` より前を捨てる（足りなければ無音を足す）→ (3) 尻尾は threshold 以下が `TAIL_KEEP_MS` 続いた所で切る＋フェード → (4) 音量: 英パック 12 語の `peakRms` の中央値に**語ごとではなくパック全体で 1 つの係数**で合わせる（語ごとに合わせると「に」「ご」が不自然に大きくなる）。超えたら `PEAK_CEILING_DBFS` で頭打ち → (5) 書き出した WAV を**もう一度** `measureOnset` で測って manifest の `onsetMs` にする（切った後の実測値。`onsetMethod:'rms-auto-v1'`）→ (6) manifest（Ruling 68-1 の欄）。**録音パック（provider `recorded`）も同じ経路を通す**（既に正規化済みでも再トリム・再実測。害は無い）。`gainDb` は常に 0（音量は波形に焼く。英パックと同じ）。
+6. **日本語 12 語の入力 `words.ja-JP.json`**（D29）: `{ key: { text, ssml?, note? } }`。初期値は `count-vocabularies.js` の `prompts[key][0]`（スロー・クイック・いち・に・さん・よん・ご・ろく・なな・はち・アンド・ア）。テストで「`ssml` が無い語の `text` は語彙の `prompts[key][0]` と一致」「`ssml` を使う語には `note` が必須」を固定（文字を勝手に変えない）。候補の行列（6b の最初の便）: 声 **`ja-JP-Neural2-B`（第一候補）・`-C`・`-D`**（性別は生成時の応答で確認。推測: B 女性）× 速さ **1.0 と 1.15**（英の 1.25 は英語の語尾が長いための値。日本語の短い語を 1.25 で縮めると「に」「ご」が潰れる見込み）＝ 6 候補 × 12 語 ≒ **72 リクエスト・約 250 文字**（F14 の見積もりの内）。Chirp 3 HD は**比較に 1 声だけ**足してよい（`--voice` で指定。価格が倍でも数十円）。
+7. **出力先**: 候補は `output/voices/<provider>-<voice>-r<rate>-<date>/`（`output/` は dist に入らない。`check-dist` の FORBIDDEN に `/output\//` は無いが、そもそも Vite は `public/` しか写さない）。`public/audio/` に置くのは `adopt.js` だけ。
+
+**理由**: 「音を作る手」を提供元ごとに閉じ、その後ろを 1 本にすれば、ひとみうさが A でも B でも、将来 C でも、聴感ゲートと番人は同じ物で済む。dry-run を既定にし Google だけ 2 重の鍵にするのは、委任の最中に誰も課金を起こさないため。
+
+**外れた時の代償**: ツールが 8 ファイルに増える（英語用の旧 2 本と二重になる。英パックを作り直す日に旧 2 本を消す）。`MIN_WORD_MS`・`TARGET_ONSET_MS` は英パック基準の製品判断で、日本語の実測で見直す（定数 1 つずつ）。
+
+## Ruling 66（Q6）onset 実測のテスト — 固定データは「合成信号＋英パックの実 WAV」。新しいバイナリは commit しない
+
+**決定**:
+1. **`test/tools/voices/*.test.js`**（`node --test` の glob は `test/**/*.test.{js,ts}` なので自動で拾う）:
+   - `wav.test.js`: `parsePcm16Wav` ↔ `encodePcm16Wav` の往復（モノ・ステレオ平均・奇数長チャンクのパディング・16bit 以外は投げる）。
+   - `pipeline.test.js`: 合成信号（無音 300ms → 220Hz＋倍音 400ms → 無音 200ms、48kHz）を通して、出力の onset が `TARGET_ONSET_MS ± 5`・長さが `400 + 40 + 60 ± 20ms`・ピークが `PEAK_CEILING_DBFS` 以下・2 回通しても結果が変わらない（冪等）。無音だけの入力は `problem:'silent'` で止まる（投げずに結果に印）。24kHz 入力は 48kHz に揃う（ffmpeg が無い環境では skip）。
+   - `onset-regression.test.js`（**回帰の固定**）: `public/audio/default-en-female-v1/` を一時フォルダに写して `measureVoicePack` を走らせ、**12 語の onsetMs が manifest の値と完全一致**（25・45・35・45・50・80・70・40・40・25・35・25）。`rms-auto-v1` のパラメータや `parsePcm16Wav` を誰かが変えたら落ちる。
+   - `generate-dryrun.test.js`: `--dry-run`（既定）で google provider の `fetch` が **0 回**呼ばれる・`--yes` だけでは `VOICES_ALLOW_PAID` 不在で止まる・見積もりの文字数が 12 語の合計と一致・`words.ja-JP.json` の鍵が `REQUIRED_VOICE_KEYS` と同じ順序。
+   - `check-pack.test.js`: Ruling 68-2 の検査項目を 1 つずつ壊した manifest／WAV で落ちることを確かめる（英パックは通る）。
+   - `recorded-provider.test.js`: `exportRecordedVoicePack` と同じ形の最小 JSON（1 語・合成 WAV の base64）を読めて pipeline に渡せる（ffmpeg 不在は skip）。
+2. **固定データは commit しない**: 合成信号はテスト内で作る。実音は英パック（既に tracked）を使う。段4の `test/fixtures/voice/{fake-mic,silence}.wav`（Ruling 63-5）とは別物（あちらは Chrome の偽マイク用）。
+3. **onset の測り方は変えない**（`rms-auto-v1`＝`measureOnset` の既定）。日本語で不自然に遅く／早く測れた語が出たら、**その語の manifest に `onsetOverrideMs` と `note` を書く**（`onsetMs` に写す。`onsetMethod:'manual'`）。アルゴリズムを日本語のために調整して英語の回帰を壊さない。
+
+**理由**: 英パックの 12 本は「正しいと分かっている実音」で、これを回帰の基準にすれば新しいバイナリを足さずに実測の信頼を固定できる。
+
+**外れた時の代償**: 日本語固有の onset の癖（「はち」の無声の頭など）は実音が来るまで見えない。来た日に `onsetOverrideMs` で逃げる。
+
+## Ruling 67（Q7・Q12）聴感ゲートの道具 — Node で「語」と「鳴り合わせ」を描画し、1 ページで ひとみうさが答える。鳴り合わせの数値は `auditCompiledTransitions` で
+
+**決定**:
+1. **`render-gate.js <候補dir…>`** が `output/voices/gate/<date>/` に作る物:
+   - 語ごと: `<cand>-<key>.wav`（語を 2 回、0.5 秒空けて。「1 語だけ聞いて自然か」）。
+   - 鳴り合わせ（メトロノームのクリック付き。`render-subdivision-audio-review.js` の描画を流用し `compileRhythm` の onset 合わせで置く）: **ワルツ `123`（practiceBpm・2 小節）**、**タンゴ／クイックステップの `templates[0]`（S・Q を使う）**、**チャチャ `234&1`**（and）、**サンバ `1a2`**（ah）、**パソ／フォックストロットの `12345678`**（4〜8 を使う）の 5 本 × practiceBpm と competitionBpm.max の 2 速＝10 本／候補。12 語が全部どこかで鳴る組み合わせであることをテストで固定。
+   - **英パックも同じ 10 本を描画して並べる**（「英語と同じ感じか」の基準。ひとみうさは英語で慣れている）。
+   - `index.html`（1 ファイル・外部読み込みなし・`<audio>` 要素＝`file://` でも http でも鳴る）。**ボタンは 56px 以上・文字 18px 以上**（ひとみうさ自身が 375 幅の iPhone で開く前提）。1 行＝「▶ 聞く」＋ 3 択「自然／気になる／だめ」＋ メモ欄。鳴り合わせの行は「ずれない／ずれる」。最後に候補ごと「この声を採用」の 1 択。**「結果をコピー」**で Markdown の表（Ruling 70-3 の確認表と同じ列）をクリップボードへ（`localStorage` に途中保存。送信はしない）。
+2. **聞く場所**: 第一は **iPhone 本体のスピーカー**（60〜70代の生徒の環境。Mac で `python3 -m http.server 4175 --directory output/voices/gate/<date>` → iPhone で `http://<Mac の IP>:4175/`）。第二に AirPods（段2で確認した経路）。Mac のスピーカーは参考。
+3. **判定の規則（Ruling 5 のゲート (2) を機械に落とす）**: 採用候補は **12 語とも「自然」**（「気になる」が 1 語でもあれば、その語だけ SSML／速さで作り直して再ゲート。「だめ」が 3 語以上なら声を替える）・**10 本の鳴り合わせが「ずれない」**。これを満たす声が無ければ Ruling 5 の最終手段（B 人の録音）へ。
+4. **鳴り合わせの数値（Ruling 5 のゲート (3)）**: `audit-all-dance-timing.js` を**触らず**、`render-gate.js` が同じ `auditCompiledTransitions(compiled, bpm, postOnsetMs)` を日本語パックの `postOnsetMs` で呼び、`risks`（尻尾が次の語に被る）を `gate-report.json` に書く。基準: **practiceBpm で risks 0**・competitionBpm.max で**英パック（`output/timing-audit-before.json`）の件数以下**。`output/all-dance-timing-audit.json` と `timing:compare` の基準は**書き換えない**（英語の監査のまま）。
+5. ページの文言は開発用（禁止語テストの対象外）だが、ひとみうさが読む物なので **日本語・ですます・1 行説明**で書く。
+
+**理由**: 聴感は人にしか決められないが、「何を・どこで・どう答えるか」を 1 ページに固めれば、起きた朝に 10 分で終わる。鳴り合わせを Node で描画するのは、アプリ側（S7）に日本語の行を出す前（6c の前）に判定したいため。
+
+**外れた時の代償**: `output/voices/gate/` が候補 6 × 22 本 ≒ 130 本の WAV（数十 MB）になる。`output/voices/` は commit しない（`.gitignore` に `output/voices/` を足す。採用した 12 本だけが `public/` に入る）。
+
+## Ruling 68（Q8・Q9）番人 — `standard-voices.json` を正本にし、`check-dist` が「JSON に無いパック／ゲート未通過／欠けた語」を落とす。S7 の日本語の行は 6c で
+
+**決定**:
+1. **manifest の追加欄**（英パックの欄はそのまま。`validateManifest` は見ないので再生は不変）:
+   ```json
+   "provider": "google-cloud-tts | voicevox | human-recording",
+   "voiceName": "ja-JP-Neural2-B", "speakingRate": 1.0, "generatedAt": "…",
+   "credit": "（VOICEVOX の時だけ。S13 に出す文字列）",
+   "pipeline": { "version": "ja-v1", "targetOnsetMs": 40, "loudnessRef": "default-en-female-v1" },
+   "gate": { "status": "pending | approved", "approvedBy": "ひとみうさ", "approvedAt": "…", "listenedOn": "iPhone SE", "notes": "" }
+   ```
+   語ごとに `onsetMs/gainDb:0/needsOnsetMeasurement:false/onsetMethod/durationMs/peakRms`。
+2. **`check-pack.js`（1 パックの検査。テスト・check-dist・`voices:check` で共有）**: `schemaVersion 2`・`id` がフォルダ名と一致・12 語が `REQUIRED_VOICE_KEYS` の順にそろう・各 WAV が存在し 16bit・モノ・48kHz・`onsetMs < duration`・`needsOnsetMeasurement:false`・長さ `MIN_WORD_MS〜MAX_WORD_MS`・ピーク ≤ `PEAK_CEILING_DBFS`・manifest に無い余分なファイルが無い・**`gate.status==='approved'`**（英パックは `gate` が無い＝**`id==='default-en-female-v1'` だけ既承認とみなす**例外。manifest に `gate` を後から書き足す改変はしない）。
+3. **`check-dist.js` に足す**（6a）:
+   - `src/app/voices/standard-voices.json`（**正本**。6a で新規・中身は `[{ "id": "default-en-female-v1", "locale": "en" }]`）を読み、**(a) JSON の各 ID に `dist/audio/<id>/manifest.json` がある**（`REQUIRED` をこの JSON から作る）**(b) `dist/audio/` 配下のフォルダは JSON の ID だけ**（知らないパック＝途中の日本語パックは「must not ship」）**(c) 各パックが `check-pack` を通る**。
+   - 鍵の漏れ: 走査対象の文字列に `AIza`・`"private_key"`・`ya29.` があれば落とす。
+   - 段4の `src/app/voices/standard.ts` は **この JSON を import して `STANDARD_VOICES` を作る**（Vite の JSON import。`as const` 相当の型は `satisfies` で）。Ruling 60-5 の「`check-dist.js` に足す」は 6a で済むので段4から外す（Ruling 64-4）。
+4. **S7 の「標準の声（日本語）」（6c）**: ID は **`default-ja-female-v1` で固定**（Ruling 5・仕様 §9。採用した声が男性でも ID は変えない＝ID は「標準の日本語」の意味で、性別は manifest の `voiceName` に残る。**D26**）。`standard-voices.json` に `{ "id": "default-ja-female-v1", "locale": "ja-JP" }` を足す・`messages.ts` に `standardVoiceJapanese: '標準の声（日本語）' / 'Standard voice (Japanese)'`・声チップは「標準（日本語）」（Ruling 61-5 の standard ja）・`voiceLocale` は選択から導く（Ruling 60-3。`'ja-JP'`）。S7 の行の並びは Ruling 60-1 のとおり ②。試聴はワルツ 1 小節（Ruling 61-5）。**6c は段4の統合後**（`standard.ts`・`VoicesScreen` が無いと足す先が無い）。`check-dist` は JSON と `public/` を同じコミットで変えないと落ちる（それが狙い）。
+5. **VOICEVOX を採用した場合だけ**（Ruling 69 で却下しているが、覆った時の備え）: `credit` を S13（プライバシー・アプリについて）に 1 行出す。段8の文言監修に回す。
+
+**理由**: 「JSON に無いパックは出荷しない」「ゲート未承認は出荷しない」の 2 本で、途中の日本語パックが混ざる経路を機械で塞げる。正本を JSON にするのは、Node の check-dist と Vite のアプリが**同じファイル**を読むため（TS を Node から読む細工を避ける）。
+
+**外れた時の代償**: 英パックに `gate` が無い例外が 1 つ残る（英パックを作り直す日に `gate` を書いて例外を消す）。JSON import の型が緩い（`id: string`）ので、`selectedVoiceId` の照合は文字列比較のまま（Ruling 61-2 と同じ）。
+
+## Ruling 69（Q10）止まっている物と決定カード — 推奨 A（従量課金・予算アラート付き）、B は Ruling 5 の最終手段として生きたまま、C・D は v1 の標準から外す
+
+**止まっている物（6b）**: 日本語 12 語の**音そのもの**（候補生成・処理・聴感ゲート・採用）と、それに続く 6c（S7 の行）。6a はどれにも依存しない。
+
+**決定（代理。ひとみうさが覆せる＝ D27・D28）**:
+1. **推奨 A: Google Cloud を従量課金に切り替えて生成する**。理由: Ruling 5 と仕様 §9 がこの前提で、英パックと**同じ会社・同じ処理・同じ音質系統**になり、S7 で英語と日本語を切り替えた時の違和感が最小。費用は F13・F14 の見積もりで **無料枠内なら ¥0、枠外でも 1 回の候補行列（約 250 文字）で $0.01 未満**（**価格は未確認**。ひとみうさが課金画面の価格表で確認してから進める）。
+2. **B（ひとみうさの録音）は Ruling 5 の最終手段として残す**（A が聴感ゲートを通らなかった時、または A を選ばない時）。経路は段4の S8 で日本語を録る → 段5の「ファイルに保存」で JSON を出す（段5が未了なら、段4完成画面の試聴の代わりに **`legacy/voice-recorder.html`（4173）で録って書き出す**のも可）→ `voices:process --provider recorded` → 同じゲート → 採用。manifest は `provider:'human-recording'`・`name:'ひとみうさの声（日本語）'`（名前は D28 で確認）。**B は段4のレコーダーが動くまで着手できない**（legacy 経由なら今でも可だが、品質は段4の 1.5 秒＋正規化の方が揃う）。
+3. **C（VOICEVOX）は v1 の「標準の日本語」から外す**（D27）。理由: (a) 60〜70代の生徒に向けた「数え言葉」の声として、声優風の声色は教室の空気と合わない見込み（審美判断＝ひとみうさが覆せる）(b) クレジット表記と**キャラクターごとの規約**（F15）を S13 と配布物に背負う (c) 約 1GB のデスクトップ版の導入と起動が要る (d) 24kHz → 48kHz の変換が入る。ただし **A・B がともに駄目だった時の第 3 候補**として `providers/voicevox.js` の口は作っておく（6a。接続はしない）。
+4. **D（macOS `say`）は使わない**（F17。公開物のライセンスが確認できない。試聴の「参考音」としても使わない＝基準がぶれる）。
+5. **ひとみうさが A を選んだ時の手順（彼女がやること・5〜10 分）**:
+   1. Google Cloud コンソール → 「お支払い」→ 対象の請求先アカウントを**従量課金（有料アカウント）にアップグレード**（トライアル終了の案内の「アップグレード」ボタン）。
+   2. 同じ画面で **予算とアラート**を作る: 月額 **¥500**（または $5）・50%／90%／100% でメール通知。
+   3. プロジェクト `project-cbd3f2d8-9635-49e4-83d` で **Cloud Text-to-Speech API が有効**のままか確認（英パック生成時に有効化済みの見込み。無効なら「有効にする」）。
+   4. Mac のターミナルで `gcloud auth application-default login`（ブラウザで Google にログイン。**鍵ファイルは `~/.config/gcloud/` に自動で置かれる。リポジトリには何も置かない。API キーは作らない**）。
+   5. く！ちゃんに「A で GO」と言う → く！ちゃんが `npm run voices:plan` の表（費用見積もり）を見せる → ひとみうさが「GO」→ `VOICES_ALLOW_PAID=1 npm run voices:synth -- --yes …`（候補 6 つ）→ `voices:process` → `voices:gate` → ひとみうさが iPhone で聞いて「結果をコピー」→ く！ちゃんへ → `voices:adopt` → 6c。
+   - **やらないこと**: API キーの発行、サービスアカウント鍵の JSON ダウンロード、鍵を LINE やメモに貼る、`public/`・`src/` に置く。
+6. **ひとみうさが B を選んだ時の手順**: 段4の実機確認の日に S8 で**日本語**を選んで 12 語を録る（静かな部屋・iPhone 本体のマイク・「よん」「なな」で）→ 段5があれば「ファイルに保存」、無ければ legacy のレコーダー → く！ちゃんへファイルを渡す（AirDrop）→ 同じゲート（自分の声を自分で判定）。
+
+**理由**: 費用がほぼゼロで、既に敷いた道（Ruling 5）が A。B は人の都合で日数がかかる代わりに費用も権利も問題が無い。C は「無料」の魅力より、生徒に届く声色と規約の負担が重い。
+
+**外れた時の代償**: A を選んでも Neural2 の日本語が「数え言葉として不自然」なら B に落ちる（Ruling 5 の想定どおり。候補行列と SSML の作り直しを 1 往復してから）。C を外したことで、A・B とも駄目な場合の第 3 候補が「口だけ」になる（その時に接続する。半日）。
+
+## Ruling 70（Q11）関門と確認表 — 6a／6b／6c の完了条件、`timing:audit` の扱い、`docs/app-v1/stage6-listening-check.md`
+
+**決定**:
+1. **6a の完了条件**（別エージェントが再実行）: `npm test`（件数。新規 ≒ 20 件）・`npm run typecheck`・`npm run build`（check-dist の新しい番人込み。**英パックだけで通る**）・`npm run voices:plan`（表が出て、`fetch` 0 回・ファイル書き込み 0）・`npm run voices:check public/audio/default-en-female-v1`（通る）・`npm run voices:gate public/audio/default-en-female-v1`（英パックで 10 本＋12 語のページが `output/voices/gate/` にでき、Mac で開いて鳴る。**撮影 375 幅**）・`timing:audit && timing:compare` 一致・`src/engine` diff ゼロ・`public/` diff ゼロ。
+2. **6b の完了条件**: 候補ごとの `gate-report.json`（onset 12 語・長さ・ピーク・risks）・ひとみうさの「結果をコピー」の表が `stage6-listening-check.md` に貼られ、採用候補が **12 語「自然」・10 本「ずれない」・practiceBpm で risks 0**・`voices:adopt` 後に `voices:check public/audio/default-ja-female-v1` が通る。`timing:compare` は英語の基準のまま一致（日本語は `gate-report.json` 側で見る。基準 `timing-audit-before.json` は書き換えない）。
+3. **6c の完了条件**: `standard-voices.json` 2 行・`build` が通る（番人が日本語 manifest を要求）・`ui:check` の `S7 標準だけ` の行が **2 行（英・日）** になり ops 2 のまま・S7 で日本語を選ぶ → S2 ワルツが「いち・に・さん」で鳴り、チップが「声: 標準（日本語）」・再読み込みで残る・`smoke:practice` 相当を日本語で 1 本（`smoke-voice.js` に 1 場面足す）・iPhone 実機（下の表）。
+4. **`docs/app-v1/stage6-listening-check.md`**（6a で雛形を作る。6b でひとみうさが埋める）:
+   - 開き方（Mac で `http.server 4175` → iPhone）・聞く順（語 12 → 鳴り合わせ 10 → 英語と聞き比べ）・答え方（ページの「結果をコピー」）。
+   - 表 A（語 × 候補）: `# | 語 | 候補 | 自然／気になる／だめ | メモ`。
+   - 表 B（鳴り合わせ × 候補）: `# | 種目・型・速さ | ずれない／ずれる | メモ`。
+   - 表 C（採用）: 採用する声・理由・`approvedAt`。
+   - 表 D（6c の実機・iPhone）: (1) S7 に「標準の声（日本語）」が英語の下に出る (2) 選ぶ → 試聴がワルツ 1 小節で「いち・に・さん」 (3) S2 ワルツ ▶ で日本語・メトロノームとずれない (4) タンゴ／チャチャ／サンバ／パソで S・Q・アンド・ア・4〜8 が鳴る (5) 速め・競技の速さでも語が重ならない (6) 「声のタイミング」が日本語にも効き、英語とは別に記憶される（`voiceOffsetMsByVoiceId`） (7) 英語に戻すとチップと声が戻る (8) 機内モード（段7の後に再確認）。
+5. **止まる条件**: 6b で「だめ」が 3 語以上の声しか無い → Fable に戻す（SSML の作り直し 1 往復か B へ）。6c で `ui:check` の S7 の主要操作数が 2 を超える → 足さずに Fable へ。
+
+**理由**: 6a を「英パックだけで全部通る」状態で閉じれば、音が来た日の作業が検査込みで数時間になる。
+
+**外れた時の代償**: 6c の `ui:check` の行が 1 つ増える。`stage6-listening-check.md` は 6b までほぼ空（雛形だけ）。
+
+---
+
+## ひとみうさの決定（代理）— 起きたら見直してもらう
+
+- **D26（代理決定・確認待ち）日本語標準の ID は `default-ja-female-v1` に固定**（声が男性でも変えない。性別は manifest の `voiceName` に残る）。— 代案: 声に合わせて `default-ja-male-v1` にする（`standard-voices.json`・`messages` は変わらず、ID の文字だけ）。
+- **D27（代理決定・確認待ち）VOICEVOX（C）と macOS `say`（D）は v1 の「標準の日本語」の候補から外す**（Ruling 69-3・69-4）。— 代案: C を候補行列に 1 声だけ足して聞き比べる（デスクトップ版の導入＋クレジット表記の受け入れが条件）。
+- **D28（代理決定・確認待ち）B（ひとみうさの録音）を採用した時の標準の表示名は「標準の声（日本語）」のまま**（manifest の `name` は「ひとみうさの声（日本語）」だが、S7 の行の文言は英語の行と対で「標準の声（日本語）」。生徒には誰の声かを出さない）。— 代案: 「ひとみうささんの声（日本語）」と出す（教室の生徒には親しみやすいが、配布物としては個人名が出る）。
+- **D29（代理決定・確認待ち）TTS に読ませる 12 語の文字は語彙の表示語そのまま**（いち・に・さん・よん・ご・ろく・なな・はち・スロー・クイック・アンド・ア）。「し」「しち」は使わない（Ruling 54・語彙の第一表記）。— 代案: 「ア」を「あ」に（TTS の読みが不自然ならその語だけ `ssml`＋`note` で）。
+
+---
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認）
+
+**判断（6b を始めるのに要る）**
+1. **決定カード（Ruling 69）: A 従量課金で生成 ／ B 自分で録る ／ C VOICEVOX を候補に戻す**。推奨 A。A なら Ruling 69-5 の手順 1〜4（アップグレード・予算アラート ¥500・API 有効・`gcloud auth application-default login`）を彼女が行い、「A で GO」と言う。
+2. A の価格（F13・F14）を課金画面で確認（Neural2 の月の無料枠と単価）。見積もりは `npm run voices:plan` の表で再提示する。
+
+**確認（6a の間に溜める）**
+3. D26（ID 固定）・D27（C・D を外す）・D28（B の時の表示名）・D29（12 語の文字）。
+4. 候補行列（Neural2-B/C/D × 速さ 1.0/1.15、Chirp 3 HD を 1 声だけ）に異存がないか。6 候補 × 12 語＝72 本を聞くのは多ければ、**最初は B 1 声 × 2 速で 24 語**から始める（Ruling 67 のページは候補数に依らない）。
+5. 聴感ゲートの判定の規則（12 語「自然」・10 本「ずれない」。「気になる」1 語でその語だけ作り直し）と、聞く場所が iPhone 本体のスピーカーであること。
+6. 6a が段4の計画より**先**に入ること（Ruling 64-4。半日の遅れ）。
+7. 日本語パックの音量を英パックに合わせる方針（Ruling 65-5。「英語と切り替えた時に音量が変わらない」が狙い）。
+8. 段6を worktree にしない（Ruling 64-3。全体地図の 1 行を書き換える）。
+9. `output/voices/` を commit しない（候補の WAV は Mac にだけ残る。採用した 12 本だけ `public/`）。
+
+---
+
+## 4. 計画への反映（計画者）
+
+- **順序**: 6a の詳細計画（`docs/superpowers/plans/2026-10-12-app-v1-stage6a.md`）を**段4の計画より先に**書き、Sonnet 1 便で実装 → 段の終わりのレビュー（Ruling 70-1 を別エージェントが再実行）→ `agent/app-v1` に逐次コミット。段4の計画は 6a の統合後に書く（`standard-voices.json` と check-dist の番人を前提に。Ruling 60-5 の「`check-dist.js` に足す」を段4から外す）。コントローラーが段4を先に始めていたら、6a は段4の統合後・6c より前。
+- **計画の手順はスクラッチのコピーで実際に動かしてから書く**（段1〜3と同じ）。先に実測する 3 点: (a) `parsePcm16Wav` で英パック 12 本を読み `measureOnset` の既定で manifest と**完全一致**するか（Ruling 66 の回帰の前提。一致しなければ manifest の値がどのパラメータで測られたかを調べ、台帳に記す）(b) `render-subdivision-audio-review.js` の描画関数を切り出してワルツ `123` 2 小節＋クリックの WAV が Node だけで出るか (c) ffmpeg で 24kHz → 48kHz・mp4 → f32le のパイプ（`audit-recorded-voice-pack.js` と同じ呼び方）が通るか。
+- **新規ファイル（6a）**: `tools/voices/{generate,pipeline,wav,check-pack,render-gate,adopt,pricing}.js`・`tools/voices/providers/{google,voicevox,recorded}.js`・`tools/voices/words.ja-JP.json`・`src/app/voices/standard-voices.json`（1 行。段4がこれを import）・`test/tools/voices/{wav,pipeline,onset-regression,generate-dryrun,check-pack,recorded-provider}.test.js`・`docs/app-v1/stage6-listening-check.md`（雛形）・`docs/app-v1/stage6-decision-card.md`（Ruling 69-5・69-6 を ひとみうさ向けの 1 枚に。手順は番号付き・技術語に説明を添える）。
+- **変更するファイル（6a）**: `tools/check-dist.js`（JSON 正本・未知のパック拒否・check-pack・鍵の文字列。Ruling 68-3）・`package.json`（`voices:plan/synth/process/gate/check/adopt`）・`.gitignore`（`output/voices/`・`.env`・`.env.*`・`*.credentials.json`・`*-key.json`）・全体地図（段6 → 6a/6b/6c の 3 行・worktree の節を撤回・「人が必要な確認点」の段6を決定カードに差し替え）・仕様 §9「標準音声」（6a/6b/6c と番人・manifest の追加欄・ID 固定 D26）・HANDOVER §3（段6の状態）・§6（決定カード）・`rulings.md`（Ruling 64〜70・D26〜D29 を転記）。
+- **触らない（6a）**: `src/engine/*`・`src/app/**/*.ts(x)`（JSON 1 つだけ新規）・`public/`・`tools/generate-google-voices.js`・`tools/measure-voice-onsets.js`・`tools/audit-all-dance-timing.js`・`output/timing-audit-before.json`・`legacy/`。
+- **6b（ひとみうさの GO の後）**: 候補生成の便は**く！ちゃん（Opus）が自分で打つ**（課金の伴う操作は委譲しない。`voices:plan` の表を ひとみうさに見せてから `--yes`）。処理・ゲート描画は Sonnet でよい。
+- **6c（段4統合後）**: `standard-voices.json` に日本語の行・`messages.ts` 2 鍵・`check-dist` は自動（JSON 由来）・`ui:check` の S7 の期待値（行 2 つ・ops 2）・`smoke-voice.js` に日本語 1 場面・`stage6-listening-check.md` 表 D。`public/audio/default-ja-female-v1/` の採用コミットと同じ便（番人のため）。
+- **完了条件**: Ruling 70-1〜3 をそのまま各段の「段の終わり」に。
