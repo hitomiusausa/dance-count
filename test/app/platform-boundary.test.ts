@@ -6,12 +6,16 @@ import path from 'node:path';
 const appDir = path.resolve(import.meta.dirname, '../../src/app');
 
 // 端末依存の入口。ここ以外の src/app から直接触ったら落とす（仕様 §10「lint で禁止」の代わり）。
-// - 常に禁止（前に . があっても）: storage 系・indexedDB・matchMedia・new AudioContext/MediaRecorder・webkitAudioContext・document.defaultView
-// - 裸の識別子だけ禁止（obj.history / obj.location のような他人のプロパティは許す）: window・navigator・globalThis・self・location・history
+// - 常に禁止（前に . があっても）: storage 系・indexedDB・matchMedia・new AudioContext/MediaRecorder/Audio・webkitAudioContext・
+//   document.defaultView・document の可視状態とイベント（visibilityState・hidden・add/removeEventListener）
+// - 裸の識別子だけ禁止（obj.history / obj.addEventListener のような他人のプロパティは許す）: window・navigator・globalThis・self・
+//   location・history・addEventListener・removeEventListener・requestAnimationFrame・cancelAnimationFrame・fetch
 //   → `const history = []` のような同名ローカル変数も検出する（紛らわしいので別名にする方針）。
-// - document は描画の入口 main.tsx が使うので対象外（document.defaultView だけ禁止）。
-const ALWAYS = /\b(localStorage|sessionStorage|indexedDB|webkitAudioContext|matchMedia)\b|\bnew\s+(AudioContext|MediaRecorder)\b|\bdocument\s*\.\s*defaultView\b/;
-const BARE = /(?<![.\w$])(window|navigator|globalThis|self|location|history)\b/;
+// - 文字列の中身を見て禁止: document.createElement('audio')・'visibilitychange'（iOS の音声解除と WakeLock 再取得の経路）
+// - document は描画の入口 main.tsx が使うので対象外（上の document.* だけ禁止）。
+const ALWAYS = /\b(localStorage|sessionStorage|indexedDB|webkitAudioContext|matchMedia)\b|\bnew\s+(AudioContext|MediaRecorder|Audio)\b|\bdocument\s*\.\s*(defaultView|visibilityState|hidden|addEventListener|removeEventListener)\b/;
+const BARE = /(?<![.\w$])(window|navigator|globalThis|self|location|history|addEventListener|removeEventListener|requestAnimationFrame|cancelAnimationFrame|fetch)\b/;
+const IN_STRINGS = /\bcreateElement\s*\(\s*['"`]audio['"`]|['"`]visibilitychange['"`]/;
 
 // コメントと文字列の中身を落とす（ブロックコメントは行をまたいで追う）。
 export function findDeviceAccess(source: string): { line: number; text: string }[] {
@@ -36,15 +40,18 @@ export function findDeviceAccess(source: string): { line: number; text: string }
       inBlock = true;
       rest = rest.slice(open + 2);
     }
-    code = code.replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g, '""');
-    if (ALWAYS.test(code) || BARE.test(code)) found.push({ line: index + 1, text: raw.trim() });
+    const withStrings = code;
+    // 文字列は空にするが、テンプレート文字列の ${...} の中身はコードとして残す（`${window.innerWidth}` の見逃し防止）。
+    code = code.replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g, literal =>
+      literal.startsWith('`') ? ` "" ${[...literal.matchAll(/\$\{([^}]*)\}/g)].map(match => match[1]).join(' ; ')} "" ` : '""');
+    if (ALWAYS.test(code) || BARE.test(code) || IN_STRINGS.test(withStrings)) found.push({ line: index + 1, text: raw.trim() });
   });
   return found;
 }
 
 async function sourceFiles(): Promise<string[]> {
   const entries = await fs.readdir(appDir, { recursive: true });
-  return entries.filter(entry => /\.(ts|tsx|js|mjs)$/.test(entry)).map(entry => entry.split(path.sep).join('/'));
+  return entries.filter(entry => /\.(ts|tsx|js|jsx|mjs)$/.test(entry)).map(entry => entry.split(path.sep).join('/'));
 }
 
 const MUST_FLAG = [
@@ -65,6 +72,20 @@ const MUST_FLAG = [
   'window.location.hash = h;',
   'history.pushState(null, "", h);',
   'const history = [];',
+  'const a = new Audio(src);',
+  "const el = document.createElement('audio');",
+  'const el = document.createElement(`audio`);',
+  "if (document.visibilityState === 'visible') {}",
+  'if (document.hidden) return;',
+  "document.addEventListener('visibilitychange', onVisible);",
+  "target.addEventListener('visibilitychange', onVisible);",
+  "addEventListener('resize', onResize);",
+  'removeEventListener("resize", onResize);',
+  'const id = requestAnimationFrame(draw);',
+  'cancelAnimationFrame(id);',
+  'const response = await fetch(url);',
+  'const width = `${window.innerWidth}px`;',
+  'const label = `${a} and ${navigator.language}`;',
 ];
 
 const MUST_NOT_FLAG = [
@@ -76,6 +97,12 @@ const MUST_NOT_FLAG = [
   'const label = "history";',
   'document.getElementById("app");',
   'const route = "#/history";',
+  'button.addEventListener("click", onClick);',
+  'const label = `${count} beats`;',
+  'const audioLabel = "audio";',
+  "document.createElement('div');",
+  'const { fetchImpl } = options;',
+  'engine.requestAnimationFrame;',
 ];
 
 test('detector flags every realistic device access', () => {

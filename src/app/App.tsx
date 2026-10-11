@@ -1,8 +1,9 @@
 import type { ComponentType } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
 import { deviceLanguages } from './platform/locale.ts';
+import { applyDocumentLanguage } from './platform/page.ts';
 import { showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
@@ -21,6 +22,7 @@ export function App() {
   const route = useRoute();
   const [locale, setLocale] = useState<AppLocale>(() => resolveAppLocale(deviceLanguages()));
   const i18n = useMemo(() => ({ translator: createAppTranslator(locale), setLocale }), [locale]);
+  useEffect(() => applyDocumentLanguage(locale, i18n.translator.t('documentTitle')), [locale, i18n]);
   const screen: ScreenId = SCREEN_COMPONENTS[route.screen] ? route.screen : 'S1';
   const Screen = SCREEN_COMPONENTS[screen] ?? HomeScreen;
   return (

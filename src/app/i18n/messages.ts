@@ -4,6 +4,7 @@ export const APP_MESSAGES = {
   en: {
     appName: 'Dance Count',
     appSubtitle: 'for Ballroom',
+    documentTitle: 'Dance Count — for Ballroom',
     switchLanguage: '日本語',
     tabPractice: 'Practice',
     tabRoutines: 'Routines',
@@ -18,6 +19,7 @@ export const APP_MESSAGES = {
   'ja-JP': {
     appName: 'Dance Count',
     appSubtitle: 'for Ballroom',
+    documentTitle: 'Dance Count — for Ballroom',
     switchLanguage: 'English',
     tabPractice: '練習',
     tabRoutines: 'ルーティン',
