@@ -1,4 +1,4 @@
-import { cleanReceivedFileName } from '../share/filename.ts';
+import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename.ts';
 import { BUNDLE_MAX_BYTES } from '../share/limits.ts';
 
 // 配る（共有・保存）と受け取る（ファイルを読む・Android の受け口）の端末の面（Ruling 79-2・81）。
@@ -80,7 +80,6 @@ export async function readBundleText(file: File): Promise<string> {
 // './#/receive' へ 303 で送る。S10 はマウント時にこれを呼び、あれば「確認」から始める。読んだら消す（2 回受け取らない）。
 export const INBOX_CACHE = 'dance-count-inbox';
 export const INBOX_KEY = './inbox/bundle';
-const INBOX_FALLBACK_NAME = 'bundle.dancecount.txt';
 
 export async function takeInboxFile(): Promise<File | null> {
   if (typeof caches === 'undefined') return null;
@@ -91,9 +90,9 @@ export async function takeInboxFile(): Promise<File | null> {
     const blob = await response.blob();
     await cache.delete(INBOX_KEY);
     const header = response.headers.get('X-File-Name');
-    let name = INBOX_FALLBACK_NAME;
+    let name = RECEIVED_FILE_FALLBACK;
     try { if (header) name = decodeURIComponent(header); } catch { /* 名前が読めなくても中身は受け取る */ }
-    return new File([blob], cleanReceivedFileName(name, INBOX_FALLBACK_NAME), { type: blob.type });
+    return new File([blob], cleanReceivedFileName(name, RECEIVED_FILE_FALLBACK), { type: blob.type });
   } catch {
     return null;
   }

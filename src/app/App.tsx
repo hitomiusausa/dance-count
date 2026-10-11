@@ -17,6 +17,7 @@ import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { ShareScreen } from './screens/ShareScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
 import { SoundHelpScreen } from './screens/SoundHelpScreen.tsx';
+import { ReceiveScreen } from './screens/ReceiveScreen.tsx';
 import { RecordVoiceScreen } from './screens/RecordVoiceScreen.tsx';
 import { VoicesScreen } from './screens/VoicesScreen.tsx';
 import type { Routine } from './routines/routine.ts';
@@ -42,11 +43,12 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8 は下で個別に描く）。S9 は印（share-intent）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S6: SettingsScreen,
   S9: ShareScreen,
+  S10: ReceiveScreen,
   S11: SoundHelpScreen
 };
 

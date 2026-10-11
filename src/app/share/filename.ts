@@ -22,6 +22,8 @@ function localDate(now: Date): string {
 
 // 受け取ったファイルの名前（選んだファイル・Android の受け口）を画面に出す前に、制御文字と向きを変える見えない文字を除く。
 // 何も残らなければ fallback（エラー文の「（ファイル名）」が空にならない）。
+export const RECEIVED_FILE_FALLBACK = 'bundle.dancecount.txt';
+
 export function cleanReceivedFileName(name: string, fallback: string): string {
   return name.replace(BIDI_CONTROLS, '').replace(CONTROLS, '').trim() || fallback;
 }

@@ -1,5 +1,5 @@
 // ui:check と smoke:voice が使う検査用の声（Ruling 63-1）。WAV はブラウザの中で合成する（dist でも動くよう import しない）。
-// 固定データ: completeEn（録音・12 語・英語）・partialJa（録音・7 語・日本語）・receivedJa（受け取り・12 語・山田さん。段5の表示の型を段4で検査）。
+// 固定データ: completeEn（録音・12 語・英語）・partialJa（録音・7 語・日本語）・receivedJa（受け取り・12 語・山田さん）。
 const UPDATED = '2026-10-12T08:00:00.000Z';
 const KEYS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 
@@ -10,7 +10,8 @@ function voice(id, name, locale, recorded, extra = {}) {
 export const UI_CHECK_VOICES = {
   completeEn: voice('user-recorded-v1', '自分の声（英語）', 'en', 12),
   partialJa: voice('user-recorded-ja-v1', '自分の声（日本語）', 'ja-JP', 7),
-  receivedJa: voice('v-uicheck-recv', '山田の声', 'ja-JP', 12, { origin: 'received', distributor: { name: '山田' } })
+  // sourceId・locale・distributor が test/fixtures/share/bundle-voice-routine.dancecount.txt の声と同じ＝S10 で「置き換え」になる（Ruling 84-4）
+  receivedJa: voice('v-uicheck-recv', '山田の声', 'ja-JP', 12, { origin: 'received', distributor: { name: '山田' }, sourceId: 'user-recorded-ja-v1' })
 };
 
 // ブラウザの中で動く（page.evaluate に渡す。外の変数は使えない）。recorded 語ぶんの WAV（16bit・モノ・48kHz・0.745 秒・

@@ -3,6 +3,7 @@
 // 前提: `npm run dev`（既定 http://localhost:5173/）を起動しておく。DC_BASE_URL で `npm run preview`（4174）にも向けられる。
 // DC_ONLY=S5,S4 のように状態名の頭で絞れる（直しながらの確認用。完了の判定は絞らずに全部で）。
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
+import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
@@ -31,6 +32,10 @@ const LIMITS = Object.freeze({
 // prepare は「前回あり」を実経路で作る（偽装クエリは使わない）。seed はブラウザの IndexedDB に検査用のルーティンを書く（Ruling 43）。
 // steps は開いた後の人の操作（クリック・入力）。人の操作の後の状態は「初期表示 5 以下」を当てず全体（9 以下）だけを見る。
 const SEEDED = [R.waltz13, R.empty, R.longJa, R.longEn];
+// 段5: 受け取る画面に渡す配布ファイル（tools/make-share-fixtures.js が作る。Ruling 87-3）
+const SHARE = name => path.resolve(import.meta.dirname, '../test/fixtures/share', name);
+const TOO_LARGE = { name: 'big.dancecount.txt', mimeType: 'text/plain', buffer: Buffer.alloc(20 * 1024 * 1024 + 1, 32) };
+const LINE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari Line/26.3.0';
 const S4_13 = `#/routines/${R.waltz13.id}/edit`;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
@@ -111,6 +116,26 @@ const STATES = [
     texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
     steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
       { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
+  // S10（Ruling 83・87-2）: 選ぶ 1・確認 2（やめる・使う）・受け取った 1。ファイルは実経路（setInputFiles）。枠は 1 つ・中の操作は 1 つまで。
+  { name: 'S10 選ぶ', hash: '#/receive', screen: 'S10', kind: 'focus', ops: 1, total: 1,
+    texts: ['LINE で届いたファイルは、先に「"\u2060ファイル\u2060"に保存」しておくと、ここで選べます。', '選ぶ画面では「最近の項目」にあります。'] },
+  { name: 'S10 LINE の中', hash: '#/receive', screen: 'S10', kind: 'focus', userAgent: LINE_UA, alert: true, ops: 1, total: 1, texts: ['LINE の中で開いています。'] },
+  { name: 'S10 確認', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2, firstView: ['.dc-receive-dock .dc-primary'],
+    texts: ['山田さんの声（日本語）· 12 語', 'ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
+  { name: 'S10 置き換え', hash: '#/receive', screen: 'S10', kind: 'focus', voiceSeed: [V.receivedJa], total: 2,
+    texts: ['山田さんの声はすでにあります。「使う」で新しい方に置き換わります。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
+  { name: 'S10 読めない', hash: '#/receive', screen: 'S10', kind: 'focus', alert: true, total: 1,
+    texts: ['このファイルは読めませんでした。先生に送り直してもらってください。（broken.txt）'],
+    steps: [{ upload: ['input[type="file"]', SHARE('broken.txt')] }, { wait: '[data-alert="broken"]' }] },
+  { name: 'S10 大きすぎ', hash: '#/receive', screen: 'S10', kind: 'focus', alert: true, total: 1, texts: ['このファイルは大きすぎて受け取れません。'],
+    steps: [{ upload: ['input[type="file"]', TOO_LARGE] }, { wait: '[data-alert="too-large"]' }] },
+  { name: 'S10 新しすぎ', hash: '#/receive', screen: 'S10', kind: 'focus', alert: true, total: 1, texts: ['新しいアプリで作られたファイルです。', '更新する'],
+    steps: [{ upload: ['input[type="file"]', SHARE('too-new.txt')] }, { wait: '[data-alert="too-new"]' }] },
+  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', 'ホームで種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
+      { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
 
@@ -167,7 +192,8 @@ try {
       const opened = state.openMore ? await page.locator('details[open]').count() : 0;
       await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => window.scrollTo(0, 0));
-      const problems = await page.evaluate(audit, { state: { ...state, compact, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      // steps はブラウザに渡さない（S10 大きすぎの 20MB のファイルを audit の引数に載せない）
+      const problems = await page.evaluate(audit, { state: { ...state, steps: undefined, compact, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
       const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
       report(label, [...openFail, ...problems, ...consoleErrors]);
       await context.close();

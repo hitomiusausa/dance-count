@@ -8,7 +8,7 @@ import type { Route, RouteTarget, ScreenId } from './routes.ts';
 // S4 新規はルーティンが上限（ROUTINES_MAX）未満の時だけ（S3 のボタンの無効をハッシュ直打ちで越えさせない）。
 // S4 編集・S5 は ID が正しく、そのルーティンがある時だけ。S5 はさらに鳴らせる時だけ（Ruling 37・40）。
 // 外れたら S3 を出し、redirect でハッシュも S3 に置き換える（履歴を積まない）。
-export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11'];
+export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11'];
 
 export interface Resolved { screen: ScreenId; redirect: RouteTarget | null }
 

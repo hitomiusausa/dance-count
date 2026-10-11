@@ -429,3 +429,14 @@ button { cursor: pointer; }
 .dc-result { padding: 10px 12px; border: var(--bw) solid var(--primary); border-left-width: 4px; border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .dc-result-sub { margin-top: 4px; font-size: 16px; font-weight: 400; }
 .dc-instructions { min-height: 0; padding: 8px 12px; font-size: 16px; line-height: 1.5; resize: none; }
+/* S10 受け取る（Ruling 83）: 選ぶ（大きいボタン＋説明 2 行）→ 確認（中身の行・下に「やめる」「使う」）→ 受け取った */
+.dc-receive-choose { margin-top: 16px; }
+.dc-receive-help { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 18px; word-break: auto-phrase; }
+.dc-receive-list { display: flex; flex-direction: column; gap: 10px; font-size: 18px; }
+.dc-receive-item { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 10px; border-bottom: var(--bw) solid var(--line); font-weight: 700; overflow-wrap: anywhere; }
+.dc-receive-item .dc-ic { margin-top: 2px; color: var(--ink2); }
+.dc-receive-note { font-size: 18px; color: var(--ink2); overflow-wrap: anywhere; }
+.dc-receive-dock { gap: 8px; }
+.dc-receive-dock .dc-button { flex: 1; max-width: 300px; }
+/* S10 の枠は 3 行の文＋「Safari で開く」で 120px 以下（Ruling 83-1・Ruling 23 の高さ） */
+.dc-receive .dc-alert-text { line-height: 1.3; }
