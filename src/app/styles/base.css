@@ -289,7 +289,7 @@ button { cursor: pointer; }
 /* S8 録音（Ruling 59・モック b-studio-navy の S8）。375×667 で 1 語の画面が初期表示に収まる寸法 */
 :root { --rec: #1B2A4A; --rec-ring: #E4E7EE; }
 .dc-record .dc-dock .dc-dock-button { width: 100%; }
-.dc-record-intro { display: flex; flex-direction: column; gap: 6px; margin: 16px 0 8px; font-size: 18px; }
+.dc-record-intro { display: flex; flex-direction: column; gap: 6px; margin: 16px 0 16px; font-size: 18px; }  /* 下は「数える言葉」の見出しと離す（通し確認） */
 .dc-radio-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; padding: 6px 0; }
 .dc-radio-text > span { word-break: keep-all; overflow-wrap: anywhere; }  /* 「スロ／ー」のように語の途中で折らない */
 .dc-radio-text small { font-size: 16px; font-weight: 400; color: var(--ink2); }
@@ -327,6 +327,8 @@ button { cursor: pointer; }
 .dc-record-dock .dc-button { flex: 1; max-width: 300px; }
 .dc-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dc-compare .dc-button { min-height: 56px; }
+/* 鳴っている方を塗る（S7 の「試聴」・「聞く」の .dc-chip と同じ見え方。アイコンの ▶／■ だけに頼らない。通し確認） */
+.dc-compare .dc-button[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-record-again { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) {
   .dc-rec-ring { background: var(--rec-ring); }
