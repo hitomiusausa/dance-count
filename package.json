@@ -10,7 +10,7 @@
     "build": "vite build && node tools/check-dist.js",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "node --test test/engine/*.test.js",
+    "test": "node --test test/engine/*.test.js test/app/*.test.ts",
     "legacy": "python3 -m http.server 4173",
     "routines:migrate": "node tools/migrate-legacy-routines.js",
     "voices:generate": "node tools/generate-google-voices.js",
