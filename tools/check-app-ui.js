@@ -14,6 +14,7 @@ const LIMITS = Object.freeze({
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
   tap: 48, tapGap: 8, // U3
   initialOps: 5, totalOps: 9, groupChoices: 10, moreSummaries: 1, // U4〜U6
+  catalogChoices: 20, // U5 の例外: 照合済みの名前の一覧 [data-group][data-catalog] は選択肢でなく一覧（Ruling 54。src の FIGURE_CHOICES_MAX と同じ）
   contrastText: 4.5, contrastLarge: 3, contrastUi: 3, // U7
   motionMs: 300, // U8
   buttonLines: 2, // U10
@@ -50,6 +51,17 @@ const STATES = [
   // Chromium にはキーボードが無いので、名前の欄にフォーカスがあっても帯は出たまま（dockWhileFocused: フォーカスで隠す作りに戻っていないか）
   { name: 'S4 同じ名前（追加）', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, sameNameCopy: '1 2 3 で複製して追加', dockWhileFocused: true,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', R.waltz13.figures[0].name] }] },
+  // D20・Ruling 54: 名前が空の追加の行は、名前の欄の下にその種目の照合済みフィガー全部（一覧＝[data-group="figure-names"][data-catalog]）。
+  // カウントの欄・使える文字・形は名前が入ってから。total 7＝閉じた 13 件の 5 −「＋ フィガーを追加」＋ figure-form・figure-names・count-patterns。
+  // 0 件のタンゴ（19 件＝一覧の最大）は 名前・種目「変える」＋3 グループ＝5（下固定の帯は追加の行の間は出ない）。
+  { name: 'S4 追加の行・名前の一覧', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-add-tail' }], total: 7,
+    nameChoices: { count: 17, heading: 'ワルツのフィガー（17）', first: 'クローズドチェンジ' } },
+  { name: 'S4 0件・追加の行', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-dock-button' }], total: 5,
+    nameChoices: { count: 19, heading: 'タンゴのフィガー（19）', first: 'プログレッシブリンク' } },
+  // 一覧の 17 番目（waltz13 は定義順の 0〜12 番を使うので未使用＝複製の形にならない。最長のワルツ名で 2 行の U10 も通す）
+  { name: 'S4 追加の行・名前を選んだ後', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, patterns: 8, pressed: 0,
+    nameChosen: 'フォーラウェイリバース＆スリップピボット',
+    steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
@@ -260,9 +272,11 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.ops !== undefined && initialOps !== state.ops) issues.push(`U4 initial operations ${initialOps}, expected ${state.ops}`);
 
   // U5 選択肢の数・U6「くわしく」は1つ
+  // 照合済みの名前の一覧（[data-catalog]）は選択肢でなく一覧なので 10 を当てず、黙って増えないよう catalogChoices を当てる（Ruling 54-4）
   for (const group of document.querySelectorAll('[data-group]')) {
     const choices = [...group.querySelectorAll(OPS)].filter(visible).length;
-    if (choices > LIMITS.groupChoices) issues.push(`U5 group "${group.dataset.group}" has ${choices} choices > ${LIMITS.groupChoices}`);
+    const limit = group.hasAttribute('data-catalog') ? LIMITS.catalogChoices : LIMITS.groupChoices;
+    if (choices > limit) issues.push(`U5 group "${group.dataset.group}" has ${choices} choices > ${limit}`);
   }
   for (const select of document.querySelectorAll('select')) {
     if (select.options.length > LIMITS.groupChoices) issues.push(`U5 select has ${select.options.length} options`);
@@ -452,6 +466,36 @@ function audit({ state, LIMITS, reducedMotion }) {
     const pressed = chips.filter(chip => chip.getAttribute('aria-pressed') === 'true').length;
     if (pressed !== state.pressed) issues.push(`R53 ${pressed} pressed count patterns, expected ${state.pressed}`);
     for (const chip of chips) if (chip.scrollWidth > chip.clientWidth) issues.push(`R53 count pattern "${chip.textContent}" overflows its chip`);
+  }
+  // D20・Ruling 54: 名前が空の追加の行は一覧だけ（件数・見出し・先頭）。カウントの欄・使える文字・形・候補は無く、主ボタンは押せない。
+  // 一覧のグループは figure-form の兄弟（ほかの [data-group] の中に入れ子にしない）
+  if (state.nameChoices) {
+    const group = document.querySelector('[data-group="figure-names"][data-catalog]');
+    const form = [...document.querySelectorAll('.dc-figure-form')].pop();
+    if (!group || !visible(group)) issues.push('R54 the figure name list is not shown');
+    else {
+      const chips = [...group.querySelectorAll('.dc-chip')].filter(visible);
+      if (chips.length !== state.nameChoices.count) issues.push(`R54 ${chips.length} figure names, expected ${state.nameChoices.count}`);
+      const heading = group.querySelector('.dc-field-label')?.textContent.trim();
+      if (heading !== state.nameChoices.heading) issues.push(`R54 the list heading reads "${heading}", expected "${state.nameChoices.heading}"`);
+      if (chips[0]?.textContent.trim() !== state.nameChoices.first) issues.push(`R54 the first name is "${chips[0]?.textContent.trim()}", expected "${state.nameChoices.first}"`);
+      if (group.parentElement?.closest('[data-group]')) issues.push('R54 the figure name list is nested in another group');
+      if (chips.some(chip => chip.hasAttribute('aria-pressed'))) issues.push('R54 the figure names carry aria-pressed (they fill the name, they do not toggle)');
+    }
+    for (const [selector, what] of [['.dc-input--counts', 'counts field'], ['[data-allowed-symbols]', 'allowed-symbols line'],
+      ['[data-group="count-patterns"] .dc-chip', 'count patterns'], ['.dc-suggestions', 'name suggestions']]) {
+      if (form?.querySelector(selector)) issues.push(`R54 the ${what} is shown while the name is empty`);
+    }
+    if (!form?.querySelector('.dc-primary')?.disabled) issues.push('R54 "Add" is pressable while the name is empty');
+  }
+  // 一覧の名前をタップした後: 名前の欄に入り、一覧は消え、同じ所にカウントの欄と形が出る（カウントが空なので「追加する」はまだ押せない）
+  if (state.nameChosen) {
+    const form = [...document.querySelectorAll('.dc-figure-form')].pop();
+    const name = form?.querySelector('input')?.value;
+    if (name !== state.nameChosen) issues.push(`R54 the name field reads "${name}", expected "${state.nameChosen}"`);
+    if (document.querySelector('[data-group="figure-names"]')) issues.push('R54 the figure name list is still shown after choosing a name');
+    if (!form?.querySelector('.dc-input--counts')) issues.push('R54 the counts field did not appear after choosing a name');
+    if (!form?.querySelector('.dc-primary')?.disabled) issues.push('R54 "Add" is pressable before the counts are entered');
   }
   // Ruling 52・D16: 行の注意は 2 つで、依頼（「してください」）はちょうど 1 つ（Ruling 7 の機械判定）。全体の注意は一覧の下に 1 つ
   if (state.barNote) {

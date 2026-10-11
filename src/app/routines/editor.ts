@@ -30,10 +30,15 @@ export interface DraftCheck { valid: boolean; counts: string; reason: DraftReaso
 //   同じ名前でなくなれば欄ごと元に戻る。
 // - sameName: 同じ名前の注意を名前の欄のすぐ下に出す形。'copy'＝追加の行（複製元の「名前（カウント）」＋名前を変える道の一言）、
 //   'match'＝編集の行で既存の名前に打ち替えた時（「カウントを合わせる」。文は今のまま、位置だけ名前の欄の下）。
-export interface FormLayout { countsShown: boolean; sameName: 'copy' | 'match' | null }
-export function formLayout(check: Pick<DraftCheck, 'action' | 'reason'>): FormLayout {
+// - namePicker（D20・Ruling 54-2・3）: 追加の行で名前が空（空白だけも空）かつ種目に照合済みの名前がある（VW は無い）時だけ true＝
+//   名前の欄の下にその種目の照合済みフィガー全部を並べ、カウントの欄・使える文字・カウントの形は出さない（名前が先。名前が入った瞬間に
+//   同じ場所へ欄と形が出る）。編集の行では名前を空にしても出さない。打っていたカウントは draft に残る（複製の形と同じ）。
+export interface FormLayout { countsShown: boolean; namePicker: boolean; sameName: 'copy' | 'match' | null }
+export interface FormContext { kind: OpenRow['kind']; nameEmpty: boolean; hasCatalog: boolean }
+export function formLayout(check: Pick<DraftCheck, 'action' | 'reason'>, context: FormContext): FormLayout {
   const copy = check.action === 'addCopy';
-  return { countsShown: !copy, sameName: check.reason !== 'sameName' ? null : copy ? 'copy' : 'match' };
+  const namePicker = context.kind === 'add' && context.nameEmpty && context.hasCatalog;
+  return { countsShown: !copy && !namePicker, namePicker, sameName: check.reason !== 'sameName' ? null : copy ? 'copy' : 'match' };
 }
 
 type Meta = Omit<Routine, 'id' | 'danceId' | 'name' | 'bpm' | 'countInBars' | 'source' | 'status' | 'figures'>;

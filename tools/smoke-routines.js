@@ -6,7 +6,8 @@
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
 // 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）→
-// 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）。
+// 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）→
+// 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
 import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
@@ -195,6 +196,9 @@ try {
   await page.waitForURL(/#\/routines\/r-[A-Za-z0-9-]+\/edit$/);
   await page.locator('.dc-add-tail').click();
   const addForm = page.locator('.dc-figure-form').last();
+  // 名前が空の間はカウントの欄が無い（名前が先。Ruling 54-3）ので、先に同じ名前でない名前を入れる
+  const nameInput = addForm.locator('input').nth(0);
+  await nameInput.fill('ウィスク（短）');
   const hint = addForm.locator('.dc-hint');
   if ((await hint.textContent())?.trim() !== '使える文字：1・2・3・&') errors.push(`allowed-symbols line on an empty row: "${await hint.textContent()}"`);
   await addForm.locator('input').nth(1).fill('12a3');
@@ -207,7 +211,6 @@ try {
   // 同じ名前は同じカウント（Ruling 50 D13）＋複製専用の形（D19）: 「ウィスク 123」がある所へ「ウィスク」→ 名前の欄の下に注意・
   // カウント欄と形は消え、主ボタンが「1 2 3 で複製して追加」。名前を変えると打っていたカウント（&123）のまま欄が戻る。押すと 2 行目が「ウィスク 1 2 3」
   const COPY = '1 2 3 で複製して追加';
-  const nameInput = addForm.locator('input').nth(0);
   await nameInput.fill('ウィスク');
   const copyButton = addForm.locator('.dc-primary');
   if ((await copyButton.textContent())?.trim() !== COPY) errors.push(`same name should switch the button to "${COPY}" ("${await copyButton.textContent()}")`);
@@ -297,6 +300,38 @@ try {
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 & 3', '1 2 & 3', '1 2 & 3'])) errors.push(`"Update all 3" should change every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
   await page.locator('[data-group="history"] button').first().click();   // 元に戻す（1 回で 3 行とも）
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`one undo should restore every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
+
+  // 種目のフィガーの一覧（D20・Ruling 54）: 名前が空の追加の行は「ワルツのフィガー（17）」の一覧だけ（カウントの欄は無い）→
+  // 「コントラチェック」をタップ → 名前に入り一覧が消え、同じ所にカウントの欄と形 8 個 → 形「1 2 3」→「追加する」で末尾に足される（キーボード無し）
+  await page.locator('.dc-add-tail').click();
+  const pickForm = page.locator('.dc-figure-form').last();
+  const nameList = pickForm.locator('[data-group="figure-names"][data-catalog]');
+  const listHeading = (await nameList.locator('.dc-field-label').textContent().catch(() => ''))?.trim();
+  if (listHeading !== 'ワルツのフィガー（17）') errors.push(`the name list heading should read ワルツのフィガー（17） ("${listHeading}")`);
+  const nameChips = nameList.locator('.dc-chip');
+  if ((await nameChips.count()) !== 17) errors.push(`the waltz name list should have 17 names (got ${await nameChips.count()})`);
+  if ((await nameChips.first().textContent())?.trim() !== 'クローズドチェンジ') errors.push(`the name list should start with クローズドチェンジ ("${await nameChips.first().textContent()}")`);
+  if (await pickForm.locator('.dc-input--counts').count()) errors.push('the counts field should wait until a name is chosen');
+  await nameChips.filter({ hasText: /^コントラチェック$/ }).click();
+  if ((await pickForm.locator('input').nth(0).inputValue()) !== 'コントラチェック') errors.push('tapping a listed name should fill the name field');
+  if (await pickForm.locator('[data-group="figure-names"]').count()) errors.push('the name list should go away once a name is chosen');
+  const pickPatterns = pickForm.locator('[data-group="count-patterns"] .dc-chip');
+  if (!(await pickForm.locator('.dc-input--counts').count()) || (await pickPatterns.count()) !== 8) errors.push(`the counts field and 8 patterns should appear after choosing a name (${await pickPatterns.count()})`);
+  await pickPatterns.filter({ hasText: /^1 2 3$/ }).click();
+  await pickForm.locator('.dc-primary').click();
+  const lastHead = ((await page.locator('.dc-figure-head').last().textContent()) ?? '').replace(/\s+/g, ' ');
+  if (!lastHead.includes('コントラチェック') || !lastHead.includes('1 2 3')) errors.push(`the chosen name should be added as the last row ("${lastHead.trim()}")`);
+
+  // ひらがなとカタカナは同じ名前（D21・Ruling 54-8・9）: 「うぃすく」でも候補に「ウィスク」が出る（変換前でも消えない）→ タップでカタカナに →
+  // 既にあるウィスクと同じ名前なので複製の形
+  await page.locator('.dc-add-tail').click();
+  const kanaForm = page.locator('.dc-figure-form').last();
+  await kanaForm.locator('input').nth(0).fill('うぃすく');
+  const kanaSuggestions = await kanaForm.locator('.dc-suggestion').allTextContents();
+  if (JSON.stringify(kanaSuggestions) !== JSON.stringify(['ウィスク', 'バックウィスク'])) errors.push(`hiragana should suggest the katakana names: ${JSON.stringify(kanaSuggestions)}`);
+  await kanaForm.locator('.dc-suggestion').first().click();
+  if ((await kanaForm.locator('input').nth(0).inputValue()) !== 'ウィスク') errors.push('tapping the suggestion should put the katakana name in');
+  if ((await kanaForm.locator('.dc-primary').textContent())?.trim() !== COPY) errors.push(`the katakana name should switch to "${COPY}" ("${await kanaForm.locator('.dc-primary').textContent()}")`);
   await context.close();
 } finally {
   await browser.close();
@@ -304,9 +339,14 @@ try {
 
 // WebKit（iOS Safari と同じエンジン）: フォーカスのある名前の欄が「複製して追加」で消えても focusout が来ない（Chrome は来る）。
 // 帯はキーボード（visualViewport の高さ）だけで決まるので、キーボードの代わりを開く → 隠れる → click だけで複製（フォーカスは欄のまま）
-// → 開いている間は隠れたまま → 閉じると 500ms 以内に戻る、を確かめる（F6 round 4）。WebKit が入っていない時は飛ばす（npx playwright-core install webkit）。
+// → 開いている間は隠れたまま → 閉じると 500ms 以内に戻る、を確かめる（F6 round 4）。WebKit が入っていない時（実行ファイルが無い）だけ飛ばす
+// （npx playwright-core install webkit）。それ以外の起動の失敗は smoke の失敗にする（黙って飛ばさない。F6 再レビュー N3）。
 let webkitNote = 'webkit skipped (not installed)';
-const wk = await webkit.launch().catch(() => null);
+const wk = await webkit.launch().catch(error => {
+  if (/Executable doesn't exist/i.test(error.message)) return null;
+  errors.push(`webkit: could not launch (${error.message.split('\n')[0]})`);
+  return null;
+});
 if (wk) {
   try {
     const page = await (await wk.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' })).newPage();
@@ -318,6 +358,7 @@ if (wk) {
     await page.waitForSelector('[data-screen="S4"]');
     await page.locator('.dc-add-tail').click();
     const form = page.locator('.dc-figure-form').last();
+    if ((await form.locator('[data-group="figure-names"] .dc-chip').count()) !== 17) errors.push('webkit: the empty add row should list the 17 waltz names');
     await form.locator('input').nth(0).click();   // 指で欄を触って打つのと同じ形（fill は WebKit で focusin を待たない）
     await page.keyboard.type(R.waltz13.figures[0].name);
     if (!(await page.locator('.dc-dock').isVisible())) errors.push('webkit: focus alone (no keyboard) should not hide the dock');
@@ -328,7 +369,7 @@ if (wk) {
     if (!(await page.locator('.dc-dock').isHidden())) errors.push('webkit: the dock should stay hidden until the keyboard closes');
     await fakeKeyboard(page, 0);
     if (!(await dockBackSoon(page))) errors.push('webkit: the bottom dock should come back within 500ms after the keyboard closes');
-    webkitNote = 'webkit dock hides with the keyboard and comes back when it closes after a copy';
+    webkitNote = 'webkit lists the waltz names on an empty add row, the dock hides with the keyboard and comes back when it closes after a copy';
   } finally {
     await wk.close();
   }
@@ -338,4 +379,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes; ${webkitNote}`);

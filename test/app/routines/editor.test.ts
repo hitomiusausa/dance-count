@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formLayout, RoutineEditor } from '../../../src/app/routines/editor.ts';
+import { formLayout, RoutineEditor, type FormLayout } from '../../../src/app/routines/editor.ts';
+import { hasFigureNameSuggestions } from '../../../src/app/routines/figure-names.ts';
 import { FIGURES_MAX } from '../../../src/app/routines/limits.ts';
 import { createRoutine, type Routine } from '../../../src/app/routines/routine.ts';
 
@@ -14,6 +15,10 @@ function editor(figures: Array<[string, string]> = [['ナチュラルターン',
   return new RoutineEditor(routine, () => `f-new0000${next++}`);
 }
 const names = (e: RoutineEditor) => e.routine.figures.map(figure => `${figure.name}:${figure.counts}`);
+// 画面（FigureForm）が formLayout に渡すのと同じ文脈（Ruling 54-2）。
+const layout = (e: RoutineEditor): FormLayout => formLayout(e.check(), {
+  kind: e.open!.kind, nameEmpty: e.open!.draft.name.trim() === '', hasCatalog: hasFigureNameSuggestions(e.routine.danceId)
+});
 
 test('add: the form opens empty, "Add" works only when valid, the counts are normalized', () => {
   const e = editor([]);
@@ -244,7 +249,7 @@ test('edit: renaming into a same-named group asks to use that count; close drops
   const e = editor();
   e.openRow(0);
   e.setDraft({ name: 'うぃすく' });
-  assert.equal(e.check().action, 'done'); // ひらがなは別の名前
+  assert.equal(e.check().action, 'matchCounts'); // ひらがなもカタカナと同じ名前（D21・Ruling 54-8。以前は別の名前）
   e.setDraft({ name: 'ｳｨｽｸ' });
   const check = e.check();
   assert.deepEqual([check.valid, check.reason, check.action], [false, 'sameName', 'matchCounts']);
@@ -344,15 +349,15 @@ test('add with a same name hides the counts parts, shows the notice under the na
   const e = editor();
   e.openAdd();
   e.setDraft({ name: 'クローズドチェンジ', counts: '1&23' });
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  assert.deepEqual(layout(e), { countsShown: true, sameName: null, namePicker: false });
   e.setDraft({ name: 'ウィスク' });
   const check = e.check();
   assert.equal(check.action, 'addCopy');
-  assert.deepEqual(formLayout(check), { countsShown: false, sameName: 'copy' });
+  assert.deepEqual(layout(e), { countsShown: false, sameName: 'copy', namePicker: false });
   assert.deepEqual([check.same?.name, check.same?.counts], ['ウィスク', '12&3']); // ボタンの「{counts} で複製して追加」の引数
   assert.equal(e.open?.draft.counts, '1&23'); // 欄を出さない間も打った値は残る
   e.setDraft({ name: 'ウィスク（短）' });
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  assert.deepEqual(layout(e), { countsShown: true, sameName: null, namePicker: false });
   assert.deepEqual([e.check().action, e.check().counts, e.check().valid], ['add', '1&23', true]);
 });
 
@@ -361,9 +366,9 @@ test('on the add row the layout depends on the name only: editing the counts nev
   e.openAdd();
   for (const counts of ['', '12&3', '12', '123', '12a3', '&123']) {
     e.setDraft({ name: 'クローズドチェンジ', counts });
-    assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null }, counts);
+    assert.deepEqual(layout(e), { countsShown: true, sameName: null, namePicker: false }, counts);
     e.setDraft({ name: 'ウィスク' });
-    assert.deepEqual(formLayout(e.check()), { countsShown: false, sameName: 'copy' }, counts);
+    assert.deepEqual(layout(e), { countsShown: false, sameName: 'copy', namePicker: false }, counts);
   }
 });
 
@@ -372,11 +377,11 @@ test('edit: renaming into another name keeps the counts shown and moves only the
   e.openRow(0);
   e.setDraft({ name: 'ウィスク' });
   assert.equal(e.check().action, 'matchCounts');
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: 'match' });
+  assert.deepEqual(layout(e), { countsShown: true, sameName: 'match', namePicker: false });
   e.setDraft({ counts: '12a3' }); // 編集の行はカウントの理由が先＝名前の下の注意は出ない
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  assert.deepEqual(layout(e), { countsShown: true, sameName: null, namePicker: false });
   e.setDraft({ name: 'ナチュラルターン', counts: '12&3' });
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  assert.deepEqual(layout(e), { countsShown: true, sameName: null, namePicker: false });
 });
 
 test('old mismatched same-name rows stay as they are; the copy source is the first one (D19・Ruling 50-1・5)', () => {
@@ -387,4 +392,75 @@ test('old mismatched same-name rows stay as they are; the copy source is the fir
   assert.deepEqual([e.check().same?.index, e.check().same?.counts], [0, '123']);
   assert.equal(e.addCopy(), true);
   assert.deepEqual(names(e), ['ウィスク:123', 'ウィスク:12&3', 'ウィスク:123']);
+});
+
+// D20・Ruling 54-2・3: 名前が空の追加の行は「名前を選ぶ所だけ」（照合済みの一覧）。カウントの欄・使える文字・形は名前が入ってから。
+test('formLayout shows the name list only on an add row with an empty name in a dance that has verified names (Ruling 54 (e))', () => {
+  const e = editor();
+  e.openAdd();
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: true, sameName: null });
+  e.setDraft({ name: '   ' }); // 空白だけは「空」
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: true, sameName: null });
+  e.setDraft({ name: 'x' });
+  assert.deepEqual(layout(e), { countsShown: true, namePicker: false, sameName: null });
+  e.setDraft({ name: 'ウィスク' });
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: false, sameName: 'copy' });
+  e.openRow(0);
+  e.setDraft({ name: '' }); // 編集の行では名前を空にしても一覧は出さない
+  assert.deepEqual(layout(e), { countsShown: true, namePicker: false, sameName: null });
+  // ヴィエニーズワルツは一覧が無いので、名前が空でも最初からカウントの欄を出す
+  const vw = new RoutineEditor(createRoutine({ id: 'r-bbbbbbbb', danceId: 'vwaltz', name: 'VW', now: NOW }), () => 'f-vw000000');
+  vw.openAdd();
+  assert.deepEqual(layout(vw), { countsShown: true, namePicker: false, sameName: null });
+  // 純粋関数としても: 同じ入力で同じ答え
+  assert.deepEqual(formLayout({ action: 'add', reason: null }, { kind: 'add', nameEmpty: true, hasCatalog: false }), { countsShown: true, namePicker: false, sameName: null });
+  assert.deepEqual(formLayout({ action: 'done', reason: null }, { kind: 'edit', nameEmpty: true, hasCatalog: true }), { countsShown: true, namePicker: false, sameName: null });
+});
+
+test('counts typed before the name was cleared come back when a name is chosen again (Ruling 54 (f))', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'コントラチェック', counts: '1&23' });
+  e.setDraft({ name: '' });
+  assert.equal(layout(e).namePicker, true);
+  assert.equal(e.open?.draft.counts, '1&23');
+  e.setDraft({ name: 'リバースターン' });
+  assert.deepEqual([layout(e).countsShown, e.check().counts, e.check().valid], [true, '1&23', true]);
+});
+
+// D21・Ruling 54-8・10: かなとカナは同じ名前（foldFigureName の 1 段）。保存した表記は変えない。
+test('a hiragana name joins the katakana figure and adds a copy in the representative spelling (Ruling 54 (i))', () => {
+  const e = editor([['ウィスク', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'うぃすく' });
+  const check = e.check();
+  assert.equal(check.action, 'addCopy');
+  assert.equal(check.same?.name, 'ウィスク');
+  assert.equal(e.addCopy(), true);
+  assert.deepEqual(names(e), ['ウィスク:123', 'ウィスク:123']);
+});
+
+test('changing the counts of a hiragana row updates the katakana row too, and one undo restores both (Ruling 54 (j))', () => {
+  const e = editor([['ウィスク', '123'], ['うぃすく', '123']]);
+  e.openRow(1);
+  e.setDraft({ counts: '12&3' });
+  const check = e.check();
+  assert.deepEqual([check.action, check.same?.others], ['updateAll', 1]);
+  assert.equal(e.close(), true);
+  assert.deepEqual(names(e), ['ウィスク:12&3', 'うぃすく:12&3']);
+  assert.equal(e.undo(), true);
+  assert.deepEqual(names(e), ['ウィスク:123', 'うぃすく:123']);
+});
+
+test('respelling a name in kana is not a rename: only the spelling changes (Ruling 54 (k))', () => {
+  const e = editor([['ウィスク', '123'], ['ウィスク', '123']]);
+  e.openRow(0);
+  e.setDraft({ name: 'うぃすく' });
+  assert.deepEqual([e.check().action, e.check().valid], ['done', true]);
+  assert.equal(e.close(), true);
+  assert.deepEqual(names(e), ['うぃすく:123', 'ウィスク:123']);
+  // 綴りを変えたままカウントも変えると、名前を変えていない扱いなので仲間ごと変わる（カウントを合わせる、にはならない）
+  e.openRow(0);
+  e.setDraft({ name: 'ウィスク', counts: '12&3' });
+  assert.equal(e.check().action, 'updateAll');
 });

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { Icon } from '../components/Icon.tsx';
-import type { MessageKey } from '../i18n/index.ts';
+import { danceName, type MessageKey } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { revealScrollBy, throttleToFrame } from '../lib/reveal.ts';
 import { nextFrame, onVisibleViewportChange, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
@@ -10,8 +10,8 @@ import { beatsPerBar } from './bar-check.ts';
 import { countPatterns, pressedPattern } from './count-patterns.ts';
 import { allowedSymbols } from './counts.ts';
 import type { IconName } from '../components/icon-names.ts';
-import { formLayout, type DraftAction, type DraftCheck, type DraftReason, type FigureDraft } from './editor.ts';
-import { figureNameSuggestions, hasFigureNameSuggestions } from './figure-names.ts';
+import { formLayout, type DraftAction, type DraftCheck, type DraftReason, type FigureDraft, type OpenRow } from './editor.ts';
+import { figureNameChoices, figureNameSuggestions, hasFigureNameSuggestions } from './figure-names.ts';
 import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 
 // 開いた行の入力（Ruling 36-3・38・39・50・53）。名前（候補は verified 名だけ）・カウント・カウントの形・主ボタン。
@@ -25,6 +25,10 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // 同じ名前の時（D19・formLayout）: 注意は名前の欄のすぐ下（aria-describedby も名前の欄へ）。追加の行で複製の時は
 // カウントの欄・使える文字・カウントの形を出さず、主ボタンに複製元のカウントを入れる（「1 2 3 で複製して追加」）。
 // 欄を出さない間も draft.counts は残す（名前を変えて同じ名前でなくなれば、打った値のまま欄が戻る）。
+// 名前が空の追加の行（D20・Ruling 54・formLayout の namePicker）: 名前の欄の下にその種目の照合済みフィガー全部を
+// [data-group="figure-names"][data-catalog]（figure-form の兄弟。入れ子にしない＝U5 は一覧の上限 20）で並べ、カウントの欄・使える文字・
+// カウントの形は出さない。タップで名前だけ入れる（counts は触らない・行は閉じない・フォーカスは動かさない）。autofocus は付けない
+// （キーボードが出て一覧が隠れるため）。すでにルーティンにある名前の印は付けない（タップすれば複製の形で分かる）。
 const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | null>, MessageKey> = {
   leading: 'startWithBeat', invalid: 'countsInvalid', sameName: 'sameNameExists', name: 'nameNeeded'
 };
@@ -34,18 +38,22 @@ const PRIMARY: Record<DraftAction, { text: MessageKey; icon: IconName | null }> 
 };
 
 // onPrimary は主ボタン（画面が check.action で処理を選ぶ）。Enter は有効な時だけ（＝確定の働きの時だけ）。
-export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary }: {
-  idPrefix: string; danceId: string; draft: FigureDraft; check: DraftCheck;
+export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onPrimary }: {
+  idPrefix: string; kind: OpenRow['kind']; danceId: string; draft: FigureDraft; check: DraftCheck;
   onDraft(patch: Partial<FigureDraft>): void; onPrimary(): void;
 }) {
   const { translator } = useI18n();
-  const suggestions = hasFigureNameSuggestions(danceId) ? figureNameSuggestions(danceId, draft.name, translator.locale) : [];
+  const hasCatalog = hasFigureNameSuggestions(danceId);
+  const suggestions = hasCatalog ? figureNameSuggestions(danceId, draft.name, translator.locale) : [];
   const countsBad = check.reason === 'symbols' || check.reason === 'leading' || check.reason === 'invalid';
   const hintId = `${idPrefix}-hint`;
   const reasonId = `${idPrefix}-reason`;
   const symbolsBad = check.reason === 'symbols';
   const others = check.same?.others ?? 0;
-  const layout = formLayout(check);
+  const layout = formLayout(check, { kind, nameEmpty: draft.name.trim() === '', hasCatalog });
+  const choices = layout.namePicker ? figureNameChoices(danceId, translator.locale) : [];
+  const choicesLabel = translator.t('figureChoices', { dance: danceName(danceId, translator.locale), count: choices.length });
+  const choicesId = `${idPrefix}-choices-label`;
   const sameCounts = check.same ? formatCounts(danceId, check.same.counts) : '';
   const sameId = `${idPrefix}-same`;
   const renameId = `${idPrefix}-rename`;
@@ -128,6 +136,16 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
           </div>
         )}
       </div>
+      {layout.namePicker && (
+        <div class="dc-field dc-figure-choices" data-group="figure-names" data-catalog>
+          <div class="dc-field-label" id={choicesId}>{choicesLabel}</div>
+          <div class="dc-chips" role="group" aria-labelledby={choicesId}>
+            {choices.map(name => (
+              <button key={name} type="button" class="dc-chip dc-chip--name" onClick={() => onDraft({ name })}>{name}</button>
+            ))}
+          </div>
+        </div>
+      )}
       <div class="dc-count-patterns" data-group="count-patterns">
         {layout.countsShown && (
           <div class="dc-field">
