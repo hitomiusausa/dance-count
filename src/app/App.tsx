@@ -13,6 +13,8 @@ import { HomeScreen } from './screens/HomeScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
+import { SoundHelpScreen } from './screens/SoundHelpScreen.tsx';
+import { VoicesScreen } from './screens/VoicesScreen.tsx';
 import { DEFAULT_SETTINGS, type AppSettings } from './settings/settings.ts';
 import { loadSettings, saveSettings } from './settings/store.ts';
 import { I18nContext } from './state/i18n.ts';
@@ -23,7 +25,9 @@ import { SettingsContext } from './state/settings.ts';
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S3: RoutinesScreen,
-  S6: SettingsScreen
+  S6: SettingsScreen,
+  S7: VoicesScreen,
+  S11: SoundHelpScreen
 };
 
 // S2 は種目が分かる時だけ。知らない種目・未実装の画面はホーム。
