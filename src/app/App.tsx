@@ -40,11 +40,10 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2〜S5 は下で個別に描く）。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8 は下で個別に描く）。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S6: SettingsScreen,
-  S7: VoicesScreen,
   S11: SoundHelpScreen
 };
 
@@ -119,6 +118,7 @@ export function App() {
                 : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
                 : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
                 : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
+                : screen === 'S7' ? <VoicesScreen uiState={route.query.uiState} />
                 : <Simple />}
               {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
             </div>

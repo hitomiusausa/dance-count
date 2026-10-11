@@ -5,6 +5,7 @@
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
 import { chromium } from 'playwright-core';
 import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
+import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
@@ -70,8 +71,14 @@ const STATES = [
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root' },
-  { name: 'S7', hash: '#/voices', screen: 'S7', kind: 'list' },
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 3, total: 3 },
+  // 段4（Ruling 60・63）: S7 は 一覧 1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 2, total: 2, voiceRows: ['標準の声（英語）'] },
+  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
+    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'] },
+  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
+  { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
 
@@ -101,14 +108,15 @@ try {
         const consoleErrors = [];
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
         page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
-        if (state.prepare || state.seed) {
+        if (state.prepare || state.seed || state.voiceSeed) {
           await page.goto(BASE + (state.prepare ?? '#/'));
           await page.waitForSelector('[data-screen]');
         }
         if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
+        if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
         await page.goto(BASE + state.hash);
-        if (state.seed) await page.reload();
-        await page.waitForSelector(`[data-screen="${state.screen}"]`);
+        if (state.seed || state.voiceSeed) await page.reload();
+        await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
         for (const step of state.steps ?? []) {
           if (step.click) await page.locator(step.click).click();
           if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
@@ -138,7 +146,7 @@ try {
   await page.waitForSelector('[data-screen]');   // アプリがハッシュの変化を聞き始めてから次のハッシュへ
   for (const state of CHECKED) {
     await page.goto(BASE + state.hash);
-    await page.waitForSelector(`[data-screen="${state.screen}"]`);
+    await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
     const { scrollWidth, clientWidth, meta } = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
@@ -161,7 +169,7 @@ try {
   await narrowPage.waitForSelector('[data-screen]');
   for (const state of CHECKED) {
     await narrowPage.goto(BASE + state.hash);
-    await narrowPage.waitForSelector(`[data-screen="${state.screen}"]`);
+    await narrowPage.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
     const { scrollWidth, clientWidth } = await narrowPage.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
     if (scrollWidth > clientWidth) narrowProblems.push(`320 ${state.name}: horizontal scroll ${scrollWidth} > ${clientWidth}`);
   }
@@ -529,6 +537,14 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.voiceOffset) {
     const value = document.querySelector('[data-voice-offset]')?.textContent.trim();
     if (value !== state.voiceOffset) issues.push(`R62 voice timing reads "${value}", expected "${state.voiceOffset}"`);
+  }
+  // 段4（Ruling 60）: S7 の行の並び・選ばれているのは 1 つ・途中の声は選べない
+  if (state.voiceRows) {
+    const rows = [...document.querySelectorAll('[data-group="voice"] .dc-voice-name')].map(row => row.textContent.trim());
+    if (JSON.stringify(rows) !== JSON.stringify(state.voiceRows)) issues.push(`R60 voice rows ${JSON.stringify(rows)}, expected ${JSON.stringify(state.voiceRows)}`);
+    const checked = [...document.querySelectorAll('[data-group="voice"] [role="radio"][aria-checked="true"]')];
+    if (checked.length !== 1) issues.push(`R60 ${checked.length} chosen voices, expected 1`);
+    if (document.querySelector('[data-group="voice"] .dc-voice-partial[role="radio"]')) issues.push('R60 a partial voice is a radio (it must not be choosable)');
   }
   return issues;
 }
