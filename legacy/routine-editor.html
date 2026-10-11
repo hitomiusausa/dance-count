@@ -6,7 +6,7 @@
   <link rel="icon" href="data:,">
   <title>ルーティン練習・編集 | Dance Count</title>
   <script>
-    if (location.protocol === 'file:') location.replace('http://localhost:4173/public/routine-editor.html');
+    if (location.protocol === 'file:') location.replace('http://localhost:4173/legacy/routine-editor.html');
   </script>
   <link rel="stylesheet" href="./assets/ui.css">
   <style>
@@ -148,7 +148,7 @@
     <div id="loadError" class="load-error" role="alert">
       <strong data-i18n="loadFailed">ルーティンデータを読み込めませんでした。</strong><br>
       <span id="loadErrorDetail" data-i18n="loadDetail">この画面はファイルを直接開かず、ローカルサーバー経由で開く必要があります。</span><br>
-      <a id="loadErrorAction" href="http://localhost:4173/public/routine-editor.html" data-i18n="reopen">正しいURLで開き直す</a>
+      <a id="loadErrorAction" href="http://localhost:4173/legacy/routine-editor.html" data-i18n="reopen">正しいURLで開き直す</a>
     </div>
     <div class="list-head"><h2 data-i18n="figureList">フィガー一覧</h2><span id="figureCount">—</span></div>
     <section id="figures" class="figures"></section>
