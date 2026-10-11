@@ -66,3 +66,14 @@ Workspace: main checkout on branch agent/app-v1 (same as stage 1; PO said to con
 - Task 10: fix round 1/5 (4 addressed, 0 open — U3 同一バー内・U10 折り返し1回・aria-hidden 除外撤去・くわしく開の合計8; commits 9dc8f88..e3c9a9b)
 - Task 10: minor (deferred): 厳しくした検査の後、公開ビルド（4174）での ui:check は未再実行（Task 11 で実行）
 - Task 10: complete (commits 5e91218..e3c9a9b, review clean after 1 fix round)
+- Task 11: found (Important for final wave): 英語の警告バナーが "No sound is playing.Check…" と文の間に空白なし（noSoundTitle と noSoundBody を連結）→ 最終修正便で直す
+- Task 11: checked by controller: 英語「Lead-in…」の見え方は Inter のハイフンで問題なし／375 の全体撮影で ▶ の帯がトグルに重なるのは固定帯の撮影上の見え方（ui:check の初期表示判定は PASS）
+- Task 11: complete (commits e3c9a9b..9ec445a; gates: 221 tests, typecheck, build, timing identical, golden unchanged, ui:check 41 PASS dev+dist, smokes OK)
+## Final review
+- Final review (opus, c75919e..9ec445a): With fixes — Critical 1（繰り返しオフで終わっても「再生中」のまま固まる）・Important 2（英語バナーの空白）・Important 3（ホームバーのある iPhone で下タブと ▶ の帯が安全域を取らない）・Minor 4〜7
+- Ruling (最終修正便に含める): 1・2・3 は必須。Minor 4（選択中の項目を再タップすると再生が頭から始まる）と Minor 5（IndexedDB が応答しないと永遠に白画面 → 1.5秒で既定値）も数行なので同じ便で直す — 高齢の初見者が「固まった」と感じる経路を消す — 外れても数行の差し戻し。
+- Ruling (後回し): Minor 6（声の読み込み中の表示・タイムアウト）は段7（オフライン・precache）で読み込みの扱いと一緒に決める／Minor 7（routes.ts の冗長な const）は修正便のついでに消してよい — 外れても見た目の差だけ。
+- Ruling (実機確認表に足す): 「繰り返しオフで最後まで鳴らす→自動で止まる」と「ホームバーのある iPhone で下タブ・▶ の帯・10種目目が隠れない」を stage2-device-check.md に追加。
+- Final fix wave: 1〜7 addressed (commits 9ec445a..ca736b5); scoped re-review: all addressed, no new breakage. Tests 224, ui:check 41 PASS (dev+dist), smoke OK
+- Final: minor (deferred): タイムアウト後に遅れて開いた IndexedDB 接続を閉じない（v3 の時に onversionchange と一緒に）／.dc-screen--focus（S11 など帯なしの集中画面）は下余白にホームバー分を足していない（スクロールで読める）／openStorageWithin のタイマーをアンマウントで消さない（alive で無害）
+- Stage 2 closed: 224 tests, typecheck ok, dist OK, timing identical, golden unchanged since stage 1, ui:check 41 PASS dev+dist, smoke:practice OK. 実機確認（docs/app-v1/stage2-device-check.md）待ち

@@ -61,7 +61,7 @@
 - `src/engine/` … 旧 `src/v2/` を無改変で移設。tick↔時刻は **`src/engine/tempo-map.js` だけ**（例外: 検算用の `tools/audit-all-dance-timing.js` と開発用 `tools/render-subdivision-audio-review.js`）
 - `src/app/` … Vite 8.3.4・Preact 10.29.8・TypeScript 6.0.3。i18n（日英）・ハッシュルーター（純粋関数）・platform アダプタ（hash/locale は実装、音声・録音・保存・ファイル・WakeLock は「未実装」を投げる空実装）・下タブ3つの空画面
 - `legacy/` … 旧画面（保守停止）。標準音声は `public/audio/default-en-female-v1/` のまま
-- テスト 221件（段2で 154 → 221。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
+- テスト 224件（段2で 154 → 224。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
 
 ### 番人（壊したら自動で止まるもの）
 
@@ -116,7 +116,7 @@
 cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
 npm run dev        # 新アプリ http://localhost:5173
 npm run legacy     # 旧画面 http://localhost:4173/legacy/practice.html
-npm test           # 221件
+npm test           # 224件
 npm run typecheck
 npm run build      # check-dist まで走る
 npm run timing:audit && npm run -s timing:compare
