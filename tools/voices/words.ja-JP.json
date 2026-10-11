@@ -1,0 +1,14 @@
+{
+  "slow": { "text": "スロー" },
+  "quick": { "text": "クイック" },
+  "one": { "text": "いち" },
+  "two": { "text": "に" },
+  "three": { "text": "さん" },
+  "four": { "text": "よん" },
+  "five": { "text": "ご" },
+  "six": { "text": "ろく" },
+  "seven": { "text": "なな" },
+  "eight": { "text": "はち" },
+  "and": { "text": "アンド" },
+  "ah": { "text": "ア" }
+}
