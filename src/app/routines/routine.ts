@@ -4,7 +4,7 @@ import { validateRoutineProvenance } from '../../engine/routine-provenance.js';
 import { APP_VERSION } from '../app-version.ts';
 import { BPM_MAX, BPM_MIN } from '../practice/speed.ts';
 import { isFigureId, isRoutineId } from './ids.ts';
-import { COUNTS_MAX, FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
+import { COUNTS_MAX, CREATED_WITH_VERSION_MAX, FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 
 // 端末に保存するルーティン（仕様 §7・Ruling 37・44）。既存のキーは変えず、createdAt を足す。
 // 自分で作ったもの（source:'user-created'）と、配布ファイルから受け取ったもの（source:'received'・段5・Ruling 84-2）。
@@ -88,7 +88,7 @@ export function normalizeRoutine(raw: unknown): Routine | null {
   const routine: Routine = {
     id, danceId, name: name as string, bpm: bpm as number | null, countInBars, source, status, figures: cleanFigures,
     provenance: { ...USER_PROVENANCE, sourceKind: source },
-    createdWith: { app: 'dance-count', version: createdWith.version },
+    createdWith: { app: 'dance-count', version: [...createdWith.version].slice(0, CREATED_WITH_VERSION_MAX).join('') },
     createdAt: typeof createdAt === 'string' ? createdAt : updatedAt,
     updatedAt
   };

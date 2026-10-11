@@ -1,6 +1,6 @@
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { USER_PROVENANCE, type Routine } from '../routines/routine.ts';
-import { VOICE_LIMITS, type VoicePackRecord } from '../voices/store.ts';
+import { VOICE_KEYS, VOICE_LIMITS, type VoicePackRecord } from '../voices/store.ts';
 import type { ParsedBundle } from './bundle.ts';
 
 // 受け取る前の計画（S10 の「確認」の中身。Ruling 83-2・84。純粋）: ID を付け直し、同じ物は置き換え、上限で止める。
@@ -46,22 +46,45 @@ export function planImport(parsed: ParsedOk, packs: readonly VoicePackRecord[], 
 
 // 受け取った声（Ruling 84-1）: 新しい v- の ID・origin:'received'・誰から・同意・先生の端末の ID と時刻。
 // 声のタイミングは先生の端末の遅れ（globalOffsetMs）を捨て、語ごとの癖（wordOffsetsMs）だけ残す。両方 0 なら持たない。
+// ファイルから来た値は決まった項目だけを写す（知らない項目を端末に保存しない。後で VoicePackRecord に足す項目を
+// ファイルが先に埋めることもできない。段5 Tasks 1–3 レビュー 1）。
 function receivedPack(parsed: ParsedOk, now: string, id: string): VoicePackRecord {
-  const { timingAdjustments, distributor: _d, consent: _c, sourceId: _s, sourceUpdatedAt: _u, receivedAt: _r, ...rest } = parsed.voice!.pack;
-  const wordOffsetsMs = timingAdjustments?.wordOffsetsMs ?? {};
-  const keepWords = Object.values(wordOffsetsMs).some(value => value !== 0);
+  const source = parsed.voice!.pack;
+  const wordOffsetsMs: Record<string, number> = {};
+  for (const key of VOICE_KEYS) {
+    const value = source.timingAdjustments?.wordOffsetsMs?.[key];
+    if (typeof value === 'number' && value !== 0) wordOffsetsMs[key] = value;
+  }
+  const keepWords = Object.keys(wordOffsetsMs).length > 0;
+  const adjustedAt = typeof source.timingAdjustments?.adjustedAt === 'string' ? source.timingAdjustments.adjustedAt : now;
   return {
-    ...rest,
+    schemaVersion: 1,
+    type: 'dance-count-recorded-voice-pack',
     id,
-    origin: 'received',
+    name: source.name,
+    locale: source.locale,
+    vocabularyId: source.vocabularyId,
     updatedAt: now,
-    ...(parsed.distributor ? { distributor: parsed.distributor } : {}),
-    ...(parsed.consent ? { consent: parsed.consent } : {}),
-    ...(keepWords ? { timingAdjustments: { globalOffsetMs: 0, wordOffsetsMs, adjustedAt: timingAdjustments!.adjustedAt } } : {}),
-    sourceId: parsed.voice!.pack.id,
+    words: receivedWords(source.words),
+    ...(keepWords ? { timingAdjustments: { globalOffsetMs: 0, wordOffsetsMs, adjustedAt } } : {}),
+    origin: 'received',
+    ...(parsed.distributor ? { distributor: { name: parsed.distributor.name } } : {}),
+    ...(parsed.consent ? { consent: { voiceDistribution: true, consentedAt: parsed.consent.consentedAt } } : {}),
+    sourceId: source.id,
     ...(parsed.voice!.sourceUpdatedAt ? { sourceUpdatedAt: parsed.voice!.sourceUpdatedAt } : {}),
     receivedAt: now
   };
+}
+
+function receivedWords(words: VoicePackRecord['words']): VoicePackRecord['words'] {
+  const clean: VoicePackRecord['words'] = {};
+  for (const key of VOICE_KEYS) {
+    const word = words[key];
+    if (!word) continue;
+    const { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized, gainDb } = word;
+    clean[key] = { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized, gainDb };
+  }
+  return clean;
 }
 
 // 受け取ったルーティン（Ruling 84-2）: ルーティンもフィガーも新しい ID・source:'received'・誰から（先生の端末の ID を sourceId に）。

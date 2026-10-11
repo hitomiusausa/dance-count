@@ -108,3 +108,26 @@ test('"Use" writes the new things first and removes the replaced ones only after
   assert.equal(await commitImport(plan, writer('voice')), false);
   assert.deepEqual(log, [`save ${plan.voice!.pack.id}`]);
 });
+
+test('only known fields of a received voice are kept; unknown keys in the file are not stored (stage-5 review)', async () => {
+  const text = buildBundle({ distributorName: '山田', voice: await exportVoiceForBundle(packFixture('ja-JP', 12)), routines: [], now: NOW });
+  const data = JSON.parse(text);
+  data.voicePack.evil = 'x'.repeat(1000);
+  data.voicePack.sourceId = 'forged';
+  data.voicePack.receivedAt = 'forged';
+  data.voicePack.futureField = { preset: true };
+  data.voicePack.words.one.extra = 'y';
+  data.voicePack.timingAdjustments = { globalOffsetMs: 5, wordOffsetsMs: { two: 10 }, adjustedAt: NOW, extra: 'z' };
+  const tampered = JSON.stringify(data).replace('"evil":', '"__proto__":{"polluted":true},"evil":');
+  const parsed = parseBundle(tampered);
+  assert.ok(parsed.ok);
+  const pack = received(planImport(parsed, [], [], { now: LATER, newId: ids() }));
+  assert.deepEqual(Object.keys(pack).sort(), ['consent', 'distributor', 'id', 'locale', 'name', 'origin', 'receivedAt', 'schemaVersion',
+    'sourceId', 'sourceUpdatedAt', 'timingAdjustments', 'type', 'updatedAt', 'vocabularyId', 'words'].sort());
+  assert.equal(Object.hasOwn(pack, '__proto__'), false);
+  assert.equal(pack.sourceId, 'user-recorded-ja-v1');
+  assert.equal(pack.receivedAt, LATER);
+  assert.deepEqual(Object.keys(pack.words.one!).sort(), ['blob', 'durationMs', 'gainDb', 'mimeType', 'normalized', 'onsetMs', 'sourceOnsetMs']);
+  assert.deepEqual(pack.timingAdjustments, { globalOffsetMs: 0, wordOffsetsMs: { two: 10 }, adjustedAt: NOW });
+  assert.deepEqual(normalizeVoicePackRecord(structuredClone(pack)), pack);
+});

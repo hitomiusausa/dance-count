@@ -1,3 +1,4 @@
+import { cleanReceivedFileName } from '../share/filename.ts';
 import { BUNDLE_MAX_BYTES } from '../share/limits.ts';
 
 // 配る（共有・保存）と受け取る（ファイルを読む・Android の受け口）の端末の面（Ruling 79-2・81）。
@@ -92,7 +93,7 @@ export async function takeInboxFile(): Promise<File | null> {
     const header = response.headers.get('X-File-Name');
     let name = INBOX_FALLBACK_NAME;
     try { if (header) name = decodeURIComponent(header); } catch { /* 名前が読めなくても中身は受け取る */ }
-    return new File([blob], name, { type: blob.type });
+    return new File([blob], cleanReceivedFileName(name, INBOX_FALLBACK_NAME), { type: blob.type });
   } catch {
     return null;
   }

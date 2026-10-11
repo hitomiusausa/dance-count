@@ -78,3 +78,9 @@ test('a received routine without receivedFrom, or with a mismatched provenance, 
   assert.equal(normalizeRoutine(received), null);
   assert.equal(normalizeRoutine({ ...received, receivedFrom: { distributor: '山田', receivedAt: NOW }, provenance: waltz().provenance }), null);
 });
+
+test('a long createdWith.version from a file is cut to 40 characters (stage-5 review)', () => {
+  const long = normalizeRoutine({ ...waltz(), createdWith: { app: 'dance-count', version: 'x'.repeat(100_000) } });
+  assert.equal(long?.createdWith.version, 'x'.repeat(40));
+  assert.equal(normalizeRoutine({ ...waltz(), createdWith: { app: 'dance-count', version: '0.5.0' } })?.createdWith.version, '0.5.0');
+});

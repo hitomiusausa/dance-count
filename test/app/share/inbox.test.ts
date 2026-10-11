@@ -50,3 +50,12 @@ test('without the Cache API, or when it fails, there is no inbox file', async ()
     assert.equal((await takeInboxFile())?.name, 'bundle.dancecount.txt', 'a missing name falls back');
   } finally { restoreNameless(); }
 });
+
+test('the inbox file name loses direction-changing characters (stage-5 review)', async () => {
+  const restore = withCaches(fakeCaches());
+  try {
+    const cache = await (globalThis as unknown as { caches: ReturnType<typeof fakeCaches> }).caches.open(INBOX_CACHE);
+    await cache.put(INBOX_KEY, new Response('x', { headers: { 'X-File-Name': encodeURIComponent('山田‮txt.dancecount.txt') } }));
+    assert.equal((await takeInboxFile())?.name, '山田txt.dancecount.txt');
+  } finally { restore(); }
+});
