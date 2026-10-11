@@ -7,6 +7,7 @@
   --line-on-soft: #7D8699; /* --soft の上の罫線・枠（3.21:1。白の上の --line と同じ強さ。U7） */
   --sel: #1B2A4A; --sel-ink: #FFFFFF; --sel-line: #1B2A4A;
   --count-ink: #A54D06; --beat-on: #A54D06;
+  --now-bg: #FBEBDD; /* 鳴っているフィガーの行の背景だけ（D10） */
   --warn-bg: #FFFFFF; --warn-ink: #7A3A05; --warn-line: #A54D06;
   --icon-circle: #14213D;
   --r: 6px; --r-s: 4px; --bw: 1px; --tabh: 68px; --tabh-top: 64px; --dockh: 97px; --track: -0.015em;
@@ -161,6 +162,47 @@ button { cursor: pointer; }
 .dc-dialog-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .dc-dialog-buttons .dc-button { min-height: 56px; }
 
+/* S4 ルーティン編集（Ruling 36〜39・D10） */
+.dc-focus-head { display: flex; align-items: center; gap: 8px; }
+.dc-focus-title { font-size: 18px; font-weight: 700; }
+.dc-tiles button.dc-tile { border: none; border-bottom: var(--bw) solid var(--line); background: var(--surface); color: var(--ink); text-align: left; }
+.dc-field { margin-top: 12px; }
+.dc-field > .dc-field-label { margin: 0 0 6px; }
+.dc-input { width: 100%; min-height: 52px; padding: 0 12px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
+  color: var(--ink); font: inherit; font-size: 18px; }
+.dc-input--counts { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.dc-input--bad { border: 2px solid var(--warn-line); }
+.dc-reason { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 16px; font-weight: 700; color: var(--warn-ink); }
+.dc-suggestions { display: flex; flex-direction: column; margin-top: 6px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); }
+.dc-suggestion { min-height: 48px; padding: 0 12px; border: none; border-bottom: var(--bw) solid var(--soft); background: none; text-align: left; font-size: 18px; color: var(--ink); }
+.dc-suggestion:last-child { border-bottom: none; }
+.dc-dance-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 56px; margin-top: 8px; border-bottom: var(--bw) solid var(--line); font-size: 18px; }
+.dc-history { display: flex; gap: 8px; margin-top: 12px; }
+.dc-history .dc-button { flex: 1; }
+.dc-figures { margin-top: 12px; }
+.dc-figure-head { min-height: 56px; padding: 6px 2px 6px 12px; }  /* 鳴っている行の左線（4px）と番号が重ならない */
+.dc-figure-no { flex: none; width: 28px; font-size: 16px; font-weight: 700; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.dc-row--now { background: var(--now-bg); box-shadow: inset 4px 0 0 var(--beat-on); }  /* 鳴っているフィガー（D10） */
+.dc-row--now .dc-row-text b { font-weight: 800; }
+/* ドラッグ（Ruling 49・D12）: 行の右端のつかみ「⠿」（アイコンだけ。読み上げ名は aria-label）。touch-action:none はつかみだけ（行の上では普通にスクロール）。動きは付けない */
+.dc-row-line { display: flex; align-items: stretch; gap: 10px; }
+.dc-row-line > .dc-row-head { flex: 1; min-width: 0; }
+.dc-grip { flex: none; display: flex; align-items: center; justify-content: center; width: 48px; min-height: 48px;
+  padding: 0; border: none; background: none; color: var(--ink2);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab; }
+.dc-figures { position: relative; }
+.dc-figures[data-dragging] { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+.dc-figures[data-dragging] .dc-grip { cursor: grabbing; }
+.dc-row--dragging { outline: 2px solid var(--primary); outline-offset: -2px; }
+.dc-drop-line { position: absolute; left: 0; right: 0; height: 3px; border-radius: 2px; background: var(--primary); pointer-events: none; }
+.dc-figure-form .dc-field:first-child { margin-top: 0; }
+.dc-figure-form > .dc-button { margin-top: 12px; }
+.dc-figure-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; padding-top: 12px; border-top: var(--bw) solid var(--line); }
+.dc-figure-actions .dc-button { padding: 0 6px; }
+.dc-span3 { grid-column: span 3; }
+.dc-add-tail { margin-top: 12px; }
+.dc-dock-button { width: 100%; max-width: 608px; }
+
 /* PC（Ruling 21）: タブは上部、S2 は2領域（最大 960px）。他は1カラム 640px のまま */
 @media (min-width: 1024px) {
   .dc-tabs { top: 0; bottom: auto; height: var(--tabh-top); justify-content: center; padding: 8px 24px; border-top: none; border-bottom: var(--bw) solid var(--line); }
@@ -177,6 +219,7 @@ button { cursor: pointer; }
   .dc-beats li { width: 72px; height: 56px; font-size: 24px; }
   .dc-dock { padding: 12px 16px; }
   .dc-play { max-width: 928px; min-height: 80px; }
+  .dc-dock-button { max-width: 608px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
