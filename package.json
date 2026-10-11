@@ -21,7 +21,9 @@
     "audio:subdivision-review": "node tools/render-subdivision-audio-review.js",
     "voices:build": "npm run voices:generate && npm run voices:measure",
     "voices:six-candidates": "node tools/generate-six-candidates.js",
-    "ui:check": "node tools/check-ui-accessibility.js",
+    "ui:check": "node tools/check-app-ui.js",
+    "ui:check:legacy": "node tools/check-ui-accessibility.js",
+    "smoke:practice": "node tools/smoke-practice.js",
     "timing:compare": "node tools/compare-timing-audit.js"
   },
   "dependencies": {

@@ -1,0 +1,324 @@
+#!/usr/bin/env node
+// 新アプリの高齢者向け数値基準（仕様 §6 U1〜U15・Ruling 7・16・18・21・23・33）を Playwright で検査する。
+// 前提: `npm run dev`（既定 http://localhost:5173/）を起動しておく。DC_BASE_URL で `npm run preview`（4174）にも向けられる。
+// 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
+import { chromium } from 'playwright-core';
+
+const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
+const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
+const ZOOM_VIEWPORT = { width: 640, height: 450 }; // 1280×900 の 200% 拡大相当（U9）
+const LIMITS = Object.freeze({
+  bodyFont: 18, minFont: 16, fineprintFont: 14, // U1
+  primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
+  tap: 48, tapGap: 8, // U3
+  initialOps: 5, totalOps: 9, groupChoices: 10, moreSummaries: 1, // U4〜U6
+  contrastText: 4.5, contrastLarge: 3, contrastUi: 3, // U7
+  motionMs: 300, // U8
+  buttonLines: 2, // U10
+  alertHeight: 120 // Ruling 23（375 幅）
+});
+
+// 検査する画面と状態（Ruling 33）。kind は仕様 §3 の種別、ops は初期表示の主要操作数の期待値（Ruling 18）。
+// prepare は「前回あり」を実経路で作る（偽装クエリは使わない）。
+const STATES = [
+  { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
+  { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
+  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
+  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true },
+  { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
+  { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
+  { name: 'S3', hash: '#/routines', screen: 'S3', kind: 'root' },
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root' },
+  { name: 'S7', hash: '#/voices', screen: 'S7', kind: 'list' },
+  { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
+];
+
+const browser = await chromium.launch({ channel: 'chrome' }).catch(error => {
+  console.error('Google Chrome を起動できませんでした。Chrome のインストールと開発サーバー（npm run dev）を確認してください。');
+  console.error(error.message);
+  process.exit(2);
+});
+
+let violations = 0;
+const report = (label, problems) => {
+  console.log(`\n== ${label} : ${problems.length ? `${problems.length} 件の違反` : 'PASS'}`);
+  for (const problem of problems) console.log(`  ${problem}`);
+  violations += problems.length;
+};
+
+try {
+  for (const state of STATES) {
+    for (const viewport of VIEWPORTS) {
+      for (const reducedMotion of ['no-preference', 'reduce']) {
+        const label = `${state.name} @ ${viewport.width}x${viewport.height}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
+        const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion });
+        const page = await context.newPage();
+        const consoleErrors = [];
+        page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
+        page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
+        if (state.prepare) {
+          await page.goto(BASE + state.prepare);
+          await page.waitForSelector('[data-screen]');
+        }
+        await page.goto(BASE + state.hash);
+        await page.waitForSelector(`[data-screen="${state.screen}"]`);
+        if (state.openMore) await page.locator('summary[data-more]').click();
+        await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        const problems = await page.evaluate(audit, { state, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+        report(label, [...problems, ...consoleErrors]);
+        await context.close();
+      }
+    }
+  }
+
+  // U9: 200% 拡大相当で横スクロールが出ない・viewport meta に拡大禁止が無い
+  const context = await browser.newContext({ viewport: ZOOM_VIEWPORT, locale: 'en-US' });
+  const page = await context.newPage();
+  const problems = [];
+  for (const state of STATES) {
+    await page.goto(BASE + state.hash);
+    await page.waitForSelector(`[data-screen="${state.screen}"]`);
+    const { scrollWidth, clientWidth, meta } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      meta: document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? ''
+    }));
+    if (scrollWidth > clientWidth) problems.push(`U9 ${state.name}: horizontal scroll ${scrollWidth} > ${clientWidth}`);
+    if (/user-scalable\s*=\s*(no|0)|maximum-scale/i.test(meta)) problems.push(`U9 ${state.name}: viewport meta blocks zoom "${meta}"`);
+  }
+  report(`U9 拡大 ${ZOOM_VIEWPORT.width}x${ZOOM_VIEWPORT.height}`, problems);
+  await context.close();
+} finally {
+  await browser.close();
+}
+
+process.exit(violations ? 1 : 0);
+
+// ---- ここから下はブラウザの中で動く（page.evaluate に関数ごと渡す。外の変数は使えない） ----
+function audit({ state, LIMITS, reducedMotion }) {
+  const issues = [];
+  const TARGETS = 'button, a[href], select, summary, input:not([type="hidden"]), label[for], [role=button], [role=switch], [role=radio]';
+  const OPS = 'button, a[href], [role=button], [role=switch], [role=radio], input:not([type="hidden"]), select, summary, label[for]';
+  const EXCLUDED_OPS = '[data-nav], [data-back], [data-utility], summary[data-more], [data-alert-action]';
+  const FIXED_BARS = '[data-nav], .dc-dock';
+
+  const visible = element => {
+    if (element.closest('[hidden]')) return false;
+    for (let node = element; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+    }
+    // 閉じた <details> の中身は見えない（summary だけが見える）。Chrome は中身の rect を返すことがあるので明示的に除く
+    const closed = element.closest('details:not([open])');
+    if (closed && !closed.querySelector(':scope > summary')?.contains(element)) return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  };
+  const describe = element => `${element.tagName.toLowerCase()}${element.className && typeof element.className === 'string' ? `.${element.className.trim().split(/\s+/).join('.')}` : ''} "${(element.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 24)}"`;
+  const inFixedBar = element => Boolean(element.closest(FIXED_BARS));
+
+  // 固定バーを除いた「見える範囲」（U4・U12・Ruling 21/23 の判定に使う）
+  let usableTop = 0;
+  let usableBottom = innerHeight;
+  for (const bar of document.querySelectorAll(FIXED_BARS)) {
+    if (!visible(bar)) continue;
+    const rect = bar.getBoundingClientRect();
+    if (rect.top <= 1) usableTop = Math.max(usableTop, rect.bottom);
+    else usableBottom = Math.min(usableBottom, rect.top);
+  }
+  const fullyInView = element => {
+    const rect = element.getBoundingClientRect();
+    const top = inFixedBar(element) ? 0 : usableTop;
+    const bottom = inFixedBar(element) ? innerHeight : usableBottom;
+    return rect.top >= top - 0.5 && rect.bottom <= bottom + 0.5 && rect.left >= -0.5 && rect.right <= innerWidth + 0.5;
+  };
+
+  // U1 文字の大きさ
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const textElements = new Set();
+  while (walker.nextNode()) {
+    const parent = walker.currentNode.parentElement;
+    if (parent && walker.currentNode.textContent.trim() && visible(parent) && !parent.closest('[aria-hidden="true"]:not(.dc-now)')) textElements.add(parent);
+  }
+  for (const element of textElements) {
+    const size = parseFloat(getComputedStyle(element).fontSize);
+    const fineprint = element.closest('[data-fineprint]');
+    if (size < LIMITS.fineprintFont - 0.01) issues.push(`U1 font ${size}px < ${LIMITS.fineprintFont} ${describe(element)}`);
+    else if (!fineprint && size < LIMITS.minFont - 0.01) issues.push(`U1 font ${size}px < ${LIMITS.minFont} ${describe(element)}`);
+    else if (element.closest('p, li, [data-body]') && size < LIMITS.bodyFont - 0.01) issues.push(`U1 body font ${size}px < ${LIMITS.bodyFont} ${describe(element)}`);
+  }
+
+  // U2 主要ボタン
+  for (const element of document.querySelectorAll('.dc-primary')) {
+    if (!visible(element)) continue;
+    const rect = element.getBoundingClientRect();
+    if (rect.height < LIMITS.primaryHeight - 0.5) issues.push(`U2 primary height ${Math.round(rect.height)} < ${LIMITS.primaryHeight} ${describe(element)}`);
+  }
+  for (const element of document.querySelectorAll('[data-play]')) {
+    if (!visible(element)) continue;
+    const rect = element.getBoundingClientRect();
+    if (rect.height < LIMITS.playHeight - 0.5) issues.push(`U2 play height ${Math.round(rect.height)} < ${LIMITS.playHeight}`);
+    if (rect.width < innerWidth * LIMITS.playWidthRatio - 0.5) issues.push(`U2 play width ${Math.round(rect.width)} < ${Math.round(innerWidth * LIMITS.playWidthRatio)}`);
+  }
+
+  // U3 タップ対象の大きさと間隔（固定バー同士・固定バーと本文の間は対象外: スクロールで重なり方が変わるため）
+  const targets = [...document.querySelectorAll(TARGETS)].filter(visible).filter(element => !(element.tagName === 'INPUT' && element.closest('label')));
+  for (const element of targets) {
+    const rect = element.getBoundingClientRect();
+    if (rect.width < LIMITS.tap - 0.5 || rect.height < LIMITS.tap - 0.5) issues.push(`U3 tap ${Math.round(rect.width)}x${Math.round(rect.height)} ${describe(element)}`);
+  }
+  for (let i = 0; i < targets.length; i += 1) {
+    for (let j = i + 1; j < targets.length; j += 1) {
+      const a = targets[i];
+      const b = targets[j];
+      if (a.contains(b) || b.contains(a) || inFixedBar(a) || inFixedBar(b)) continue;
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      const dx = Math.max(0, Math.max(ra.left, rb.left) - Math.min(ra.right, rb.right));
+      const dy = Math.max(0, Math.max(ra.top, rb.top) - Math.min(ra.bottom, rb.bottom));
+      const gap = Math.hypot(dx, dy);
+      if (gap < LIMITS.tapGap - 0.5) issues.push(`U3 gap ${gap.toFixed(1)}px < ${LIMITS.tapGap} between ${describe(a)} and ${describe(b)}`);
+    }
+  }
+
+  // U4 主要操作数（Ruling 18）: 同じ [data-group] は1つ、除外の要素は数えない
+  const operations = scope => {
+    const keys = new Set();
+    for (const element of document.querySelectorAll(OPS)) {
+      if (!visible(element) || element.closest(EXCLUDED_OPS)) continue;
+      if (scope === 'initial' && !fullyInView(element)) continue;
+      keys.add(element.closest('[data-group]') ?? element);
+    }
+    return keys.size;
+  };
+  const initialOps = operations('initial');
+  const totalOps = operations('all');
+  // 「初期表示」は画面を開いた直後のこと。「くわしく」を開いた状態は人の操作の後なので全体（9以下）だけを見る（Ruling 31: 開くと8）。
+  if (!state.openMore && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
+  if (totalOps > LIMITS.totalOps) issues.push(`U4 total operations ${totalOps} > ${LIMITS.totalOps}`);
+  if (state.ops !== undefined && initialOps !== state.ops) issues.push(`U4 initial operations ${initialOps}, expected ${state.ops}`);
+
+  // U5 選択肢の数・U6「くわしく」は1つ
+  for (const group of document.querySelectorAll('[data-group]')) {
+    const choices = [...group.querySelectorAll(OPS)].filter(visible).length;
+    if (choices > LIMITS.groupChoices) issues.push(`U5 group "${group.dataset.group}" has ${choices} choices > ${LIMITS.groupChoices}`);
+  }
+  for (const select of document.querySelectorAll('select')) {
+    if (select.options.length > LIMITS.groupChoices) issues.push(`U5 select has ${select.options.length} options`);
+  }
+  const summaries = document.querySelectorAll('summary[data-more]').length;
+  if (summaries > LIMITS.moreSummaries) issues.push(`U6 ${summaries} "more" sections > ${LIMITS.moreSummaries}`);
+
+  // U7 コントラスト（文字・操作の枠線）
+  const linear = channel => { const c = channel / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const luminance = rgb => 0.2126 * linear(rgb[0]) + 0.7152 * linear(rgb[1]) + 0.0722 * linear(rgb[2]);
+  const parse = value => { const m = value.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/); return m ? { rgb: [+m[1], +m[2], +m[3]], alpha: m[4] === undefined ? 1 : +m[4] } : null; };
+  const background = element => {
+    for (let node = element; node; node = node.parentElement) {
+      const parsed = parse(getComputedStyle(node).backgroundColor);
+      if (parsed && parsed.alpha >= 0.9) return parsed.rgb;
+    }
+    return [255, 255, 255];
+  };
+  const ratio = (a, b) => { const la = luminance(a); const lb = luminance(b); return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05); };
+  for (const element of textElements) {
+    const style = getComputedStyle(element);
+    const color = parse(style.color);
+    if (!color) continue;
+    const size = parseFloat(style.fontSize);
+    const large = size >= 24 && Number(style.fontWeight) >= 700;
+    const needed = large ? LIMITS.contrastLarge : LIMITS.contrastText;
+    const value = ratio(color.rgb, background(element));
+    if (value < needed) issues.push(`U7 text contrast ${value.toFixed(2)} < ${needed} ${describe(element)}`);
+  }
+  for (const element of targets) {
+    const style = getComputedStyle(element);
+    const width = parseFloat(style.borderTopWidth);
+    if (!(width > 0) || style.borderTopStyle === 'none') continue;
+    const border = parse(style.borderTopColor);
+    if (!border || border.alpha < 0.9) continue;
+    const value = ratio(border.rgb, background(element.parentElement ?? element));
+    if (value < LIMITS.contrastUi) issues.push(`U7 border contrast ${value.toFixed(2)} < ${LIMITS.contrastUi} ${describe(element)}`);
+  }
+
+  // U8 動き
+  const durations = value => value.split(',').map(part => parseFloat(part) * (part.trim().endsWith('ms') ? 1 : 1000));
+  for (const element of document.querySelectorAll('*')) {
+    const style = getComputedStyle(element);
+    for (const ms of [...durations(style.transitionDuration), ...durations(style.animationDuration)]) {
+      if (reducedMotion ? ms > 0 : ms > LIMITS.motionMs) { issues.push(`U8 motion ${ms}ms ${describe(element)}`); break; }
+    }
+  }
+
+  // U10 はみ出し・ボタン文言は2行まで
+  for (const element of textElements) {
+    if (element.scrollWidth > element.clientWidth + 1 && getComputedStyle(element).overflowX !== 'visible') {
+      issues.push(`U10 clipped text ${element.scrollWidth} > ${element.clientWidth} ${describe(element)}`);
+    }
+  }
+  // ボタン文言の行数は、文字列（テキストノード）ごとの行の数で数える（アイコンや2段組みの配置は行に数えない）
+  for (const button of targets) {
+    if (!['BUTTON', 'A', 'SUMMARY'].includes(button.tagName)) continue;
+    const texts = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+    while (texts.nextNode()) {
+      if (!texts.currentNode.textContent.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(texts.currentNode);
+      const lines = new Set([...range.getClientRects()].filter(rect => rect.width > 0).map(rect => Math.round(rect.top))).size;
+      if (lines > LIMITS.buttonLines) { issues.push(`U10 button text ${lines} lines > ${LIMITS.buttonLines} ${describe(button)}`); break; }
+    }
+  }
+
+  // U11 下タブと戻る（種別の表と照合）
+  const nav = document.querySelector('[data-nav]');
+  const back = document.querySelector('[data-back]');
+  const navVisible = Boolean(nav && visible(nav));
+  const backVisible = Boolean(back && visible(back));
+  if (state.kind === 'focus' && navVisible) issues.push('U11 tabs are visible on a focus screen');
+  if (state.kind !== 'focus' && !navVisible) issues.push('U11 tabs are missing on a root/list screen');
+  if (state.kind === 'root' && backVisible) issues.push('U11 back button on a root screen');
+  if (state.kind !== 'root') {
+    if (!backVisible) issues.push('U11 back button missing');
+    else {
+      const rect = back.getBoundingClientRect();
+      if (rect.height < LIMITS.tap - 0.5 || rect.width < LIMITS.tap - 0.5) issues.push('U11 back button smaller than 48px');
+      if (!back.textContent.trim()) issues.push('U11 back button has no text');
+    }
+  }
+
+  // U12 S1: 先生カードと10種目が初期表示に入る（Ruling 16）
+  if (state.teacherAndTiles) {
+    const teacher = document.querySelector('[data-teacher-card]');
+    if (!teacher || !fullyInView(teacher)) issues.push('U12 teacher card is not fully in the first view');
+    const tiles = [...document.querySelectorAll('[data-group="dance"] > *')];
+    if (tiles.length !== 10) issues.push(`U12 expected 10 dance tiles, found ${tiles.length}`);
+    tiles.forEach((tile, index) => { if (!fullyInView(tile)) issues.push(`U12 dance tile ${index + 1} is not fully in the first view (bottom ${Math.round(tile.getBoundingClientRect().bottom)} > ${Math.round(usableBottom)})`); });
+  }
+
+  // U13 固定バーが画面の端に接している（下タブ・再生帯。PC の上部タブは上端）
+  for (const bar of document.querySelectorAll(FIXED_BARS)) {
+    if (!visible(bar)) continue;
+    const rect = bar.getBoundingClientRect();
+    const touches = Math.abs(rect.bottom - innerHeight) <= 2 || Math.abs(rect.top) <= 2;
+    if (!touches) issues.push(`U13 fixed bar not at an edge (top ${Math.round(rect.top)} bottom ${Math.round(rect.bottom)}) ${describe(bar)}`);
+  }
+
+  // Ruling 21・23: 速さと ▶ は初期表示に入る。警告の枠は 375 幅で 120px 以下、中の操作は1つ
+  if (state.speedAndPlay) {
+    for (const selector of ['[data-group="speed"]', '[data-play]']) {
+      const element = document.querySelector(selector);
+      if (!element || !fullyInView(element)) issues.push(`R21/23 ${selector} is not fully in the first view`);
+    }
+  }
+  if (state.alert) {
+    const alert = document.querySelector('[data-alert]');
+    if (!alert || !visible(alert)) issues.push('R23 alert is not shown');
+    else {
+      if (innerWidth < 1024 && alert.getBoundingClientRect().height > LIMITS.alertHeight + 0.5) issues.push(`R23 alert height ${Math.round(alert.getBoundingClientRect().height)} > ${LIMITS.alertHeight}`);
+      const actions = [...alert.querySelectorAll(OPS)].filter(visible);
+      if (actions.length > 1 || actions.some(action => !action.matches('[data-alert-action]'))) issues.push('R23 alert has an action other than one [data-alert-action]');
+    }
+  }
+  return issues;
+}
