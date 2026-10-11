@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessLegacyRoutine, assessLegacyRoutines } from '../../src/v2/legacy-routine-migration.js';
+import { assessLegacyRoutine, assessLegacyRoutines } from '../../src/engine/legacy-routine-migration.js';
 
 test('complete legacy routine is mechanically valid but remains unreviewed', () => {
   const result = assessLegacyRoutine({

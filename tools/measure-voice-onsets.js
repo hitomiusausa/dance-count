@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { measureOnset } from '../src/v2/onset-detector.js';
+import { measureOnset } from '../src/engine/onset-detector.js';
 
 export { measureOnset };
 

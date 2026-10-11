@@ -1,15 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { DANCE_PROFILES } from '../src/v2/dance-profiles.js';
-import { atomicRhythmCases, auditCompiledTransitions, expectedEventTimeMs } from '../src/v2/dance-timing-audit.js';
-import { compileRhythm, compileRoutine } from '../src/v2/rhythm-compiler.js';
-import { measureOnset } from '../src/v2/onset-detector.js';
+import { DANCE_PROFILES } from '../src/engine/dance-profiles.js';
+import { atomicRhythmCases, auditCompiledTransitions, expectedEventTimeMs } from '../src/engine/dance-timing-audit.js';
+import { compileRhythm, compileRoutine } from '../src/engine/rhythm-compiler.js';
+import { measureOnset } from '../src/engine/onset-detector.js';
 import { parsePcm16Wav } from './measure-voice-onsets.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const packDir = path.join(root, 'public/audio/default-en-female-v1');
 const manifest = JSON.parse(await fs.readFile(path.join(packDir, 'manifest.json'), 'utf8'));
-const report = JSON.parse(await fs.readFile(path.join(root, 'src/v2/data/legacy-routines-report.json'), 'utf8'));
+const report = JSON.parse(await fs.readFile(path.join(root, 'src/engine/data/legacy-routines-report.json'), 'utf8'));
 const voiceMetrics = await measureVoiceMetrics(packDir, manifest);
 const postOnsetMs = Object.fromEntries(Object.entries(voiceMetrics).map(([key, value]) => [key, value.postOnsetMs]));
 const dances = [];

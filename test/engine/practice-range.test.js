@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { figureRangeTicks, normalizeFigureRange } from '../../src/v2/practice-range.js';
+import { figureRangeTicks, normalizeFigureRange } from '../../src/engine/practice-range.js';
 
 test('figure range clamps indices and never ends before it starts', () => {
   assert.deepEqual(normalizeFigureRange(4, 2, 1), { startIndex: 2, endIndex: 2 });

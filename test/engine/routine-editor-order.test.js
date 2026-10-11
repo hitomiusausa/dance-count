@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dropDestination } from '../../src/v2/routine-editor-order.js';
+import { dropDestination } from '../../src/engine/routine-editor-order.js';
 
 test('drop destination accounts for removing the source before a downward insertion', () => {
   assert.equal(dropDestination(0, 2, true, 4), 2);

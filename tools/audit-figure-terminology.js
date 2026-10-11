@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import report from '../src/v2/data/legacy-routines-report.json' with { type: 'json' };
-import { figureTerminologyEvidence, terminologyCoverage } from '../src/v2/figure-terminology.js';
+import report from '../src/engine/data/legacy-routines-report.json' with { type: 'json' };
+import { figureTerminologyEvidence, terminologyCoverage } from '../src/engine/figure-terminology.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const byDance = new Map();

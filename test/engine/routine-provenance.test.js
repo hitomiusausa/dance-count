@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { beginnerPresetEligible, legacyRoutineProvenance, validateRoutineProvenance } from '../../src/v2/routine-provenance.js';
+import { beginnerPresetEligible, legacyRoutineProvenance, validateRoutineProvenance } from '../../src/engine/routine-provenance.js';
 
 test('legacy labels never become verified authority claims automatically', () => {
   const metadata = legacyRoutineProvenance('dance-count-B_215.html');

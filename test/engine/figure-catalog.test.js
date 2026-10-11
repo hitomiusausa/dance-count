@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFigureCatalog } from '../../src/v2/figure-catalog.js';
+import { buildFigureCatalog } from '../../src/engine/figure-catalog.js';
 
 test('figure catalog is dance-specific, unique, and keeps the current draft figures', () => {
   const routines = [

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { compileRhythm } from '../src/v2/rhythm-compiler.js';
-import { measureOnset } from '../src/v2/onset-detector.js';
+import { compileRhythm } from '../src/engine/rhythm-compiler.js';
+import { measureOnset } from '../src/engine/onset-detector.js';
 import { parsePcm16Wav } from './measure-voice-onsets.js';
 
 const root = path.resolve(import.meta.dirname, '..');

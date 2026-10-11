@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DANCE_PROFILES, TICKS_PER_BEAT } from '../../src/v2/dance-profiles.js';
-import { atomicRhythmCases, auditCompiledTransitions, expectedEventTimeMs } from '../../src/v2/dance-timing-audit.js';
-import { compileRhythm } from '../../src/v2/rhythm-compiler.js';
+import { DANCE_PROFILES, TICKS_PER_BEAT } from '../../src/engine/dance-profiles.js';
+import { atomicRhythmCases, auditCompiledTransitions, expectedEventTimeMs } from '../../src/engine/dance-timing-audit.js';
+import { compileRhythm } from '../../src/engine/rhythm-compiler.js';
 
 test('every atomic count transition accepted by each dance compiles on integer ticks', () => {
   let checked = 0;

@@ -3,12 +3,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import vm from 'node:vm';
-import { assessLegacyRoutines } from '../src/v2/legacy-routine-migration.js';
+import { assessLegacyRoutines } from '../src/engine/legacy-routine-migration.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const sourcePath = path.join(ROOT, 'dance-count-B_215.html');
-const importedSourcesPath = path.join(ROOT, 'src/v2/data/imported-routine-sources.json');
-const outputPath = path.join(ROOT, 'src/v2/data/legacy-routines-report.json');
+const importedSourcesPath = path.join(ROOT, 'src/engine/data/imported-routine-sources.json');
+const outputPath = path.join(ROOT, 'src/engine/data/legacy-routines-report.json');
 
 const source = await fs.readFile(sourcePath, 'utf8');
 const routines = extractArrayLiteral(source, 'const SAMPLE_ROUTINES =');

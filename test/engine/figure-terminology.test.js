@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import report from '../../src/v2/data/legacy-routines-report.json' with { type: 'json' };
-import { figureDisplayName, figureTerminologyEvidence, terminologyCoverage } from '../../src/v2/figure-terminology.js';
+import report from '../../src/engine/data/legacy-routines-report.json' with { type: 'json' };
+import { figureDisplayName, figureTerminologyEvidence, terminologyCoverage } from '../../src/engine/figure-terminology.js';
 
 test('verified terminology is dance-specific and never translates an unknown composite', () => {
   assert.equal(figureDisplayName('tango', 'プログレッシブリンク', 'en'), 'Progressive Link');

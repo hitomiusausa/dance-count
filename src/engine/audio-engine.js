@@ -1,6 +1,6 @@
 import { TICKS_PER_BEAT } from './dance-profiles.js';
 import { eventTimeSeconds } from './rhythm-compiler.js';
-import { scheduleVoiceEvent } from './voice-pack-loader.js?v=20260713-overlap-fade';
+import { scheduleVoiceEvent } from './voice-pack-loader.js';
 
 const DEFAULT_LOOKAHEAD_SECONDS = 0.35;
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { measureRecordingOnset, normalizeAudioBuffer, recordingTrimPlan, REFERENCE_VOICE_TIMING } from '../../src/v2/recording-normalizer.js';
+import { measureRecordingOnset, normalizeAudioBuffer, recordingTrimPlan, REFERENCE_VOICE_TIMING } from '../../src/engine/recording-normalizer.js';
 
 function audioBuffer(channels, sampleRate) {
   const data = channels.map(channel => Float32Array.from(channel));

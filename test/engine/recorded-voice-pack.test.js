@@ -10,7 +10,7 @@ import {
   REQUIRED_VOICE_KEYS,
   validateRecordedVoicePack,
   voiceTimingAdjustmentsEqual
-} from '../../src/v2/recorded-voice-pack.js';
+} from '../../src/engine/recorded-voice-pack.js';
 
 function completePack() {
   const pack = createRecordedVoicePack('Test voice');

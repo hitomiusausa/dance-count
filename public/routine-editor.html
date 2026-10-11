@@ -252,27 +252,27 @@
   </script>
 
   <script type="module">
-    import { compileRoutine } from '../src/v2/rhythm-compiler.js';
-    import { loadVoicePack, scheduleVoiceEvent } from '../src/v2/voice-pack-loader.js?v=20260713-overlap-fade';
-    import { effectiveVoiceOffsetMs, PracticeAudioEngine } from '../src/v2/audio-engine.js?v=20260713-overlap-fade';
-    import { createVoiceTimingAdjustments, decodeRecordedVoicePack, recordedPackProgress, REQUIRED_VOICE_KEYS, voiceTimingAdjustmentsEqual } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
-    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
-    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
-    import { RoutineEditorState } from '../src/v2/routine-editor-state.js';
-    import { getDanceProfile } from '../src/v2/dance-profiles.js';
-    import { beatPositionAtTick, buildFigureTimeline } from '../src/v2/timeline-view-model.js';
-    import { buildFigureCatalog } from '../src/v2/figure-catalog.js';
-    import { readRoutineDraft } from '../src/v2/routine-draft.js';
-    import { dropDestination } from '../src/v2/routine-editor-order.js';
-    import { createEditorTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260715-global-6';
-    import { figureDisplayName } from '../src/v2/figure-terminology.js?v=20260715-verified-2';
+    import { compileRoutine } from '../src/engine/rhythm-compiler.js';
+    import { loadVoicePack, scheduleVoiceEvent } from '../src/engine/voice-pack-loader.js?v=20260713-overlap-fade';
+    import { effectiveVoiceOffsetMs, PracticeAudioEngine } from '../src/engine/audio-engine.js?v=20260713-overlap-fade';
+    import { createVoiceTimingAdjustments, decodeRecordedVoicePack, recordedPackProgress, REQUIRED_VOICE_KEYS, voiceTimingAdjustmentsEqual } from '../src/engine/recorded-voice-pack.js?v=20260713-global-1';
+    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/engine/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/engine/count-vocabularies.js?v=20260713-global';
+    import { RoutineEditorState } from '../src/engine/routine-editor-state.js';
+    import { getDanceProfile } from '../src/engine/dance-profiles.js';
+    import { beatPositionAtTick, buildFigureTimeline } from '../src/engine/timeline-view-model.js';
+    import { buildFigureCatalog } from '../src/engine/figure-catalog.js';
+    import { readRoutineDraft } from '../src/engine/routine-draft.js';
+    import { dropDestination } from '../src/engine/routine-editor-order.js';
+    import { createEditorTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/engine/ui-messages.js?v=20260715-global-6';
+    import { figureDisplayName } from '../src/engine/figure-terminology.js?v=20260715-verified-2';
 
     let translator = createEditorTranslator(localStorage.getItem(UI_LOCALE_STORAGE_KEY) || navigator.language);
     const t = (key, variables) => translator.t(key, variables);
     const recordedLanguage = pack => vocabularyDisplayName(getCountVocabulary(pack?.vocabularyId ?? pack?.locale), translator.locale);
     const localizedFigureName = name => figureDisplayName(state?.value?.danceId, name, translator.locale);
 
-    const response = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' });
+    const response = await fetch('../src/engine/data/legacy-routines-report.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`ルーティンデータの取得に失敗しました（HTTP ${response.status}）`);
     const report = await response.json();
     const sources = report.routines.filter(item => item.status === 'mechanically-valid-unreviewed');

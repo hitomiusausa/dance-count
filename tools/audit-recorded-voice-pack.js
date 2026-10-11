@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { measureOnset } from '../src/v2/onset-detector.js';
-import { recordingTrimPlan, REFERENCE_VOICE_TIMING } from '../src/v2/recording-normalizer.js';
+import { measureOnset } from '../src/engine/onset-detector.js';
+import { recordingTrimPlan, REFERENCE_VOICE_TIMING } from '../src/engine/recording-normalizer.js';
 
 const file = process.argv[2];
 if (!file) throw new Error('Usage: node tools/audit-recorded-voice-pack.js <voice-pack.json>');

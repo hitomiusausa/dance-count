@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { loadVoicePack, scheduleVoiceEvent, validateManifest, VoicePackError } from '../../src/v2/voice-pack-loader.js';
+import { loadVoicePack, scheduleVoiceEvent, validateManifest, VoicePackError } from '../../src/engine/voice-pack-loader.js';
 
 test('voice manifest v2 accepts per-word onset metadata', () => {
   assert.equal(validateManifest({

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PRACTICE_MESSAGES, EDITOR_MESSAGES } from '../../src/v2/ui-messages.js';
+import { PRACTICE_MESSAGES, EDITOR_MESSAGES } from '../../src/engine/ui-messages.js';
 
 const PRACTICE_NEW_KEYS = ['languageToggle'];
 const EDITOR_NEW_KEYS = ['languageToggle', 'speedShort', 'voiceShort', 'countInShort', 'settingsSummary'];

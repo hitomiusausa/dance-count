@@ -7,7 +7,7 @@ export class VoicePackError extends Error {
 }
 
 export async function loadVoicePack(audioContext, manifestUrl, fetchImpl = fetch) {
-  const response = await fetchImpl(manifestUrl, { cache: 'no-store' });
+  const response = await fetchImpl(manifestUrl);
   if (!response.ok) throw new VoicePackError(`Could not load voice manifest: ${response.status}`);
   const manifest = await response.json();
   validateManifest(manifest);
@@ -17,7 +17,7 @@ export async function loadVoicePack(audioContext, manifestUrl, fetchImpl = fetch
   const decodedWords = await Promise.all(Object.entries(manifest.words).map(async ([key, item]) => {
     const audioUrl = new URL(item.file, baseUrl);
     if (item.revision) audioUrl.searchParams.set('v', item.revision);
-    const audioResponse = await fetchImpl(audioUrl, { cache: 'no-store' });
+    const audioResponse = await fetchImpl(audioUrl);
     if (!audioResponse.ok) throw new VoicePackError(`Could not load voice file: ${item.file}`);
     const buffer = await audioContext.decodeAudioData(await audioResponse.arrayBuffer());
     if (item.onsetMs / 1000 >= buffer.duration) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createReviewWorkspace, normalizeReviewEntry, reviewWorkspaceSummary, updateReviewEntry } from '../../src/v2/routine-review-workspace.js';
+import { createReviewWorkspace, normalizeReviewEntry, reviewWorkspaceSummary, updateReviewEntry } from '../../src/engine/routine-review-workspace.js';
 
 test('review workspace keeps research evidence separate from source routines', () => {
   const source = createReviewWorkspace();

@@ -1,7 +1,7 @@
 // 再生エンジンが実際に予約する時刻を、偽の AudioContext で記録する（tempo-map 集約の前後比較用）。
-import { PracticeAudioEngine } from '../../src/v2/audio-engine.js';
-import { compileRhythm, compileRoutine } from '../../src/v2/rhythm-compiler.js';
-import { DANCE_PROFILES } from '../../src/v2/dance-profiles.js';
+import { PracticeAudioEngine } from '../../src/engine/audio-engine.js';
+import { compileRhythm, compileRoutine } from '../../src/engine/rhythm-compiler.js';
+import { DANCE_PROFILES } from '../../src/engine/dance-profiles.js';
 
 const VOICE_KEYS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 

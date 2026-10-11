@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { assessLegacyRoutines } from '../../src/v2/legacy-routine-migration.js';
-import { getDanceProfile, TICKS_PER_BEAT } from '../../src/v2/dance-profiles.js';
+import { assessLegacyRoutines } from '../../src/engine/legacy-routine-migration.js';
+import { getDanceProfile, TICKS_PER_BEAT } from '../../src/engine/dance-profiles.js';
 
-const sourcesPath = path.resolve(import.meta.dirname, '../../src/v2/data/imported-routine-sources.json');
+const sourcesPath = path.resolve(import.meta.dirname, '../../src/engine/data/imported-routine-sources.json');
 
 async function loadImportedSources() {
   return JSON.parse(await fs.readFile(sourcesPath, 'utf8'));

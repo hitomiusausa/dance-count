@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { COUNT_VOCABULARIES, getCountVocabulary, vocabularyDisplayName } from '../../src/v2/count-vocabularies.js';
-import { canonicalLanguageTag, createTranslator, isValidLanguageTag, resolveUiLocale } from '../../src/v2/localization.js';
-import { createPracticeTranslator, danceDisplayName } from '../../src/v2/ui-messages.js';
+import { COUNT_VOCABULARIES, getCountVocabulary, vocabularyDisplayName } from '../../src/engine/count-vocabularies.js';
+import { canonicalLanguageTag, createTranslator, isValidLanguageTag, resolveUiLocale } from '../../src/engine/localization.js';
+import { createPracticeTranslator, danceDisplayName } from '../../src/engine/ui-messages.js';
 
 test('BCP 47 locales canonicalize and unsupported UI locales fall back to English', () => {
   assert.equal(canonicalLanguageTag('ja-jp'), 'ja-JP');

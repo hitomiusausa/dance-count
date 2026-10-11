@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compileRoutine } from '../../src/v2/rhythm-compiler.js';
-import { beatPositionAtTick, buildFigureTimeline } from '../../src/v2/timeline-view-model.js';
+import { compileRoutine } from '../../src/engine/rhythm-compiler.js';
+import { beatPositionAtTick, buildFigureTimeline } from '../../src/engine/timeline-view-model.js';
 
 test('figure timeline preserves the bar phase across figure boundaries', () => {
   const compiled = compileRoutine({

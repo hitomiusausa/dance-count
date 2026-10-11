@@ -83,17 +83,17 @@
   </main>
 
   <script type="module">
-    import { normalizeRecordingBlob } from '../src/v2/recording-normalizer.js';
+    import { normalizeRecordingBlob } from '../src/engine/recording-normalizer.js';
     import {
       createRecordedVoicePack,
       exportRecordedVoicePack,
       importRecordedVoicePack,
       recordedPackProgress,
       REQUIRED_VOICE_KEYS
-    } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
-    import { JAPANESE_RECORDED_PACK_ID, loadLocalRecordedPack, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
-    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
-    import { canonicalLanguageTag, createTranslator, resolveUiLocale } from '../src/v2/localization.js?v=20260713-global';
+    } from '../src/engine/recorded-voice-pack.js?v=20260713-global-1';
+    import { JAPANESE_RECORDED_PACK_ID, loadLocalRecordedPack, LOCAL_RECORDED_PACK_ID, saveLocalRecordedPack } from '../src/engine/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/engine/count-vocabularies.js?v=20260713-global';
+    import { canonicalLanguageTag, createTranslator, resolveUiLocale } from '../src/engine/localization.js?v=20260713-global';
 
     const MESSAGES = {
       en: {

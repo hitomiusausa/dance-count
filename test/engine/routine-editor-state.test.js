@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RoutineEditorState } from '../../src/v2/routine-editor-state.js';
+import { RoutineEditorState } from '../../src/engine/routine-editor-state.js';
 
 const routine = {
   id: 'test', danceId: 'waltz', name: 'Test',

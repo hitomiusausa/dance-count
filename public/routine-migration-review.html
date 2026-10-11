@@ -62,10 +62,10 @@
   <main id="routines"></main>
 
   <script type="module">
-    import { createReviewWorkspace, normalizeReviewWorkspace, reviewWorkspaceSummary, updateReviewEntry } from '../src/v2/routine-review-workspace.js';
+    import { createReviewWorkspace, normalizeReviewWorkspace, reviewWorkspaceSummary, updateReviewEntry } from '../src/engine/routine-review-workspace.js';
 
     const STORAGE_KEY = 'dance-count-v2-routine-review-workspace';
-    const report = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' }).then(response => {
+    const report = await fetch('../src/engine/data/legacy-routines-report.json', { cache: 'no-store' }).then(response => {
       if (!response.ok) throw new Error(`レポートを読み込めません: ${response.status}`);
       return response.json();
     });

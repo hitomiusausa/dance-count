@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { TICKS_PER_BEAT } from '../../src/v2/dance-profiles.js';
-import { DANCE_PROFILES } from '../../src/v2/dance-profiles.js';
-import { compileRhythm, compileRoutine, eventTimeSeconds } from '../../src/v2/rhythm-compiler.js';
+import { TICKS_PER_BEAT } from '../../src/engine/dance-profiles.js';
+import { DANCE_PROFILES } from '../../src/engine/dance-profiles.js';
+import { compileRhythm, compileRoutine, eventTimeSeconds } from '../../src/engine/rhythm-compiler.js';
 
 const positions = compiled => compiled.events.map(event => event.absoluteTick / TICKS_PER_BEAT);
 

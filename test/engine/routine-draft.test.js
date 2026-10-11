@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readRoutineDraft, validRoutineDraft } from '../../src/v2/routine-draft.js';
+import { readRoutineDraft, validRoutineDraft } from '../../src/engine/routine-draft.js';
 
 const source = { id: 'r1', danceId: 'tango', figures: [{ id: 'f1', name: 'Walks', counts: 'SS' }] };
 

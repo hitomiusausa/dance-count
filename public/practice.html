@@ -150,17 +150,17 @@
   </div></div>
 
   <script type="module">
-    import { DANCE_PROFILES } from '../src/v2/dance-profiles.js';
-    import { compileRhythm, compileRoutine } from '../src/v2/rhythm-compiler.js';
-    import { loadVoicePack } from '../src/v2/voice-pack-loader.js?v=20260713-overlap-fade';
-    import { PracticeAudioEngine } from '../src/v2/audio-engine.js?v=20260713-overlap-fade';
-    import { figureRangeTicks, normalizeFigureRange } from '../src/v2/practice-range.js';
-    import { readRoutineDraft } from '../src/v2/routine-draft.js';
-    import { decodeRecordedVoicePack, recordedPackProgress } from '../src/v2/recorded-voice-pack.js?v=20260713-global-1';
-    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID } from '../src/v2/recorded-voice-store.js?v=20260713-global-1';
-    import { getCountVocabulary, vocabularyDisplayName } from '../src/v2/count-vocabularies.js?v=20260713-global';
-    import { createPracticeTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/v2/ui-messages.js?v=20260715-global-6';
-    import { figureDisplayName } from '../src/v2/figure-terminology.js?v=20260715-verified-2';
+    import { DANCE_PROFILES } from '../src/engine/dance-profiles.js';
+    import { compileRhythm, compileRoutine } from '../src/engine/rhythm-compiler.js';
+    import { loadVoicePack } from '../src/engine/voice-pack-loader.js?v=20260713-overlap-fade';
+    import { PracticeAudioEngine } from '../src/engine/audio-engine.js?v=20260713-overlap-fade';
+    import { figureRangeTicks, normalizeFigureRange } from '../src/engine/practice-range.js';
+    import { readRoutineDraft } from '../src/engine/routine-draft.js';
+    import { decodeRecordedVoicePack, recordedPackProgress } from '../src/engine/recorded-voice-pack.js?v=20260713-global-1';
+    import { listLocalRecordedPacks, LOCAL_RECORDED_PACK_ID } from '../src/engine/recorded-voice-store.js?v=20260713-global-1';
+    import { getCountVocabulary, vocabularyDisplayName } from '../src/engine/count-vocabularies.js?v=20260713-global';
+    import { createPracticeTranslator, danceDisplayName, UI_LOCALE_STORAGE_KEY } from '../src/engine/ui-messages.js?v=20260715-global-6';
+    import { figureDisplayName } from '../src/engine/figure-terminology.js?v=20260715-verified-2';
 
     const $ = selector => document.querySelector(selector);
     let translator = createPracticeTranslator(localStorage.getItem(UI_LOCALE_STORAGE_KEY) || navigator.language);
@@ -194,7 +194,7 @@
     let voiceOptionInitialized = false;
 
     try {
-      const routineResponse = await fetch('../src/v2/data/legacy-routines-report.json', { cache: 'no-store' });
+      const routineResponse = await fetch('../src/engine/data/legacy-routines-report.json', { cache: 'no-store' });
       if (!routineResponse.ok) throw new Error(`HTTP ${routineResponse.status}`);
       const report = await routineResponse.json();
       routines = report.routines.filter(routine => routine.status === 'mechanically-valid-unreviewed');
