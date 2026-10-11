@@ -188,3 +188,16 @@ Start HEAD: 5bd6e53 (after 6a). Plan built from a scratch copy based on 95fc319 
 - Task 8: fix round 1/5 (a95bf3e: IndexedDB 12 words, network control, engine-reuse fingerprint, quiet.wav peak 0.002).
 - Task 8: complete (ac5fe4f..a95bf3e, re-review all addressed; 3 parked minors: separate fingerprint windows / quiet.wav relies on Chrome AGC / 100ms sampling).
 ```
+
+## 最終レビューと直し便（2026-10-12）
+
+- 最終レビュー（5bd6e53..5e4b391）: Ready・0 Critical / 0 Important / 6 Minor（`.superpowers/sdd/2026-10-12-app-v1-stage4/final-review.md`）。裁定: 6 件とも直す。
+- 直し便 a16a35a:
+  - M1 完成画面の名前の欄を空にすると既定名（保存される名前）が欄に戻る（`wizard.nameAfterEdit`）。
+  - M2 録音中は「聞く」を押せない。
+  - M3 600px 未満で録れた語に「声が入っていませんでした」等の枠が出たら、枠を進み具合の行（12 のます）に重ねる。丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。375×548 で丸の上端 214 のまま・波形の下端 450 < 帯 467。375×667 は前と同じ値。枠が出ている間だけ進み具合の行は隠れる。
+  - M4 S7 の削除は端末から消えたと確かめてから一覧と設定を変える（`store.removeVoicePack`）。失敗は行を残し「保存できませんでした」。
+  - M5 ui-state の S8 は端末の声・設定に書かない（`wizard.savesVoices`、録った語と名前は画面の中だけ）。no-voice は英語の声があればその写しから始まる。
+  - M6 時間のずれが録り直し・名前の変更・保存と読み込みを通って残るテスト。
+  - ui:check に「S8 録れた語で声が入っていない」（M3 を 375×548 で検査。直す前の CSS では落ちることを確認）。
+- ゲート: npm test 476 / typecheck / build OK・ui:check 197 PASS（exit 0）・smoke:voice / routines / practice OK（5199）。
