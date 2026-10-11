@@ -2,6 +2,9 @@
 // 偽マイク用の WAV を作る（Ruling 63-5）。Chrome の --use-file-for-fake-audio-capture に渡す（ループで何度も鳴る）。
 // fake-mic.wav: 1.5 秒・48kHz・16bit・モノ。0.3 秒の無音 → 0.6 秒の 220Hz＋倍音（声の代わり）→ 0.6 秒の無音。
 // silence.wav : 1.5 秒の全 0。
+// quiet.wav   : fake-mic.wav と同じ形で振幅だけ小さい（ピーク 0.002）。全 0 ではないので「無音の基準 SILENCE_PEAK_RMS」そのものを試す。
+//               Chrome のマイクは自動ゲイン（AGC）で小さい音を持ち上げるため、アプリが見る peakRms は 0.002 以上 0.01 未満になる。
+//               実測（2026-10-12）: 0.001〜0.004 は基準 0 だと「録れた」、基準 0.01 だと「声が入っていない」。0.0003 は検出器の下限 0.002 で先に落ちる。
 // 使い方: node tools/make-fake-mic-wav.js（test/fixtures/voice/ に書く。中身は決定的なので何度作っても同じバイト列）
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,8 +14,9 @@ export const TOTAL_SECONDS = 1.5;
 export const VOICE_START_SECONDS = 0.3;
 export const VOICE_SECONDS = 0.6;
 export const VOICE_PEAK = 0.5;
+export const QUIET_PEAK = 0.002;
 
-export function fakeVoiceSamples({ silent = false } = {}) {
+export function fakeVoiceSamples({ silent = false, peak = VOICE_PEAK } = {}) {
   const samples = new Float32Array(Math.round(SAMPLE_RATE * TOTAL_SECONDS));
   if (silent) return samples;
   const start = Math.round(SAMPLE_RATE * VOICE_START_SECONDS);
@@ -22,7 +26,7 @@ export function fakeVoiceSamples({ silent = false } = {}) {
     const t = i / SAMPLE_RATE;
     const envelope = Math.min(1, i / ramp, (length - i) / ramp);
     const tone = Math.sin(2 * Math.PI * 220 * t) + 0.5 * Math.sin(2 * Math.PI * 440 * t) + 0.25 * Math.sin(2 * Math.PI * 660 * t);
-    samples[start + i] = VOICE_PEAK * envelope * tone / 1.75;
+    samples[start + i] = peak * envelope * tone / 1.75;
   }
   return samples;
 }
@@ -54,5 +58,6 @@ if (path.resolve(process.argv[1] ?? "") === import.meta.filename) {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'fake-mic.wav'), encodeMonoWav(fakeVoiceSamples()));
   fs.writeFileSync(path.join(dir, 'silence.wav'), encodeMonoWav(fakeVoiceSamples({ silent: true })));
-  console.log(`wrote ${dir}/fake-mic.wav and silence.wav`);
+  fs.writeFileSync(path.join(dir, 'quiet.wav'), encodeMonoWav(fakeVoiceSamples({ peak: QUIET_PEAK })));
+  console.log(`wrote ${dir}/fake-mic.wav, silence.wav and quiet.wav`);
 }

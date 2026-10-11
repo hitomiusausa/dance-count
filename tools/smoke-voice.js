@@ -4,7 +4,10 @@
 // 開いて「続きを録音する」→ 4 語目から 12 語目まで（録るたびに波形と「聞く」）→ 完成 → 聞き比べ（自分の声・標準の声が鳴って止まる）→
 // 「完了」→ S7 で選ばれている → S2 ワルツが自分の声で鳴る・チップ「声: 自分の声（英語）」→ 再読み込みでも同じ →
 // くわしくの「早く」×2 で「−20 ms」→ 再読み込みでも残る → S7 で削除 → チップ「声: 標準（英語）」。
-// 無音の本: 別のブラウザを無音の WAV で起動 → 1 語目「録音する」→「声が入っていませんでした」・「次へ」は押せない。
+// 録音の声で鳴ることの証明: 12 語が IndexedDB の voice-packs に入っている → 新しく読み直して選ぶ → ▶ の間、標準の声の音声
+// （/audio/default-en-female-v1/）が 1 本も要求されない。対照として、標準の声を選ぶと同じ操作で要求される。
+// 無音の本: 別のブラウザを無音の WAV（全 0）と、とても小さい声の WAV（0 ではないが RMS が基準未満）で起動 → 1 語目「録音する」→
+// 「声が入っていませんでした」・「次へ」は押せない。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。偽マイクの WAV は `node tools/make-fake-mic-wav.js` で作って commit 済み。
 import path from 'node:path';
 import { chromium } from 'playwright-core';
@@ -14,6 +17,8 @@ const FIXTURES = path.resolve(import.meta.dirname, '../test/fixtures/voice');
 const SOUND_TIMEOUT_MS = 10000;
 const TAKE_TIMEOUT_MS = 8000;      // getUserMedia（〜0.3 秒）＋ 1.5 秒の録音 ＋ 正規化と保存
 const WRITE_SETTLE_MS = 500;       // 書き込みの確定を待ってから再読み込み（smoke-routines.js と同じ理由）
+const STANDARD_AUDIO = '/audio/default-en-female-v1/';
+const PREVIEW_MS = 2500;           // 試聴を鳴らして指紋を集める時間
 const errors = [];
 
 function launch(wav) {
@@ -25,6 +30,20 @@ function launch(wav) {
 
 async function openPage(browser) {
   const context = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP', permissions: ['microphone'] });
+  // 声の語を鳴らす BufferSource の中身の指紋を window.__played に残す（どの声の音が実際に鳴ったかを見る）。
+  await context.addInitScript(() => {
+    window.__played = [];
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (...args) {
+      const data = this.buffer?.getChannelData(0);
+      if (data) {
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 1) sum += Math.abs(data[i]);
+        window.__played.push(`${data.length}:${sum.toFixed(2)}`);
+      }
+      return start.apply(this, args);
+    };
+  });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
@@ -60,6 +79,41 @@ async function recordWord(page, label) {
     return false;
   }
   return true;
+}
+
+// IndexedDB voice-packs の中身（id・origin・録れた語の数）をページの中から読む。
+async function readPacks(page) {
+  return page.evaluate(() => new Promise((resolve, reject) => {
+    const open = indexedDB.open('dance-count-v2');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const all = open.result.transaction('voice-packs').objectStore('voice-packs').getAll();
+      all.onerror = () => reject(all.error);
+      all.onsuccess = () => { open.result.close(); resolve(all.result.map(pack => ({ origin: pack.origin, words: Object.keys(pack.words ?? {}).length }))); };
+    };
+  }));
+}
+
+// 新しく読み直して ▶ を押し、その間に標準の声の音声が何本要求されたかを返す。
+async function standardRequestsWhilePlaying(page, label) {
+  const hits = [];
+  const onRequest = request => { if (request.url().includes(STANDARD_AUDIO)) hits.push(request.url()); };
+  page.on('request', onRequest);
+  await page.reload();
+  await page.waitForSelector('[data-screen="S2"]');
+  await page.waitForTimeout(300);
+  const played = await playAndCollect(page, label);
+  page.off('request', onRequest);
+  return { hits, played };
+}
+
+// ▶ で鳴らし、鳴った語の指紋（重複なし）を返す。
+async function playAndCollect(page, label) {
+  await page.evaluate(() => { window.__played = []; });
+  await page.locator('[data-play]').click();
+  await expectSounding(page, label);
+  await page.locator('[data-play]').click();
+  return [...new Set(await page.evaluate(() => window.__played))];
 }
 
 async function wordNumber(page) {
@@ -105,6 +159,9 @@ try {
     await page.locator('.dc-record-dock .dc-primary').click();
   }
   await page.waitForSelector('[data-step="done"]');
+  await page.waitForTimeout(WRITE_SETTLE_MS);
+  const stored = await readPacks(page);
+  if (stored.length !== 1 || stored[0].origin !== 'recorded' || stored[0].words !== 12) errors.push(`IndexedDB voice-packs: ${JSON.stringify(stored)}`);
 
   // 聞き比べ（Ruling 59-5）: 押した方が鳴り（aria-pressed）、2 小節で自分で止まる。
   for (const index of [0, 1]) {
@@ -124,11 +181,33 @@ try {
   await page.goto(`${BASE}#/practice/waltz`);
   await page.waitForSelector('[data-screen="S2"]');
   await page.waitForFunction(() => document.querySelector('[data-voice-chip]')?.textContent?.includes('自分の声'), null, { timeout: 3000 })
-    .catch(() => errors.push(`S2 chip: "${'?'}"`));
-  await page.locator('[data-play]').click();
-  await expectSounding(page, 'S2 with my voice');
-  await page.locator('[data-play]').click();
-  await page.reload();
+    .catch(async () => errors.push(`S2 chip: "${await chipText(page)}"`));
+  // 新しく読み直した S2 で録音の声を選んだまま ▶: 標準の声の音声は要求されない。
+  const withMine = await standardRequestsWhilePlaying(page, 'S2 with my voice');
+  if (withMine.hits.length) errors.push(`S2 with my voice: standard audio requested (${withMine.hits.length}), e.g. ${withMine.hits[0]}`);
+  if (!withMine.played.length) errors.push('S2 with my voice: no voice buffer was played');
+
+  // 使い回しのエンジン（Ruling 61-3）: S7 の試聴は 1 つの画面の中で同じエンジンを使い回す。録音の声を試聴した後、同じ画面で
+  // 標準の声に替えて試聴すると、標準の声の語が鳴る（setVoicePack）。録音の 12 語は同じ偽マイクの音で、標準の声とは指紋が違う。
+  await page.goto(`${BASE}#/voices`);
+  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
+  const previewPrints = async () => {
+    await page.evaluate(() => { window.__played = []; });
+    await page.locator('.dc-voice-preview').click();
+    await page.waitForTimeout(PREVIEW_MS);
+    await page.locator('.dc-voice-preview').click().catch(() => {});   // 自分で止まっていても構わない
+    return [...new Set(await page.evaluate(() => window.__played))];
+  };
+  const previewMine = await previewPrints();
+  await page.locator('[data-group="voice"] [role="radio"]').first().click();
+  const previewStandard = await previewPrints();
+  if (!previewMine.length) errors.push('S7 preview of my voice played no voice buffer');
+  if (!previewStandard.some(print => !previewMine.includes(print))) errors.push('engine reuse: after switching to the standard voice, still the recorded words play');
+  await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声' }).click();
+  await page.waitForTimeout(WRITE_SETTLE_MS);
+  const previewMineAgain = await previewPrints();
+  if (!previewMineAgain.some(print => !previewStandard.includes(print))) errors.push('engine reuse: after switching back to my voice, still the standard words play');
+  await page.goto(`${BASE}#/practice/waltz`);
   await page.waitForSelector('[data-screen="S2"]');
   await page.waitForTimeout(300);
   if ((await chipText(page)) !== '声: 自分の声（英語）') errors.push(`S2 after reload: chip "${await chipText(page)}"`);
@@ -157,28 +236,33 @@ try {
   await page.waitForSelector('[data-screen="S2"]');
   await page.waitForTimeout(300);
   if ((await chipText(page)) !== '声: 標準（英語）') errors.push(`S2 after delete: chip "${await chipText(page)}"`);
+  // 対照: 標準の声なら、同じ操作で標準の声の音声が要求される（検出が効いている証拠）。
+  const withStandard = await standardRequestsWhilePlaying(page, 'S2 with the standard voice');
+  if (!withStandard.hits.length) errors.push('control: standard voice played without requesting standard audio (the request check is blind)');
 } finally {
   await browser.close();
 }
 
-// 無音の本（Ruling 58）
-const silent = await launch('silence.wav');
-try {
-  const { page } = await openPage(silent);
-  await page.goto(`${BASE}#/voices/record`);
-  await page.waitForSelector('[data-step="intro"]');
-  await page.locator('.dc-dock .dc-primary').click();
-  await page.waitForSelector('[data-step="word"]');
-  await page.locator('.dc-rec').click();
-  await page.waitForSelector('[data-alert="no-voice"]', { timeout: TAKE_TIMEOUT_MS }).catch(() => errors.push('silence: "no voice" was not shown'));
-  if (!(await page.locator('.dc-record-dock .dc-primary').isDisabled())) errors.push('silence: "Next" is pressable');
-  if (await page.locator('.dc-take').count()) errors.push('silence: a take is shown');
-} finally {
-  await silent.close();
+// 無音の本（Ruling 58）: 全 0 の WAV と、小さい声（0 ではないが基準未満）の WAV。どちらも「声が入っていません」で止まる。
+for (const wav of ['silence.wav', 'quiet.wav']) {
+  const silent = await launch(wav);
+  try {
+    const { page } = await openPage(silent);
+    await page.goto(`${BASE}#/voices/record`);
+    await page.waitForSelector('[data-step="intro"]');
+    await page.locator('.dc-dock .dc-primary').click();
+    await page.waitForSelector('[data-step="word"]');
+    await page.locator('.dc-rec').click();
+    await page.waitForSelector('[data-alert="no-voice"]', { timeout: TAKE_TIMEOUT_MS }).catch(() => errors.push(`${wav}: "no voice" was not shown`));
+    if (!(await page.locator('.dc-record-dock .dc-primary').isDisabled())) errors.push(`${wav}: "Next" is pressable`);
+    if (await page.locator('.dc-take').count()) errors.push(`${wav}: a take is shown`);
+  } finally {
+    await silent.close();
+  }
 }
 
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('voice smoke OK: 12 words recorded (with a break), compared, chosen, played in S2, timing kept, deleted; silence is refused');
+console.log('voice smoke OK: 12 words recorded (with a break), compared, chosen, played in S2, timing kept, deleted; silence and a too-quiet voice are refused');
