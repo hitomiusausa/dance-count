@@ -1,18 +1,35 @@
-import { compileRhythm } from '../../engine/rhythm-compiler.js';
+import { figureRangeTicks } from '../../engine/practice-range.js';
+import { compileRhythm, compileRoutine } from '../../engine/rhythm-compiler.js';
 import type { TrackProfile } from '../../engine/tempo-map.js';
 
 // 再生セッション（S2）。音・WakeLock・2秒判定・中断の検知をまとめ、画面には SessionView だけを渡す。
 // 端末に触る処理は deps で受け取る（本物は practice/session-deps.ts、テストは偽物）。
 export const SOUND_CHECK_DELAY_MS = 2000;
 
-export interface PracticeOptions {
+interface CommonOptions {
   danceId: string;
-  counts: string;              // カウントの型（templates のどれか）
-  bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm を通す）
+  bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm・routine-preferences.ts を通す）
   metronome: boolean;
-  countInBars: 0 | 1;
+  countInBars: 0 | 1 | 2;      // 2 はルーティンの「2小節」（Ruling 40）
   loop: boolean;
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
+}
+export interface FigureLike { id: string; name: string; counts: string }
+
+// 2つの形（Ruling 40）。counts＝S2 のカウントの型。routine＝S4 の試聴・S5（range はフィガーの番号、0 始まり・両端を含む）。
+export type PracticeOptions =
+  | (CommonOptions & { kind: 'counts'; counts: string })
+  | (CommonOptions & { kind: 'routine'; figures: readonly FigureLike[]; range?: { startIndex: number; endIndex: number } });
+
+export interface CompiledProgram { compiled: unknown; rangeStartTick?: number; rangeEndTick?: number }
+
+// カウントをエンジンに渡す形にする。範囲は小節の位相を保つため、ルーティン全体をコンパイルしてから切り出す。
+export function compileProgram(options: PracticeOptions): CompiledProgram {
+  if (options.kind === 'counts') return { compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }) };
+  const compiled = compileRoutine({ danceId: options.danceId, figures: options.figures });
+  if (!options.range) return { compiled };
+  const { startTick, endTick } = figureRangeTicks(compiled, options.range);
+  return { compiled, rangeStartTick: startTick, rangeEndTick: endTick };
 }
 
 // [data-alert] の枠に出すもの（Ruling 30）。優先順位: no-sound ＞ stopped・voice-missing ＞ wake-tip。
@@ -24,6 +41,7 @@ export interface SessionView {
   countIn: boolean;
   voiceKey: string | null;     // 鳴っている語（表示は lib/count-display.ts）
   originalTick: number | null;
+  figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
   notice: SessionNotice;
 }
 
@@ -31,7 +49,7 @@ export interface AudioLike { state: string; currentTime: number }
 
 export interface EngineFrame {
   playing: boolean;
-  event?: { voiceKey?: string | null } | null;
+  event?: { voiceKey?: string | null; figureIndex?: number } | null;
   countIn?: boolean;
   originalTick?: number | null;
 }
@@ -58,7 +76,7 @@ export interface SessionHints {
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
-  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, notice: 'none'
+  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none'
 }) as SessionView;
 
 export class PracticeSession<A extends AudioLike, V> {
@@ -138,7 +156,7 @@ export class PracticeSession<A extends AudioLike, V> {
     try {
       this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
       this.engine.start({
-        compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }),
+        ...compileProgram(options),
         bpm: options.bpm,
         loop: options.loop,
         metronome: options.metronome,
@@ -201,7 +219,8 @@ export class PracticeSession<A extends AudioLike, V> {
       ...this.view,
       countIn,
       voiceKey: countIn ? null : frame.event?.voiceKey ?? null,
-      originalTick: countIn ? null : frame.originalTick ?? null
+      originalTick: countIn ? null : frame.originalTick ?? null,
+      figureIndex: countIn ? null : frame.event?.figureIndex ?? null
     });
   }
 

@@ -41,7 +41,7 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
   };
 }
 
-const WALTZ: PracticeOptions = { danceId: 'waltz', counts: '123', bpm: 84, metronome: true, countInBars: 1, loop: true, track: null };
+const WALTZ: PracticeOptions = { kind: 'counts', danceId: 'waltz', counts: '123', bpm: 84, metronome: true, countInBars: 1, loop: true, track: null };
 
 test('unlock and the wake lock request happen synchronously inside play() (iOS tap rule)', () => {
   const h = harness();
@@ -242,4 +242,44 @@ test('pressing ▶ again while playing (engine reports its stop) still starts th
   assert.equal(h.session.current.playing, true);
   await Promise.resolve();
   assert.equal(h.releases, 1);
+});
+
+const ROUTINE: PracticeOptions = {
+  kind: 'routine', danceId: 'waltz', bpm: 84, metronome: true, countInBars: 2, loop: true, track: null,
+  figures: [
+    { id: 'f-00000001', name: 'A', counts: '123' },
+    { id: 'f-00000002', name: 'B', counts: '12&3' },
+    { id: 'f-00000003', name: 'C', counts: '123123' }
+  ]
+};
+
+test('a routine plays the whole routine with its lead-in bars (Ruling 40)', async () => {
+  const h = harness();
+  await h.session.play(ROUTINE);
+  const options = h.starts[0]!;
+  assert.equal(options.countInBars, 2);
+  assert.equal((options.compiled as { durationTicks: number }).durationTicks, 4 * 3 * 960);
+  assert.equal(options.rangeStartTick, undefined);
+});
+
+test('a range keeps the bar position: it cuts the whole routine at figure boundaries', async () => {
+  const h = harness();
+  await h.session.play({ ...ROUTINE, range: { startIndex: 1, endIndex: 2 } });
+  assert.deepEqual([h.starts[0]!.rangeStartTick, h.starts[0]!.rangeEndTick], [3 * 960, 12 * 960]);
+});
+
+test('frames report the sounding figure; the lead-in reports none', async () => {
+  const h = harness();
+  await h.session.play(ROUTINE);
+  h.frame({ playing: true, countIn: true, event: null, originalTick: null });
+  assert.equal(h.session.current.figureIndex, null);
+  h.frame({ playing: true, countIn: false, event: { voiceKey: 'and', figureIndex: 1 }, originalTick: 4800 });
+  assert.equal(h.session.current.figureIndex, 1);
+});
+
+test('a routine that does not compile stops with the "stopped" notice instead of throwing', async () => {
+  const h = harness();
+  await h.session.play({ ...ROUTINE, figures: [{ id: 'f-00000001', name: 'x', counts: '12a3' }] });
+  assert.equal(h.session.current.playing, false);
+  assert.equal(h.session.current.notice, 'stopped');
 });

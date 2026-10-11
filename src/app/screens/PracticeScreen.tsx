@@ -40,7 +40,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
 
   const optionsFrom = (next: AppSettings): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
-    return { danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: next.countInBars, loop: next.loop, track: null };
+    return { kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: next.countInBars, loop: next.loop, track: null };
   };
 
   // 開いた時点で「前回」を書き（Ruling 26）、前回カードの印があればすぐ鳴らす（Ruling 32）。離れたら必ず止める。
