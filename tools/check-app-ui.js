@@ -24,7 +24,7 @@ const STATES = [
   { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
   { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
-  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true },
+  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 8 },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S3', hash: '#/routines', screen: 'S3', kind: 'root' },
@@ -63,10 +63,12 @@ try {
         await page.goto(BASE + state.hash);
         await page.waitForSelector(`[data-screen="${state.screen}"]`);
         if (state.openMore) await page.locator('summary[data-more]').click();
+        const opened = state.openMore ? await page.locator('details[open]').count() : 0;
         await page.evaluate(() => document.fonts.ready);
         await page.evaluate(() => window.scrollTo(0, 0));
         const problems = await page.evaluate(audit, { state, LIMITS, reducedMotion: reducedMotion === 'reduce' });
-        report(label, [...problems, ...consoleErrors]);
+        const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
+        report(label, [...openFail, ...problems, ...consoleErrors]);
         await context.close();
       }
     }
@@ -139,7 +141,7 @@ function audit({ state, LIMITS, reducedMotion }) {
   const textElements = new Set();
   while (walker.nextNode()) {
     const parent = walker.currentNode.parentElement;
-    if (parent && walker.currentNode.textContent.trim() && visible(parent) && !parent.closest('[aria-hidden="true"]:not(.dc-now)')) textElements.add(parent);
+    if (parent && walker.currentNode.textContent.trim() && visible(parent)) textElements.add(parent);
   }
   for (const element of textElements) {
     const size = parseFloat(getComputedStyle(element).fontSize);
@@ -162,7 +164,7 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (rect.width < innerWidth * LIMITS.playWidthRatio - 0.5) issues.push(`U2 play width ${Math.round(rect.width)} < ${Math.round(innerWidth * LIMITS.playWidthRatio)}`);
   }
 
-  // U3 タップ対象の大きさと間隔（固定バー同士・固定バーと本文の間は対象外: スクロールで重なり方が変わるため）
+  // U3 タップ対象の大きさと間隔（固定バーと本文の間・別の固定バー同士は対象外。同じバーの中は測る）
   const targets = [...document.querySelectorAll(TARGETS)].filter(visible).filter(element => !(element.tagName === 'INPUT' && element.closest('label')));
   for (const element of targets) {
     const rect = element.getBoundingClientRect();
@@ -172,7 +174,10 @@ function audit({ state, LIMITS, reducedMotion }) {
     for (let j = i + 1; j < targets.length; j += 1) {
       const a = targets[i];
       const b = targets[j];
-      if (a.contains(b) || b.contains(a) || inFixedBar(a) || inFixedBar(b)) continue;
+      if (a.contains(b) || b.contains(a)) continue;
+      const barA = a.closest(FIXED_BARS);
+      const barB = b.closest(FIXED_BARS);
+      if (barA !== barB) continue; // 片方だけ固定バー、または別々の固定バー: スクロールで重なり方が変わるので対象外（同じバーの中は測る）
       const ra = a.getBoundingClientRect();
       const rb = b.getBoundingClientRect();
       const dx = Math.max(0, Math.max(ra.left, rb.left) - Math.min(ra.right, rb.right));
@@ -197,6 +202,7 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 「初期表示」は画面を開いた直後のこと。「くわしく」を開いた状態は人の操作の後なので全体（9以下）だけを見る（Ruling 31: 開くと8）。
   if (!state.openMore && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
   if (totalOps > LIMITS.totalOps) issues.push(`U4 total operations ${totalOps} > ${LIMITS.totalOps}`);
+  if (state.total !== undefined && totalOps !== state.total) issues.push(`U4 total operations ${totalOps}, expected ${state.total}`);
   if (state.ops !== undefined && initialOps !== state.ops) issues.push(`U4 initial operations ${initialOps}, expected ${state.ops}`);
 
   // U5 選択肢の数・U6「くわしく」は1つ
@@ -257,17 +263,21 @@ function audit({ state, LIMITS, reducedMotion }) {
       issues.push(`U10 clipped text ${element.scrollWidth} > ${element.clientWidth} ${describe(element)}`);
     }
   }
-  // ボタン文言の行数は、文字列（テキストノード）ごとの行の数で数える（アイコンや2段組みの配置は行に数えない）
+  // 「ボタン文言は最大2行」を「各文字列2行まで・ボタン全体で折り返しは1回まで」と読む（アイコンや2段組みの配置は行に数えない）
   for (const button of targets) {
     if (!['BUTTON', 'A', 'SUMMARY'].includes(button.tagName)) continue;
     const texts = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+    let wraps = 0;
+    let reported = false;
     while (texts.nextNode()) {
       if (!texts.currentNode.textContent.trim()) continue;
       const range = document.createRange();
       range.selectNodeContents(texts.currentNode);
       const lines = new Set([...range.getClientRects()].filter(rect => rect.width > 0).map(rect => Math.round(rect.top))).size;
-      if (lines > LIMITS.buttonLines) { issues.push(`U10 button text ${lines} lines > ${LIMITS.buttonLines} ${describe(button)}`); break; }
+      wraps += Math.max(0, lines - 1);
+      if (lines > LIMITS.buttonLines) { issues.push(`U10 button text ${lines} lines > ${LIMITS.buttonLines} ${describe(button)}`); reported = true; break; }
     }
+    if (!reported && wraps > 1) issues.push(`U10 button text wraps ${wraps} times > 1 ${describe(button)}`);
   }
 
   // U11 下タブと戻る（種別の表と照合）
