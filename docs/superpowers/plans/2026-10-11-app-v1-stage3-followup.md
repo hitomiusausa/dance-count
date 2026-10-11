@@ -36,6 +36,13 @@
 - TDD: `test/app/routines/bar-check.test.ts` を先に。
 - 完了: 関門すべて（ui:check は状態が1つ増えて 97 件 PASS の見込み＝23→24 状態×4＋拡大1）。
 
+## Task F4: はじめの合図は2小節（D17）
+
+- 正: rulings.md の **D17** 全文。S2 のオンは `LEAD_IN_BARS = 2`（`src/app/practice/` の定数。S2 の `optionsFrom` が `countInBars: settings.countInBars === 1 ? LEAD_IN_BARS : 0`）。新しいルーティンの `countInBars` 初期値 2（`createRoutine`）。S5 は今のまま（`routineLeadInBars` がルーティンの値）。`PracticeOptions.countInBars` は 0|1|2 のまま。
+- テスト: S2 のオンで 2 小節がエンジンに渡ること（`practice` の純粋部分で）、`createRoutine` の初期値 2（`routine.test.ts` の期待値を更新）。`tools/smoke-practice.js` は最初のカウント（1〜8・S・Q・&・a）が出るまで最大 10 秒待ってから「3種類変わる」を判定（`smoke-routines.js` の `expectSounding` と同じ形）。
+- 仕様の読み替え: §4 S2 の「はじめの合図オン（1小節）」→「（2小節。D17）」。§7 のルーティンの `countInBars` の既定 2。
+- 完了: 関門すべて。
+
 ## 締め
 
 - 段3台帳 `docs/app-v1/stage3-ledger.md` に追加便の記録（各 Task の完了・修正便・裁定）を追記。`docs/app-v1/HANDOVER.md` の段3の行と §0 を更新（実機の再確認＝追加便ぶんの確認表の行）。
