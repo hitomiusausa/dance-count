@@ -3,11 +3,13 @@ import type { AppLocale } from '../i18n/index.ts';
 import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
+import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { isVoiceId } from '../voices/ids.ts';
 
 // 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
 // selectedVoiceId は録音・受け取った声の ID も残す（段4・Ruling 61-1）。voiceOffsetMsByVoiceId は標準の声のタイミング（Ruling 62-3。
-// 録音の声は声そのものの timingAdjustments に持つ）。バックアップの案内（hints.backupTip*）は段5（Ruling 55-3）。
+// 録音の声は声そのものの timingAdjustments に持つ）。distributorName は S9 の「あなたの名前」（次回から入っている。Ruling 82-2）。
+// hints.backupTip* はバックアップの 1 行を出したか（S8 完成・S4 の最初の保存で各 1 回。Ruling 86-2・86-3）。
 export const SETTINGS_KEY = 'app';
 export const STANDARD_VOICE_ID = 'default-en-female-v1';
 
@@ -25,7 +27,8 @@ export interface AppSettings {
   metronome: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
-  hints: { wakeLockTipShown: boolean };
+  distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
+  hints: { wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
@@ -42,7 +45,8 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   metronome: true,
   countInBars: 1,
   loop: true,
-  hints: { wakeLockTipShown: false }
+  distributorName: '',
+  hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false }
 }) as AppSettings;
 
 const SPEED_CHOICES: readonly SpeedChoice[] = ['slow', 'standard', 'fast', 'custom'];
@@ -68,7 +72,12 @@ export function normalizeSettings(raw: unknown): AppSettings {
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
-    hints: { wakeLockTipShown: hints.wakeLockTipShown === true }
+    distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
+    hints: {
+      wakeLockTipShown: hints.wakeLockTipShown === true,
+      backupTipShownForRecording: hints.backupTipShownForRecording === true,
+      backupTipShownForRoutine: hints.backupTipShownForRoutine === true
+    }
   };
 }
 

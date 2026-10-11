@@ -18,7 +18,8 @@ test('valid saved values survive a round trip', () => {
     lastTemplateByDance: { waltz: '12&3' }, speedPresetByDance: { waltz: 'custom', tango: 'fast' },
     customBpmByDance: { waltz: 100 }, metronome: false, countInBars: 0, loop: false,
     speedPresetByRoutine: { 'r-aaaaaaaa': 'fast' }, customBpmByRoutine: { 'r-bbbbbbbb': 120 },
-    hints: { wakeLockTipShown: true }
+    distributorName: '山田',
+    hints: { wakeLockTipShown: true, backupTipShownForRecording: true, backupTipShownForRoutine: false }
   };
   assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(saved))), saved);
 });
@@ -42,7 +43,7 @@ test('broken or foreign values fall back field by field', () => {
   assert.equal(settings.metronome, true);
   assert.equal(settings.countInBars, 1);
   assert.equal(settings.loop, true);
-  assert.deepEqual(settings.hints, { wakeLockTipShown: false });
+  assert.deepEqual(settings.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false });
   assert.deepEqual(settings.speedPresetByRoutine, { 'r-aaaaaaaa': 'slow' });
   assert.deepEqual(settings.customBpmByRoutine, { 'r-aaaaaaaa': 220 });
 });
@@ -68,4 +69,25 @@ test('voice offsets keep integers within ±200 under valid ids and drop zeros (R
   assert.deepEqual(settings.voiceOffsetMsByVoiceId, { 'default-en-female-v1': -20 });
   assert.deepEqual(normalizeSettings({ voiceOffsetMsByVoiceId: 'x' }).voiceOffsetMsByVoiceId, {});
   assert.deepEqual(DEFAULT_SETTINGS.voiceOffsetMsByVoiceId, {});
+});
+
+test('the sharer name is kept trimmed to 40 characters; anything else is empty (Ruling 82-2・86-6)', () => {
+  assert.equal(normalizeSettings({ distributorName: '  山田  ' }).distributorName, '山田');
+  assert.equal(normalizeSettings({ distributorName: 'あ'.repeat(45) }).distributorName, 'あ'.repeat(40));
+  for (const bad of [3, null, ['山田'], { name: '山田' }]) assert.equal(normalizeSettings({ distributorName: bad }).distributorName, '', String(bad));
+  assert.equal(DEFAULT_SETTINGS.distributorName, '');
+});
+
+test('the backup hints start unshown and stay shown once true (Ruling 86-2・86-3・86-6)', () => {
+  assert.deepEqual(DEFAULT_SETTINGS.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false });
+  const shown = normalizeSettings({ hints: { backupTipShownForRecording: true, backupTipShownForRoutine: true } });
+  assert.equal(shown.hints.backupTipShownForRecording, true);
+  assert.equal(shown.hints.backupTipShownForRoutine, true);
+  assert.equal(shown.hints.wakeLockTipShown, false);
+});
+
+test('broken hint values read as not shown yet', () => {
+  const settings = normalizeSettings({ hints: { backupTipShownForRecording: 'yes', backupTipShownForRoutine: 1 } });
+  assert.equal(settings.hints.backupTipShownForRecording, false);
+  assert.equal(settings.hints.backupTipShownForRoutine, false);
 });
