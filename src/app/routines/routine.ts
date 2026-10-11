@@ -34,7 +34,7 @@ export const USER_PROVENANCE: RoutineProvenance = Object.freeze({
 
 export function createRoutine({ id, danceId, name, now }: { id: string; danceId: string; name: string; now: string }): Routine {
   return {
-    id, danceId, name, bpm: null, countInBars: 1, source: 'user-created', status: 'ready', figures: [],
+    id, danceId, name, bpm: null, countInBars: 2, source: 'user-created', status: 'ready', figures: [],
     provenance: { ...USER_PROVENANCE }, createdWith: { app: 'dance-count', version: APP_VERSION }, createdAt: now, updatedAt: now
   };
 }

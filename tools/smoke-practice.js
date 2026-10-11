@@ -7,28 +7,22 @@
 import { chromium } from 'playwright-core';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
-const LISTEN_MS = 4000;
+const SOUND_TIMEOUT_MS = 10000;   // はじめの合図（2小節。ワルツ♩=84で約4.3秒、D17）＋声の読み込みを待っても、この間にカウントが3種類変わること
 const errors = [];
 const browser = await chromium.launch({ channel: 'chrome' });
 
-async function countsSeen(page) {
+async function expectSounding(page, label) {
   const seen = new Set();
-  const end = Date.now() + LISTEN_MS;
-  while (Date.now() < end) {
+  const end = Date.now() + SOUND_TIMEOUT_MS;
+  while (Date.now() < end && seen.size < 3) {
     const text = (await page.locator('.dc-now').textContent())?.trim();
-    if (text) seen.add(text);
+    if (text && /^[1-8SQ&a]$/.test(text)) seen.add(text);
     await page.waitForTimeout(100);
   }
-  return seen;
-}
-
-async function expectSounding(page, label) {
-  const seen = await countsSeen(page);
   const alert = await page.locator('[data-alert]').getAttribute('data-alert').catch(() => null);
   if (alert === 'no-sound') errors.push(`${label}: no-sound banner shown`);
   if ((await page.locator('[data-screen="S2"]').getAttribute('data-playing')) !== 'true') errors.push(`${label}: not playing`);
-  const counts = [...seen].filter(text => /^[1-8SQ&a]$/.test(text));
-  if (counts.length < 3) errors.push(`${label}: count display did not advance (${[...seen].join(', ')})`);
+  if (seen.size < 3) errors.push(`${label}: count display did not advance (${[...seen].join(', ')})`);
 }
 
 try {

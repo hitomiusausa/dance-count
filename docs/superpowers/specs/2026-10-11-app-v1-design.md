@@ -144,7 +144,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 ### S2 再生（集中）
 - 初期表示（上から）: 「‹ 戻る」→ 種目名見出し 28px ＋副題 16px（選択中のカウントの型を同じ整形で表示。Ruling 22）→ 現在カウント（鳴っている語をそのまま表示。スマホ 96px／PC 200px、琥珀色）と小節内の拍インジケータ（操作ではない。現在拍だけ琥珀色の下線 6px＋太字、他は灰の下線 3px）→ 速さ3択（`[data-group="speed"]`）→ トグル2つ（メトロノーム・はじめの合図、Ruling 19）→ 声チップ「声: 標準（英語）」→「くわしく」（`summary[data-more]`）。画面下固定に ▶ 再生／■ 停止（72px 以上・幅は画面の60%以上）。
 - 主要操作数（Ruling 18）: 速さ(1)＋メトロノーム(1)＋はじめの合図(1)＋声チップ(1)＋▶(1)＝5。375×667 の初期表示に5つとも完全に入ること。
-- 初期値（Ruling 13・18・D3）: 繰り返しオン、メトロノームオン、はじめの合図オン（1小節）、速さ「標準」＝`practiceBpm`、カウントの型＝`templates[0]`（種目ごとに記憶）、声＝英語の標準音声。
+- 初期値（Ruling 13・18・D3）: 繰り返しオン、メトロノームオン、はじめの合図オン（2小節。D17）、速さ「標準」＝`practiceBpm`、カウントの型＝`templates[0]`（種目ごとに記憶）、声＝英語の標準音声。
 - 速さ3択（Ruling 24）: 「ゆっくり / Slower」＝`round(practiceBpm × 0.8)`、「標準 / Standard」＝`practiceBpm`、「速め / Faster」＝`min(round(practiceBpm × 1.1), competitionBpm.max)`。定数 `SPEED_SLOW_RATIO=0.8`・`SPEED_FAST_RATIO=1.1` を1か所で持つ。ワルツは 67 / 84 / 90。単体テストで10種目すべて「ゆっくり < 標準 < 速め ≤ 競技上限」を固定。選択中のボタンに「♩=84」の形で数値を小さく併記（「BPM」の語は出さない）。選択はネイビー塗り＋チェックのアイコン＋文字（色だけに頼らない）。種目ごとに記憶（`speedPresetByDance`）。
 - トグル: アイコン＋ラベル＋スイッチ形＋「オン / On」「オフ / Off」の文字。`role="switch"`。
 - 声チップ: タップで S7。表示は選択中の声の名前（「標準（英語）」「標準（日本語）」「○○さんの声」「自分の声」）。
@@ -346,7 +346,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 
 ### ルーティン（既存形式を拡張。既存キーは変えない）
 ```
-{ id, danceId, name, bpm|null, countInBars:1|2, source:'user-created', status:'ready',
+{ id, danceId, name, bpm|null, countInBars:1|2 /* 新規の既定は2（D17） */, source:'user-created', status:'ready',
   figures:[{ id, name, counts }],                // counts は正規化した文字列（例 "123a45a6"）。パーサのトークンは変えない
   provenance:{ sourceKind:'user-created', authority:null,
                authorityClaimStatus:'not-applicable', reviewStatus:'unreviewed' },   // 'received' は段5で足す
@@ -367,7 +367,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 { uiLocale, voiceLocale:'en', selectedVoiceId, lastDanceId,
   lastTemplateByDance:{}, speedPresetByDance:{}, customBpmByDance:{},
   speedPresetByRoutine:{}, customBpmByRoutine:{},  // S5 の速さはルーティンごと（Ruling 40）。ルーティン削除で消す
-  metronome:true, countInBars:1, loop:true,
+  metronome:true, countInBars:1 /* オン。S2 のオンは2小節（D17） */, loop:true,
   voiceOffsetMsByVoiceId:{},                     // 標準音声の「声のタイミング」（読み取り専用パックのため設定側に持つ）
   hints:{ homeScreenCardDismissed, wakeLockTipShown, backupTipShownForRecording, backupTipShownForRoutine } }
 ```

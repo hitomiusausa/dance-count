@@ -19,7 +19,7 @@ export interface AppSettings {
   speedPresetByRoutine: Record<string, SpeedChoice>;   // S5 の速さはルーティンごと（Ruling 40）。キーはルーティンID
   customBpmByRoutine: Record<string, number>;
   metronome: boolean;
-  countInBars: 0 | 1;                       // はじめの合図 オン=1小節 / オフ=0
+  countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
   hints: { wakeLockTipShown: boolean };
 }

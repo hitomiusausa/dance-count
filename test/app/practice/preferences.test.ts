@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DANCE_PROFILES } from '../../../src/engine/dance-profiles.js';
 import { DEFAULT_SETTINGS, type AppSettings } from '../../../src/app/settings/settings.ts';
-import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice } from '../../../src/app/practice/preferences.ts';
+import { LEAD_IN_BARS, chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars } from '../../../src/app/practice/preferences.ts';
 
 const waltz = DANCE_PROFILES.waltz;
 const apply = (settings: AppSettings, patch: Partial<AppSettings>): AppSettings => ({ ...settings, ...patch });
@@ -46,4 +46,11 @@ test('custom values are clamped; garbage is ignored; unknown templates are refus
 test('a custom choice without a stored value falls back to standard', () => {
   const settings = { ...DEFAULT_SETTINGS, speedPresetByDance: { waltz: 'custom' as const } };
   assert.deepEqual(practiceChoice(waltz, settings), { counts: '123', speed: 'standard', bpm: 84, customBpm: null });
+});
+
+test('lead-in switch: off = 0, on = LEAD_IN_BARS (2 bars, D17); stored 0|1 needs no migration', () => {
+  assert.equal(LEAD_IN_BARS, 2);
+  assert.equal(practiceLeadInBars({ ...DEFAULT_SETTINGS, countInBars: 1 }), 2);
+  assert.equal(practiceLeadInBars({ ...DEFAULT_SETTINGS, countInBars: 0 }), 0);
+  assert.equal(practiceLeadInBars(DEFAULT_SETTINGS), 2);
 });

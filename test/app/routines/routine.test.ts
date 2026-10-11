@@ -9,10 +9,10 @@ function waltz(figures: Routine['figures'] = [{ id: 'f-11111111', name: 'ナチ�
   return { ...createRoutine({ id: ID, danceId: 'waltz', name: 'ワルツの練習', now: NOW }), figures };
 }
 
-test('a new routine has the Ruling 44 values', () => {
+test('a new routine has the Ruling 44 values (lead-in 2 bars, D17)', () => {
   const routine = createRoutine({ id: ID, danceId: 'waltz', name: 'ワルツのルーティン', now: NOW });
   assert.deepEqual(routine, {
-    id: ID, danceId: 'waltz', name: 'ワルツのルーティン', bpm: null, countInBars: 1, source: 'user-created', status: 'ready', figures: [],
+    id: ID, danceId: 'waltz', name: 'ワルツのルーティン', bpm: null, countInBars: 2, source: 'user-created', status: 'ready', figures: [],
     provenance: { sourceKind: 'user-created', authority: null, authorityClaimStatus: 'not-applicable', reviewStatus: 'unreviewed' },
     createdWith: { app: 'dance-count', version: 'test' }, createdAt: NOW, updatedAt: NOW
   });

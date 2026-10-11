@@ -10,7 +10,7 @@ interface CommonOptions {
   danceId: string;
   bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm・routine-preferences.ts を通す）
   metronome: boolean;
-  countInBars: 0 | 1 | 2;      // 2 はルーティンの「2小節」（Ruling 40）
+  countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
 }

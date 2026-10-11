@@ -109,10 +109,10 @@ test('the routine name: blank keeps the old name; trimmed and limited to 40', ()
 
 test('lead-in bars and speed are undoable changes', () => {
   const e = editor();
-  assert.equal(e.setLeadInBars(2), true);
-  assert.equal(e.setLeadInBars(2), false);
+  assert.equal(e.setLeadInBars(1), true);
+  assert.equal(e.setLeadInBars(1), false);
   e.setBpm(100);
-  assert.deepEqual([e.routine.countInBars, e.routine.bpm], [2, 100]);
+  assert.deepEqual([e.routine.countInBars, e.routine.bpm], [1, 100]);
   e.undo();
   assert.equal(e.routine.bpm, null);
 });

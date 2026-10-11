@@ -5,7 +5,7 @@ import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip } from '../practice/controls.tsx';
-import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, type DanceProfileLike } from '../practice/preferences.ts';
+import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions, SessionNotice } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
@@ -32,7 +32,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
 
   const optionsFrom = (next: AppSettings): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
-    return { kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: next.countInBars, loop: next.loop, track: null };
+    return { kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null };
   };
 
   // 開いた時点で「前回」を書き（Ruling 26）、前回カードの印があればすぐ鳴らす（Ruling 32）。止めるのは usePracticeSession。
