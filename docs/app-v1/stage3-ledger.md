@@ -79,3 +79,45 @@ Method: the planner built every task as one commit in a scratch copy (branch pla
 - Final fix wave: 7 addressed (commits 6f35387..63533e5): name-only + back no longer returns to S4 (route replace only while mounted; pending name committed in cleanup; smoke step + device row #16); S3 delete failure shows save-failed; S5 uses platform viewportHeight; #/routines/new at 200 → S3 (+test); standard-speed chip aria-pressed; ignoreClick reset on keydown; HANDOVER doc nits. Extra: RoutineNameField resyncs only on real name prop change (fixed a mount race that wiped typed text). Scoped re-review (opus): all addressed, no new breakage.
 - Final: residual risks for the device check: iOS swipe-back blur timing (row #16); WebKit no-blur path verified by hand only; S3 delete-failure notice verified by code only.
 - Stage 3 closed: 292 tests, typecheck ok, build dist OK, timing identical, golden unchanged, ui:check 93 PASS dev+dist, smoke:routines + smoke:practice OK. iPhone device check (docs/app-v1/stage3-device-check.md, 16 rows) pending.
+
+## 追加便（iPhone 実機確認の指摘 D13〜D18）
+
+計画: `docs/superpowers/plans/2026-10-11-app-v1-stage3-followup.md`。裁定: Ruling 50〜53・D13〜D18（`docs/app-v1/rulings.md`）。ブランチ `agent/app-v1`、始点 `88d73cb`（段3の最終）。SDD の台帳は `.superpowers/sdd/2026-10-11-app-v1-stage3-followup/progress.md`。実装は Opus（計画に完全なコードは無く、Ruling の本文が仕様）。審美の選択肢は推奨の既定で作った（「・」区切り・「N件まとめて決定」・常設の行 400・影 0.25・一覧の中に止める・全体の注意 `--ink2`。ひとみうさが見てから調整）。
+
+| Task | 中身 | コミット | Ruling | レビュー | 持ち越した Minor |
+|---|---|---|---|---|---|
+| F1 | 同じ名前のフィガーは同じカウント（複製して追加／カウントを合わせる／N件まとめて決定）・使える文字を常に表示（D13・D14） | `2c24529` | 50 | 指摘なしで完了。テスト 302 | updateAll 中の moveOpen／duplicateOpen／openRow が全行を確定すること（close() 経由）の単体テストが無い・実機確認表 18 の「2件」は実装者の計算が正しい（Ruling 本文の「3件」は 3 回出てくる場合）・「同じ名前の1件も…なります」が 375px で「す」だけ折れる（文言は PO／Fable）・updateAll 中の行の試聴はその行だけ |
+| F2 | つかんだ行が少し浮いて指についてくる（D15） | `33f35b1` | 51 | spec ✅・品質 approved（0 C／0 I／4 M）。テスト 305 | M1 行き先の線が浮いた行の文字の上を通る（**ひとみうさの実機判断**。確認表 20）・M2 開いた行が閉じる時の位置補正に自動の検査が無い（最終レビューの探査 A で手で確認済み）・M3 閉じる描画と次の lift の間に理論上 1 フレームの隙・M4 テストの分け方が Ruling の「4 件」と違う（中身はそろう） |
+| F3 | 3拍の注意（ワルツ・VW の行）と小節の途中で終わる注意（全種目・一覧の下）（D16） | `33ef176` | 52 | spec ✅・品質 approved（0 C／0 I／4 M）。テスト 312・ui:check 97 | M2 1280 幅で「S4 小節の注意」の操作数の下限検査が無い・M3 `.dc-row-note .dc-ic` の規則が S4 に閉じていない・M4 台帳の D16 の行（この締めで消化） |
+| F4 | はじめの合図は 2 小節（S2 はオンで 2 小節・新しいルーティンの初期値 2）（D17） | `4c80c8f` | （D17 のみ） | spec ✅・品質 approved（0 C／0 I／2 M）。テスト 313 | `smoke-routines.js` 13 行目のコメントが「1小節」のまま・`practiceLeadInBars` の戻り値の型 `0|2` が `LEAD_IN_BARS` と別に手書き |
+| F5 | カウントの形を増やす（種目ごとに規則で作る ≤8 個・別グループ・開いた行の主要操作 7→8）（D18） | `01b2cbe` | 53 | spec ✅・品質 approved（0 C／0 I／3 M）。テスト 319・ui:check 97 | `check-app-ui.js` ~418: 形はあるが押されたチップが無い状態を足すと大きく落ちる・FigureForm が描画ごとに countPatterns を作り直す（無視できる）・台帳の D18 の行（この締めで消化） |
+
+F3 の裁定（コントローラー）:
+- 実装者の Ruling 52 からの 4 つのずれを採用（行の注意は行の幅いっぱいで 375px に 2 行で収める・全体の注意は 16px の div・「S4 小節の注意」は操作数を固定せず total:5・検査用データは「シャッセ フロム PP」）— レビューが意図は保たれていると確認 — 外れたら CSS／ui:check の手直し。
+- 再生の警告（「〜してください」）が行の全文の注意と同時に出て S4 の依頼が 2 つになる場面は許す — 再生の警告は一時的なエラーの状態で、いつもの画面ではない — 外れたら再生の警告の文言を後で短くする。
+
+### 全体レビュー（Opus・`88d73cb..01b2cbe`）
+
+**Ready**（0 Critical／0 Important／4 Minor）。テスト 319・typecheck・build・ui:check 97・両 smoke OK。375 幅の実ブラウザで機能をまたぐ探査（開いた行＋ドラッグの位置補正・同じ名前の行で形をタップ・名前の打ち替え → カウントを合わせる・並べ替えで全文の注意が移る・小節の判定に合図を含めない・描画の重さ）はすべて仕様どおり。`src/engine/` は無変更。
+
+- Ruling（修正便）: M2・M3・M4 と締めの文書を直す — 小さく、利用者に見えるか番人のため — 外れたら小さく戻す。
+- Ruling（保留）: **M1** は直さず PO／Fable への問いとして HANDOVER に持ち越す（下）。
+
+### 修正便（`9aa31d0`＋この文書のコミット）
+
+- **M2**: 主ボタンが「複製して追加」の間は、カウントの形をどれも押された印にしない（打った形は捨てるので、色の付いた形と保存される値が食い違わないように）。判定は純粋関数 `pressedPattern(draftCounts, action)`（`src/app/routines/count-patterns.ts`）に出し単体テスト 1 件。smoke の「複製して追加」の場面に「別の形をタップしても複製して追加のまま・押された形 0」を追加（判定を戻すと smoke が落ちることを確認）。ui:check の状態は「複製して追加」を通らないので不変。
+- **M4**: `smoke:routines` に 1 本: ウィスクを 3 行にする → 1 行目を開いて形 `1 2 & 3` をタップ →「3件まとめて決定」→ 3 行とも `1 2 & 3` → 「元に戻す」1 回で 3 行とも `1 2 3`。
+- **M3**: 仕様 §4 S4 に D15 の一文（つかんだ行は浮いて指についてくる）・D14 の「使える文字：1・2・3・&」の常設の行（「使える記号」の文を置き換え・「・」も除く）・D13（同じ名前は同じカウント）と D16（3拍と小節の注意・止めない）の行を追加。主要操作の期待値を S4＝8（行を開く）・7（くわしく開）に。
+- 締め: この節、HANDOVER（§0・§4b・§5・§6）、実機確認表（17〜30 を追加便の再確認として明示・D17 の 2 行・M4 の流れの 1 行・確認表 17 に M2・確認表 20 に F2 M1 の判断を追記）。
+- ゲート: テスト **320**・typecheck・build（dist OK）・ui:check **97 PASS**（exit 0）・`smoke:routines`・`smoke:practice` OK（いずれも 5199 番の自前の開発サーバー）。
+
+### PO／Fable への問い（保留 M1）
+
+**同じ名前の判定は保存された名前どうしで比べている**（Ruling 50-1 のとおり。`editor.ts` の `sameName`＝`foldFigureName`）。一方、英語の画面では verified の日本語名を英語名で表示する（`figureDisplayName`）。そのため、日本語で保存した「ウィスク 12&3」が英語の画面で "Whisk" と見えている所へ、先生が "Whisk" を `1 2 3` で足すと普通の「Add」になり、"Whisk" が 2 行・違うカウントで並ぶ（D13 が防ぎたかった見え方）。日本語の画面では起きない。起きるのは言語を切り替えた時か、段5で受け取ったルーティンで日英の名前が混ざる時だけ。
+- 案 A: verified 名は用語集の項目（`terminologyKey(danceId, name)` の `englishName`）で比べ、それ以外は今の `foldFigureName`。
+- 案 B: このままにして、Ruling 50 の「外れた時の代償」に限界として書き足す。
+- 段5（受け取り）の計画までに決めたい。
+
+### 実機の再確認
+
+`docs/app-v1/stage3-device-check.md` の **17〜30**（追加便ぶん）をひとみうさの iPhone で。OK なら段4の詳細計画へ。
