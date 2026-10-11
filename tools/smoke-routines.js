@@ -8,6 +8,7 @@
 // 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）→
 // 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）→
 // 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）→
+// 英語表示で一覧の "Whisk" は日本語の「ウィスク」の行と同じフィガー＝複製の形（D22）→
 // キーボードを開いたままのドラッグで画面が流れない・鳴らしている間は帯が残る（最終レビュー2 I1・M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
@@ -335,6 +336,35 @@ try {
   if ((await kanaForm.locator('.dc-primary').textContent())?.trim() !== COPY) errors.push(`the katakana name should switch to "${COPY}" ("${await kanaForm.locator('.dc-primary').textContent()}")`);
   await context.close();
 
+  // 同じフィガーなら同じ名前（D22）: 英語表示で、日本語の「ウィスク」が入っているルーティン（waltz13 の 4 行目）の追加の行 →
+  // 一覧の "Whisk" をタップ → 複製の形（注意は保存した名前を英語の表示で "Whisk"・カウントの欄なし・"Add a copy (…)"）→ 押すと 14 行目が足される
+  const enContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'en-US' });
+  const enPage = await enContext.newPage();
+  enPage.on('pageerror', error => errors.push(`pageerror (en same figure): ${error.message}`));
+  await enPage.goto(`${BASE}#/`);
+  await enPage.waitForSelector('[data-screen]');
+  await enPage.evaluate(seedRoutinesInPage, [R.waltz13]);
+  await enPage.goto(`${BASE}#/routines/${R.waltz13.id}/edit`);
+  await enPage.reload();
+  await enPage.waitForSelector('[data-screen="S4"]');
+  const enWhisk = R.waltz13.figures[3];
+  if (enWhisk.name !== 'ウィスク') errors.push(`en same figure: expected the 4th seeded figure to be ウィスク ("${enWhisk.name}")`);
+  const enCounts = [...enWhisk.counts].join(' ');
+  await enPage.locator('.dc-add-tail').click();
+  const enForm = enPage.locator('.dc-figure-form').last();
+  await enForm.locator('[data-group="figure-names"] .dc-chip', { hasText: /^Whisk$/ }).click();
+  if ((await enForm.locator('input').nth(0).inputValue()) !== 'Whisk') errors.push('en same figure: tapping "Whisk" should fill the name field');
+  const enButton = (await enForm.locator('.dc-primary').textContent())?.trim();
+  if (enButton !== `Add a copy (${enCounts})`) errors.push(`en same figure: "Whisk" should match the JA ウィスク row and read "Add a copy (${enCounts})" ("${enButton}")`);
+  const enNotice = (await enForm.locator('.dc-reason').first().textContent().catch(() => null))?.trim();
+  if (enNotice !== `Same name exists: Whisk (${enCounts})`) errors.push(`en same figure: notice should be "Same name exists: Whisk (${enCounts})" ("${enNotice}")`);
+  if (await enForm.locator('.dc-input--counts').count()) errors.push('en same figure: the counts field should be hidden while adding a copy');
+  await enForm.locator('.dc-primary').click();
+  if ((await enPage.locator('.dc-figure-head').count()) !== 14) errors.push('en same figure: "Add a copy" should add the 14th figure');
+  const enLast = (await enPage.locator('.dc-figure-head').last().textContent()) ?? '';
+  if (!enLast.includes('Whisk') || !enLast.includes(enCounts)) errors.push(`en same figure: the copy should show as Whisk ${enCounts} ("${enLast.trim()}")`);
+  await enContext.close();
+
   // キーボードを開いたままのドラッグ（最終レビュー2 I1）: 帯が隠れている（矩形 0）間も、自動スクロールの下端は見えている範囲の下端。
   // ルーティン名の欄にフォーカス → キーボードの代わり（300px）→ 見えている範囲の中ほどのつかみを 8px 以上動かして 800ms 止める → スクロールしない。
   // 全体を鳴らしている間はキーボードが開いても帯（■ 止める）を隠さない（M4）。止めると隠れる。
@@ -425,4 +455,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing; ${webkitNote}`);

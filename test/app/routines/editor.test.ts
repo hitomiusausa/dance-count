@@ -268,16 +268,17 @@ test('edit: renaming into a same-named group asks to use that count; close drops
 });
 
 test('edit: same name, new counts, two others: "Update all 3" changes all three in one undo step (Ruling 50-4e)', () => {
-  const e = editor([['ウィスク', '12&3'], ['ナチュラルターン', '123'], ['whisk', '12&3'], ['WHISK', '12&3'], ['Whisk', '12&3']]);
+  // D22 より前は 1 行目が「ウィスク」だった（今は Whisk と同じフィガーなので、別のフィガーに替えて大小の畳みだけを見る）
+  const e = editor([['リバースターン', '12&3'], ['ナチュラルターン', '123'], ['whisk', '12&3'], ['WHISK', '12&3'], ['Whisk', '12&3']]);
   e.openRow(2);
   e.setDraft({ counts: '123' });
   const check = e.check();
   assert.deepEqual([check.valid, check.reason, check.action], [true, null, 'updateAll']);
   assert.deepEqual(check.same, { index: 3, name: 'WHISK', counts: '12&3', others: 2 });
   assert.equal(e.close(), true);
-  assert.deepEqual(names(e), ['ウィスク:12&3', 'ナチュラルターン:123', 'whisk:123', 'WHISK:123', 'Whisk:123']);
+  assert.deepEqual(names(e), ['リバースターン:12&3', 'ナチュラルターン:123', 'whisk:123', 'WHISK:123', 'Whisk:123']);
   e.undo();
-  assert.deepEqual(names(e), ['ウィスク:12&3', 'ナチュラルターン:123', 'whisk:12&3', 'WHISK:12&3', 'Whisk:12&3']);
+  assert.deepEqual(names(e), ['リバースターン:12&3', 'ナチュラルターン:123', 'whisk:12&3', 'WHISK:12&3', 'Whisk:12&3']);
 });
 
 test('same name: half-width kana and letter case fold together; spaces inside the name do not (Ruling 50-1f)', () => {
@@ -289,7 +290,10 @@ test('same name: half-width kana and letter case fold together; spaces inside th
   assert.equal(e.check().action, 'addCopy');
   e.setDraft({ name: 'naturalturn' });
   assert.equal(e.check().action, 'add');
+  // D22: 「ナチュラルターン」は照合済みの Natural Turn の日本語名なので、空白の規則とは別に同じフィガー（英語の行が代表）
   e.setDraft({ name: 'ナチュラルターン' });
+  assert.deepEqual([e.check().action, e.check().same?.name], ['addCopy', 'Natural Turn']);
+  e.setDraft({ name: 'ナチュラル  ターン' });
   assert.equal(e.check().action, 'add');
 });
 
@@ -463,4 +467,45 @@ test('respelling a name in kana is not a rename: only the spelling changes (Ruli
   e.openRow(0);
   e.setDraft({ name: 'ウィスク', counts: '12&3' });
   assert.equal(e.check().action, 'updateAll');
+});
+
+// D22: 同じフィガーなら同じ名前（照合済みの登録簿で日英を結ぶ）。保存した表記は変えない。
+test('EN: picking "Whisk" from the list when a JA ウィスク row exists switches to the copy layout (D22)', () => {
+  const e = editor([['ウィスク', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'Whisk' });
+  const check = e.check();
+  assert.deepEqual([check.action, check.reason, check.same?.name, check.same?.counts], ['addCopy', 'sameName', 'ウィスク', '123']);
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: false, sameName: 'copy' });
+  assert.equal(e.addCopy(), true);
+  assert.deepEqual(names(e), ['ウィスク:123', 'ウィスク:123']);
+});
+
+test('updateAll groups the JA and EN rows of the same figure, and leaves other figures alone (D22)', () => {
+  const e = editor([['ウィスク', '123'], ['Whisk', '123'], ['うぃすく', '123'], ['Back Whisk', '123']]);
+  e.openRow(1);
+  e.setDraft({ counts: '12&3' });
+  assert.deepEqual([e.check().action, e.check().same?.others, e.check().same?.name], ['updateAll', 2, 'ウィスク']);
+  assert.equal(e.close(), true);
+  assert.deepEqual(names(e), ['ウィスク:12&3', 'Whisk:12&3', 'うぃすく:12&3', 'Back Whisk:123']);
+  assert.equal(e.undo(), true);
+  assert.deepEqual(names(e), ['ウィスク:123', 'Whisk:123', 'うぃすく:123', 'Back Whisk:123']);
+});
+
+test('renaming to the other language of the same figure is not a rename; to another figure asks to match counts (D22)', () => {
+  const e = editor([['ウィスク', '123'], ['Natural Turn', '12&3']]);
+  e.openRow(0);
+  e.setDraft({ name: 'Whisk' });
+  assert.deepEqual([e.check().action, e.check().valid], ['done', true]);
+  e.setDraft({ name: 'ナチュラルターン' });
+  assert.deepEqual([e.check().action, e.check().reason, e.check().same?.name], ['matchCounts', 'sameName', 'Natural Turn']);
+});
+
+test('free-text names still compare by folded spelling only (D22)', () => {
+  const e = editor([['マイステップ', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'まいすてっぷ' });
+  assert.equal(e.check().action, 'addCopy');
+  e.setDraft({ name: 'My Step', counts: '123' });
+  assert.equal(e.check().action, 'add');
 });

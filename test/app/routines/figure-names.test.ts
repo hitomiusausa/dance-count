@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FIGURE_CHOICES_MAX, FIGURE_SUGGESTIONS_MAX, figureNameChoices, figureNameSuggestions, foldFigureName, hasFigureNameSuggestions, hiraganaToKatakana, spellingKey
+  FIGURE_CHOICES_MAX, FIGURE_SUGGESTIONS_MAX, buildFigureIdentity, figureIdentity, figureNameChoices, figureNameSuggestions, foldFigureName, hasFigureNameSuggestions, hiraganaToKatakana, spellingKey
 } from '../../../src/app/routines/figure-names.ts';
 
 test('suggestions match Japanese aliases and English names, shown in the UI language', () => {
@@ -86,4 +86,58 @@ test('hiragana finds katakana names, and an unconverted spelling keeps its sugge
   assert.deepEqual(figureNameSuggestions('waltz', 'うぃすく', 'ja-JP'), ['ウィスク', 'バックウィスク']);
   assert.deepEqual(figureNameSuggestions('waltz', 'ウィスク', 'ja-JP'), []);
   assert.deepEqual(figureNameSuggestions('waltz', 'うぃーぶ', 'en'), ['Weave from PP']);
+});
+
+// D22: 同じフィガーなら同じ名前。同じ種目の照合済みフィガーに当たれば日本語の別名・英語名・かなを問わず同じ印、当たらなければ畳んだ綴り。
+test('figureIdentity: ウィスク = Whisk = うぃすく in waltz, aliases of one figure are one figure (D22)', () => {
+  const whisk = figureIdentity('waltz', 'ウィスク');
+  assert.ok(!whisk.startsWith('text:'));
+  for (const name of ['Whisk', 'whisk ', 'うぃすく', 'ｳｨｽｸ', 'ＷＨＩＳＫ']) assert.equal(figureIdentity('waltz', name), whisk, name);
+  assert.equal(figureIdentity('waltz', 'クローズド・チェンジ'), figureIdentity('waltz', 'Closed Changes'));
+  assert.equal(figureIdentity('waltz', 'クローズドチェンジ'), figureIdentity('waltz', 'クローズド・チェンジ'));
+  assert.notEqual(figureIdentity('waltz', 'Back Whisk'), whisk);
+});
+
+test('figureIdentity: the same text in another dance is a different figure (D22)', () => {
+  assert.notEqual(figureIdentity('waltz', 'Natural Turn'), figureIdentity('slowfox', 'Natural Turn'));
+  assert.notEqual(figureIdentity('waltz', 'ナチュラルターン'), figureIdentity('slowfox', 'ナチュラルターン'));
+  assert.equal(figureIdentity('slowfox', 'ナチュラルターン'), figureIdentity('slowfox', 'Natural Turn'));
+  // タンゴに Whisk は登録が無い＝自由入力の名前として綴りで比べる（日英は結びつかない）
+  assert.equal(figureIdentity('tango', 'Whisk'), 'text:whisk');
+  assert.notEqual(figureIdentity('tango', 'ウィスク'), figureIdentity('tango', 'Whisk'));
+  assert.equal(figureIdentity('vwaltz', 'ウィスク'), 'text:ウィスク');
+});
+
+test('figureIdentity: names not in the registry compare by their folded spelling (D22)', () => {
+  assert.equal(figureIdentity('waltz', 'べーしっく '), 'text:ベーシック');
+  assert.equal(figureIdentity('waltz', 'ベーシック'), figureIdentity('waltz', 'べーしっく'));
+  assert.equal(figureIdentity('waltz', 'My Step'), figureIdentity('waltz', ' my step'));
+  assert.notEqual(figureIdentity('waltz', 'ナチュラル ターン'), figureIdentity('waltz', 'ナチュラルターン'));
+  // 登録簿の名前と同じ綴りの自由入力（'text:…'）が照合済みの印と混ざらない
+  assert.notEqual(figureIdentity('waltz', 'Whisk'), 'text:whisk');
+});
+
+test('figureIdentity: a name shared by two verified figures in one dance is ambiguous and compares by spelling (D22)', () => {
+  const entry = (englishName: string, sourceAliases: string[], claimStatus = 'verified') => ({ danceId: 'waltz', englishName, sourceAliases, claimStatus });
+  const identity = buildFigureIdentity([
+    entry('Alpha Turn', ['ターン', 'アルファ']),
+    entry('Beta Turn', ['ターン', 'ベータ']),
+    entry('Gamma', ['ガンマ', 'がんま']),
+    entry('Delta', ['デルタ'], 'unverified')
+  ]);
+  assert.equal(identity('waltz', 'ターン'), 'text:ターン');
+  assert.equal(identity('waltz', 'たーん'), 'text:ターン');
+  assert.equal(identity('waltz', 'アルファ'), identity('waltz', 'Alpha Turn'));
+  assert.notEqual(identity('waltz', 'アルファ'), identity('waltz', 'ベータ'));
+  assert.equal(identity('waltz', 'ガンマ'), identity('waltz', 'Gamma'));   // 1 つのフィガーの 2 つの別名が同じに畳まれても曖昧ではない
+  assert.equal(identity('waltz', 'デルタ'), 'text:デルタ');                 // 未照合は登録簿に無いのと同じ
+  assert.equal(identity('waltz', 'Delta'), 'text:delta');
+});
+
+test('the real registry has no name shared by two figures in one dance (D22)', () => {
+  for (const danceId of ['waltz', 'tango', 'slowfox', 'quickstep', 'rumba', 'chacha', 'samba', 'pasodoble', 'jive']) {
+    for (const locale of ['ja-JP', 'en'] as const) {
+      for (const name of figureNameChoices(danceId, locale)) assert.ok(!figureIdentity(danceId, name).startsWith('text:'), `${danceId} "${name}"`);
+    }
+  }
 });

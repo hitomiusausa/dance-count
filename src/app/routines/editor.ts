@@ -1,7 +1,7 @@
 import { RoutineEditorState } from '../../engine/routine-editor-state.js';
 import { isOffBar } from './bar-check.ts';
 import { checkCounts, normalizeCounts, type CountsProblem } from './counts.ts';
-import { foldFigureName } from './figure-names.ts';
+import { figureIdentity } from './figure-names.ts';
 import { FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 import type { Routine, RoutineFigure } from './routine.ts';
 
@@ -90,7 +90,7 @@ export class RoutineEditor {
     if (counts.problem) return { valid: false, counts: counts.counts, reason: counts.problem, action: plain };
     if (editIndex !== null && same) {
       const current = this.routine.figures[editIndex]!;
-      const renamed = foldFigureName(draft.name) !== foldFigureName(current.name);
+      const renamed = this.identity(draft.name) !== this.identity(current.name);
       if (renamed && !matches) return { valid: false, counts: counts.counts, reason: 'sameName', action: 'matchCounts', same };
       if (!renamed && !counts.empty && counts.counts !== normalizeCounts(current.counts)) {
         return { valid: true, counts: counts.counts, reason: null, action: 'updateAll', same };
@@ -147,9 +147,9 @@ export class RoutineEditor {
     }
     const current = this.routine.figures[open.index];
     if (!current || (current.name === figure.name && current.counts === figure.counts)) return false;
-    const group = check.action === 'updateAll' ? foldFigureName(current.name) : null;
+    const group = check.action === 'updateAll' ? this.identity(current.name) : null;
     this.edits.update((value: { figures: RoutineFigure[] }) => {
-      if (group !== null) value.figures.forEach(item => { if (foldFigureName(item.name) === group) item.counts = figure.counts; });
+      if (group !== null) value.figures.forEach(item => { if (this.identity(item.name) === group) item.counts = figure.counts; });
       Object.assign(value.figures[open.index]!, figure);
     });
     return true;
@@ -271,10 +271,16 @@ export class RoutineEditor {
     return { figures, index: this.open.index };
   }
 
-  // 自分以外で同じ名前の行（Ruling 50-1）。代表は番号の若い行。無ければ undefined。
+  // 同じフィガーか（D22）。この種目の照合済みフィガーに当たれば日英・かなを問わず同じ、当たらなければ畳んだ綴り。
+  // 同じ名前の判定（sameName・renamed・updateAll の仲間分け＝複製の形・カウントを合わせるも）は全部ここを通す。
+  private identity(name: string): string {
+    return figureIdentity(this.routine.danceId, name);
+  }
+
+  // 自分以外で同じ名前の行（Ruling 50-1・D22）。代表は番号の若い行。無ければ undefined。
   private sameName(name: string, exceptIndex: number | null): SameName | undefined {
-    const folded = foldFigureName(name);
-    const indexes = this.routine.figures.flatMap((figure, index) => (index !== exceptIndex && foldFigureName(figure.name) === folded ? [index] : []));
+    const identity = this.identity(name);
+    const indexes = this.routine.figures.flatMap((figure, index) => (index !== exceptIndex && this.identity(figure.name) === identity ? [index] : []));
     if (indexes.length === 0) return undefined;
     const first = this.routine.figures[indexes[0]!]!;
     return { index: indexes[0]!, name: first.name, counts: first.counts, others: indexes.length };

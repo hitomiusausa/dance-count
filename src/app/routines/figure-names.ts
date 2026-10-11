@@ -9,7 +9,7 @@ export const FIGURE_CHOICES_MAX = 20;
 
 const KANA_OFFSET = 0x60;   // ひらがな → 同じ音のカタカナ（う U+3046 → ウ U+30A6）
 
-interface Entry { danceId: string; englishName: string; sourceAliases: readonly string[]; claimStatus: string }
+export interface Entry { danceId: string; englishName: string; sourceAliases: readonly string[]; claimStatus: string }
 interface Figure { danceId: string; display: { ja: string; en: string }; keys: string[]; spellings: string[] }
 
 // ひらがなをカタカナに（D21・Ruling 54-8）。ほかの字（長音「ー」・「・」・「＆」・英数・漢字）は触らない。
@@ -25,7 +25,7 @@ export function spellingKey(text: string): string {
 }
 
 // 「同じ名前」の判定（Ruling 50-1・54-8）: NFKC → 前後の空白を除く → 小文字化 → ひらがなをカタカナに。名前の中の空白は除かない。
-// 同じ名前の判定（editor.ts）・候補の部分一致・仲間分けはすべてこの 1 つの関数（判定を 2 か所に書かない）。
+// 候補の部分一致と、figureIdentity（D22。同じ名前の判定の唯一の入口）の畳み方はすべてこの 1 つの関数（判定を 2 か所に書かない）。
 // spellingKey との違いはかなを畳むかどうかだけ（こちらは「同じフィガーか」、あちらは「綴りが照合済みか」）。
 export function foldFigureName(text: string): string {
   return hiraganaToKatakana(spellingKey(text));
@@ -33,10 +33,10 @@ export function foldFigureName(text: string): string {
 const fold = foldFigureName;
 
 // 別名ごとに並んでいる登録簿を、1フィガー1件にまとめる（登録簿の順のまま）。
-const FIGURES: Figure[] = (() => {
+function buildFigures(entries: readonly Entry[]): Figure[] {
   const seen = new Set<string>();
   const figures: Figure[] = [];
-  for (const entry of Object.values(FIGURE_TERMINOLOGY as Record<string, Entry>)) {
+  for (const entry of entries) {
     if (entry.claimStatus !== 'verified') continue;
     const id = `${entry.danceId}\u0000${entry.englishName}`;
     if (seen.has(id)) continue;
@@ -50,7 +50,36 @@ const FIGURES: Figure[] = (() => {
     });
   }
   return figures;
-})();
+}
+const FIGURES = buildFigures(Object.values(FIGURE_TERMINOLOGY as Record<string, Entry>));
+
+// 同じフィガーか（D22）。種目ごとに「畳んだ名前（別名・英語名）→ フィガーの印」。同じ種目の 2 つの照合済みフィガーが同じ畳んだ名前を
+// 持つ時（曖昧）は null＝どちらにも決めず、綴りで比べる（今の登録簿には無い。テストは buildFigureIdentity に作り物の登録簿を渡して確かめる）。
+type IdentityIndex = Map<string, Map<string, string | null>>;
+function identityIndex(figures: readonly Pick<Figure, 'danceId' | 'display' | 'keys'>[]): IdentityIndex {
+  const index: IdentityIndex = new Map();
+  for (const figure of figures) {
+    const id = `figure:${figure.danceId}:${figure.display.en}`;
+    const keys = index.get(figure.danceId) ?? new Map<string, string | null>();
+    index.set(figure.danceId, keys);
+    for (const key of figure.keys) keys.set(key, keys.has(key) && keys.get(key) !== id ? null : id);
+  }
+  return index;
+}
+
+// 登録簿を渡して figureIdentity を作る（テスト用に export。アプリは下の figureIdentity だけを使う）。
+export function buildFigureIdentity(entries: readonly Entry[]): (danceId: string, name: string) => string {
+  const index = identityIndex(buildFigures(entries));
+  return (danceId, name) => {
+    const folded = fold(name);
+    return index.get(danceId)?.get(folded) ?? `text:${folded}`;
+  };
+}
+
+// 「同じ名前」の判定（D22・Ruling 50-1・54-8）の唯一の入口。同じ種目の照合済みフィガーに当たる名前（日本語の別名・英語名・かなの畳み）
+// はそのフィガーの印（ウィスク＝Whisk＝うぃすく）、当たらない名前（自由入力・曖昧）は 'text:'＋畳んだ綴り。editor.ts の sameName・
+// 名前を変えたか・updateAll の仲間分け・複製の形はすべてこれで比べる（判定を 2 か所に書かない）。保存した名前・表示は変えない。
+export const figureIdentity = buildFigureIdentity(Object.values(FIGURE_TERMINOLOGY as Record<string, Entry>));
 
 const shownIn = (locale: 'en' | 'ja-JP'): 'ja' | 'en' => (locale === 'ja-JP' ? 'ja' : 'en');
 
