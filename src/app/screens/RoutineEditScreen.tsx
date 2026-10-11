@@ -5,8 +5,8 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
-import { TypingDock } from '../lib/typing-focus.ts';
-import { nextFrame } from '../platform/viewport.ts';
+import { isTypingInside, TypingDock } from '../lib/typing-focus.ts';
+import { focusedElement, nextFrame } from '../platform/viewport.ts';
 import { MoreOptions, NoticeBox, type AlertNotice } from '../practice/controls.tsx';
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
 import { BPM_MAX, BPM_MIN, clampBpm, type SpeedProfile } from '../practice/speed.ts';
@@ -45,7 +45,15 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const typingDock = useRef(new TypingDock());
   const applyTyping = (hidden: boolean | null) => { if (hidden !== null) setTyping(hidden); };
   // 指を離した後の click は同じ入力の処理の中で届くので、帯を出すのは次の描画の前まで待つ（click の当たり判定の後）。
-  const afterPress = () => { nextFrame(() => applyTyping(typingDock.current.pointerUp())); };
+  const screenRoot = useRef<HTMLElement>(null);
+  const typingNow = () => isTypingInside(focusedElement() as HTMLElement | null, screenRoot.current);
+  const afterPress = () => { nextFrame(() => applyTyping(typingDock.current.pointerUp(typingNow()))); };
+  // 打っている状態が残り続けない（F6 round 3）: WebKit は行を閉じて消えた欄の focusout を出さない。打っている間は描画のたびに
+  // 次の描画の前で確かめ直す（決定・複製・追加で行が閉じた後の描画もここを通る）。変わらなければ描き直さないので繰り返さない。
+  useEffect(() => {
+    if (!typing) return undefined;
+    return nextFrame(() => applyTyping(typingDock.current.recheck(typingNow())));
+  });
   const mounted = useRef(true);   // 画面を離れた後（戻る・スワイプ）の保存ではハッシュを置き換えない
   const pendingName = useRef<string | null>(null);   // 名前欄の確定前の文字（離れる時に確定する。blur が来ない端末向け）
   const { session, view } = usePracticeSession('S4');
@@ -208,10 +216,10 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   };
 
   return (
-    <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
+    <main ref={screenRoot} class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
       data-typing={typing ? 'true' : undefined}
       onFocusIn={event => applyTyping(typingDock.current.focusIn(event.target as HTMLElement | null))}
-      onFocusOut={event => applyTyping(typingDock.current.focusOut(event.relatedTarget as HTMLElement | null))}
+      onFocusOut={event => { applyTyping(typingDock.current.focusOut(event.relatedTarget as HTMLElement | null)); nextFrame(() => applyTyping(typingDock.current.recheck(typingNow()))); }}
       onPointerDown={() => typingDock.current.pointerDown()}
       onPointerUp={afterPress} onPointerCancel={afterPress}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>

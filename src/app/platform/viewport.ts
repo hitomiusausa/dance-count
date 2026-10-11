@@ -51,3 +51,8 @@ export function onVisibleViewportChange(listener: () => void): () => void {
     visual.removeEventListener('scroll', listener);
   };
 }
+
+// いまフォーカスのある要素（F6 round 3）。WebKit は消えた欄の focusout を出さないので、S4 の「打っている」をこれで確かめ直す。
+export function focusedElement(): Element | null {
+  return typeof document === 'undefined' ? null : document.activeElement;
+}

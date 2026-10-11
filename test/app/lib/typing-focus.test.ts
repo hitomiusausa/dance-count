@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTypingTarget, TypingDock } from '../../../src/app/lib/typing-focus.ts';
+import { isTypingInside, isTypingTarget, TypingDock } from '../../../src/app/lib/typing-focus.ts';
 
 test('text inputs and textareas are typing targets', () => {
   assert.equal(isTypingTarget({ tagName: 'INPUT', type: 'text' }), true);
@@ -34,10 +34,11 @@ test('TypingDock waits for the finger to lift before showing the dock (the press
   dock.pointerDown();
   assert.equal(dock.focusOut({ tagName: 'BUTTON' }), null);
   assert.equal(dock.focusIn({ tagName: 'BUTTON' }), null); // ボタンがフォーカスを受けても、押している間は隠したまま
+  assert.equal(dock.recheck(false), null);                  // 描画のたびの確かめ直しでも、押している間は待つ
   assert.equal(dock.hidden, true);
-  assert.equal(dock.pointerUp(), false);
+  assert.equal(dock.pointerUp(false), false);
   assert.equal(dock.hidden, false);
-  assert.equal(dock.pointerUp(), null);
+  assert.equal(dock.pointerUp(false), null);
 });
 
 test('TypingDock: pressing from one text field into another keeps the dock hidden', () => {
@@ -45,7 +46,28 @@ test('TypingDock: pressing from one text field into another keeps the dock hidde
   dock.focusIn({ tagName: 'INPUT' });
   dock.pointerDown();
   assert.equal(dock.focusOut({ tagName: 'BUTTON' }), null);
-  assert.equal(dock.focusIn({ tagName: 'TEXTAREA' }), null); // 保留は取り消し
-  assert.equal(dock.pointerUp(), null);
+  assert.equal(dock.focusIn({ tagName: 'TEXTAREA' }), null);
+  assert.equal(dock.pointerUp(true), null);
   assert.equal(dock.hidden, true);
+});
+
+test('TypingDock does not get stuck when the focused field is removed without a focusout (WebKit, F6 round 3)', () => {
+  const dock = new TypingDock();
+  dock.focusIn({ tagName: 'INPUT' });
+  dock.pointerDown();                          // iOS: ボタンを押してもフォーカスは欄に残る
+  assert.equal(dock.pointerUp(true), null);    // 押した直後はまだ欄が画面にある
+  assert.equal(dock.recheck(false), false);    // 複製で行が閉じ欄が消えた後の描画で確かめ直す → 帯が戻る
+  assert.equal(dock.hidden, false);
+});
+
+test('isTypingInside: a connected text field inside the root only', () => {
+  const root = { contains: (node: unknown) => node === inside || node === removed };
+  const inside = { tagName: 'INPUT', type: 'text', isConnected: true };
+  const removed = { tagName: 'INPUT', type: 'text', isConnected: false };
+  assert.equal(isTypingInside(inside, root), true);
+  assert.equal(isTypingInside(removed, root), false);
+  assert.equal(isTypingInside({ tagName: 'INPUT', isConnected: true }, root), false); // 根の外（例 別の画面）
+  assert.equal(isTypingInside({ tagName: 'BODY', isConnected: true }, root), false);
+  assert.equal(isTypingInside(inside, null), false);
+  assert.equal(isTypingInside(null, root), false);
 });

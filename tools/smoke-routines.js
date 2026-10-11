@@ -8,7 +8,8 @@
 // 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）→
 // 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
-import { chromium } from 'playwright-core';
+import { chromium, webkit } from 'playwright-core';
+import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const SOUND_TIMEOUT_MS = 10000;   // はじめの合図（1小節）＋声の読み込みを待っても、この間にカウントが3種類変わること
@@ -23,6 +24,11 @@ async function addFigure(page, name, counts) {
   await form.locator('input').nth(0).fill(name);
   await form.locator('input').nth(1).fill(counts);
   await form.locator('.dc-primary').click();
+}
+
+// 下の帯（▶ 全体を試聴）が 500ms 以内に戻るか（D19・F6 round 3: 打っている状態が残り続けない）。
+async function dockBackSoon(page) {
+  return page.locator('.dc-dock').waitFor({ state: 'visible', timeout: 500 }).then(() => true, () => false);
 }
 
 async function expectSounding(page, label) {
@@ -205,6 +211,7 @@ try {
   if (kept !== '&123') errors.push(`a different name should bring the counts back as typed ("${kept}")`);
   await nameInput.fill('ウィスク');
   await copyButton.click();
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after "Add a copy"');
   const copied = await page.locator('.dc-figure-head').nth(1).textContent().catch(() => '');
   if (!copied?.includes('ウィスク') || !copied.includes('1 2 3')) errors.push(`"Add a copy" should add ウィスク 1 2 3 as the 2nd row ("${copied}")`);
 
@@ -217,6 +224,7 @@ try {
   await addFigure(page, 'クローズドチェンジ', '12');
   await page.locator('.dc-add-tail').click();
   await addFigure(page, 'リバースターン', '12');
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after adding a figure');
   if ((await page.locator('.dc-figure-head').count()) !== 4) errors.push('a 2-beat waltz figure must still be added (D16: not blocked)');
   if (await rowNote(2) !== FULL || await rowNote(3) !== SHORT) errors.push(`row notes should be full then short: ${JSON.stringify([await rowNote(2), await rowNote(3)])}`);
   if (await barNote() !== 1) errors.push('the mid-bar note should show under the list');
@@ -253,7 +261,9 @@ try {
   await page.locator('.dc-add-tail').click();
   const thirdForm = page.locator('.dc-figure-form').last();
   await thirdForm.locator('input').nth(0).fill('ウィスク');
-  await thirdForm.locator('.dc-primary').click();   // 1 2 3 で複製して追加
+  // iOS ではボタンを押してもフォーカスは名前の欄に残り、行が閉じて欄が消えても focusout が来ない。click だけを送って同じ形にする（F6 round 3）
+  await thirdForm.locator('.dc-primary').dispatchEvent('click');   // 1 2 3 で複製して追加
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms when the focused name field is removed by "Add a copy"');
   const whiskCounts = async () => (await page.locator('.dc-figure-head').evaluateAll(heads => heads
     .filter(head => head.querySelector('b')?.textContent.trim() === 'ウィスク').map(head => head.querySelector('small')?.textContent.trim())));
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`expected 3 ウィスク rows at 1 2 3: ${JSON.stringify(await whiskCounts())}`);
@@ -266,13 +276,48 @@ try {
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 & 3', '1 2 & 3', '1 2 & 3'])) errors.push(`"Update all 3" should change every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
   await page.locator('[data-group="history"] button').first().click();   // 元に戻す（1 回で 3 行とも）
   if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`one undo should restore every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
+  // Esc（F6 round 3）: S4 の Esc は何も閉じないので、欄にフォーカスがある間は帯は隠れたまま。欄から離れると 500ms 以内に戻る
+  await page.locator('.dc-add-tail').click();
+  const escName = page.locator('.dc-figure-form').last().locator('input').nth(0);
+  await escName.fill('ナチュラルターン');
+  await page.keyboard.press('Escape');
+  if (await page.locator('.dc-dock').isVisible()) errors.push('the bottom dock should stay hidden while the name field still has focus after Esc');
+  await escName.blur();
+  if (!(await dockBackSoon(page))) errors.push('the bottom dock should come back within 500ms after Esc and leaving the field');
   await context.close();
 } finally {
   await browser.close();
+}
+
+// WebKit（iOS Safari と同じエンジン）: フォーカスのある名前の欄が「複製して追加」で消えても focusout が来ない（Chrome は来る）。
+// 帯が 500ms 以内に戻ることをここで確かめる（F6 round 3）。WebKit が入っていない時は飛ばす（npx playwright-core install webkit）。
+let webkitNote = 'webkit skipped (not installed)';
+const wk = await webkit.launch().catch(() => null);
+if (wk) {
+  try {
+    const page = await (await wk.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' })).newPage();
+    await page.goto(BASE + '#/');
+    await page.waitForSelector('[data-screen]');
+    await page.evaluate(seedRoutinesInPage, [R.waltz13]);
+    await page.goto(BASE + `#/routines/${R.waltz13.id}/edit`);
+    await page.reload();
+    await page.waitForSelector('[data-screen="S4"]');
+    await page.locator('.dc-add-tail').click();
+    const form = page.locator('.dc-figure-form').last();
+    await form.locator('input').nth(0).click();   // 指で欄を触って打つのと同じ形（fill は WebKit で focusin を待たない）
+    await page.keyboard.type(R.waltz13.figures[0].name);
+    if (await page.locator('.dc-dock').isVisible()) errors.push('webkit: the bottom dock should hide while typing');
+    await form.locator('.dc-primary').dispatchEvent('click');   // iOS と同じく、フォーカスは名前の欄に残したまま押す
+    if ((await page.locator('.dc-figure-head').count()) !== 14) errors.push('webkit: "Add a copy" should add the 14th figure');
+    if (!(await dockBackSoon(page))) errors.push('webkit: the bottom dock should come back within 500ms after "Add a copy" removes the focused name field');
+    webkitNote = 'webkit dock comes back after a copy';
+  } finally {
+    await wk.close();
+  }
 }
 
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one');
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, the dock hides while typing and comes back; ${webkitNote}`);
