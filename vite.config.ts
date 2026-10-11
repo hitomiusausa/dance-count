@@ -6,7 +6,7 @@ import preact from '@preact/preset-vite';
 export default defineConfig({
   base: './',
   plugins: [preact()],
-  optimizeDeps: { entries: ['index.html'] },
+  optimizeDeps: { entries: ['index.html'], include: ['preact', 'preact/hooks', 'preact/jsx-runtime'] },
   server: { port: 5173, strictPort: true },
   preview: { port: 4174, strictPort: true },
   build: { outDir: 'dist', emptyOutDir: true }

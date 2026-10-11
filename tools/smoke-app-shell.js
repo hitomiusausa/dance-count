@@ -36,6 +36,11 @@ try {
       await page.waitForSelector('[data-screen="S1"]');
       expectEqual(`${label} tabs`, await page.locator('[data-nav] a').allTextContents(), tabs);
       expectEqual(`${label} S1 heading`, await page.locator('[data-screen="S1"] h2').textContent(), heading);
+      expectEqual(`${label} active tab aria-current`, await page.locator('[data-nav] a[aria-current="page"]').allTextContents(), [tabs[0]]);
+      for (const [index, tabLink] of (await page.locator('[data-nav] a').all()).entries()) {
+        const box = await tabLink.boundingBox();
+        if (!box || box.height < 48) errors.push(`${label} tab ${index} height ${box?.height} < 48`);
+      }
       await page.screenshot({ path: path.join(outDir, `${prefix}-s1-${width}-${locale}.png`), fullPage: true });
       await page.locator('[data-nav] a').nth(1).click();
       await page.waitForSelector('[data-screen="S3"]');
