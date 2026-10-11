@@ -12,6 +12,7 @@ import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutineEditScreen } from './screens/RoutineEditScreen.tsx';
+import { RoutinePlayScreen } from './screens/RoutinePlayScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
 import { SoundHelpScreen } from './screens/SoundHelpScreen.tsx';
@@ -115,6 +116,7 @@ export function App() {
             {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
               : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
               : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
+              : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
               : <Simple />}
             {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
           </div>
