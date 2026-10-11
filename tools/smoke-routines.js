@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // 段3の完了条件（全体地図・Ruling 43）を本物の Chrome で確かめる。
-// UI の操作だけで: ワルツのルーティンを作る（種目 → フィガー2本を「追加する」で確定・不正なカウントでは押せない）→
+// UI の操作だけで: 新しいルーティンで名前だけ打って端末の戻る → 一覧に戻り名前が残る（編集画面に戻されない）→ 消す →
+// ワルツのルーティンを作る（種目 → フィガー2本を「追加する」で確定・不正なカウントでは押せない）→
 // つかみで引いて並べ替える・元に戻す・再読み込みで残る・軽く押すと行が開く（Ruling 49）→
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件。
@@ -43,6 +44,23 @@ try {
   await page.goto(`${BASE}#/routines`);
   await page.waitForSelector('[data-screen="S3"]');
   if (await page.locator('[data-row]').count()) errors.push('S3 should start empty');
+
+  // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず S3 に着く・名前は残る
+  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-group="dance"] button').first().click();
+  await page.locator('[data-screen="S4"] .dc-field input').fill('金曜クラス');
+  await page.goBack();
+  await page.waitForSelector('[data-screen="S3"]');
+  if (!page.url().endsWith('#/routines')) errors.push(`back after typing a name should land on the list (url ${page.url()})`);
+  await page.waitForTimeout(WRITE_SETTLE_MS);
+  await page.reload();
+  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  const typed = await page.locator('[data-row] .dc-row-head').allTextContents();
+  if (typed.length !== 1 || !typed[0]?.includes('金曜クラス')) errors.push(`a name typed before going back was not kept: ${JSON.stringify(typed)}`);
+  await page.locator('[data-row] .dc-row-head').first().click();
+  await page.locator('[data-row-body] .dc-button--secondary').last().click();
+  await page.locator('dialog[open] .dc-primary').click();
+  await page.waitForSelector('.dc-empty');
 
   // 作る: 新しいルーティン → 種目（ワルツ）→ 0件の下固定「＋ フィガーを追加」
   await page.locator('[data-screen="S3"] .dc-primary').click();
@@ -140,4 +158,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: created by taps, invalid counts blocked, dragged and undone, survives reload, plays in S5, deleted');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged and undone, survives reload, plays in S5, deleted');

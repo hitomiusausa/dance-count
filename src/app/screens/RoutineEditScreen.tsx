@@ -35,6 +35,8 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const saved = useRef(false);   // 端末に1回でも保存したか（新規は最初の確定まで false）
   const [saveFailed, setSaveFailed] = useState(false);
   const [choosingDance, setChoosingDance] = useState(false);   // フィガー0件の時の「変える」
+  const mounted = useRef(true);   // 画面を離れた後（戻る・スワイプ）の保存ではハッシュを置き換えない
+  const pendingName = useRef<string | null>(null);   // 名前欄の確定前の文字（離れる時に確定する。blur が来ない端末向け）
   const { session, view } = usePracticeSession('S4');
 
   // 同じ画面のままハッシュだけ替わった（ブラウザの戻る・進む）。自分で置き換えた時（新規 → 編集）は編集を続け、
@@ -43,7 +45,9 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   if (routineId !== shownFor.current) {
     shownFor.current = routineId;
     if (!(routineId && editor.current?.routine.id === routineId)) {
-      if (editor.current?.close()) persist({ replace: false });   // 離れる時の保存: 未保存の新規でも確定した行は残す（ハッシュは置き換えない）
+      const renamed = pendingName.current !== null && !!editor.current?.rename(pendingName.current);   // 名前欄の打ちかけも前のルーティンへ
+      pendingName.current = null;
+      if (editor.current?.close() || renamed) persist({ replace: false });   // 離れる時の保存: 未保存の新規でも確定した行は残す（ハッシュは置き換えない）
       editor.current = null;
       saved.current = false;
     }
@@ -67,7 +71,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     void save(routine).then(ok => setSaveFailed(!ok));
     if (!saved.current) {
       saved.current = true;
-      if (replace) replaceRoute({ screen: 'S4', params: { routineId: routine.id } });
+      if (replace && mounted.current) replaceRoute({ screen: 'S4', params: { routineId: routine.id } });
     }
   }
 
@@ -97,10 +101,16 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     }
   });
 
-  // 戻る（端末の戻る・タブ移動も）: 開いている行は原則どおり閉じて（有効なら確定）保存する（Ruling 36-1）。
+  // 戻る（端末の戻る・タブ移動も）: 名前欄の打ちかけと開いている行は原則どおり確定して保存する（Ruling 36-1）。
+  // 先に mounted を下ろす: この後に来る名前欄の blur（Chrome は外す時に出す）でも、ハッシュを編集の形に置き換えない。
   useEffect(() => () => {
+    mounted.current = false;
     const current = editor.current;
-    if (current && current.close()) persist({ replace: false });
+    if (!current) return;
+    const renamed = pendingName.current !== null && current.rename(pendingName.current);
+    pendingName.current = null;
+    const closed = current.close();
+    if (renamed || closed) persist({ replace: false });
   }, []);
 
   // 種目を選ぶ（新規）・選び直す（フィガー0件の「変える」）。選び直しで、名前が前の種目の既定のままなら新しい種目の既定に。
@@ -176,7 +186,8 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
       <NoticeBox notice={notice} onClose={() => session.dismissNotice()} />
-      <RoutineNameField name={routine.name} onCommit={name => act(editor => editor.rename(name))} />
+      <RoutineNameField name={routine.name} onText={text => { pendingName.current = text; }}
+        onCommit={name => { pendingName.current = null; act(editor => editor.rename(name)); }} />
       <div class="dc-dance-line">
         <span>{translator.t('danceLine', { dance: danceName(routine.danceId, locale) })}</span>
         {count === 0 && <button type="button" class="dc-button dc-button--secondary" onClick={changeDance}>{translator.t('changeDance')}</button>}
@@ -293,16 +304,17 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
 }
 
 // 名前（常に表示の入力欄）。確定は blur か Enter。空なら直前の名前に戻す（Ruling 36-6）。
-function RoutineNameField({ name, onCommit }: { name: string; onCommit(name: string): void }) {
+function RoutineNameField({ name, onText, onCommit }: { name: string; onText(text: string): void; onCommit(name: string): void }) {
   const { translator } = useI18n();
   const [text, setText] = useState(name);
-  useEffect(() => setText(name), [name]);
+  const shownName = useRef(name);   // 名前が外から変わった時だけ欄を合わせる（出した直後の effect で打ち始めた文字を消さない）
+  useEffect(() => { if (name !== shownName.current) { shownName.current = name; setText(name); } }, [name]);
   const commit = () => { if (text.trim() === '') setText(name); else onCommit(text); };
   return (
     <div class="dc-field">
       <div class="dc-field-label" id="dc-s4-name-label">{translator.t('routineName')}</div>
       <input class="dc-input" type="text" aria-labelledby="dc-s4-name-label" value={text} maxLength={ROUTINE_NAME_MAX} autocomplete="off"
-        onInput={event => setText((event.currentTarget as HTMLInputElement).value)} onBlur={commit}
+        onInput={event => { const value = (event.currentTarget as HTMLInputElement).value; setText(value); onText(value); }} onBlur={commit}
         onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
     </div>
   );
@@ -326,7 +338,7 @@ function RoutineSpeedField({ profile, bpm, onChange }: { profile: SpeedProfile; 
       <input aria-labelledby="dc-s4-speed-label" type="range" min={BPM_MIN} max={BPM_MAX} step={1} value={shown}
         onInput={event => setDrag(Number((event.currentTarget as HTMLInputElement).value))}
         onChange={event => { setDrag(null); commit((event.currentTarget as HTMLInputElement).value); }} />
-      <button type="button" class="dc-chip" role="radio" aria-checked={bpm === null ? 'true' : 'false'} onClick={() => onChange(null)}>
+      <button type="button" class="dc-chip" aria-pressed={bpm === null ? 'true' : 'false'} onClick={() => onChange(null)}>
         {translator.t('danceStandardSpeed', { tempo: profile.practiceBpm })}
       </button>
     </div>
