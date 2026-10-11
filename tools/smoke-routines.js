@@ -5,7 +5,7 @@
 // つかみで引いて並べ替える・元に戻す・再読み込みで残る・軽く押すと行が開く（Ruling 49）→
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
-// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）。
+// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium } from 'playwright-core';
 
@@ -217,6 +217,19 @@ try {
   await page.locator('.dc-row[data-index="3"] .dc-figure-form input').nth(1).fill('123');
   await page.locator('.dc-row[data-index="3"] .dc-figure-form .dc-primary').click();
   if ((await page.locator('.dc-row-note').count()) || await barNote()) errors.push('all notes should be gone after fixing both');
+  // カウントの形（D18・Ruling 53）: ワルツは 8 個。タップで欄を置き換え、そのチップだけ押された印 → 決定で見出しに出る
+  await page.locator('.dc-figure-head').nth(3).click();
+  const patternForm = page.locator('.dc-row[data-index="3"] .dc-figure-form');
+  const chips = patternForm.locator('[data-group="count-patterns"] .dc-chip');
+  if ((await chips.count()) !== 8) errors.push(`waltz should show 8 count patterns (got ${await chips.count()})`);
+  await chips.filter({ hasText: /^1 & 2 & 3 &$/ }).click();
+  const patternValue = await patternForm.locator('input').nth(1).inputValue();
+  if (patternValue !== '1&2&3&') errors.push(`tapping a count pattern should replace the counts (got "${patternValue}")`);
+  const pressedChips = await chips.evaluateAll(list => list.filter(chip => chip.getAttribute('aria-pressed') === 'true').map(chip => chip.textContent.trim()));
+  if (JSON.stringify(pressedChips) !== JSON.stringify(['1 & 2 & 3 &'])) errors.push(`only the tapped pattern should be pressed: ${JSON.stringify(pressedChips)}`);
+  await patternForm.locator('.dc-primary').click();
+  const patternHead = (await page.locator('.dc-figure-head').nth(3).textContent()) ?? '';
+  if (!patternHead.includes('1 & 2 & 3 &')) errors.push(`the row heading should show the chosen pattern ("${patternHead.trim()}")`);
   await context.close();
 } finally {
   await browser.close();
@@ -226,4 +239,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy, bar notes inform without blocking');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy, bar notes inform without blocking, count patterns fill the counts');

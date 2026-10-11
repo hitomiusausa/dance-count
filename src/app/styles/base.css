@@ -115,7 +115,7 @@ button { cursor: pointer; }
 .dc-more-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
 .dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dc-chip { min-height: 48px; min-width: 48px; padding: 0 16px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
-  font-size: 18px; font-weight: 700; }
+  font-size: 18px; font-weight: 700; white-space: nowrap; }
 .dc-chip[aria-checked="true"], .dc-chip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-fine { display: flex; flex-direction: column; gap: 8px; }
 .dc-fine input[type="range"] { width: 100%; min-height: 48px; accent-color: var(--primary); }
@@ -211,8 +211,8 @@ button { cursor: pointer; }
   outline: 2px solid var(--primary); outline-offset: -2px; }
 .dc-row--dragging .dc-grip { color: var(--primary); }
 .dc-drop-line { position: absolute; z-index: 3; left: 0; right: 0; height: 3px; border-radius: 2px; background: var(--primary); pointer-events: none; }
-.dc-figure-form .dc-field:first-child { margin-top: 0; }
-.dc-figure-form > .dc-button { margin-top: 12px; }
+.dc-figure-fields > .dc-field:first-child { margin-top: 0; }
+.dc-count-patterns > .dc-button { margin-top: 12px; }
 .dc-figure-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; padding-top: 12px; border-top: var(--bw) solid var(--line); }
 .dc-figure-actions .dc-button { padding: 0 6px; }
 .dc-span3 { grid-column: span 3; }
