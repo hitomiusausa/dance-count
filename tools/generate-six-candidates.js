@@ -6,7 +6,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const outputDir = path.join(ROOT, 'public/audio/six-candidates');
+const outputDir = path.join(ROOT, 'legacy/audio/six-candidates');
 const voiceName = process.env.GOOGLE_TTS_VOICE ?? 'en-US-Neural2-F';
 const languageCode = process.env.GOOGLE_TTS_LANGUAGE ?? 'en-US';
 const speakingRate = Number(process.env.GOOGLE_TTS_RATE ?? '1.25');

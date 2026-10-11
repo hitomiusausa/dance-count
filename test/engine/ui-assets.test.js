@@ -15,26 +15,26 @@ const UI_TOKENS = ['--dc-primary', '--dc-text', '--dc-text-sub', '--dc-tap', '--
 const UI_CLASSES = ['.dc-btn', '.dc-icon', '.dc-toggle', '.dc-chip', '.dc-select', '.dc-bar', '.dc-panel', '.dc-add-figure'];
 
 test('icons.svg defines every required symbol id', async () => {
-  const svg = await fs.readFile(path.join(root, 'public/assets/icons.svg'), 'utf8');
+  const svg = await fs.readFile(path.join(root, 'legacy/assets/icons.svg'), 'utf8');
   for (const id of ICON_IDS) assert.ok(svg.includes(`id="i-${id}"`), `missing symbol i-${id}`);
   assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(svg), 'icons.svg must not contain emoji');
 });
 
 test('ui.css defines shared tokens and component classes', async () => {
-  const css = await fs.readFile(path.join(root, 'public/assets/ui.css'), 'utf8');
+  const css = await fs.readFile(path.join(root, 'legacy/assets/ui.css'), 'utf8');
   for (const token of UI_TOKENS) assert.ok(css.includes(token), `missing token ${token}`);
   for (const className of UI_CLASSES) assert.ok(css.includes(className), `missing class ${className}`);
 });
 
 test('practice.html links the shared UI assets and has no emoji', async () => {
-  const html = await fs.readFile(path.join(root, 'public/practice.html'), 'utf8');
+  const html = await fs.readFile(path.join(root, 'legacy/practice.html'), 'utf8');
   assert.ok(html.includes('assets/ui.css'), 'ui.css link missing');
   assert.ok(html.includes('assets/icons.svg#i-globe'), 'globe icon missing');
   assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}]/u.test(html), 'no emoji allowed');
 });
 
 test('routine-editor.html links the shared UI assets and labels card actions', async () => {
-  const html = await fs.readFile(path.join(root, 'public/routine-editor.html'), 'utf8');
+  const html = await fs.readFile(path.join(root, 'legacy/routine-editor.html'), 'utf8');
   assert.ok(html.includes('assets/ui.css'), 'ui.css link missing');
   assert.ok(html.includes('dc-add-figure'), 'list-end add button missing');
   assert.ok(html.includes('icons.svg#i-copy'), 'labeled duplicate action missing');
@@ -43,8 +43,8 @@ test('routine-editor.html links the shared UI assets and labels card actions', a
 
 test('shared module cache busters stay in sync across both practice pages', async () => {
   const pages = await Promise.all([
-    fs.readFile(path.join(root, 'public/practice.html'), 'utf8'),
-    fs.readFile(path.join(root, 'public/routine-editor.html'), 'utf8')
+    fs.readFile(path.join(root, 'legacy/practice.html'), 'utf8'),
+    fs.readFile(path.join(root, 'legacy/routine-editor.html'), 'utf8')
   ]);
   const versions = pages.map(html => Object.fromEntries(
     [...html.matchAll(/src\/engine\/([\w-]+\.js)\?v=([\w-]+)/g)].map(match => [match[1], match[2]])

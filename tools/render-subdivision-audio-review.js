@@ -6,7 +6,7 @@ import { parsePcm16Wav } from './measure-voice-onsets.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const packDir = path.join(root, 'public/audio/default-en-female-v1');
-const outputDir = path.join(root, 'public/audio/subdivision-review');
+const outputDir = path.join(root, 'legacy/audio/subdivision-review');
 const manifest = JSON.parse(await fs.readFile(path.join(packDir, 'manifest.json'), 'utf8'));
 const sampleRate = 48_000;
 const fadeMs = 12;

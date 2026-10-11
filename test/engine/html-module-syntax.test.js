@@ -4,13 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
 const pages = [
-  'public/practice.html',
-  'public/routine-editor.html',
-  'public/routine-migration-review.html',
-  'public/six-comparison.html',
-  'public/subdivision-audio-review.html',
-  'public/voice-recorder.html',
-  'public/voice-calibration.html'
+  'legacy/practice.html',
+  'legacy/routine-editor.html',
+  'legacy/routine-migration-review.html',
+  'legacy/six-comparison.html',
+  'legacy/subdivision-audio-review.html',
+  'legacy/voice-recorder.html',
+  'legacy/voice-calibration.html'
 ];
 
 for (const page of pages) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { chromium } from 'playwright-core';
 
-const BASE = process.env.DC_BASE_URL ?? 'http://localhost:4173/public/';
+const BASE = process.env.DC_BASE_URL ?? 'http://localhost:4173/legacy/';
 const PAGES = ['practice.html', 'routine-editor.html'];
 const VIEWPORTS = [{ name: 'mobile', width: 390, height: 844 }, { name: 'desktop', width: 1280, height: 900 }];
 const MIN_TAP = 44;

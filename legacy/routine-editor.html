@@ -722,7 +722,7 @@
       await audioContext.resume();
       if (!voicePack) voicePack = document.querySelector('#editorVoicePackChoice').value.startsWith('recorded:')
         ? await decodeRecordedVoicePack(audioContext, recordedVoicePack)
-        : await loadVoicePack(audioContext, new URL('./audio/default-en-female-v1/manifest.json', location.href));
+        : await loadVoicePack(audioContext, new URL('../public/audio/default-en-female-v1/manifest.json', location.href));
       if (!engine) engine = new PracticeAudioEngine(audioContext, { voicePack, onFrame });
     }
 
