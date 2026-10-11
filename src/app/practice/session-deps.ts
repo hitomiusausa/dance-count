@@ -1,8 +1,7 @@
 import { PracticeAudioEngine } from '../../engine/audio-engine.js';
-import { loadStandardVoice, type VoicePack } from '../platform/assets.ts';
+import { loadRecordedVoice, loadStandardVoice, type VoicePack } from '../platform/assets.ts';
 import { onAudioStateChange, outputLatencySeconds, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { keepScreenOn } from '../platform/wake-lock.ts';
-import { STANDARD_VOICE_ID } from '../settings/settings.ts';
 import type { EngineFrame, EngineLike, SessionDeps } from './session.ts';
 
 // エンジンは JS のまま（Ruling 1）で、引数の既定値から推論される型が狭すぎるため、使う形だけをここで宣言する。
@@ -13,10 +12,10 @@ type EngineConstructor = new (audio: AudioContext, options: {
 }) => EngineLike;
 const Engine = PracticeAudioEngine as unknown as EngineConstructor;
 
-// 本物の端末で使う deps。段2の声は英語の標準音声だけ（段4で選んだ声に替える）。
+// 本物の端末で使う deps。声は画面が解いた VoiceSelection（標準は同梱の音声、録音・受け取りは端末の声を decode。Ruling 61-3）。
 export const browserSessionDeps: SessionDeps<AudioContext, VoicePack> = {
   unlock: unlockAudioInsideTap,
-  loadVoice: audio => loadStandardVoice(audio, STANDARD_VOICE_ID),
+  loadVoice: (audio, voice) => (voice.kind === 'standard' ? loadStandardVoice(audio, voice.id) : loadRecordedVoice(audio, voice.pack)),
   createEngine: (audio, voicePack, onFrame) => new Engine(audio, {
     voicePack,
     onFrame,

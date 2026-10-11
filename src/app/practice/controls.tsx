@@ -5,6 +5,7 @@ import { buildHash, type UiState } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
+import { canStep, formatVoiceOffset } from './voice-offset.ts';
 
 // S2・S5 が共通で組む部品（Ruling 42）。記憶の単位（種目ごと・ルーティンごと）は各画面が持ち、部品は値と操作だけを受け取る。
 const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standard: 'speedStandard', fast: 'speedFast' };
@@ -78,13 +79,13 @@ function Toggle({ icon, label, on, onToggle }: { icon: 'metronome' | 'leadin'; l
   );
 }
 
-// 声チップ（→ S7）。段3までは英語の標準音声だけ。
-export function VoiceChip() {
+// 声チップ（→ S7）。name は選んだ声の短い名前（voices/selection.ts の voiceDisplayName(…, 'chip')。Ruling 61-5）。
+export function VoiceChip({ name }: { name: string }) {
   const { translator } = useI18n();
   return (
     <a class="dc-chip-row" href={buildHash({ screen: 'S7', params: {} })}>
       <Icon name="voice" />
-      <span>{translator.t('voiceChip', { name: translator.t('standardVoiceShort') })}</span>
+      <span data-voice-chip>{translator.t('voiceChip', { name })}</span>
       <Icon name="chev-r" />
     </a>
   );
@@ -138,6 +139,29 @@ export function RepeatRow({ loop, onToggle }: { loop: boolean; onToggle(): void 
       <button type="button" class="dc-chip" role="switch" aria-checked={loop ? 'true' : 'false'} onClick={onToggle}>
         {loop ? translator.t('on') : translator.t('off')}
       </button>
+    </div>
+  );
+}
+
+// 声のタイミング（くわしくの最後の行。Ruling 62・D24）。1 行目にラベルと値、2 行目に「‹ 早く」「遅く ›」（320 幅でも横に溢れない）。
+// 端では押せない。スライダーは使わない（10ms を指で合わせられない）。
+export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: number; onStep(direction: -1 | 1): void; idPrefix: string }) {
+  const { translator } = useI18n();
+  const labelId = `${idPrefix}-voice-offset-label`;
+  return (
+    <div class="dc-voice-offset" role="group" aria-labelledby={labelId} data-group="voice-offset">
+      <div class="dc-field-label" id={labelId}>
+        <span>{translator.t('voiceTiming')}</span>
+        <span class="dc-offset-value" data-voice-offset>{formatVoiceOffset(offsetMs)}</span>
+      </div>
+      <div class="dc-offset-buttons">
+        <button type="button" class="dc-chip" disabled={!canStep(offsetMs, -1)} onClick={() => onStep(-1)}>
+          <Icon name="chev-l" /><span>{translator.t('voiceEarlier')}</span>
+        </button>
+        <button type="button" class="dc-chip" disabled={!canStep(offsetMs, 1)} onClick={() => onStep(1)}>
+          <span>{translator.t('voiceLater')}</span><Icon name="chev-r" />
+        </button>
+      </div>
     </div>
   );
 }

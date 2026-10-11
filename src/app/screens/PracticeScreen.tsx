@@ -4,16 +4,19 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions, SessionNotice } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
+import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
 import type { AppSettings } from '../settings/settings.ts';
 import { takeAutoplay } from '../state/autoplay.ts';
 import { useI18n } from '../state/i18n.ts';
 import { useSettings } from '../state/settings.ts';
+import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
+import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 type Profile = DanceProfileLike & { beatsPerBar: number };
 
@@ -24,24 +27,33 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   const profile = getDanceProfile(danceId) as Profile;
   const choice = practiceChoice(profile, settings);
   const { session, view } = usePracticeSession(danceId);
-  // クリック処理は描画を待たずに続けて来ることがある（連打）。常に最新の設定と再生状態を読む（Ruling 42）。
-  const latest = useRef({ settings, view });
-  latest.current = { settings, view };
+  const playback = usePlaybackVoice();
+  // クリック処理は描画を待たずに続けて来ることがある（連打）。常に最新の設定・再生状態・声を読む（Ruling 42）。
+  const latest = useRef({ settings, view, voice: playback.voice });
+  latest.current = { settings, view, voice: playback.voice };
+  const autoplayChecked = useRef(false);
   const [forcedDismissed, setForcedDismissed] = useState(false);
   const [dragBpm, setDragBpm] = useState<number | null>(null);
 
-  const optionsFrom = (next: AppSettings): PracticeOptions => {
+  // 声は解き終わるまで標準（英語）で鳴らす（録音の声を端末から読むのは数十ミリ秒。Ruling 61-4）。
+  const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
-    return { kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null };
+    return {
+      kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
+      voice, voiceOffsetMs: voiceOffsetFor(next, voice)
+    };
   };
 
-  // 開いた時点で「前回」を書き（Ruling 26）、前回カードの印があればすぐ鳴らす（Ruling 32）。止めるのは usePracticeSession。
+  // 開いた時点で「前回」を書く（Ruling 26）。
+  useEffect(() => { update({ lastDanceId: danceId }); }, [session]);
+  // 前回カードの印があれば、声が決まった時点ですぐ鳴らす（Ruling 32・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
-    update({ lastDanceId: danceId });
+    if (autoplayChecked.current || !playback.voice) return;
+    autoplayChecked.current = true;
     if (takeAutoplay({ kind: 'dance', id: danceId })) {
-      try { void session.play(optionsFrom(settings)); } catch { /* 入力は practiceChoice 済み。万一でも画面は止まったまま */ }
+      try { void session.play(optionsFrom(latest.current.settings, playback.voice)); } catch { /* 入力は practiceChoice 済み。万一でも画面は止まったまま */ }
     }
-  }, [session]);
+  }, [session, playback.voice]);
 
   const isPlaying = () => latest.current.view.playing || latest.current.view.starting;
 
@@ -52,6 +64,15 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
     latest.current.settings = next;
     update(patch);
     if (isPlaying()) void session.play(optionsFrom(next));
+  };
+
+  // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
+  const stepVoiceOffset = (direction: -1 | 1) => {
+    const result = playback.step(latest.current.settings, direction);
+    if (!result) return;
+    latest.current.voice = result.voice;
+    if (Object.keys(result.patch).length > 0) change(result.patch);
+    else if (isPlaying()) void session.play(optionsFrom(latest.current.settings));
   };
 
   const togglePlay = () => {
@@ -86,7 +107,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
-          <VoiceChip />
+          <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
           <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
             {profile.templates.length > 1 && (
               <div>
@@ -104,6 +125,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
             <FineSpeed idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
             <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
+            <VoiceOffsetRow idPrefix="dc-s2" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
           </MoreOptions>
         </div>
       </div>

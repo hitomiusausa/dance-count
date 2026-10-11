@@ -1,6 +1,7 @@
 import { figureRangeTicks } from '../../engine/practice-range.js';
 import { compileRhythm, compileRoutine } from '../../engine/rhythm-compiler.js';
 import type { TrackProfile } from '../../engine/tempo-map.js';
+import { wordOffsetsFor, type VoiceSelection } from '../voices/selection.ts';
 
 // 再生セッション（S2）。音・WakeLock・2秒判定・中断の検知をまとめ、画面には SessionView だけを渡す。
 // 端末に触る処理は deps で受け取る（本物は practice/session-deps.ts、テストは偽物）。
@@ -13,6 +14,8 @@ interface CommonOptions {
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
+  voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
+  voiceOffsetMs: number;       // 声のタイミング（practice/voice-offset.ts の voiceOffsetFor。Ruling 62）
 }
 export interface FigureLike { id: string; name: string; counts: string }
 
@@ -57,13 +60,14 @@ export interface EngineFrame {
 export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
+  setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
 }
 
 export interface WakeLockLike { release(): Promise<void> }
 
 export interface SessionDeps<A extends AudioLike, V> {
   unlock(): A;                                                              // クリック処理の中で同期
-  loadVoice(audio: A): Promise<V>;
+  loadVoice(audio: A, voice: VoiceSelection): Promise<V>;
   createEngine(audio: A, voicePack: V, onFrame: (frame: EngineFrame) => void): EngineLike;
   keepScreenOn(): Promise<WakeLockLike | null>;                             // クリック処理の中で同期に発行
   onStateChange(audio: A, listener: (state: string) => void): () => void;
@@ -142,7 +146,7 @@ export class PracticeSession<A extends AudioLike, V> {
     const lockPromise = wakeLockRequest.catch(() => null);
     let voicePack: V;
     try {
-      voicePack = await this.deps.loadVoice(audio);
+      voicePack = await this.deps.loadVoice(audio, options.voice);
     } catch {
       void lockPromise.then(lock => lock?.release());
       if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'voice-missing' });
@@ -155,12 +159,15 @@ export class PracticeSession<A extends AudioLike, V> {
     const startedAt = audio.currentTime;
     try {
       this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
+      this.engine.setVoicePack(voicePack);
       this.engine.start({
         ...compileProgram(options),
         bpm: options.bpm,
         loop: options.loop,
         metronome: options.metronome,
-        countInBars: options.countInBars
+        countInBars: options.countInBars,
+        voiceOffsetMs: options.voiceOffsetMs,
+        wordOffsetsMs: wordOffsetsFor(options.voice)
       });
     } catch {
       void lockPromise.then(lock => lock?.release());

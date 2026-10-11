@@ -255,6 +255,13 @@ button { cursor: pointer; }
 .dc-play-row.dc-row--now .dc-play-name { font-weight: 800; }
 .dc-play-row--out, .dc-play-row--out .dc-figure-no { color: var(--ink2); }
 
+/* 声のタイミング（Ruling 62・D24）: 1 行目 ラベル＋値、2 行目 2 つのボタン（320 幅で横に溢れない） */
+.dc-voice-offset .dc-field-label { justify-content: space-between; margin-top: 0; }
+.dc-offset-value { font-size: 18px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dc-offset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dc-offset-buttons .dc-chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.dc-chip:disabled { border-color: var(--line); background: var(--soft); color: var(--ink2); cursor: not-allowed; }
+
 /* PC（Ruling 21）: タブは上部、S2 は2領域（最大 960px）。他は1カラム 640px のまま */
 @media (min-width: 1024px) {
   .dc-tabs { top: 0; bottom: auto; height: var(--tabh-top); justify-content: center; padding: 8px 24px; border-top: none; border-bottom: var(--bw) solid var(--line); }

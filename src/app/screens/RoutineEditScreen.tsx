@@ -7,10 +7,11 @@ import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { hidesDock, isKeyboardOpen } from '../lib/keyboard.ts';
 import { onVisibleViewportChange, viewportHeights } from '../platform/viewport.ts';
-import { MoreOptions, NoticeBox, type AlertNotice } from '../practice/controls.tsx';
+import { MoreOptions, NoticeBox, VoiceOffsetRow, type AlertNotice } from '../practice/controls.tsx';
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
 import { BPM_MAX, BPM_MIN, clampBpm, type SpeedProfile } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
+import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import { beatsPerBar, offBarIndexes, routineEndsMidBar } from '../routines/bar-check.ts';
 import { RoutineEditor } from '../routines/editor.ts';
 import { useReorderDrag } from '../routines/useReorderDrag.ts';
@@ -22,6 +23,8 @@ import { useI18n } from '../state/i18n.ts';
 import { replaceRoute } from '../state/route.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
+import { DEFAULT_VOICE } from '../voices/selection.ts';
+import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 const DANCE_IDS = Object.keys(DANCE_PROFILES);
 const TEMPLATES = DANCE_PROFILES as Record<string, { templates: readonly string[] }>;
@@ -31,7 +34,7 @@ const TEMPLATES = DANCE_PROFILES as Record<string, { templates: readonly string[
 export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const { translator } = useI18n();
   const { routines, save } = useRoutines();
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const locale = translator.locale;
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   const editor = useRef<RoutineEditor | null>(null);
@@ -51,6 +54,9 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const mounted = useRef(true);   // 画面を離れた後（戻る・スワイプ）の保存ではハッシュを置き換えない
   const pendingName = useRef<string | null>(null);   // 名前欄の確定前の文字（離れる時に確定する。blur が来ない端末向け）
   const { session, view } = usePracticeSession('S4');
+  const playback = usePlaybackVoice();
+  // 試聴の声（S2 と同じ選んだ声。解き終わる前は標準（英語）。Ruling 61-4）
+  const voiceOptions = () => { const voice = playback.voice ?? DEFAULT_VOICE; return { voice, voiceOffsetMs: voiceOffsetFor(settings, voice) }; };
 
   // 同じ画面のままハッシュだけ替わった（ブラウザの戻る・進む）。自分で置き換えた時（新規 → 編集）は編集を続け、
   // それ以外は、開いている行を原則どおり閉じて保存してから、新しいハッシュのルーティンで開き直す。
@@ -195,7 +201,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     if (playing) { session.stop(); return; }
     void session.play({
       kind: 'routine', danceId: routine.danceId, figures: preview.figures, range: { startIndex: preview.index, endIndex: preview.index },
-      bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: 0, loop: false, track: null
+      bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: 0, loop: false, track: null, ...voiceOptions()
     });
   };
 
@@ -205,7 +211,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     rerender(0);
     void session.play({
       kind: 'routine', danceId: routine.danceId, figures: current.routine.figures,
-      bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: routine.countInBars, loop: false, track: null
+      bpm: routineBaseBpm(profile, routine), metronome: settings.metronome, countInBars: routine.countInBars, loop: false, track: null, ...voiceOptions()
     });
   };
 
@@ -322,6 +328,11 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
           </div>
         </div>
         <RoutineSpeedField profile={profile} bpm={routine.bpm} onChange={bpm => act(editor => editor.setBpm(bpm))} />
+        <VoiceOffsetRow idPrefix="dc-s4" offsetMs={playback.offsetMs} onStep={direction => {
+          session.stop();   // 試聴中なら止める（ほかの操作と同じ。Ruling 36）
+          const result = playback.step(settings, direction);
+          if (result && Object.keys(result.patch).length > 0) update(result.patch);
+        }} />
       </MoreOptions>
       {!(count === 0 && open?.kind === 'add') && (
         <div class="dc-dock">

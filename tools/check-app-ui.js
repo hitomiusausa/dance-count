@@ -9,6 +9,7 @@ import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
 const ZOOM_VIEWPORT = { width: 640, height: 450 }; // 1280×900 の 200% 拡大相当（U9）
+const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
 const LIMITS = Object.freeze({
   bodyFont: 18, minFont: 16, fineprintFont: 14, // U1
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
@@ -32,7 +33,7 @@ const STATES = [
   { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
   { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
-  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 8 },
+  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
@@ -42,7 +43,7 @@ const STATES = [
   { name: 'S4 0件', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, ops: 3, total: 3 },
   { name: 'S4 13件・閉', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5 },
   { name: 'S4 13件・行を開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-figure-head >> nth=2' }], total: 8, patterns: 8, pressed: 1 },
-  { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 7 },
+  { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true, patterns: 8, pressed: 0,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
   // D19: 追加の行に既にある名前（1 件目＝templates[0] の 123）→ 複製専用の形。カウント欄・使える文字・形は出ず、注意は名前の欄の下、主ボタンは「1 2 3 で複製して追加」。
@@ -65,7 +66,7 @@ const STATES = [
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
+  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
@@ -148,6 +149,24 @@ try {
   }
   report(`U9 拡大 ${ZOOM_VIEWPORT.width}x${ZOOM_VIEWPORT.height}`, problems);
   await context.close();
+
+  // 320 幅（最も狭い端末）でも横スクロールが出ない（ひとみうさの要件・段4から）。状態の初期表示を全部回る。
+  const narrow = await browser.newContext({ viewport: NARROW_VIEWPORT, locale: 'ja-JP' });
+  const narrowPage = await narrow.newPage();
+  const narrowProblems = [];
+  await narrowPage.goto(BASE);
+  await narrowPage.waitForSelector('[data-screen]');
+  await narrowPage.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
+  await narrowPage.reload();
+  await narrowPage.waitForSelector('[data-screen]');
+  for (const state of CHECKED) {
+    await narrowPage.goto(BASE + state.hash);
+    await narrowPage.waitForSelector(`[data-screen="${state.screen}"]`);
+    const { scrollWidth, clientWidth } = await narrowPage.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+    if (scrollWidth > clientWidth) narrowProblems.push(`320 ${state.name}: horizontal scroll ${scrollWidth} > ${clientWidth}`);
+  }
+  report(`横スクロール ${NARROW_VIEWPORT.width}x${NARROW_VIEWPORT.height}`, narrowProblems);
+  await narrow.close();
 } finally {
   await browser.close();
 }
@@ -506,6 +525,10 @@ function audit({ state, LIMITS, reducedMotion }) {
     const barNotes = [...document.querySelectorAll('.dc-bar-note')].filter(visible);
     if (barNotes.length !== 1) issues.push(`R52 ${barNotes.length} mid-bar notes, expected 1`);
     else if (barNotes[0].closest('[data-list]')) issues.push('R52 the mid-bar note is inside the list');
+  }
+  if (state.voiceOffset) {
+    const value = document.querySelector('[data-voice-offset]')?.textContent.trim();
+    if (value !== state.voiceOffset) issues.push(`R62 voice timing reads "${value}", expected "${state.voiceOffset}"`);
   }
   return issues;
 }

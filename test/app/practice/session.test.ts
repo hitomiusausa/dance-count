@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PracticeSession, SOUND_CHECK_DELAY_MS, type EngineFrame, type PracticeOptions, type SessionView } from '../../../src/app/practice/session.ts';
+import { DEFAULT_VOICE, packSelection, type VoiceSelection } from '../../../src/app/voices/selection.ts';
+import { packFixture } from '../helpers/voice-fixtures.ts';
 
 // 偽の端末: AudioContext・エンジン・WakeLock・タイマーを手で進める。
 function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false, stopEmitsFrame = false } = {}) {
@@ -11,15 +13,17 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
   let stateListener: ((state: string) => void) | null = null;
   let onFrame: ((frame: EngineFrame) => void) | null = null;
   const starts: Array<Record<string, unknown>> = [];
+  const voices: VoiceSelection[] = [];
+  const packsSet: unknown[] = [];
   let tip = tipShown;
   let releases = 0;
   const session = new PracticeSession({
     unlock() { calls.push('unlock'); return audio; },
-    async loadVoice() { calls.push('loadVoice'); if (voiceFails) throw new Error('offline'); return { words: new Map() }; },
+    async loadVoice(_audio, voice) { calls.push('loadVoice'); voices.push(voice); if (voiceFails) throw new Error('offline'); return { words: new Map(), id: voice.id }; },
     createEngine(_audio, _voice, frame) {
       calls.push('createEngine');
       onFrame = frame;
-      return { start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); if (stopEmitsFrame) onFrame?.({ playing: false }); } };
+      return { setVoicePack(pack) { packsSet.push(pack); }, start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); if (stopEmitsFrame) onFrame?.({ playing: false }); } };
     },
     keepScreenOn() { calls.push('keepScreenOn'); if (lockHangs) return new Promise<null>(() => {}); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
     onStateChange(_audio, listener) { stateListener = listener; return () => { stateListener = null; }; },
@@ -28,7 +32,7 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
   const views: SessionView[] = [];
   session.subscribe(view => views.push(view));
   return {
-    session, audio, calls, starts, views,
+    session, audio, calls, starts, views, voices, packsSet,
     get tip() { return tip; },
     get releases() { return releases; },
     frame: (frame: EngineFrame) => onFrame?.(frame),
@@ -41,7 +45,7 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
   };
 }
 
-const WALTZ: PracticeOptions = { kind: 'counts', danceId: 'waltz', counts: '123', bpm: 84, metronome: true, countInBars: 1, loop: true, track: null };
+const WALTZ: PracticeOptions = { kind: 'counts', danceId: 'waltz', counts: '123', bpm: 84, metronome: true, countInBars: 1, loop: true, track: null, voice: DEFAULT_VOICE, voiceOffsetMs: 0 };
 
 test('unlock and the wake lock request happen synchronously inside play() (iOS tap rule)', () => {
   const h = harness();
@@ -245,7 +249,7 @@ test('pressing ▶ again while playing (engine reports its stop) still starts th
 });
 
 const ROUTINE: PracticeOptions = {
-  kind: 'routine', danceId: 'waltz', bpm: 84, metronome: true, countInBars: 2, loop: true, track: null,
+  kind: 'routine', danceId: 'waltz', bpm: 84, metronome: true, countInBars: 2, loop: true, track: null, voice: DEFAULT_VOICE, voiceOffsetMs: 0,
   figures: [
     { id: 'f-00000001', name: 'A', counts: '123' },
     { id: 'f-00000002', name: 'B', counts: '12&3' },
@@ -282,4 +286,25 @@ test('a routine that does not compile stops with the "stopped" notice instead of
   await h.session.play({ ...ROUTINE, figures: [{ id: 'f-00000001', name: 'x', counts: '12a3' }] });
   assert.equal(h.session.current.playing, false);
   assert.equal(h.session.current.notice, 'stopped');
+});
+
+test('the chosen voice is loaded and set on the reused engine at every play (Ruling 61-3)', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  const mine = packSelection(packFixture('en', 12));
+  await h.session.play({ ...WALTZ, voice: mine });
+  assert.deepEqual(h.voices.map(voice => voice.id), ['default-en-female-v1', 'user-recorded-v1']);
+  assert.equal(h.calls.filter(call => call === 'createEngine').length, 1, 'the engine is reused on the same AudioContext');
+  assert.deepEqual(h.packsSet.map(pack => (pack as { id: string }).id), ['default-en-female-v1', 'user-recorded-v1']);
+});
+
+test('the voice timing reaches the engine; per-word offsets only from a pack (Ruling 62)', async () => {
+  const h = harness();
+  await h.session.play({ ...WALTZ, voiceOffsetMs: -20 });
+  assert.equal(h.starts[0]!.voiceOffsetMs, -20);
+  assert.deepEqual(h.starts[0]!.wordOffsetsMs, {});
+  const pack = { ...packFixture('en', 12), timingAdjustments: { globalOffsetMs: 30, wordOffsetsMs: { slow: 15 }, adjustedAt: 'x' } };
+  await h.session.play({ ...WALTZ, voice: packSelection(pack), voiceOffsetMs: 30 });
+  assert.equal(h.starts[1]!.voiceOffsetMs, 30);
+  assert.deepEqual(h.starts[1]!.wordOffsetsMs, { slow: 15 });
 });

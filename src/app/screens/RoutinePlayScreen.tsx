@@ -6,11 +6,12 @@ import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions, SessionNotice } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
+import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
 import type { Routine } from '../routines/routine.ts';
 import type { AppSettings } from '../settings/settings.ts';
@@ -19,6 +20,8 @@ import { viewportHeight } from '../platform/viewport.ts';
 import { useI18n } from '../state/i18n.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
+import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
+import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 type Profile = SpeedProfile & { beatsPerBar: number };
 interface Range { startIndex: number; endIndex: number }
@@ -42,27 +45,32 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const { session, view } = usePracticeSession(routine.id);
   const last = routine.figures.length - 1;
   const [range, setRange] = useState<Range>({ startIndex: 0, endIndex: last });
-  const latest = useRef({ settings, view, range });
-  latest.current = { settings, view, range };
+  const playback = usePlaybackVoice();
+  const latest = useRef({ settings, view, range, voice: playback.voice });
+  latest.current = { settings, view, range, voice: playback.voice };
+  const autoplayChecked = useRef(false);
   const [forcedDismissed, setForcedDismissed] = useState(false);
   const [dragBpm, setDragBpm] = useState<number | null>(null);
   const list = useRef<HTMLDivElement>(null);
 
-  const optionsFrom = (next: AppSettings, nextRange: Range): PracticeOptions => {
+  const optionsFrom = (next: AppSettings, nextRange: Range, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = routinePracticeChoice(profile, routine, next);
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, track: null
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, track: null,
+      voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
 
-  // S3 の ▶ から来た時だけすぐ鳴らす（一回限りの印。Ruling 32・40）。止めるのは usePracticeSession。
+  // S3 の ▶ から来た時だけ、声が決まった時点ですぐ鳴らす（一回限りの印。Ruling 32・40・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
+    if (autoplayChecked.current || !playback.voice) return;
+    autoplayChecked.current = true;
     if (takeAutoplay({ kind: 'routine', id: routine.id })) {
-      try { void session.play(optionsFrom(settings, range)); } catch { /* resolve 済みのルーティン。万一でも止まったまま */ }
+      try { void session.play(optionsFrom(latest.current.settings, latest.current.range, playback.voice)); } catch { /* resolve 済みのルーティン。万一でも止まったまま */ }
     }
-  }, [session]);
+  }, [session, playback.voice]);
 
   // 鳴っている行を一覧の中で見える位置へ。一覧が画面に少しでも見えている時だけ（見ていない時に画面を動かさない。Ruling 46）。
   useEffect(() => {
@@ -86,6 +94,14 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     latest.current.settings = next;
     update(patch);
     restart(next, latest.current.range);
+  };
+
+  const stepVoiceOffset = (direction: -1 | 1) => {
+    const result = playback.step(latest.current.settings, direction);
+    if (!result) return;
+    latest.current.voice = result.voice;
+    if (Object.keys(result.patch).length > 0) change(result.patch);
+    else restart(latest.current.settings, latest.current.range);
   };
 
   const changeRange = (next: Range) => {
@@ -136,7 +152,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
-          <VoiceChip />
+          <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
           <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
@@ -152,6 +168,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             <FineSpeed idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
             <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
+            <VoiceOffsetRow idPrefix="dc-s5" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
           </MoreOptions>
         </div>
         <div class="dc-area-list">
