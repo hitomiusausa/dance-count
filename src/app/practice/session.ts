@@ -72,6 +72,7 @@ export class PracticeSession<A extends AudioLike, V> {
   private cancelSoundCheck: (() => void) | null = null;
   private unsubscribeState: (() => void) | null = null;
   private generation = 0;
+  private halting = false;     // halt() の engine.stop() が返す playing:false を「自然な終わり」と取り違えない
 
   constructor(deps: SessionDeps<A, V>, hints: SessionHints) {
     this.deps = deps;
@@ -189,7 +190,12 @@ export class PracticeSession<A extends AudioLike, V> {
   }
 
   private onFrame(frame: EngineFrame) {
-    if (!frame.playing || !this.view.playing) return;
+    if (!frame.playing) {
+      // 繰り返しオフでエンジンが最後まで鳴らして自分で止まった。■ と同じ後始末をする。
+      if (this.view.playing && !this.halting) this.stop();
+      return;
+    }
+    if (!this.view.playing) return;
     const countIn = frame.countIn === true;
     this.update({
       ...this.view,
@@ -200,7 +206,12 @@ export class PracticeSession<A extends AudioLike, V> {
   }
 
   private halt() {
-    this.engine?.stop();
+    this.halting = true;
+    try {
+      this.engine?.stop();
+    } finally {
+      this.halting = false;
+    }
     this.cancelSoundCheck?.();
     this.cancelSoundCheck = null;
     const lock = this.wakeLock;

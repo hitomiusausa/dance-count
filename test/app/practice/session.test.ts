@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { PracticeSession, SOUND_CHECK_DELAY_MS, type EngineFrame, type PracticeOptions, type SessionView } from '../../../src/app/practice/session.ts';
 
 // 偽の端末: AudioContext・エンジン・WakeLock・タイマーを手で進める。
-function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false } = {}) {
+function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false, stopEmitsFrame = false } = {}) {
   const audio = { state: 'running', currentTime: 0 };
   const calls: string[] = [];
   const timers: Array<{ at: number; run: () => void; cancelled: boolean }> = [];
@@ -19,7 +19,7 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
     createEngine(_audio, _voice, frame) {
       calls.push('createEngine');
       onFrame = frame;
-      return { start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); } };
+      return { start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); if (stopEmitsFrame) onFrame?.({ playing: false }); } };
     },
     keepScreenOn() { calls.push('keepScreenOn'); if (lockHangs) return new Promise<null>(() => {}); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
     onStateChange(_audio, listener) { stateListener = listener; return () => { stateListener = null; }; },
@@ -208,4 +208,38 @@ test('a wake lock request that never settles does not delay the no-sound banner'
   await new Promise(resolve => setImmediate(resolve));
   h.advance(SOUND_CHECK_DELAY_MS);
   assert.equal(h.session.current.notice, 'no-sound');
+});
+
+test('the engine ending on its own (repeat off) returns to idle, cancels the 2-second check and releases the wake lock', async () => {
+  const h = harness({ stopEmitsFrame: true });
+  h.audio.state = 'suspended';
+  await h.session.play({ ...WALTZ, loop: false });
+  assert.equal(h.session.current.playing, true);
+  h.frame({ playing: false });
+  assert.equal(h.session.current.playing, false);
+  assert.equal(h.session.current.starting, false);
+  assert.equal(h.releases, 1);
+  h.advance(SOUND_CHECK_DELAY_MS);
+  assert.equal(h.session.current.notice, 'none');
+  h.frame({ playing: false });
+  assert.equal(h.releases, 1);
+});
+
+test('a normal stop() with an engine that reports its own stop releases the wake lock exactly once', async () => {
+  const h = harness({ stopEmitsFrame: true });
+  await h.session.play(WALTZ);
+  h.session.stop();
+  assert.equal(h.session.current.playing, false);
+  await Promise.resolve();
+  assert.equal(h.releases, 1);
+});
+
+test('pressing ▶ again while playing (engine reports its stop) still starts the new run', async () => {
+  const h = harness({ stopEmitsFrame: true });
+  await h.session.play(WALTZ);
+  await h.session.play({ ...WALTZ, bpm: 90 });
+  assert.equal(h.starts.length, 2);
+  assert.equal(h.session.current.playing, true);
+  await Promise.resolve();
+  assert.equal(h.releases, 1);
 });
