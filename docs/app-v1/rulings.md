@@ -1828,6 +1828,10 @@
 - **D33（代理決定・ひとみうさ確認待ち）見える高さ 600px 未満の詰めた配置**: iPhone SE の Safari（375×548）で S1・S2・S8 の主要操作が初期表示に入るよう、現在カウント 96 → 72・タイル 64 → 48・トグル 108 → 83・声チップ 56 → 48 などに詰める（Ruling 71）。667 以上は変えない。S5 は声チップだけスクロール。— 代案: 詰めずに「ホーム画面に追加（段7）までは Safari でスクロールする」と割り切る。
 - **D34（代理決定・ひとみうさ確認待ち）語の画面の 1 行**: 「ボタンを押したら、すぐ「{語}」と言ってください。」（Ruling 72）。— 代案: 「ボタンを押すと 1.5 秒だけ録音します。」のまま。
 - **D35（代理決定・ひとみうさ確認待ち）声のタイミングの補助文**: 「声が遅れて聞こえたら「早く」を押します。」（Ruling 75）。— 代案: 足さない。
+- **D36（代理決定・ひとみうさ確認待ち）配布ファイルの拡張子は `.dancecount.txt`・MIME `text/plain`**（Ruling 80-3。中身は JSON のまま。理由: Chrome／Android は `.json` を `share()` で拒む＝F19・F20）。— 代案: Ruling 4 の `.json` のまま（Android の先生は毎回ダウンロード → LINE に添付。案内文に 1 行足す）。
+- **D37（代理決定・ひとみうさ確認待ち）受け取った声は配り直せない・「ファイルに保存」は作らない**（Ruling 80-2・82-3。バックアップは「配る」で作ったファイルを自分にも送る）。— 代案: 仕様どおり S7 の開いた行に「ファイルに保存」（同意なし）を置く（受け取った声も保存できる＝先生の「配り先は自分で管理します」の外に出る）。
+- **D38（代理決定・ひとみうさ確認待ち）同じ先生の声・同じルーティンは「使う」で置き換える（「両方残す」は作らない）**（Ruling 83-2・84-4）。— 代案: 仕様どおり「置き換える／両方残す」の確認ダイアログ（1 タップと 1 判断が増える）。
+- **D39（代理決定・ひとみうさ確認待ち）S8 完成の帯は左「完了」・右「配る ›」の 2 ボタン**（Ruling 86-2。主要操作 5＝上限）。— 代案: 帯は「配る」だけにし「完了」を上の `.dc-button--secondary` に（録音だけの先生に「配る」が主に見える）。
 
 ## 3. ひとみうさに後で見てもらうこと（判断でなく確認。Task 10 の実機確認表へ）
 
@@ -1854,3 +1858,299 @@
 - [ ] **シミュレーター（任意・できれば）**: SE iOS 26.3 の Safari で `#/practice/waltz` と `#/voices/record?ui-state=no-voice` を開き、548 の実機相当で主要操作が入ることを撮る（HANDOVER §8 の手順）。
 - [ ] **コミット**: 変更ファイルをパス指定で add（`git add -A` 禁止）。メッセージ例 `fix(app): 見える高さ 600px 未満の詰めた配置・語の画面の 1 行・途中の声の行の色・設定の道順・声のタイミングの補助文（段4 Task 9b・Ruling 71〜78）`。
 - [ ] **Task 10 へ引き継ぐ物**: Ruling 71〜78・D33〜D35 を `rulings.md` へ転記／仕様 §4 S8（説明の文・箱）・§5（600px 未満の寸法）・§6（375×548 の検査・S5 の例外）・§11（道順）の注記／Ruling 16・23・47・59-2・60-2・62 への注記／F8 の更新（iOS 26.3 シミュレーターの decode 実測）／実機確認表に §3 の 8 項目と Ruling 74・77・78 の行。
+
+---
+
+# 段5（配る・受け取る S9・S10）計画前の裁定 — Fable（2026-10-12・代理決定を含む）
+
+作成: 2026-10-12 / ブランチ `agent/app-v1`（HEAD `5e4b391` 段4の締め） / 書き手: Fable（設計と裁定だけ。コードと `docs/app-v1/rulings.md` には触れていない。採用が決まったら計画者がこの文書の **Ruling 79〜87 と D36〜D39** を `rulings.md` 末尾へ転記する。`rulings.md` の最後は Ruling 78・D35）。
+
+前提: ひとみうさは就寝中で「確認は溜めて Fable が決めて進める」の委任。push・デプロイ・課金・外部送信は禁止のまま。基準は **60〜70代の初見の生徒（iPhone・LINE で受け取る）と、同じく高齢かもしれない先生（LINE 等で配る）** が「止まらない・迷わない」 ＞ iPhone SE 375×667（実機の Safari は 375×548 で主要操作が初期表示に入る） ＞ 320 で横スクロール無し ＞ 既存の裁定の字面。仕様 §3「生徒が声を受け取る」・§4 S9/S10・§7「配布ファイル」・§8・§11・§12・§14 G5/G6、全体地図の段5行と持ち越し表、Ruling 4・8・11・14・26・27・41・55・56・60・61・62・76、D22 を前提にする。
+
+---
+
+## 0. コードと外部で確かめた事実（裁定の根拠。推測は明記）
+
+### 0-1. アプリ（`src/app/`）— 段5が触る面
+
+- `platform/files.ts:1-10` は殻（`shareOrDownload(file)`・`pickBundleFile()` が `PlatformNotReadyError('…', 5)` を投げる）。`platform/not-ready.ts` はその例外の定義だけ。`page.ts` には再読み込み・UA 判定の関数は無い。
+- `voices/store.ts:7-12` `VOICE_LIMITS = { packs: 20, nameLength: 40, wordBytes: 2MB, packBytes: 20MB }`。`:28-42` `VoicePackRecord` に `origin:'recorded'|'received'`・`distributor?`・`consent?` の欄は**段4で既にある**（データは段5が書く）。`:46-70` `normalizeVoicePackRecord` は `validateRecordedVoicePack(raw,{requireComplete:false})` → `isVoiceId` → 名前 1〜40 字 → 語ごと 2MB・合計 20MB → `origin` を `'received'` 以外は `'recorded'` に丸める → `distributor.name` を 40 字に切る。**余計なキーは落とさない**（`...rest`）＝段5で `sourceId` 等を足しても通る。`:73-77` 並びは recorded → received → `updatedAt` 昇順。`:94-98` `saveVoicePack` は失敗で `false`。`:116-119` `isCompletePack`。
+- `voices/ids.ts:6-9` 録音の ID は `user-recorded-v1`／`user-recorded-ja-v1` に固定（Ruling 56-3）＝**先生の端末の ID がそのまま配布ファイルに乗る**ので、受け取り側で同じ ID のまま保存すると生徒自身の録音（同じ ID）を上書きする。`:11-15` `isVoiceId` は `/^[A-Za-z0-9_-]{1,64}$/`（`v-<uuid>` の形を通す）。
+- `voices/selection.ts:60-68` `packDisplayName` は `origin==='received' && distributor` なら「{name}さんの声」、それ以外は `pack.name`。`:45-49` `forgetVoiceSettings` は消した声が選択中なら標準（英語）へ。`:52-54` `wordOffsetsFor` は受け取った声の `wordOffsetsMs` をエンジンに渡す（Ruling 62-5）。
+- `screens/VoicesScreen.tsx:109-114` 一覧の並びは 標準 → recorded → received → 途中。`:139-152` `VoiceActions`（`[data-group="voice-actions"]`）は「続きを録音する」（途中のみ）と「削除」。開いた行は `voice.kind==='pack'` のとき（録音・受け取りの両方）。`:125-127` 下の `.dc-primary` は「自分の声を録音する」1 つ。
+- `screens/RecordVoiceScreen.tsx:268-300` 完成の画面: 名前欄・`[data-group="compare"]`・「1 語目から見直す」・帯は「完了」1 つ（主要操作 4。段5で「配る」を足して 5＝上限ちょうど。Ruling 59-6）。
+- `screens/RoutinesScreen.tsx:56-69` 開いた行の `[data-group="routine-actions"]` は ▶ 再生（鳴らせる時）・編集・削除。`:47` 受け取ったルーティンの副題「{name}さんから」は `receivedFrom.distributor` から**既に描く**。`screens/RoutinePlayScreen.tsx` の副題 `madeBy`（`messages.ts:112,279`）も同じ。
+- `screens/SettingsScreen.tsx:36-40` 「先生の方へ」の下は「自分の声を録音する」だけ（主要操作 3）。「ルーティンを配る」は無い。
+- `routines/routine.ts:12-14` `RoutineProvenance.sourceKind` は `'user-created'` だけ。`:60-61` `normalizeRoutine` は `source!=='user-created'` を**捨てる**・`provenance.sourceKind!==source` を捨てる・`validateRoutineProvenance` を呼ぶ。`:86-88` `receivedFrom {distributor, receivedAt}` は読む（型は段3で用意済み）。`routines/store.ts` は `loadRoutines/saveRoutine/deleteRoutine`（書きは 1 本の列）。`routines/limits.ts` 名前 40・カウント 32・フィガー 64・ルーティン 200。
+- `src/engine/routine-provenance.js:24` `validateRoutineProvenance` の列挙は `['legacy-import','reviewed-preset','user-created']`＝**`'received'` を足すにはエンジン 1 行の変更が要る**（全体地図の持ち越し表で予告済み）。
+- `src/engine/recorded-voice-pack.js:69-84` `exportRecordedVoicePack(pack)` は **JSON 文字列**（`words[key].dataBase64`・`exportedAt`）を返す。`:86-112` `importRecordedVoicePack(text)` は文字列を受け、`dataBase64 > 30,000,000` 文字で投げ、`updatedAt` を今にし、`validateRecordedVoicePack` を通す（`requireComplete` は**付けない**）。`:114-134` `decodeRecordedVoicePack` は `requireComplete:true`。配布ファイルの `voicePack` は仕様 §7 のとおり**この出力そのもの**（`type:'dance-count-recorded-voice-pack'`・schemaVersion 1）。
+- `settings/settings.ts:28,45,71` `hints` は `wakeLockTipShown` だけ。`backupTipShownForRecording`・`backupTipShownForRoutine` と「配る人の名前」の欄は無い。
+- `router/routes.ts:7` `UiState` は 6 つ（以後の追加は裁定）。`:21-29` S9＝`#/share`・S10＝`#/receive`、ともに `focus`・親 S7・タブ settings。`parseQuery` は `ui-state` 以外のクエリを捨てる（`?openExternalBrowser=1` のような**ハッシュの前**のクエリはそもそも見ない）。`App.tsx:43-48` に S9・S10 の登録は無い。
+- `app-version.ts` は Vite の `define` で `__APP_VERSION__`（`vite.config.ts:12`）。`PUBLIC_APP_URL` の定数はまだ無い。`index.html` に manifest の link は無く、`public/` は `audio/` だけ＝**manifest・Service Worker は存在しない**（段7。`vite-plugin-pwa` も未導入＝`package.json`）。
+- `i18n/forbidden-words.ts`: 「読み込み」「書き出し」「インポート」「エクスポート」「Import」「Export」が禁止＝S10 の進行中の文言は「読んでいます」、S9 は「ファイルを作る」で書く。`messages.ts` に `receivedFrom`・`madeBy`・`distributorVoice`・`saveFailed`・`voiceMissing` は既にある。S9/S10 の文言は無い。
+- `tools/check-app-ui.js:34-100` の状態表（S7 標準だけ ops 2・S7 3 本 total 2・S7 行を開 total 3・S8 完成 total 4・S6 ops 3・S3 2本・1本開 total 3）、`:326` `opsSmall`。`tools/ui-check-voices.js:13` に受け取った声の seed `V.receivedJa`（`id:'v-uicheck-recv'`・`distributor:{name:'山田'}`）が**段4から既にある**。`tools/check-dist.js:12` `FORBIDDEN_PATHS` は `legacy/`・`six-candidates`・`subdivision-review`・`.html`（`test/fixtures/` は `public/` に無いので dist に入らない）。
+- `test/app/platform-boundary.test.ts:16-18`: 裸の `navigator`・`fetch`・`location`・`history` 等は `platform/` 以外で落ちる。`caches`・`File`・`Blob`・`FileReader`・`URL.createObjectURL`・`<input type=file>` は**対象外**だが、共有・ダウンロード・クリップボード・Cache API は `navigator`／`document.createElement('a')`／`location` を使うので `platform/` に置く。
+- `tools/smoke-voice.js:24-50` は Chrome を偽マイクで起動し、`AudioBufferSourceNode.start` に指紋を仕込んで「録った声で鳴った」を証明する（`expectSounding`・`standardRequestsWhilePlaying`）。段5のスモークは同じ型で「**受け取った声**で鳴った」を証明できる。
+- `legacy/voice-recorder.html:393-396,417` 旧画面の書き出しは単体パック JSON `dance-count-<locale>-voice-pack.json`（`application/json`・`<a download>`）、取り込みは `<input type=file accept="application/json,.json">` → `importRecordedVoicePack(await file.text())`。**ルーティンの旧書き出しは無い**（`legacy/routine-editor.html` は localStorage の下書きだけ）。仕様 §7「既存の単体 `dance-count-recorded-voice-pack` を受理」はこのファイルのこと。
+- `figure-names.ts:60-82` `figureIdentity(danceId, name)` は登録簿（`figure-terminology` の verified）から**いつでも再計算できる**（D22 A 案。行には何も保存していない）。
+
+### 0-2. 外部事実（確認済み／推測を分ける。F13〜F18 の続き）
+
+| # | 事実 | 状態 | 出典 |
+|---|---|---|---|
+| F19 | **Chrome の `navigator.share({files})` は、拡張子と MIME の許可リストに無いファイルを `share()` で拒む（`PERMISSION_DENIED`＝ページには `NotAllowedError`）。許可リストに `.json`／`application/json` は無い。`.txt`／`text/plain`・`.csv`・`.pdf`・画像・音声・動画はある**。コメントで「Android の Java 実装と FILE_TYPES.md と同期して保つ」と明記 | **確認済み（Chromium のソース本文）** | https://chromium.googlesource.com/chromium/src/+/main/chrome/browser/webshare/share_service_impl.cc （`IsDangerousFilename`・`IsDangerousMimeType`） |
+| F20 | **Chrome の `navigator.canShare({files})` はファイルの種類を見ない**（Blink の `CanShareInternal` は「欄が 1 つ以上ある・URL が妥当」だけ）。この Mac の Chrome 154 で `.json`/`application/json` も `canShare` が **true** を返すことを Playwright で実測（スクラッチ `probe/canshare.mjs`）。＝**`canShare` で通っても `share()` で落ちる**ので、`share()` の拒否をダウンロードに切り替える経路が必須 | **確認済み（ソース＋実測）** | https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/modules/webshare/navigator_share.cc ・ MDN の「Shareable file types」（JSON は無い）https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share |
+| F21 | Chrome の共有は 1 回 **10 ファイル・合計 50MB** まで（`kMaxSharedFileCount`・`kMaxSharedFileBytes`） | 確認済み（同ソース） | 同上 |
+| F22 | `navigator.share()` は **transient activation（タップの中）が必須**。WebKit は `await`（fetch 等）を挟むと活性が失われ `NotAllowedError`（「fetch 越しにジェスチャーを伝える方法は無い」）。また **前の `share()` が settle する前に再度呼ぶと `NotAllowedError`**。iOS 15.x では「"ファイル"に保存」を選ぶと promise が永遠に解決しない報告（238713。重複報告あり） | 確認済み（WebKit Bugzilla・W3C 仕様）。最新 iOS で直っているかは**未確認** | https://bugs.webkit.org/show_bug.cgi?id=197779 ・ https://bugs.webkit.org/show_bug.cgi?id=244408 ・ https://bugs.webkit.org/show_bug.cgi?id=238713 ・ https://www.w3.org/TR/web-share/ |
+| F23 | iOS Safari の `share({files})`（Web Share Level 2）は iOS 14 で旗の後ろ、**iOS 15 で既定有効**。WKWebView（アプリ内ブラウザ）でも実装の報告 | 確認済み（WebKit Bugzilla・Apple forum の二次情報。Apple の公式リリースノートは未取得） | https://bugs.webkit.org/show_bug.cgi?id=198606 ・ https://developer.apple.com/forums/thread/133310 |
+| F24 | `share_target`（manifest）: ファイルを受けるには `method:'POST'`・`enctype:'multipart/form-data'`・`params.files[{name, accept}]`（MIME と拡張子の両方を書く）。**PWA がインストール済みの時だけ**共有先に出る。POST は Service Worker の `fetch` で受け、ファイルを Cache／IndexedDB に置いて **303** で画面へ。iOS Safari は非対応 | 確認済み（MDN） | https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/share_target |
+| F25 | WebKit bug 277884「PWA でファイル入力が開かない」は **macOS Safari 17.6 の報告**（Status NEW・最後のコメント 2024-08-23「Sequoia beta で直るはず」）。iOS の報告ではない。＝全体地図リスク #2（F3）の根拠は弱い | 確認済み（本文を取得） | https://bugs.webkit.org/show_bug.cgi?id=277884 |
+| F26 | LINE のトークから開く URL に **`?openExternalBrowser=1`** を付けると、LINE のアプリ内ブラウザでなく**外部ブラウザ（Safari／Chrome）で開く**（iOS・Android とも。短縮 URL 越しだと一度アプリ内で開いてから切り替わる報告） | **推測混じり**（LINE Developers の URL スキーム文書を指す二次情報。公式本文は未取得。実機で確かめる） | https://dev.classmethod.jp/articles/line-open-uri-in-external-browser/ ・ https://ithelp.ithome.com.tw/questions/10214624 |
+| F27 | LINE のアプリ内ブラウザ（WKWebView）は **Safari と保存領域が別**（IndexedDB が共有されない）。UA に `Line/` を含む | **推測**（一般知識。今回未検索。実機で UA と保存の別を確かめる） | — |
+| F28 | iOS Safari の `<a download>`（blob URL）はタップの中で動き、「ダウンロード」の確認の後 Files の「ダウンロード」に入る。Files のピッカーは `accept` に合わない項目を灰色にする（`.txt`／`text/plain` の UTI は確実） | **推測混じり**（一般的な案内記事のみ。LINE の添付の「共有 → "ファイル"に保存」の手順も同様） | https://otranslator.com/en/blog/how-to-download-files-on-iPhone-using-Safari-and-Chrome |
+
+---
+
+## 1. 計画者が止まる問い（この文書で全部答える）
+
+| # | 問い | 答えの場所 |
+|---|---|---|
+| Q1 | 段5の範囲: share_target・Service Worker・manifest は段5か段7か。F3「Safari で開く」リンクは要るか | Ruling 79 |
+| Q2 | 配布ファイルの正確な形（schema・拡張子・MIME・名前・上限）と検証の規則（壊れた／大きすぎ／新しすぎ／一部不正／旧単体パック） | Ruling 80・D36 |
+| Q3 | 何を束ねられるか（声・ルーティン・両方）。受け取った声・受け取ったルーティンを配り直せるか。「ファイルに保存」は「配る」と別か | Ruling 80-2・82-2・D37 |
+| Q4 | `platform/files.ts` の形: 共有／ダウンロード／クリップボード／ファイル読み／Android の inbox。タップ内の `share()` と「先に作っておく」 | Ruling 81 |
+| Q5 | S9 の構成（入口と印・名前の記憶・同意・主要操作数・案内文のコピー・`PUBLIC_APP_URL`・LINE の `openExternalBrowser`） | Ruling 82 |
+| Q6 | S10 の状態（選ぶ → 確認 → 使う → 結果）・重複の扱い・受け取った声を自動で選ぶか・エラー文・LINE の中で開いた時 | Ruling 83・D38 |
+| Q7 | 受け取った声とルーティンの保存の形: ID の付け直し・`origin:'received'`・`provenance.sourceKind:'received'`（エンジン 1 行）・編集できるか・`timingAdjustments`・上限での拒否 | Ruling 84 |
+| Q8 | D22-B（行に「どのフィガーか」を保存）を段5で決めるか | Ruling 85 |
+| Q9 | S7・S8・S3・S6 に何をどう足すか（主要操作数の期待値）とバックアップの 1 行・`hints` | Ruling 86・D39 |
+| Q10 | 検査: 単体・`ui:check` の状態表・`smoke:share`（Playwright のアップロード／ダウンロード・共有の偽物）・固定ファイル・iOS シミュレーターで確かめられること・実機確認表 | Ruling 87 |
+
+---
+
+## 2. 裁定
+
+## Ruling 79（Q1）[地図差] 段5の範囲 — ファイル選択を全端末の正として作り切る。share_target・SW・manifest は段7、ただし「受け口（inbox）」の契約は段5で決めて実装する。F3 のリンクは作らない
+
+**決定**:
+1. **段5でやる**: 配布ファイル（Ruling 80）、`platform/files.ts`（Ruling 81）、S9（Ruling 82）、S10（Ruling 83）、受け取った声・ルーティンの保存（Ruling 84）、S7/S8/S3/S6 への入口とバックアップの 1 行（Ruling 86）、`PUBLIC_APP_URL`、検査（Ruling 87）。
+2. **段7へ送る（Service Worker が生まれる段でだけ書く＝SW を 2 か所に書かない）**: `manifest` の `share_target`（F24。インストール済み PWA にしか効かず、段5には manifest も SW も無い）、SW の POST 受け、`?v=` の precache。段5は **受け口の契約**だけ実装する: `platform/files.ts` の `takeInboxFile(): Promise<File|null>`＝Cache `dance-count-inbox` の `./inbox/bundle` を読んで**消してから**返す（Cache API が無い・空なら `null`）。S10 はマウント時に必ずこれを呼び、あれば「確認」の状態から始める（仕様 §4 S10「Android の share_target から来た時は、確認画面から始まる」）。段7の SW は `formData.get('bundle')` を同じ鍵に `put` し `Response.redirect('./#/receive', 303)` するだけ。契約は `test/app/share/inbox.test.ts`（偽の Cache）で固定し、全体地図の段7行に「`share_target: { action:'./receive', method:'POST', enctype:'multipart/form-data', params:{ files:[{ name:'bundle', accept:['text/plain','.txt','application/json','.json'] }] } }`」を書く。
+3. **仕様 §4 S10 の「Safari で開いて受け取る」リンク（F3）は作らない**。根拠 F25（報告は macOS の Safari 17.6・iOS ではない・「直るはず」のコメントで止まっている）。段5の S10 はブラウザのタブでしか開かない（ホーム画面のアプリは段7）ので、段5にこのリンクを置いても押す場面が無い。段7の実機確認表に「ホーム画面のアプリで S10『ファイルを選ぶ』が開く」を 1 行置き、開かなければ**その時**に裁定する（候補: 「Safari で開く」は iOS のホーム画面アプリから Safari 本体を確実に開く手段が無い（`target=_blank` はアプリ内ブラウザ）ので、文言で「Safari で開いてください」と URL を見せる形）。
+4. 全体地図の段5行の「share_target」を「受け口の契約（SW は段7）」に、段7行に「share_target の manifest と SW の POST 受け（段5の契約どおり）」を足す。リスク #2 の根拠を F25 に更新。
+
+**理由**: 仕様 §8 技術「ファイル選択が全端末共通の正」。share_target は段7の SW と同じ物を触り、段5で仮の SW を書くと段7で捨てる物を作る。受け口だけ先に決めれば、段7は SW の 10 行で済み、段5のスモークで Cache に置いた偽の共有も今から検査できる。
+
+**外れた時の代償**: Android の「LINE → 共有 → Dance Count」は段7まで動かない（段5の Android は iPhone と同じ「保存 → ファイルを選ぶ」。案内文もその手順で書く。Ruling 82-6）。G6 の Android 経路は段5ではファイル選択で見る。
+
+## Ruling 80（Q2・Q3）[仕様差] 配布ファイル — 中身は仕様 §7 のまま、拡張子は `.dancecount.txt`・MIME `text/plain`（D36）。1 ファイルに声 1 つまで・ルーティン 50 本まで・20MB。検証の順と各結果
+
+**決定**:
+1. **中身（仕様 §7 と同じ。`src/app/share/bundle.ts` の純粋関数で作る・読む）**:
+   ```
+   { schemaVersion: 1, type: 'dance-count-bundle',
+     createdAt, createdWith: { app: 'dance-count', version: APP_VERSION },
+     distributor: { name },                                  // 1〜40 字（前後の空白を除く）
+     consent?: { voiceDistribution: true, consentedAt },     // voicePack がある時は必須
+     voicePack?: <JSON.parse(await exportRecordedVoicePack(pack))>,   // 1 つだけ。exportedAt はそのまま残す
+     routines?: [ <Routine。receivedFrom と provenance は落とし、source:'user-created' の形で書く> ] }
+   ```
+   `voicePack` の形の正本は**エンジンの `exportRecordedVoicePack`／`importRecordedVoicePack` だけ**（アプリ側で base64 の形を書き直さない。文字列 ↔ オブジェクトの往復は 1MB で数十 ms＝許容。`JSON.stringify(bundle.voicePack)` を `importRecordedVoicePack` に渡す）。
+2. **何を束ねられるか**: 声は **`origin:'recorded'` の完成した声だけ**（最大 1 つ。英語と日本語の両方を配るなら 2 回）。**受け取った声（`origin:'received'`）は配れない・ファイルにもできない**（D37。同意は「自分の声を配る」ものなので、生徒が先生の声を配り直す経路を作らない）。ルーティンは `routinePlayability==='ok'` の物だけ（0 件・不正は S9 の一覧に出さない）。受け取ったルーティンは配り直せる（踊りの並びに人格は無い。配り直した時の `distributor` は配り直す人。元の先生の名前は残さない＝v1 の割り切り）。
+3. **拡張子と MIME（D36・代理決定）**: ファイル名は **`声-<先生名>-<YYYY-MM-DD>.dancecount.txt`**（英語 UI `voice-<name>-<date>.dancecount.txt`、声が無ければ `ルーティン-…`／`routines-…`）、`File` の `type` は **`text/plain`**。Ruling 4 の `.json` を変える理由は F19・F20: **Chrome（Android も同じリスト）は `.json`／`application/json` を `share()` で拒む**のに `canShare` は通すので、`.json` のままだと Android の先生は毎回「共有シートが出ない → ダウンロード」になる。`.txt`／`text/plain` は Chrome の許可リストにあり、iOS の LINE・Files も確実に扱う（Ruling 4 の「独自拡張子にしない」の趣旨は保つ）。中身は JSON のまま（読む側は拡張子を見ない）。ファイル名に使えない文字（`/ \ : * ? " < > |` と制御文字）は `_`、先生名が空なら `名前なし`／`unnamed`。
+4. **上限（`src/app/share/limits.ts` の定数）**: `BUNDLE_MAX_BYTES = 20MB`（`file.size` で**読む前に**拒む。§7）、`BUNDLE_ROUTINES_MAX = 50`（1 ファイル。端末の 200 とは別）、`BUNDLE_VOICE_MAX = 1`、`DISTRIBUTOR_NAME_MAX = 40`。声の語ごと・合計は `VOICE_LIMITS`（2MB・20MB）をそのまま当てる。
+5. **読む順と結果（`parseBundle(text) → ParsedBundle`。純粋）**:
+   1. `JSON.parse` できない・オブジェクトでない → `problem:'broken'`。
+   2. `type==='dance-count-bundle'`: `schemaVersion` が整数で **> 1** → `'too-new'`、1 でない → `'broken'`。`type==='dance-count-recorded-voice-pack'`（旧画面の単体パック。0-1）→ **`voicePack` だけの束として読む**（`distributor` は無いので受け取り側の表示は `pack.name`。`consent` 無しを許す。schemaVersion は `importRecordedVoicePack` が検査）。どちらでもない → `'broken'`。
+   3. `voicePack` があれば `importRecordedVoicePack(JSON.stringify(voicePack))`（投げたら `'broken'`）→ `isCompletePack` でなければ `'broken'`（途中の声は配れないので来ない）→ `VOICE_LIMITS` の語・合計のバイト数。`consent.voiceDistribution===true` でなければ `'broken'`（束の形式の時だけ。旧単体パックは免除）。
+   4. `routines` があれば配列・`BUNDLE_ROUTINES_MAX` 以下（超えたら `'broken'`）。1 本ずつ `normalizeRoutine` 相当の検査（型・種目・上限・ID の形）＋ `compileRoutine`（`routinePlayability==='ok'`）。**通らない本はその本だけ `rejected:[{name}]` に積み、他は受け取る**（§7・§11）。名前が読めない本は `'（名前なし）'`／`'(no name)'`。
+   5. 声もルーティンも 0 → `'broken'`（空の束は「読めなかった」と同じ扱い）。
+   6. 結果: `{ ok:true, voicePack?: VoicePackRecord（まだ id・origin は付け替えていない）, routines: Routine[], rejected: {name}[], distributor: {name}|null, legacy: boolean }` または `{ ok:false, problem:'broken'|'too-new' }`。`'too-large'` は `file.size` の段で（`platform/files.ts` の `readBundleText(file)` が `BUNDLE_MAX_BYTES` を超えたら読まずに投げる）。
+6. **互換の約束**: `schemaVersion:1` の束は将来も読める。欄を**足す**だけなら版は上げない（読む側は知らない欄を無視する＝`normalizeRoutine` と同じ方針）。意味が変わる時だけ 2 にし、「新しいアプリで作られたファイルです」を出す。
+
+**理由**: 形は仕様どおり。拡張子だけは、Chromium のソースで「`canShare` は通すが `share()` で落ちる」が確定した以上、Android の先生に毎回ダウンロード経由を踏ませる方が「迷う」。50 本・1 声の上限は、LINE の添付と 60〜70代の確認画面（1 画面で読める量）の両方の都合。
+
+**外れた時の代償**: `.txt` なので iPhone で開くと**文字の羅列**（JSON）が見える（`.json` でも Quick Look は同じ文字の羅列）。拡張子で「Dance Count のファイル」と分かるのは `.dancecount` の部分だけ。旧画面の `.json` は受け取りで読める（`accept` に残す）。D36 をひとみうさが覆して `.json` に戻すなら、Android の先生はダウンロード → LINE に添付（案内文に 1 行足す）。
+
+## Ruling 81（Q4）共有・保存・読みの面 — `platform/files.ts` の形。ファイルは先に作っておき、`share()` はタップの中で同期に呼ぶ。拒否はダウンロードへ、取り消しは何もしない
+
+**決定**:
+1. **API（`window`・`navigator`・`document.createElement('a')`・`location`・`caches` はここだけ）**:
+   ```ts
+   export function canShareFile(file: File): boolean;                       // navigator.canShare?.({ files:[file] }) === true
+   export function shareFile(file: File): Promise<'shared'|'cancelled'|'refused'>;
+   //   navigator.share({ files:[file] }) を「最初の文で・await なしで」呼ぶ（F22）。AbortError → 'cancelled'、それ以外の例外（NotAllowedError 等。F19）→ 'refused'。
+   //   既に 1 つ進行中なら即 'refused' を返さず、進行中の promise を返す（二重呼び出しを作らない。F22）。
+   export function downloadFile(file: File): void;                            // <a download=file.name href=blobURL>.click() を同期で。URL は 60 秒後に revoke
+   export function copyText(text: string): Promise<boolean>;                  // navigator.clipboard.writeText。無い・失敗は false
+   export async function readBundleText(file: File): Promise<string>;         // file.size > BUNDLE_MAX_BYTES なら BundleTooLargeError を投げる（読まない）。それ以外は file.text()
+   export async function takeInboxFile(): Promise<File|null>;                 // Ruling 79-2。caches が無ければ null
+   export function reloadPage(): void;                                        // location.reload()（§11「更新する」）
+   ```
+   `shareOrDownload`・`pickBundleFile` の殻は消す（ファイル選択は S10 の `<input type=file>` が持つ。DOM の要素は platform ではない）。`not-ready.ts` の `PlatformNotReadyError` は段7の WakeLock 等が無ければ消してよい（残っている参照を grep してから）。
+2. **「ファイルを作る」の 1 タップの中身（S9）**: ファイルは**タップの前に**作って `File` を持っておく（S9 が選択・名前・同意の変化のたびに `buildBundle` → `new File([json], name, { type:'text/plain' })` を作り直す。12 語 ≒ 1MB の base64 は 50ms 以下。できるまで主ボタンは `disabled`＝「作っています…」は出さない。普通は見えない速さ）。タップでは: `canShareFile(file)` が真なら **同期に** `shareFile(file)` → `'refused'` なら同じタップの流れで `downloadFile(file)`（Safari で活性が切れていればダウンロードも失敗しうる＝その時は画面に「ファイルを保存する」の `.dc-button` を出して**次のタップ**で `downloadFile`）；偽なら `downloadFile(file)`。結果の見せ方は Ruling 82-5。
+3. **PC・共有の無いブラウザ**: ダウンロード（§11「案内なし。ファイル名を表示」）。macOS／Windows の Chrome・Safari は `navigator.share` を持つので共有シートが出る（AirDrop が使える＝害なし）。
+4. **境界テスト**: `test/app/platform-boundary.test.ts` はそのまま効く（S9/S10 から `navigator`・`caches`・`location` を呼べば落ちる）。`files.ts` の単体テストは `globalThis.navigator` を差し替えた偽物で `shareFile` の 3 分岐と「await なしで呼ぶ」（偽の `share` が**同期に**呼ばれたことを `callOrder` で見る）を固定。
+
+**理由**: F22 のとおり WebKit は `await` 1 つで活性を失い、F19・F20 のとおり Chrome は `canShare` を通しても `share()` で拒む。「先に作る・タップで同期に呼ぶ・拒否はダウンロード・取り消しは無視」の 4 本で両方を一度に塞ぐ。
+
+**外れた時の代償**: iOS 15.x の「"ファイル"に保存で promise が解決しない」端末（F22）では、同じ画面でもう一度共有できない（再読み込みで戻る。実機確認表に 1 行）。S9 がファイルを常に持つのでメモリに 1MB 余計に乗る（許容）。
+
+## Ruling 82（Q5）S9 配る — 入口の印・構成と並び・主要操作数 5／6・同意・名前の記憶・結果の見せ方・案内文（コピー）・`PUBLIC_APP_URL` と `openExternalBrowser=1`・「ファイルに保存」は作らない
+
+**決定**:
+1. **入口と印**: S7 の開いた行（録音の声）「配る」・S8 完成の「配る」・S3 の開いた行「配る」・S6「ルーティンを配る」の 4 つ。どれも `#/share` へ遷移し、**何を選んで来たかはアプリ内メモリの一回限りの印**（`state/share-intent.ts`: `requestShareIntent({ voiceId?, routineId? })`／`takeShareIntent()`。`state/autoplay.ts` と同じ型・URL や storage に書かない）。S9 はマウント時に印を消費してチェックを入れる。再読み込み・直接開いた時は何も選ばれていない（害なし）。
+2. **構成（上から。集中画面・戻る＝履歴 1 つ・直接開いたら S7）**:
+   1. 見出し「配る / Share」。
+   2. **名前**（`[data-group="distributor"]` の `<input>` 40 字・見出しは `div`＋`aria-labelledby`・既定は `settings.distributorName`・確定（blur／Enter）で `settings.distributorName` に保存＝次回から入っている。空なら主ボタンは押せず、欄の下に「名前を入れると、ファイルを作れます。 / Enter your name to create the file.」（依頼形でない）。
+   3. **声** `[data-group="share-voice"]`（`role="radiogroup"`・`.dc-radio-row`）: 「入れない / None」＋ `origin:'recorded'` の完成した声（最大 2 行）。完成した録音が 1 つも無ければ群を出さず 1 行「録音した声はまだありません。 / You haven't recorded a voice yet.」（操作ではない）。
+   4. **同意**（声を選んでいる時だけ・`role="checkbox"` の 1 行・56px 以上・`[data-group="consent"]`）: 「自分の声をこのファイルに入れて配ることに同意します。配り先は自分で管理します。 / I agree to put my voice in this file and share it. I will manage who receives it.」（仕様 §12）。未チェックなら主ボタンは押せず、下に「同意すると、ファイルを作れます。 / Tick the box to create the file.」。
+   5. **ルーティン**（`[data-list]`・`role="list"`・行は `role="checkbox"` の `.dc-radio-row`・名前＋副題「ワルツ · 13 フィガー」）: `routinePlayability==='ok'` の物だけ・作った順。0 件なら 1 行「配れるルーティンはまだありません。」。`[data-list]` なので U5（10）は当てず、U4 は 1（Ruling 35）。
+   6. 下固定 `.dc-primary`「ファイルを作る / Create file」（声もルーティンも選んでいない時は押せず、上に「声かルーティンを選ぶと、ファイルを作れます。 / Choose a voice or a routine to create the file.」）。
+   - **主要操作数（初期表示）**: 名前 1＋声 1＋同意 1＋ルーティン 1＋作る 1＝**5**（上限ちょうど。録音が無い時 4、声を選んでいない時 4）。**375×548**: 名前（約 80）＋声 2〜3 行（112〜168）＋同意（56）＋見出し・戻る（約 100）＝ 350〜400 ≤ 帯 476。ルーティンの一覧が帯の下に出るのは許す（主ボタンは帯で常に見える）。計画者が実測する。
+3. **「ファイルに保存」は作らない（[仕様差]）**: 仕様 §4 S7 の「ファイルに保存」（同意欄なし）は「配る」と同じファイルを作る別名で、60〜70代に 2 つの違いを説明できない。バックアップは「配る」で作ったファイルを自分にも送ること（Ruling 86 の 1 行で言う）。同意は自分への保存でも付ける（害なし）。
+4. **案内文は作った後に出す（[仕様差]）**: 「生徒への案内文をコピー / Copy instructions for students」は**主ボタンを押した後**（共有・ダウンロード・取り消しのどれでも）に、結果の枠の下に `.dc-button--secondary` で出す（初期表示の 5 を超えないため・「ファイル → 案内」の順が自然）。押すと `copyText` → 成功で枠の中に「案内文をコピーしました。LINE やメールに貼れます。 / Copied. You can paste it into LINE or email.」（`role="status"`）、失敗（clipboard が無い）なら同じ場所に読み取り専用の `<textarea>`（全文・`readonly`・1 操作）と 1 行「長押しで選んでコピーできます。」。画面全体の主要操作: 5＋コピー 1（＋textarea 1）＝ **6〜7** ≤ 9。
+5. **結果の見せ方（`[data-alert]` の枠は使わない。`role="status"` の `.dc-result` 1 つ）**: `'shared'`／`'cancelled'`（iOS は区別できないことがある）→ 「ファイルを送ったら、下の案内文も送ってください。 / After sending the file, send the instructions below too.」（この画面の唯一の「〜してください」）。ダウンロードした時 → 「「{file}」を保存しました。LINE やメールに添付できます。 / “{file}” has been saved. You can attach it to LINE or email.」。どちらも案内文のボタンを伴う。主ボタンは消さない（もう一度作れる）。
+6. **案内文（仕様 §8 の定型文を段5の現実に合わせて改める。段7で share_target が入ったら Android の行を書き換える）**:
+   ```
+   Dance Count で、私の声のカウントを使えます。
+   【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」
+   2. Dance Count を開き「先生の声で練習」→「ファイルから受け取る」→「ファイルを選ぶ」
+   3. 「最近の項目」からこのファイルを選び「使う」
+   【Android】このファイルを保存してから、同じ手順で「ファイルを選ぶ」
+   （スマホで受け取るのが便利です）
+   アプリ: <PUBLIC_APP_URL>?openExternalBrowser=1
+   ```
+   英語は §8 の文の同じ読み替え（Android の行 `[Android] Save this file, then follow the same steps and “Choose a file”`）。ルーティンだけの束では 1 行目を「Dance Count で、私のルーティンを使えます。 / You can use my routines in Dance Count.」に。**最後の行は `PUBLIC_APP_URL` が空なら行ごと出さない**（§16-1）。URL には **`?openExternalBrowser=1`** を付ける（F26: LINE のトークから開く時にアプリ内ブラウザでなく Safari／Chrome で開く。アプリ内ブラウザで受け取ると保存領域が別で、Safari で開いた時に声が無い＝F27 の罠を**送る側で**塞ぐ。ハッシュの前のクエリなので `parseHash` は見ない＝アプリは無視する）。
+7. **`PUBLIC_APP_URL`**: `vite.config.ts` の `define` に `__PUBLIC_APP_URL__: JSON.stringify(process.env.PUBLIC_APP_URL ?? '')`、`src/app/app-url.ts` が `APP_VERSION` と同じ型で読む（Node のテストでは `''`）。公開前にひとみうさが名前を決めたら `PUBLIC_APP_URL=https://count.dancemap.jp npm run build`（全体地図「人が必要な確認点・公開の前」のまま）。
+8. **S9 を鳴らさない**（試聴は S7・S8 にある。`usePracticeSession` を使わない＝音の解除も不要）。
+
+**理由**: 先生の画面は「名前 → 声 → 同意 → ルーティン → 作る」の一本道で、押せない理由を**ボタンの上の 1 行**で言えば、60〜70代が止まらない。案内文を後に出すのは操作数のためだけでなく、「ファイルを送った後に案内を送る」という順番を画面が教えるため。
+
+**外れた時の代償**: 「ファイルに保存」という語が UI から消える（Ruling 11・仕様 §7 の文言を「配るで作ったファイルを自分にも送る」に読み替える。D37 と一緒にひとみうさへ）。案内文の「右上の共有ボタン」は LINE の iOS 版の実物で確かめる（実機確認表）。
+
+## Ruling 83（Q6）S10 受け取る — 3 つの状態（選ぶ → 確認 → 受け取った）・同じ先生の声は置き換える（D38）・受け取った声はその場で選ばれる・エラー文・LINE のアプリ内ブラウザの 1 行・inbox
+
+**決定**:
+1. **選ぶ（`data-step="pick"`。初期表示の主要操作 1）**: 見出し「受け取る / Receive」→ `.dc-primary`「ファイルを選ぶ / Choose a file」（`<button>` が隠した `<input type=file accept=".txt,.json,text/plain,application/json">` を同じタップで `click()`。`label[for]` は使わない＝U3 の数え方）→ 説明（操作ではない・18px 本文・4 行以内・依頼形 1 つ以内）: 「LINE で届いたファイルは、先に「"ファイル"に保存」しておくと、ここで選べます。」「選ぶ画面では「最近の項目」にあります。」（英 `If the file came by LINE, save it with “Save to Files” first.` / `You will find it under “Recents”.`）。**図解（SVG）は段5では作らない**（仕様 §4 S10 の「iPhone 向け図解」は文字の手順に読み替え。絵が要るかは実機で 60〜70代の目で見てから＝§3）。
+   - **LINE のアプリ内ブラウザで開いている時だけ**（`platform/page.ts` の `isLineInAppBrowser()`＝UA に `Line/`。F27 推測）: 説明の上に `[data-alert]`（`role="status"`・120px 以下）「LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。 / This is open inside LINE. Open it in Safari or Chrome so the voice stays on your phone.」＋ `[data-alert-action]`「Safari で開く / Open in Safari」（`href` は今の URL に `?openExternalBrowser=1` を付けた物・F26 の推測。開かなければ文言だけが残る）。ui:check は `?ui-state=` を足さず、`page.ts` の判定を `addInitScript` で真にして 1 状態だけ見る（Ruling 87-2）。
+   - **inbox**（Ruling 79-2）: マウント時に `takeInboxFile()`。あれば選択を飛ばして 2. へ。
+2. **確認（`data-step="confirm"`。主要操作 2）**: ファイルを選んだら `readBundleText` → `parseBundle` → `planImport(parsed, existingPacks, existingRoutines)`（純粋。Ruling 84-4）。見出し「このファイルの中身 / In this file」→ 中身の一覧（表示のみ・`[data-list]` ではなく `dl`／`p`）:
+   - 声: 「{name}さんの声（日本語）· 12 語 / {name}'s voice (Japanese) · 12 words」（旧単体パックは `pack.name`）。
+   - ルーティン: 「ルーティン 2 本: ワルツのルーティン、タンゴ… / 2 routines: …」（名前を「、」区切り・3 本目から「ほか N 本」）。
+   - 読めなかった本: 「ルーティン「○○」は読めませんでした。 / Routine “○○” couldn't be read.」（§11。1 本 1 行・3 行目から「ほか N 本」）。
+   - **置き換え**（D38）: 同じ先生の声が既にある時（Ruling 84-4）「{name}さんの声はすでにあります。「使う」で新しい方に置き換わります。 / You already have {name}'s voice. “Use” replaces it with this one.」。同じルーティン（`receivedFrom.sourceId` が同じ）も同様の 1 行「同じルーティンは新しい方に置き換わります。」。**「両方残す」は作らない**（[仕様差]・D38）。
+   - **上限**: 声が `VOICE_LIMITS.packs`（20）に当たる（置き換えでない追加の時）→ この画面に来ず、選ぶ画面の枠に「声が 20 を超えるため、受け取れません。使わない声を削除してから、もう一度選んでください。 / You already have 20 voices. Delete one you don't use, then choose the file again.」。ルーティンが 200 を超える分 → 束のうち入る分だけ受け取り、確認に「ルーティンは 200 本までなので、N 本は受け取れません。」。
+   - 下固定: 左「やめる / Cancel」（`.dc-button--secondary`・選ぶへ戻る）・右 `.dc-primary`「使う / Use」。
+3. **受け取った（`data-step="done"`。主要操作 1）**: 「使う」で保存（声 → `saveVoicePack`、ルーティン → `routinesValue.save` を 1 本ずつ）。**声を受け取ったら `update(chooseVoice(packSelection(saved)))`＝その場でこの声が選ばれる**（生徒が来た目的は「先生の声で練習」。S7 で改めて選ばせない）。見出し「受け取りました / Received」→ 1 行「ホームで種目を選んで ▶ を押すと、{name}さんの声で鳴ります。 / Choose a dance on the Home screen and press ▶ to hear {name}'s voice.」（ルーティンだけなら「「ルーティン」に入っています。 / They are in “Routines”.」）→ 下固定 `.dc-primary`「ホームへ / Go to Home」（声があれば S1 へ**置き換え遷移**。ルーティンだけなら「ルーティンを見る / See routines」→ S3）。保存に 1 つでも失敗したら、この画面でなく確認の画面に留まり `[data-alert]`「保存できませんでした。空き容量を確かめてください。」（§11。「ファイルに保存」のボタンは作らない＝Ruling 82-3）。
+4. **エラー（選ぶ画面の `[data-alert]`。枠は 1 つ・同時に 1 件。「ファイルを選ぶ」はそのまま押せる）**: `'broken'` → 「このファイルは読めませんでした。先生に送り直してもらってください。（{file}） / This file couldn't be read. Ask your teacher to send it again. ({file})」。`'too-large'` → 「このファイルは大きすぎて受け取れません。 / This file is too large.」。`'too-new'` → 「新しいアプリで作られたファイルです。アプリを更新してください。 / This file was made by a newer version. Please update the app.」＋ `[data-alert-action]`「更新する / Update」（`reloadPage()`。段7で SW の更新に差し替える）。読んでいる間（20MB の `file.text()` と parse は 1 秒前後）は主ボタンを `disabled` にし文字を「読んでいます… / Reading…」（禁止語「読み込み」を使わない）。
+5. **選び直し**: 同じファイルを続けて選べるよう、`<input>` の `value` は使うたびに空にする。
+6. **戻る**: 確認の画面で「‹ 戻る」は S10 を出る（S7 へ）。「やめる」は選ぶ画面へ（確認なし。何も保存していない）。
+
+**理由**: 生徒の操作は「選ぶ → 使う → ホームへ」の 3 タップで、途中の判断を「置き換える／両方残す」の 1 つも増やさない。受け取った声をその場で選ぶのは、仕様 §3 の「生徒が声を受け取る」が練習のためであり、S7 で「山田さんの声」を自分で探して選ぶ 2 タップを 60〜70代に求めないため。
+
+**外れた時の代償**: 同じ先生から同じ言語の声を 2 種類（教室用・大会用）は持てない（先生が S9 の名前を「山田（大会用）」にすれば別の声になる。D38 の代案）。LINE の中で開いた時の 1 行は推測の上に立つ（UA と `openExternalBrowser=1` の両方を実機で確かめる。効かなければ文言だけ残す）。
+
+## Ruling 84（Q7）受け取った声とルーティンの保存の形 — ID は付け直す・`origin:'received'`・`sourceId` で同じ物を見分ける・`provenance.sourceKind:'received'`（エンジン 1 行）・編集できる・`globalOffsetMs` は捨て `wordOffsetsMs` は残す
+
+**決定**:
+1. **声**: `id` は **`v-<uuid>`**（`routines/ids.ts` の `makeId` と同じ作り方・`isVoiceId` を通る）。`origin:'received'`・`distributor:{ name }`（束の `distributor`。旧単体パックは無し）・`consent`（束の物を写す）・**`sourceId`**（先生の端末の `id`。`user-recorded-v1` 等）・**`sourceUpdatedAt`**（先生のパックの `updatedAt`）・`receivedAt`。`name` は先生のパックの `name` のまま（表示は `packDisplayName`＝「{name}さんの声」）。`timingAdjustments`: **`globalOffsetMs` は 0 にし**（先生の端末の遅れの補正で、生徒の端末には合わない。Ruling 62-3 の「段5の確認事項」の答え）、**`wordOffsetsMs` は残す**（語ごとの癖は声の物。Ruling 62-5）。両方 0 なら `timingAdjustments` を外す。`VoicePackRecord` に `sourceId?`・`sourceUpdatedAt?`・`receivedAt?` の欄を足す（`normalizeVoicePackRecord` は通す）。
+2. **ルーティン**: `id` は新しい `r-<uuid>`、`figures[].id` もそれぞれ新しい `f-<uuid>`（端末内で一意に）。`source:'received'`・`provenance:{ sourceKind:'received', authority:null, authorityClaimStatus:'not-applicable', reviewStatus:'unreviewed' }`・`receivedFrom:{ distributor, receivedAt, sourceId }`（**`sourceId` を足す**。[仕様差]）・`createdWith` は束の物・`createdAt`＝`receivedAt`。`routine.ts` の `RoutineProvenance.sourceKind` を `'user-created'|'received'` に、`normalizeRoutine` は `source==='received'` を `receivedFrom` がある時だけ通す（無ければ捨てる）。**`src/engine/routine-provenance.js:24` の列挙に `'received'` を足す（エンジン 1 行。`test/engine/` に 1 件）**＝段5で許すエンジンの変更はこれだけ（`src/engine` の diff はこの 1 行だけであることを完了条件に）。
+3. **編集できる**（Ruling 41 の傾きどおり）: 受け取ったルーティンは S4 で編集でき、編集しても `source:'received'`・`receivedFrom` は**変えない**（S3「山田さんから」・S5「ワルツ · 山田さんが作成」のまま。監修済みと誤認させない Ruling 8 の線は守る）。受け取った声は名前を変える画面が無い（S8 は録音の声だけ）＝編集なし・削除だけ。
+4. **同じ物の見分け（`planImport`。純粋）**: 声は **`origin:'received'` かつ `sourceId` が同じ かつ `locale` が同じ**（旧単体パックは `distributor` が無いので `sourceId`＋`locale`）→ `replace:{ oldId }`（新しい `v-` ID で保存し、古い ID を削除。`forgetVoiceSettings(old)` を**使わず** `chooseVoice(new)` で選び直す＝声のタイミング `voiceOffsetMsByVoiceId` は標準用なので無関係）。ルーティンは `receivedFrom.sourceId` が同じ → 置き換え（新 ID で保存・旧 ID を削除・`forgetRoutineSettings(old)`）。`sourceUpdatedAt` が同じ（同じファイルをもう一度）でも**同じ扱い**（置き換え。文言は同じ。何も壊れない）。
+5. **上限**: 置き換えでない声の追加で `packs ≥ VOICE_LIMITS.packs` → 受け取らない（Ruling 83-2）。ルーティンは 200 に入る分だけ。
+6. **削除**: 受け取った声・ルーティンの削除は今の S7・S3 のまま（Ruling 60-4・44）。
+
+**理由**: ID を付け直さないと、先生の固定 ID が生徒自身の録音を黙って消す（0-1）。`sourceId` を残せば「同じ先生の新しい声」を黙って重ねずに置き換えられる。`globalOffsetMs` を捨てるのは、同じ値が生徒の AirPods では逆効果になるため。
+
+**外れた時の代償**: 先生が自分の声のタイミングを「−20 ms」に合わせていても生徒には乗らない（生徒は自分の「くわしく」で合わせる。補助文 D35 がある）。エンジンに 1 行入る（`validateRoutineProvenance` の列挙。ゴールデン・`timing:audit` には無関係）。
+
+## Ruling 85（Q8）D22-B は段5で**据え置く**（配布ファイルに「どのフィガーか」は入れない）。理由は「再計算できる物は保存しない」
+
+**決定**: 配布ファイルのルーティンは `figures[].name`（保存した文字）と `counts` だけを持つ。行に `figureId` を**入れない**。受け取り側の表示は保存した文字のまま（英語の先生の "Whisk" は日本語の生徒にも "Whisk"）。
+
+**理由**:
+1. `figureIdentity(danceId, name)`（0-1）は登録簿からいつでも同じ答えを出す**純粋関数**で、行に印を保存しても「登録簿が変わった時に古い印が残る」二重管理が増えるだけ。D22 A 案で「同じ名前」の判定は受け取り側の S4 でも既に効く（受け取った "Whisk" の行と、生徒が打った「ウィスク」は同じ名前）。
+2. 表示を言語で切り替える（B の目的）は、受け取り側で `figureIdentity` が `figure:` を返す行だけ `display[locale]` に差し替えれば**保存形式を変えずに**後から足せる（段8以降の 1 関数）。
+3. 段5の束の形式（schemaVersion 1）に欄を足す必要が出ても、知らない欄は読み飛ばす約束（Ruling 80-6）なので版は上がらない。
+
+**外れた時の代償**: 英語で作った routines を日本語 UI の生徒が受け取ると、フィガー名は英語のまま（ダンスの用語なので、60〜70代の生徒も教室で英語名に触れている見込み。気になるなら上の 2. を段8で）。
+
+## Ruling 86（Q9）S7・S8・S3・S6 への足し方と主要操作数 — バックアップは「配る」で作ったファイルを自分にも送る 1 行・`hints` の 2 つ・S8 完成の帯は「完了」＋「配る」（D39）
+
+**決定**:
+1. **S7**: 下の `.dc-primary`「自分の声を録音する」の**上**に `.dc-button--secondary dc-wide`「ファイルから受け取る / Receive from a file」（→ S10）。開いた行（`[data-group="voice-actions"]`）: 録音の声＝「配る / Share」（→ `requestShareIntent({voiceId})` → S9）＋「削除」。受け取った声＝「削除」だけ（D37）。途中の声＝段4のまま。期待値: **閉 3・行を開 4**（録音の声）・受け取った声の行を開 4（群は 1 なので同じ）。`S7 3 本` の `total` 3。
+2. **S8 完成**: 帯を 2 ボタンに（語の画面の「‹ 前の語」「次へ ›」と同じ型）: 左 `.dc-button--secondary`「完了 / Done」（今と同じ: S7 へ置き換え・この声を選ぶ）、右 `.dc-primary`「配る › / Share ›」（`chooseVoice` で選んでから `requestShareIntent({voiceId})` → S9 へ**置き換え遷移**。S9 の「戻る」は S7 へ）。期待値 **5**（上限ちょうど・Ruling 59-6 のとおり以後は足せない）。D39 として確認待ち。
+   - **バックアップの 1 行**（Ruling 11・26）: 完成の画面の「1 語目から見直す」の下に 16px `--ink2` の `<p class="dc-hint">`（操作ではない）「「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。 / Send yourself the file made with “Share” and you can use this voice on another phone.」。**最初にこの画面を出した時だけ**（`hints.backupTipShownForRecording` を表示と同時に `true`。閉じるボタンは無い＝Ruling 30 の「閉じなくても次回は出さない」と同じ）。375×548 で主要操作 5 つが入るか計画者が実測（入らなければこの 1 行を 14px にせず、`compare` の見出しを詰める）。
+3. **S4**: 最初の保存（ID 発行）の直後に 1 回だけ `[data-alert]`（Ruling 30 の型・`role="status"`・`[data-alert-action]`「閉じる」）「ルーティンは「配る」でファイルにして、自分にも送っておけます。 / You can turn routines into a file with “Share” and send it to yourself.」。`hints.backupTipShownForRoutine` を表示と同時に `true`。S4 の主要操作数は変わらない（`[data-alert-action]` は除外）。保存失敗の枠が出ている時は出さない（枠は 1 つ・次の機会に回す）。
+4. **S3**: 開いた行の `[data-group="routine-actions"]` に「配る / Share」（`playability==='ok'` の時だけ・編集と削除の間）。期待値 3 のまま。
+5. **S6**: 「先生の方へ」の下に「ルーティンを配る / Share routines」（→ S9・印なし）。期待値 **4**。
+6. **設定（`settings.ts`）**: `distributorName: string`（既定 `''`・40 字・`normalizeSettings` で切る）と `hints.backupTipShownForRecording`・`hints.backupTipShownForRoutine`（既定 `false`）。テスト 3 件。
+7. **文言キー（`messages.ts`）**: Ruling 82〜86 の全文を日英で足す。禁止語（「読み込み」「書き出し」「Import」「Export」）に当たる語を使わない（「読んでいます」「ファイルを作る」「受け取る」「配る」）。
+
+**理由**: 「ファイルに保存」を作らない（Ruling 82-3）代わりに、バックアップは「配るで作った物を自分に送る」の 1 文で済む。帯を 2 ボタンにするのは、録音が終わった先生の次の一手が「配る」であり、仕様 §3「録音から配るまで＝一本道」のため。
+
+**外れた時の代償**: S8 完成の帯が 2 ボタンになり、片方が「完了」（録音だけで終わる先生）。375×548 で 1 行増える分は実測で確かめる。
+
+## Ruling 87（Q10）検査 — 単体・`ui:check` の状態表（S3/S6/S7/S8/S9/S10）・`smoke:share`（先生の Chrome → 生徒の Chrome を本物のファイルで）・固定ファイル・iOS シミュレーターで iPhone の往復まで確かめる・実機確認表
+
+**決定**:
+1. **単体（`node --test`。`test/app/share/*.test.ts`）**: `bundle.test.ts`（`buildBundle` ↔ `parseBundle` の往復・`schemaVersion 2` → `too-new`・壊れた JSON → `broken`・`type` 不明 → `broken`・旧単体パック（`exportRecordedVoicePack` の形）→ `legacy:true`・ルーティン 1 本不正 → `rejected` に名前・51 本 → `broken`・声の語 2MB 超 → `broken`・同意なし → `broken`・空 → `broken`）、`filename.test.ts`（日英・日付・使えない文字・空の名前・ルーティンだけ）、`instructions.test.ts`（日英・URL 無しで最後の行が無い・`?openExternalBrowser=1` が付く・ルーティンだけの 1 行目）、`plan-import.test.ts`（Ruling 84-4 の置き換え・20 本目の拒否・200 の切り詰め・ID の付け直し・`globalOffsetMs` 0・`wordOffsetsMs` 維持・`sourceId`）、`inbox.test.ts`（偽の `caches`。Ruling 79-2）、`files.test.ts`（Ruling 81-4）、`settings` に 3 件、`routines/routine.test.ts` に `received` の 2 件（`receivedFrom` あり／なし）、`test/engine/` に `validateRoutineProvenance('received')` 1 件。`Blob`・`btoa`・`atob` は Node ≥ 18 の global（検証済みの前提。計画者が `node -e` で確かめる）。
+2. **`ui:check` の状態表（375×667・1280×900・reduced-motion・375×548・320×568・640×450 は既存の周り方のまま）**:
+   - `S3 2本・1本開` total 3（「配る」が `routine-actions` にある）／`S6` ops 4・total 4／`S7 標準だけ` ops 3・total 3／`S7 3 本` total 3／`S7 行を開`（録音の声）total 4・`voice-actions` に「配る」「削除」／**新** `S7 受け取った声を開`（seed `V.receivedJa` を選んで開く）total 4・「配る」が**無い**／`S8 完成` total 5・帯に「完了」「配る」・`.dc-hint` が見える（seed の `hints` は既定なので初回）。
+   - **新 `S9 声あり`**（seed `V.completeEn`＋`R.waltz13`・`addInitScript` で `requestShareIntent` を使わず `#/share` を直接開き、steps で声の行をクリック）ops 5・total 5・同意の行が見える・主ボタン `disabled`（同意前）／**`S9 録音なし`**（seed 無し）ops 3（名前・ルーティン一覧（0 件は操作でない）…）＝計画者が実装の DOM で数え直して期待値を書く（上限 5 だけが規則）／**`S9 作った後`**（`addInitScript` で `navigator.share` を即 resolve の偽物・`canShare` true に差し替え、steps: 名前入力 → 声 → 同意 → 「ファイルを作る」）total 6・結果の行と「案内文をコピー」がある。
+   - **新 `S10 選ぶ`** ops 1・total 1／**`S10 LINE の中`**（`addInitScript` で `navigator.userAgent` を `Line/` 入りに）alert（120px 以下・`[data-alert-action]` 1 つ）／**`S10 確認`**（steps: `setInputFiles` に固定ファイル `test/fixtures/share/bundle-voice-routine.dancecount.txt`）total 2・中身の行に「山田さんの声」「ルーティン 1 本」／**`S10 置き換え`**（seed に同じ `sourceId` の受け取った声 → 確認に置き換えの 1 行）／**`S10 読めない`**（`setInputFiles` に `broken.txt`）alert／**`S10 大きすぎ`**（`setInputFiles({ buffer: 20MB+1 })`）alert／**`S10 新しすぎ`**（`too-new.txt`）alert・`[data-alert-action]`「更新する」／**`S10 受け取った`**（確認 → 「使う」）total 1。
+   - **`ui-state` は足さない**（全部、実経路（`setInputFiles`・`addInitScript`）で作れる。Ruling 33・43 の方針）。件数は計画者が数え、台帳に書く（見込み 192 → 230 前後）。
+3. **固定ファイル `test/fixtures/share/`**（`tools/make-share-fixtures.js` が決定論的に生成して commit。WAV は `make-fake-mic-wav.js` と同じ合成音を 0.3 秒・12 語 → 束は数百 KB 以下）: `bundle-voice-routine.dancecount.txt`（山田・日本語の声・ワルツ 2 本）、`bundle-routines-only.dancecount.txt`、`legacy-voice-pack.json`（旧画面の単体パックの形）、`broken.txt`（`{"type":"x"`）、`too-new.txt`（`schemaVersion:2`）。`check-dist` の対象外（`public/` に置かない）。
+4. **スモーク `tools/smoke-share.js`（`npm run smoke:share`。dev 起動中に）**: 
+   1. **先生**: Chrome（`addInitScript` で `navigator.canShare=()=>false`＝ダウンロードに落とす）→ seed `V.completeEn`＋ルーティン 1 本 → S7 で声を開いて「配る」→ S9: 名前「山田」・同意 →「ファイルを作る」→ `page.waitForEvent('download')` → `download.path()` → 名前が `声-山田-<今日>.dancecount.txt`・結果の行・「案内文をコピー」（clipboard は headless で失敗しうるので textarea の退避まで通ればよい）。
+   2. **生徒**: **別の `browser.newContext()`**（IndexedDB が別＝別の端末）→ S1「先生の声で練習」→ S7「ファイルから受け取る」→ S10「ファイルを選ぶ」→ `setInputFiles(download.path())` → 確認に「山田さんの声（英語）· 12 語」「ルーティン 1 本」→「使う」→「受け取りました」→「ホームへ」→ S1 → ワルツ ▶ → **`smoke-voice.js` と同じ指紋で「受け取った声の WAV で鳴った」**・標準の声の音声要求 0 → チップ「声: 山田さんの声」→ S3 に「山田さんから」の行 → S5 で鳴る。
+   3. 同じファイルをもう一度 → 確認に置き換えの 1 行 →「使う」→ S7 の受け取った声は 1 行のまま（増えない）。
+   4. `legacy-voice-pack.json` → 受け取れる（表示は `pack.name`）。`broken.txt`・`too-new.txt`・20MB+1 → それぞれの枠。
+   5. **inbox**: `page.evaluate` で `caches.open('dance-count-inbox')` に固定ファイルを `put` → `#/receive` を開く → 確認から始まる → `caches` から消えている。
+   6. 受け取った声を S7 で開く → 「配る」が無い → 削除 → 標準に戻る。
+5. **iOS シミュレーター（SE 第3世代・iOS 26.3。HANDOVER §8 の手順）で確かめられること**: (a) S9 の「ファイルを作る」で**共有シートが出る**（`navigator.share` は動く。AirDrop は無い）(b) 「"ファイル"に保存」→ Files の「ダウンロード」に `.dancecount.txt` が入る → S10「ファイルを選ぶ」→ Files のピッカーでそのファイルが**灰色でなく選べる**（`accept` の検査。F28）→ 確認 → 使う → S2 で鳴る＝**iPhone の往復がシミュレーターで閉じる**（録音と違い OS のダイアログが要らない）(c) 375×548 で S9（声あり）・S10（3 状態）・S8 完成（帯 2 ボタン＋1 行）の主要操作が入る (d) 共有の promise が解決しない時の二重タップ（F22）。**確かめられないこと**: LINE（アプリ内ブラウザ・添付の手順・`openExternalBrowser=1`）、AirDrop、Android。
+6. **実機確認表 `docs/app-v1/stage5-device-check.md`**（ひとみうさの iPhone。できれば家族の Android 1 台）: (1) S8 完成 →「配る」→ S9 に自分の声がチェック済み・名前・同意 →「ファイルを作る」→ 共有シートに LINE・AirDrop・メール・"ファイル"に保存 が出る (2) LINE で自分（Keep か家族）に送る → LINE で添付を開く → **右上の共有 →「"ファイル"に保存」**（案内文の手順どおりか。違えば案内文を直す）(3) Safari で Dance Count →「先生の声で練習」→「ファイルから受け取る」→「ファイルを選ぶ」→「最近の項目」に出る・選べる → 確認の文 →「使う」→ ホームでワルツ ▶ が先生（自分）の声 (4) 案内文の URL を LINE で自分に送り、タップ → **Safari で開く**（`openExternalBrowser=1`。LINE の中で開いたら S10 の 1 行が出るか・「Safari で開く」が効くか） (5) 同じファイルをもう一度 → 置き換えの 1 行 → 増えない (6) 「案内文をコピー」→ LINE に貼れる (7) AirDrop で Mac へ → ファイル名が `声-…dancecount.txt` (8) S9・S10 を Safari（548）で: 主要操作が初期表示に入る (9) 受け取った声の行を開く → 「配る」が無く「削除」だけ（D37）(10) S4 で新しいルーティンを作った時の 1 行・S8 完成の 1 行（文言の好み） (11) iOS 15.x の罠（F22）: 共有シートで「"ファイル"に保存」を選んだ後、もう一度「ファイルを作る」が効くか (12) Android（あれば）: Chrome で S9 →「ファイルを作る」→ 共有シートに LINE が出て**`.txt` が拒まれない**（F19 の検証）→ 受け取りは「保存 → ファイルを選ぶ」で通る。share_target は段7。
+
+**理由**: 実経路で作れる状態は実経路で（Ruling 43）。ファイルは Playwright のダウンロードとアップロードで**本物**を往復でき、2 つのコンテキストが 2 台の端末の代わりになる。iOS の往復がシミュレーターで閉じるのは段4と違う好条件で、実機は LINE と Android に絞れる。
+
+**外れた時の代償**: 固定ファイルが数百 KB 増える（`test/fixtures/share/`。dist には入らない）。`ui:check` の状態が 10 ほど増え、実行時間が伸びる。headless Chrome の clipboard は失敗しうる（スモークは textarea の退避で通す）。
+
+---
+
+## ひとみうさの決定（代理）— 起きたら見直してもらう
+
+- **D36（代理決定・ひとみうさ確認待ち）配布ファイルの拡張子は `.dancecount.txt`・MIME `text/plain`**（Ruling 80-3。中身は JSON のまま。理由: Chrome／Android は `.json` を `share()` で拒む＝F19・F20）。— 代案: Ruling 4 の `.json` のまま（Android の先生は毎回ダウンロード → LINE に添付。案内文に 1 行足す）。
+- **D37（代理決定・ひとみうさ確認待ち）受け取った声は配り直せない・「ファイルに保存」は作らない**（Ruling 80-2・82-3。バックアップは「配る」で作ったファイルを自分にも送る）。— 代案: 仕様どおり S7 の開いた行に「ファイルに保存」（同意なし）を置く（受け取った声も保存できる＝先生の「配り先は自分で管理します」の外に出る）。
+- **D38（代理決定・ひとみうさ確認待ち）同じ先生の声・同じルーティンは「使う」で置き換える（「両方残す」は作らない）**（Ruling 83-2・84-4）。— 代案: 仕様どおり「置き換える／両方残す」の確認ダイアログ（1 タップと 1 判断が増える）。
+- **D39（代理決定・ひとみうさ確認待ち）S8 完成の帯は左「完了」・右「配る ›」の 2 ボタン**（Ruling 86-2。主要操作 5＝上限）。— 代案: 帯は「配る」だけにし「完了」を上の `.dc-button--secondary` に（録音だけの先生に「配る」が主に見える）。
+
+---
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認）
+
+**判断**
+1. D36〜D39（上）。
+2. **案内文の全文**（Ruling 82-6。生徒に届く文なので、ひとみうさの言葉に直してよい。段8の監修でも可）。
+3. 「配る / Share」の語（仕様・Ruling 7 のまま）。「送る」の方が 60〜70代に近いか。
+4. S10 の説明は文字だけ（Ruling 83-1。図解 SVG は作っていない）。実物を見て絵が要るか。
+5. `PUBLIC_APP_URL`（公開前。全体地図のとおり）。Android の端末が家にあるか（G6 の 2 経路目）。
+6. D22-B を据え置くこと（Ruling 85）。
+
+**確認（実機確認表 Ruling 87-6）**
+7. LINE の添付の手順（右上の共有 →「"ファイル"に保存」）が案内文どおりか。
+8. 案内文の URL が Safari で開くか（`openExternalBrowser=1`）。
+9. Files のピッカーで `.dancecount.txt` が選べるか（灰色にならないか）。
+10. 受け取った直後にホームのワルツ ▶ が先生の声で鳴るか（受け取った声が自動で選ばれる）。
+11. S9・S10・S8 完成の 548 の配置。バックアップの 1 行の文言。
+
+---
+
+## 4. 計画への反映（計画者）
+
+- **順序**: 段4の実機確認（`stage4-device-check.md`）と段3追加便の再確認はひとみうさが起きてから。段5の詳細計画は今書いてよく、実装は `agent/app-v1` で逐次（段4と同じ。worktree なし）。段6b（決定カード待ち）は段5の途中でも差し込める（`public/`・`tools/` だけ）。
+- **先にスクラッチで実証する 4 点**: (a) この Mac の Chrome で `share()` に `.txt`/`text/plain` を渡すと共有シートが出る・`.json` が `NotAllowedError` になる（F19 の `share()` 側。`canShare` は F20 で実測済み）(b) Playwright の `page.waitForEvent('download')` で `<a download>` の blob を取れ、`download.path()` を別コンテキストの `setInputFiles` に渡せる (c) `exportRecordedVoicePack` → `JSON.parse` → `JSON.stringify` → `importRecordedVoicePack` の往復が Node で通り、12 語 ≒ 1MB で 100ms 以内 (d) iOS シミュレーターの Safari で `navigator.share({files})` → 「"ファイル"に保存」→ `<input type=file accept=".txt,.json,text/plain,application/json">` でそのファイルが選べる（Ruling 87-5 (b)）。
+- **新規ファイル**: `src/app/share/{bundle,limits,filename,instructions,plan-import}.ts`・`src/app/state/share-intent.ts`・`src/app/app-url.ts`・`src/app/screens/ShareScreen.tsx`（S9）・`src/app/screens/ReceiveScreen.tsx`（S10）・`tools/make-share-fixtures.js`・`test/fixtures/share/*`・`tools/smoke-share.js`・`test/app/share/*.test.ts`・`docs/app-v1/stage5-device-check.md`。
+- **変更するファイル**: `platform/files.ts`（Ruling 81。殻を置き換え）・`platform/page.ts`（`reloadPage`・`isLineInAppBrowser`）・`platform/not-ready.ts`（参照が残らなければ消す）・`voices/store.ts`（`sourceId`・`sourceUpdatedAt`・`receivedAt`）・`voices/selection.ts`（変更なしの見込み。`packDisplayName` は既に受け取りを描く）・`routines/routine.ts`（`received`）・`routines/ids.ts`（`makeId('v')` を許す）・`settings/settings.ts`（`distributorName`・`hints` 2 つ）・`screens/VoicesScreen.tsx`／`RecordVoiceScreen.tsx`／`RoutinesScreen.tsx`／`RoutineEditScreen.tsx`／`SettingsScreen.tsx`（Ruling 86）・`App.tsx`（S9・S10 の登録）・`i18n/messages.ts`（Ruling 82〜86 の文言。禁止語テスト）・`styles/base.css`（`.dc-result`・`.dc-hint`・チェックボックスの行・textarea）・`components/icons.svg`（`share` のアイコン 1 つ。線画・24px）・`vite.config.ts`（`__PUBLIC_APP_URL__`）・`tools/check-app-ui.js`（Ruling 87-2）・`tools/ui-check-voices.js`（受け取った声の seed に `sourceId`）・`package.json`（`smoke:share`・`fixtures:share`）・**`src/engine/routine-provenance.js`（1 行）**＋`test/engine/`（1 件）。
+- **触らない**: `src/engine/*`（上の 1 行以外。diff がその 1 行だけであることを完了条件に）・ゴールデン・`output/timing-audit-before.json`・`legacy/*`・`public/*`。Service Worker・manifest は作らない（段7）。
+- **文書**: 仕様 §4 S7/S8/S9/S10（Ruling 82・83・86 の読み替え: 「ファイルに保存」撤去・案内文は作った後・図解は文字・置き換えのみ・F3 のリンク撤回）・§7「配布ファイル」（`.txt`・50 本・`sourceId`・`globalOffsetMs` 0）・§8（案内文・Android の行・`openExternalBrowser=1`・share_target は段7）・§11（新しい 3 行: 声 20・ルーティン 200・LINE の中）・§6 の期待値（S3 3・S6 4・S7 3/3/4・S8 完成 5・S9 5/6・S10 1/2/1）・全体地図（段5行・段7行の share_target と inbox の契約・持ち越し表の段5の行を全部「済」に・リスク #2 を F25 に）・HANDOVER §3・§5（段7送り: share_target・SW・F3・案内文の Android 行）・`rulings.md`（Ruling 79〜87・D36〜D39・F19〜F28 を転記。Ruling 4・11・41・55-3・62-3・62-5・76-1 に注記）。
+- **完了条件（段の終わり・別エージェントが再実行）**: `npm test`（件数。新規 ≒ 40）・`typecheck`・`build`（check-dist）・`timing:audit && timing:compare` 一致・ゴールデン不変・**`src/engine` の diff が `routine-provenance.js` の 1 行だけ**・`ui:check` 全 PASS（新しい状態込み・件数を報告）・`smoke:share`・`smoke:voice`・`smoke:practice`・`smoke:routines` OK・iOS シミュレーターで Ruling 87-5 の (a)〜(c)・375/1280 のスクロール領域ごとの撮影（S7・S8 完成・S9 2 状態・S10 4 状態・S3 開・S6）。実機（Ruling 87-6）はひとみうさが起きてから。G6 の「iPhone→iPhone」はシミュレーターの往復＋実機の LINE で、「iPhone→Android」は Android が手に入れば。
