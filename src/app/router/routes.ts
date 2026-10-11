@@ -41,9 +41,8 @@ const PATTERNS = [
 
 export function parseHash(hash: string): Route {
   const [rawPath = '', rawQuery = ''] = hash.replace(/^#/, '').split('?');
-  const path = rawPath;
   const query = parseQuery(rawQuery);
-  const segments = path.split('/').filter(Boolean);
+  const segments = rawPath.split('/').filter(Boolean);
   for (const pattern of PATTERNS) {
     if (pattern.segments.length !== segments.length) continue;
     const params: Record<string, string> = {};

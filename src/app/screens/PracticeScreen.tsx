@@ -103,7 +103,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
               const checked = choice.speed === preset;
               return (
                 <button key={preset} type="button" class="dc-opt" role="radio" aria-checked={checked ? 'true' : 'false'}
-                  onClick={() => change(choosePreset(settings, danceId, preset))}>
+                  onClick={() => { if (!checked) change(choosePreset(settings, danceId, preset)); }}>
                   <b class="dc-opt-label">{checked && <Icon name="check" />}{translator.t(SPEED_LABEL[preset])}</b>
                   {checked && <small>{translator.t('tempoMark', { tempo: presets[preset] })}</small>}
                 </button>
@@ -133,7 +133,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
                   <div class="dc-chips" role="radiogroup" aria-label={translator.t('countPattern')} data-group="pattern">
                     {profile.templates.map(counts => (
                       <button key={counts} type="button" class="dc-chip" role="radio" aria-checked={choice.counts === counts ? 'true' : 'false'}
-                        onClick={() => change(chooseTemplate(settings, profile, counts))}>
+                        onClick={() => { if (choice.counts !== counts) change(chooseTemplate(settings, profile, counts)); }}>
                         {formatCounts(danceId, counts)}
                       </button>
                     ))}
@@ -194,7 +194,7 @@ function Alert({ notice, onClose }: { notice: SessionNotice; onClose(): void }) 
     <div class="dc-alert" role="status" data-alert={notice}>
       {notice === 'no-sound' && (
         <>
-          <div class="dc-alert-text"><b>{translator.t('noSoundTitle')}</b>{translator.t('noSoundBody')}</div>
+          <div class="dc-alert-text"><b>{translator.t('noSoundTitle')}</b>{translator.locale === 'ja-JP' ? '' : ' '}{translator.t('noSoundBody')}</div>
           <a class="dc-alert-action" data-alert-action href={buildHash({ screen: 'S11', params: {} })}>
             <span>{translator.t('noSoundLink')}</span><Icon name="chev-r" />
           </a>

@@ -21,6 +21,19 @@ import { I18nContext } from './state/i18n.ts';
 import { useRoute } from './state/route.ts';
 import { SettingsContext } from './state/settings.ts';
 
+// 端末の保存領域が開くのをこれ以上は待たない（固まっても画面を出す。以後このセッションでは使わない）。
+const STORAGE_OPEN_TIMEOUT_MS = 1500;
+
+function openStorageWithin(ms: number): Promise<AppStorage | null> {
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), ms);
+    openAppStorage().then(
+      opened => { clearTimeout(timer); resolve(opened); },
+      () => { clearTimeout(timer); resolve(null); }
+    );
+  });
+}
+
 // 中身がある画面だけ登録する。未実装の画面はホームを出す（段3以降でここに足す）。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
@@ -45,8 +58,7 @@ export function App() {
   // 設定を読み終えてから描画する（前回カードのちらつき防止。Ruling 26）。開けなければ既定値で続行。
   useEffect(() => {
     let alive = true;
-    openAppStorage()
-      .catch(() => null)
+    openStorageWithin(STORAGE_OPEN_TIMEOUT_MS)
       .then(opened => { storage.current = opened; return loadSettings(opened, { read: readLegacyUiLocale, forget: forgetLegacyUiLocale }); })
       .then(loaded => { if (alive) { current.current = loaded; setSettings(loaded); } });
     return () => { alive = false; };
