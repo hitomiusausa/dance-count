@@ -68,7 +68,13 @@ export function playBuffer(audio: AudioContext, buffer: AudioBuffer, onEnded: ()
   source.connect(audio.destination);
   let ended = false;
   source.onended = () => { if (!ended) { ended = true; onEnded(); } };
-  source.start();
+  try {
+    source.start();
+  } catch {
+    // 閉じた AudioContext など。鳴らなかったことを、鳴り終わりと同じく後から（戻り値を受け取った後で）知らせる。
+    ended = true;
+    queueMicrotask(onEnded);
+  }
   return () => {
     if (ended) return;
     ended = true;

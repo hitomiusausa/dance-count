@@ -74,16 +74,16 @@ function stopStream(stream: MediaStream): void {
 
 function capture(stream: MediaStream, ms: number, onStart?: () => void): Promise<WordRecording> {
   return new Promise((resolve, reject) => {
-    const mimeType = pickMimeType();
-    let recorder: MediaRecorder;
-    try {
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    } catch {
+    const created = createRecorder(stream);
+    if (!created) {
       reject(new RecorderError('failed'));
       return;
     }
+    const { recorder, mimeType } = created;
     const chunks: Blob[] = [];
     let settled = false;
+    let stopTimer: ReturnType<typeof setTimeout> | undefined;
+    let giveUpTimer: ReturnType<typeof setTimeout> | undefined;
     const finish = (outcome: WordRecording | RecorderError) => {
       if (settled) return;
       settled = true;
@@ -102,11 +102,20 @@ function capture(stream: MediaStream, ms: number, onStart?: () => void): Promise
     try {
       recorder.start();
     } catch {
-      finish(new RecorderError('failed'));
+      finish(new RecorderError('failed'));   // 呼び出し側（recordTake の finally）がトラックを止める
       return;
     }
     onStart?.();
-    const stopTimer = setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, ms);
-    const giveUpTimer = setTimeout(() => finish(new RecorderError('failed')), ms + STOP_GRACE_MS);
+    stopTimer = setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, ms);
+    giveUpTimer = setTimeout(() => finish(new RecorderError('failed')), ms + STOP_GRACE_MS);
   });
+}
+
+// 選んだ形で作れなければ、1 回だけブラウザ既定（形を指定しない）で作り直す。それも駄目なら null。
+function createRecorder(stream: MediaStream): { recorder: MediaRecorder; mimeType?: string } | null {
+  const mimeType = pickMimeType();
+  if (mimeType) {
+    try { return { recorder: new MediaRecorder(stream, { mimeType }), mimeType }; } catch { /* 既定で作り直す */ }
+  }
+  try { return { recorder: new MediaRecorder(stream) }; } catch { return null; }
 }
