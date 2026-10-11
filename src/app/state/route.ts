@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { historyBack, onHashChange, readHash, setHash } from '../platform/hash.ts';
-import { canGoBackInHistory, recordVisit } from '../router/back-stack.ts';
+import { canGoBackInHistory, recordVisit, replaceTop } from '../router/back-stack.ts';
 import { buildHash, parentScreen, parseHash, type Route, type RouteTarget, type ScreenId } from '../router/routes.ts';
 
 // このタブで見てきた画面の列（「戻る」の判断用。仕様 §3・Ruling 17）。起動時の画面から始まる。
@@ -26,5 +26,7 @@ export function goBack(current: ScreenId): void {
     return;
   }
   const parent = parentScreen(current) ?? 'S1';
-  setHash(buildHash({ screen: parent, params: {} }), { replace: true });
+  const parentHash = buildHash({ screen: parent, params: {} });
+  visited = replaceTop(visited, parentHash);
+  setHash(parentHash, { replace: true });
 }

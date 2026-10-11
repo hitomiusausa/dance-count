@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canGoBackInHistory, recordVisit } from '../../src/app/router/back-stack.ts';
+import { canGoBackInHistory, recordVisit, replaceTop } from '../../src/app/router/back-stack.ts';
 
 const walk = (hashes: string[]) => hashes.reduce<string[]>((stack, hash) => recordVisit(stack, hash), []);
 
@@ -24,4 +24,19 @@ test('direct practice -> voices -> back -> back needs the parent fallback', () =
 
 test('the ui-state query does not count as a different screen', () => {
   assert.deepEqual(walk(['#/practice/waltz?ui-state=no-sound', '#/practice/waltz']), ['#/practice/waltz']);
+});
+
+test('replaceTop swaps the last entry for the normalized path', () => {
+  assert.deepEqual(replaceTop([], '#/voices?ui-state=no-sound'), ['#/voices']);
+  assert.deepEqual(replaceTop([], ''), ['#/']);
+  assert.deepEqual(replaceTop(['#/practice/waltz'], '#/'), ['#/']);
+  assert.deepEqual(replaceTop(['#/', '#/practice/waltz'], '#/voices'), ['#/', '#/voices']);
+});
+
+test('direct S8 -> parent replace leaves no phantom entry', () => {
+  const opened = recordVisit([], '#/voices/record');
+  const replaced = replaceTop(opened, '#/voices');
+  const afterHashChange = recordVisit(replaced, '#/voices');
+  assert.deepEqual(afterHashChange, ['#/voices']);
+  assert.equal(canGoBackInHistory(afterHashChange), false);
 });
