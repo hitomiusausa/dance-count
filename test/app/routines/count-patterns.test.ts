@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DANCE_PROFILES } from '../../../src/engine/dance-profiles.js';
-import { COUNT_PATTERNS_MAX, countPatterns } from '../../../src/app/routines/count-patterns.ts';
+import { COUNT_PATTERNS_MAX, countPatterns, pressedPattern } from '../../../src/app/routines/count-patterns.ts';
 import { checkCounts } from '../../../src/app/routines/counts.ts';
 import { isOffBar } from '../../../src/app/routines/bar-check.ts';
 import { COUNTS_MAX } from '../../../src/app/routines/limits.ts';
@@ -64,4 +64,11 @@ test('countPatterns: every pattern fits COUNTS_MAX', () => {
 test('count-patterns.ts reads no figure data (Ruling 3 / 53-4)', () => {
   const source = readFileSync(new URL('../../../src/app/routines/count-patterns.ts', import.meta.url), 'utf8');
   for (const word of ['figure-catalog', 'legacy', 'terminology']) assert.ok(!source.includes(word), word);
+});
+
+test('pressedPattern: no chip is pressed while the primary reads 複製して追加 (final review M2)', () => {
+  assert.equal(pressedPattern('123', 'addCopy'), null);
+  assert.equal(pressedPattern('', 'addCopy'), null);
+  for (const action of ['add', 'done', 'matchCounts', 'updateAll'] as const) assert.equal(pressedPattern('１・2 &3', action), '12&3', action);
+  assert.equal(pressedPattern('s q q', 'done'), 'SQQ');
 });

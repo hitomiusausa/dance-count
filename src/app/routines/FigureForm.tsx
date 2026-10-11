@@ -3,8 +3,8 @@ import type { MessageKey } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { useI18n } from '../state/i18n.ts';
 import { beatsPerBar } from './bar-check.ts';
-import { countPatterns } from './count-patterns.ts';
-import { allowedSymbols, normalizeCounts } from './counts.ts';
+import { countPatterns, pressedPattern } from './count-patterns.ts';
+import { allowedSymbols } from './counts.ts';
 import type { IconName } from '../components/icon-names.ts';
 import type { DraftAction, DraftCheck, DraftReason, FigureDraft } from './editor.ts';
 import { figureNameSuggestions, hasFigureNameSuggestions } from './figure-names.ts';
@@ -17,6 +17,7 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // カウント欄の下には常に「使える文字：…」（Ruling 50 D14）。文字の誤りはこの行が赤くなり、ほかの理由はその下に1行。
 // 理由が無い時だけ、止めない知らせ（まとめて変更の予告 → 小節の注意の短い形。Ruling 52-3）を同じ位置に出す。
 // 主ボタンは editor の action で文字・アイコンを替えるだけ（ボタンは増やさない。Ruling 50-6）。
+// 「複製して追加」の時は形を押した見た目にしない（欄のカウントは捨てるため。pressedPattern）。
 const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | null>, MessageKey> = {
   leading: 'startWithBeat', invalid: 'countsInvalid', sameName: 'sameNameExists', name: 'nameNeeded'
 };
@@ -43,7 +44,7 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
     : check.note === 'offBar' ? translator.t('offBarFigure', { beats: beatsPerBar(danceId) }) : null;
   const primary = PRIMARY[check.action];
   const alwaysPressable = check.action === 'addCopy' || check.action === 'matchCounts';
-  const current = normalizeCounts(draft.counts);
+  const pressed = pressedPattern(draft.counts, check.action);
   const patternsLabel = translator.t('commonCounts');
   return (
     <div class="dc-figure-form">
@@ -82,7 +83,7 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
           <div class="dc-field-label">{patternsLabel}</div>
           <div class="dc-chips" role="group" aria-label={patternsLabel}>
             {countPatterns(danceId).map(counts => (
-              <button key={counts} type="button" class="dc-chip" aria-pressed={counts === current ? 'true' : 'false'}
+              <button key={counts} type="button" class="dc-chip" aria-pressed={counts === pressed ? 'true' : 'false'}
                 onClick={() => onDraft({ counts })}>{formatCounts(danceId, counts)}</button>
             ))}
           </div>

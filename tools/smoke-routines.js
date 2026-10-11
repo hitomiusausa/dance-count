@@ -5,7 +5,8 @@
 // つかみで引いて並べ替える・元に戻す・再読み込みで残る・軽く押すと行が開く（Ruling 49）→
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
 // 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
-// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）。
+// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）→ 小節の注意（D16・Ruling 52）→ カウントの形（D18・Ruling 53）→
+// 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium } from 'playwright-core';
 
@@ -186,6 +187,10 @@ try {
   await addForm.locator('input').nth(1).fill('');
   const copyButton = addForm.locator('.dc-primary');
   if ((await copyButton.textContent())?.trim() !== '複製して追加') errors.push(`same name should switch the button to "Add a copy" ("${await copyButton.textContent()}")`);
+  // 違う形をタップしても「複製して追加」のまま・どの形も押された印にならない（欄のカウントは捨てるため。最終レビュー M2）
+  await addForm.locator('[data-group="count-patterns"] .dc-chip').filter({ hasText: /^1 2 & 3$/ }).click();
+  if ((await copyButton.textContent())?.trim() !== '複製して追加') errors.push(`a different pattern should keep "Add a copy" ("${await copyButton.textContent()}")`);
+  if (await addForm.locator('[data-group="count-patterns"] .dc-chip[aria-pressed="true"]').count()) errors.push('no count pattern should look pressed while the button reads "Add a copy"');
   await copyButton.click();
   const copied = await page.locator('.dc-figure-head').nth(1).textContent().catch(() => '');
   if (!copied?.includes('ウィスク') || !copied.includes('1 2 3')) errors.push(`"Add a copy" should add ウィスク 1 2 3 as the 2nd row ("${copied}")`);
@@ -230,6 +235,24 @@ try {
   await patternForm.locator('.dc-primary').click();
   const patternHead = (await page.locator('.dc-figure-head').nth(3).textContent()) ?? '';
   if (!patternHead.includes('1 & 2 & 3 &')) errors.push(`the row heading should show the chosen pattern ("${patternHead.trim()}")`);
+
+  // 同じ名前の行で形をタップ（Ruling 50 D13 × Ruling 53）: ウィスクを 3 行にする → 1 行目で形をタップ → 「3件まとめて決定」→ 3 行とも変わる → 元に戻すで 3 行とも戻る
+  await page.locator('.dc-add-tail').click();
+  const thirdForm = page.locator('.dc-figure-form').last();
+  await thirdForm.locator('input').nth(0).fill('ウィスク');
+  await thirdForm.locator('.dc-primary').click();   // 複製して追加
+  const whiskCounts = async () => (await page.locator('.dc-figure-head').evaluateAll(heads => heads
+    .filter(head => head.querySelector('b')?.textContent.trim() === 'ウィスク').map(head => head.querySelector('small')?.textContent.trim())));
+  if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`expected 3 ウィスク rows at 1 2 3: ${JSON.stringify(await whiskCounts())}`);
+  await page.locator('.dc-figure-head').first().click();
+  const groupForm = page.locator('.dc-row[data-index="0"] .dc-figure-form');
+  await groupForm.locator('[data-group="count-patterns"] .dc-chip').filter({ hasText: /^1 2 & 3$/ }).click();
+  const groupButton = groupForm.locator('.dc-primary');
+  if ((await groupButton.textContent())?.trim() !== '3件まとめて決定') errors.push(`a pattern on a shared name should read "Update all 3" ("${await groupButton.textContent()}")`);
+  await groupButton.click();
+  if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 & 3', '1 2 & 3', '1 2 & 3'])) errors.push(`"Update all 3" should change every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
+  await page.locator('[data-group="history"] button').first().click();   // 元に戻す（1 回で 3 行とも）
+  if (JSON.stringify(await whiskCounts()) !== JSON.stringify(['1 2 3', '1 2 3', '1 2 3'])) errors.push(`one undo should restore every ウィスク row: ${JSON.stringify(await whiskCounts())}`);
   await context.close();
 } finally {
   await browser.close();
@@ -239,4 +262,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy, bar notes inform without blocking, count patterns fill the counts');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy, bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one');

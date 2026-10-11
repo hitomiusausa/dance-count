@@ -1,4 +1,6 @@
 import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
+import { normalizeCounts } from './counts.ts';
+import type { DraftAction } from './editor.ts';
 
 // カウントの形（D18・Ruling 53）。プロファイルの数（templates・beatsPerBar・allowedTokens）だけから規則で作る「形」の一覧。
 // 特定のフィガーの正しいカウントは名乗らない（Ruling 3）。フィガーのデータは読まない。
@@ -15,6 +17,12 @@ export function countPatterns(danceId: string): string[] {
   if (!profile) return [];
   const generated = /\d/.test(profile.templates[0] ?? '') ? numberPatterns(profile) : [...SQ_HALF_BAR, ...SQ_FULL_BAR];
   return [...new Set([...profile.templates, ...generated])];
+}
+
+// 押された見た目にする形（最終レビュー M2）。主ボタンが「複製して追加」の時は欄のカウントを捨てるので、どの形も押さない。
+// それ以外は欄の中身（正規化後）と同じ形を押す。
+export function pressedPattern(draftCounts: string, action: DraftAction): string | null {
+  return action === 'addCopy' ? null : normalizeCounts(draftCounts);
 }
 
 // 数字の種目: 基本形（templates[0] から & と a を除いた先頭 beatsPerBar 文字）の各拍の後ろに副音を付ける／付けない。
