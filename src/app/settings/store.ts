@@ -19,7 +19,16 @@ export async function loadSettings(storage: AppStorage | null, legacy: LegacyLoc
   return migrated;
 }
 
-export async function saveSettings(storage: AppStorage | null, patch: Partial<AppSettings>): Promise<boolean> {
+// 連続した保存が互いの項目を消さないように直列化する（read-merge-write が交差すると先の項目が失われる）。
+let saveChain: Promise<unknown> = Promise.resolve();
+
+export function saveSettings(storage: AppStorage | null, patch: Partial<AppSettings>): Promise<boolean> {
+  const result = saveChain.then(() => writeSettings(storage, patch));
+  saveChain = result;
+  return result;
+}
+
+async function writeSettings(storage: AppStorage | null, patch: Partial<AppSettings>): Promise<boolean> {
   if (!storage) return false;
   try {
     const current = await storage.get<Record<string, unknown>>('settings', SETTINGS_KEY);

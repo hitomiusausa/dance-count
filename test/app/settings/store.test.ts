@@ -56,3 +56,29 @@ test('the old language is kept when saving fails, and ignored when a new one is 
   const junk = legacySource('xx-YY');
   assert.equal((await loadSettings(memoryStorage().storage, junk.source)).uiLocale, null);
 });
+
+test('back-to-back saves do not erase each other (serialized read-merge-write)', async () => {
+  const data = new Map<string, unknown>();
+  const storage: AppStorage = {
+    async get<T>(store: StoreName, key: string) { const value = data.get(`${store}/${key}`) as T | undefined; await new Promise(r => setTimeout(r, 0)); return value; },
+    async put<T>(store: StoreName, value: T, key?: string) { await new Promise(r => setTimeout(r, 0)); data.set(`${store}/${key}`, value); }
+  };
+  const results = await Promise.all([saveSettings(storage, { lastDanceId: 'waltz' }), saveSettings(storage, { metronome: false })]);
+  assert.deepEqual(results, [true, true]);
+  const stored = data.get('settings/app') as Record<string, unknown>;
+  assert.equal(stored.lastDanceId, 'waltz');
+  assert.equal(stored.metronome, false);
+});
+
+test('a failed save does not break the chain: the next save still writes', async () => {
+  const data = new Map<string, unknown>();
+  let puts = 0;
+  const storage: AppStorage = {
+    async get<T>(store: StoreName, key: string) { return data.get(`${store}/${key}`) as T | undefined; },
+    async put<T>(store: StoreName, value: T, key?: string) { if (puts++ === 0) throw new Error('quota'); data.set(`${store}/${key}`, value); }
+  };
+  const first = saveSettings(storage, { loop: false });
+  const second = saveSettings(storage, { metronome: false });
+  assert.deepEqual([await first, await second], [false, true]);
+  assert.equal((data.get('settings/app') as Record<string, unknown>).metronome, false);
+});
