@@ -23,6 +23,14 @@ export function nextStep(pack: VoicePackRecord | null, index: number): RecordSte
   return index + 1 >= VOICE_KEYS.length ? { kind: 'done' } : { kind: 'word', index: index + 1 };
 }
 
+// 録音の途中（語の画面）の失敗の行き先（Ruling 57-6・58-2）。拒否と非対応だけ説明の画面の枠へ。
+// 'failed'（使用中・録音が作れない・空の Blob 等）と種類の分からない失敗は、その語に留まって「声が入っていませんでした」。
+// ステップ0（「録音をはじめる」）の 'failed' は別（Fable Q2 の micFailed）で、ここは通らない。
+export type TakeErrorOutcome = 'denied' | 'unsupported' | 'no-voice';
+export function takeErrorOutcome(kind: string | null): TakeErrorOutcome {
+  return kind === 'denied' || kind === 'unsupported' ? kind : 'no-voice';
+}
+
 export function previousStep(index: number): RecordStep | null {
   return index > 0 ? { kind: 'word', index: index - 1 } : null;
 }

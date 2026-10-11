@@ -142,6 +142,7 @@ export const APP_MESSAGES = {
     recordHint: 'Tap to record for 1.5\u00A0seconds.',
     recordWord: 'Record',
     recordAgain: 'Record again',
+    reviewFromFirst: 'Review from word 1',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
     recordingNow: 'Recording…',
     listenTake: 'Play',
     previousWord: 'Previous',
@@ -307,6 +308,7 @@ export const APP_MESSAGES = {
     recordHint: 'ボタンを押すと 1.5\u00A0秒だけ録音します。',   // 「1.5 秒」は折らない
     recordWord: '録音する',
     recordAgain: '録り直す',
+    reviewFromFirst: '1\u00A0語目から見直す',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
     recordingNow: '録音中…',
     listenTake: '聞く',
     previousWord: '前の語',

@@ -17,7 +17,7 @@ import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
 import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, renamePack, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
-import { defaultVoiceName, nextStep, previousStep, stepAfterStart, wordPrompts, type RecordStep } from '../voices/wizard.ts';
+import { defaultVoiceName, nextStep, previousStep, stepAfterStart, takeErrorOutcome, wordPrompts, type RecordStep } from '../voices/wizard.ts';
 
 // S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語 → 完成。
 // 1 語ごとに端末へ保存（戻る・電話・落ちるのどれでも録った語が残る）。「‹ 戻る」は S8 を出る（確認なし）。
@@ -147,15 +147,14 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         setSaved(current => (current ? { ...current, [next.locale]: next } : current));
       }, (error: unknown) => {
         if (mine !== generation.current) return;
-        // マイクの問題（拒否・使用中・非対応）は説明の画面の枠へ。録れた語は保存済みなので「録音をはじめる」で同じ語に戻る。
-        if (error instanceof RecorderError) {
-          abortTake.current = null;
-          setAlert('none');
-          setBlocked(error.kind);
-          setStep({ kind: 'intro' });
-          return;
-        }
-        setAlert('no-voice');
+        // 拒否・非対応だけ説明の画面の枠へ（録れた語は保存済み。「録音をはじめる」で同じ所に戻る）。
+        // それ以外（'failed' 等）はその語に留まり「声が入っていませんでした」（Ruling 57-6・58-2。完成済みの声の録り直しでも場所を失わない）。
+        const outcome = takeErrorOutcome(error instanceof RecorderError ? error.kind : null);
+        if (outcome === 'no-voice') { setAlert('no-voice'); return; }
+        abortTake.current = null;
+        setAlert('none');
+        setBlocked(outcome);
+        setStep({ kind: 'intro' });
       })
       .finally(() => {
         if (timer) clearInterval(timer);
@@ -290,7 +289,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
           })}
         </div>
         <button type="button" class="dc-button dc-button--secondary dc-wide dc-record-again" onClick={() => goTo({ kind: 'word', index: 0 })}>
-          <Icon name="mic" /><span>{translator.t('recordAgain')}</span>
+          <Icon name="mic" /><span>{translator.t('reviewFromFirst')}</span>
         </button>
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button" onClick={finish}>
