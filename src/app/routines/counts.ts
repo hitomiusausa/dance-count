@@ -8,15 +8,17 @@ export type CountsProblem = 'symbols' | 'leading' | 'invalid';
 export interface CountsCheck { counts: string; empty: boolean; problem: CountsProblem | null }
 
 const PROFILES = DANCE_PROFILES as Record<string, { allowedTokens: readonly string[] }>;
+// 使える文字の区切り（Ruling 50 D14-1）: 日本語は「・」（U+30FB・空白なし）、英語は「 · 」（U+00B7・前後に空白）。
+const SYMBOL_SEPARATOR: Record<'en' | 'ja-JP', string> = { 'ja-JP': '\u30FB', en: ' \u00B7 ' };
 
-// NFKC（全角→半角）→ s/q は大文字・A は小文字 → 空白と | を除く。
+// NFKC（全角→半角）→ s/q は大文字・A は小文字 → 空白と | と「・」を除く（Ruling 38・50 D14-5。半角「･」は NFKC で「・」になる）。
 export function normalizeCounts(input: string): string {
-  return input.normalize('NFKC').replace(/[sq]/g, letter => letter.toUpperCase()).replace(/A/g, 'a').replace(/[\s|]/g, '');
+  return input.normalize('NFKC').replace(/[sq]/g, letter => letter.toUpperCase()).replace(/A/g, 'a').replace(/[\s|\u30FB]/g, '');
 }
 
-// 「使える記号: 1 2 3 &」の中身。@（声なしの1拍）は受け付けるが案内に出さない。
-export function allowedSymbols(danceId: string): string {
-  return (PROFILES[danceId]?.allowedTokens ?? []).filter(token => token !== '@').join(' ');
+// 「使える文字：1・2・3・&」の中身（Ruling 50 D14-1）。@（声なしの1拍）は受け付けるが案内に出さない。
+export function allowedSymbols(danceId: string, locale: 'en' | 'ja-JP'): string {
+  return (PROFILES[danceId]?.allowedTokens ?? []).filter(token => token !== '@').join(SYMBOL_SEPARATOR[locale]);
 }
 
 export function checkCounts(danceId: string, input: string): CountsCheck {

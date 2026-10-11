@@ -172,6 +172,9 @@ button { cursor: pointer; }
   color: var(--ink); font: inherit; font-size: 18px; }
 .dc-input--counts { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
 .dc-input--bad { border: 2px solid var(--warn-line); }
+/* 使える文字（Ruling 50 D14）: カウント欄の下に常に1行。読む物なので 400・--ink2。文字の誤りの時だけ同じ行が警告の色・700・アイコン。 */
+.dc-hint { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 16px; font-weight: 400; color: var(--ink2); }
+.dc-hint--bad { font-weight: 700; color: var(--warn-ink); }
 .dc-reason { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 16px; font-weight: 700; color: var(--warn-ink); }
 .dc-suggestions { display: flex; flex-direction: column; margin-top: 6px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); }
 .dc-suggestion { min-height: 48px; padding: 0 12px; border: none; border-bottom: var(--bw) solid var(--soft); background: none; text-align: left; font-size: 18px; color: var(--ink); }

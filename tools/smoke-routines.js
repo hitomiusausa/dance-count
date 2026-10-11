@@ -4,7 +4,8 @@
 // ワルツのルーティンを作る（種目 → フィガー2本を「追加する」で確定・不正なカウントでは押せない）→
 // つかみで引いて並べ替える・元に戻す・再読み込みで残る・軽く押すと行が開く（Ruling 49）→
 // 行を開いて書き換えたまま戻る（閉じ方の原則で確定）→
-// 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件。
+// 再読み込みしても一覧に残る → 行を開いて ▶ → S5 で鳴る（大きなカウント表示が音声の時計に沿って変わる）→ 戻る → 削除 → 0件 →
+// 使える文字の常設の行（Ruling 50 D14）→ 同じ名前で「複製して追加」（Ruling 50 D13）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium } from 'playwright-core';
 
@@ -149,6 +150,32 @@ try {
   await page.reload();
   await page.waitForSelector('[data-screen="S3"]');
   if (await page.locator('[data-row]').count()) errors.push('the deleted routine came back after reload');
+
+  // 使える文字はいつも見える（Ruling 50 D14）: 空欄でも「使える文字：1・2・3・&」。12a3 はその行が赤く理由の行は無し。&123 は灰のまま下に理由。
+  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-group="dance"] button').first().click();
+  await page.locator('.dc-dock .dc-primary').click();
+  await addFigure(page, 'ウィスク', '123');
+  await page.waitForURL(/#\/routines\/r-[A-Za-z0-9-]+\/edit$/);
+  await page.locator('.dc-add-tail').click();
+  const addForm = page.locator('.dc-figure-form').last();
+  const hint = addForm.locator('.dc-hint');
+  if ((await hint.textContent())?.trim() !== '使える文字：1・2・3・&') errors.push(`allowed-symbols line on an empty row: "${await hint.textContent()}"`);
+  await addForm.locator('input').nth(1).fill('12a3');
+  if (!(await hint.evaluate(node => node.classList.contains('dc-hint--bad')))) errors.push('12a3 should turn the allowed-symbols line red');
+  if (await addForm.locator('.dc-reason').count()) errors.push('12a3 should not add a reason line under the red allowed-symbols line');
+  await addForm.locator('input').nth(1).fill('&123');
+  if (await hint.evaluate(node => node.classList.contains('dc-hint--bad'))) errors.push('&123 should keep the allowed-symbols line grey');
+  if (!(await addForm.locator('.dc-reason').count())) errors.push('&123 should show its reason under the allowed-symbols line');
+
+  // 同じ名前は同じカウント（Ruling 50 D13）: 「ウィスク 123」がある所へ「ウィスク」→ 主ボタンが「複製して追加」→ 押すと 2 行目が「ウィスク 1 2 3」
+  await addForm.locator('input').nth(0).fill('ウィスク');
+  await addForm.locator('input').nth(1).fill('');
+  const copyButton = addForm.locator('.dc-primary');
+  if ((await copyButton.textContent())?.trim() !== '複製して追加') errors.push(`same name should switch the button to "Add a copy" ("${await copyButton.textContent()}")`);
+  await copyButton.click();
+  const copied = await page.locator('.dc-figure-head').nth(1).textContent().catch(() => '');
+  if (!copied?.includes('ウィスク') || !copied.includes('1 2 3')) errors.push(`"Add a copy" should add ウィスク 1 2 3 as the 2nd row ("${copied}")`);
   await context.close();
 } finally {
   await browser.close();
@@ -158,4 +185,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged and undone, survives reload, plays in S5, deleted');
+console.log('routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy');

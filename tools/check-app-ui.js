@@ -43,7 +43,7 @@ const STATES = [
   { name: 'S4 13件・行を開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-figure-head >> nth=2' }], total: 7 },
   { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 7 },
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true,
-    steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'ウィスク'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
+    steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
@@ -402,11 +402,13 @@ function audit({ state, LIMITS, reducedMotion }) {
       if (!left?.matches('[data-cancel]')) issues.push('R44 the cancel button is not on the left');
     }
   }
-  // Ruling 36・38: 不正なカウントは赤枠と理由の1行、「追加する」は押せない
+  // Ruling 36・38・50: 不正な文字は赤枠と、常設の「使える文字」の行が赤くなる（同じ文を 2 回出さない＝理由の行は無し）、「追加する」は押せない
+  // （名前は検査用の 13 件に無いもの。同じ名前だと「複製して追加」になる。Ruling 50-2）
   if (state.invalidCounts) {
     if (!document.querySelector('.dc-input--bad[aria-invalid="true"]')) issues.push('R38 invalid counts are not marked');
-    const reason = document.querySelector('.dc-reason');
-    if (!reason || !visible(reason)) issues.push('R38 the reason line is not shown');
+    const hint = document.querySelector('.dc-hint.dc-hint--bad');
+    if (!hint || !visible(hint)) issues.push('R50 the allowed-symbols line is not shown in red');
+    if (document.querySelector('.dc-reason')) issues.push('R50 a reason line is shown under the red allowed-symbols line');
     const decide = [...document.querySelectorAll('.dc-figure-form .dc-primary')].pop();
     if (!decide?.disabled) issues.push('R36 "Add" is pressable with invalid counts');
   }

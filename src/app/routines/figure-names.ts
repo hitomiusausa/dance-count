@@ -7,7 +7,12 @@ export const FIGURE_SUGGESTIONS_MAX = 5;
 interface Entry { danceId: string; englishName: string; sourceAliases: readonly string[]; claimStatus: string }
 interface Figure { danceId: string; display: { ja: string; en: string }; keys: string[] }
 
-const fold = (text: string) => text.normalize('NFKC').toLowerCase();
+// 「同じ名前」の判定（Ruling 50-1）: NFKC → 前後の空白を除く → 小文字化。名前の中の空白は除かない。
+// 候補の照合と同じ 1 つの関数を使う（判定を 2 か所に書かない）。
+export function foldFigureName(text: string): string {
+  return text.normalize('NFKC').trim().toLowerCase();
+}
+const fold = foldFigureName;
 
 // 別名ごとに並んでいる登録簿を、1フィガー1件にまとめる（登録簿の順のまま）。
 const FIGURES: Figure[] = (() => {
@@ -35,7 +40,7 @@ export function hasFigureNameSuggestions(danceId: string): boolean {
 // 1文字以上打ってから。部分一致（NFKC・大小無視）。打った名前がすでに照合済みの名前（別名・英語名）と
 // ぴったり同じなら、もう選び終えているので何も出さない（「ウィスク」に「バックウィスク」を出し続けない）。
 export function figureNameSuggestions(danceId: string, query: string, locale: 'en' | 'ja-JP', limit = FIGURE_SUGGESTIONS_MAX): string[] {
-  const needle = fold(query.trim());
+  const needle = fold(query);
   if (!needle) return [];
   if (FIGURES.some(figure => figure.danceId === danceId && figure.keys.includes(needle))) return [];
   const shown = locale === 'ja-JP' ? 'ja' : 'en';

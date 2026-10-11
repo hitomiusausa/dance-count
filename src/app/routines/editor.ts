@@ -1,5 +1,6 @@
 import { RoutineEditorState } from '../../engine/routine-editor-state.js';
-import { checkCounts, type CountsProblem } from './counts.ts';
+import { checkCounts, normalizeCounts, type CountsProblem } from './counts.ts';
+import { foldFigureName } from './figure-names.ts';
 import { FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 import type { Routine, RoutineFigure } from './routine.ts';
 
@@ -11,8 +12,13 @@ import type { Routine, RoutineFigure } from './routine.ts';
 // 変更した操作は true を返す（画面はその時だけ保存する）。
 export interface FigureDraft { name: string; counts: string }
 export type OpenRow = { kind: 'edit'; index: number; draft: FigureDraft } | { kind: 'add'; draft: FigureDraft };
-export type DraftReason = CountsProblem | 'name' | null;
-export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason }
+export type DraftReason = CountsProblem | 'sameName' | 'name' | null;
+// 主ボタンの働き（Ruling 50-7）。画面はこれで文字・アイコン・押した時の処理を選ぶ（画面に判定を書かない）。
+// add/done＝普通の確定、addCopy＝同じ名前の代表を複製して追加、matchCounts＝欄を代表にそろえる、updateAll＝同じ名前の全行をまとめて確定。
+export type DraftAction = 'add' | 'done' | 'addCopy' | 'matchCounts' | 'updateAll';
+// 同じ名前の代表（番号の若い行）と、自分以外で同じ名前の件数（Ruling 50-1）。
+export interface SameName { index: number; name: string; counts: string; others: number }
+export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason; action: DraftAction; same?: SameName }
 
 type Meta = Omit<Routine, 'id' | 'danceId' | 'name' | 'bpm' | 'countInBars' | 'source' | 'status' | 'figures'>;
 
@@ -40,12 +46,27 @@ export class RoutineEditor {
   get canAdd(): boolean { return this.routine.figures.length < FIGURES_MAX; }
 
   // 入力欄の値の検証。理由の1行は同時に1つ（カウント → 名前の順）。空のカウントは理由を出さない。
-  check(draft: FigureDraft = this.open?.draft ?? { name: '', counts: '' }): DraftCheck {
+  // 同じ名前（Ruling 50）: 名前の仲間に入る時はその仲間のカウントを受け取る。仲間のカウントを変える時は仲間ごと変わる。
+  // 追加の行は「同じ名前」がカウントの理由より先、編集の行はカウントの理由が先。
+  check(draft: FigureDraft = this.open?.draft ?? { name: '', counts: '' }, open: OpenRow | null = this.open): DraftCheck {
+    const editIndex = open?.kind === 'edit' ? open.index : null;
+    const plain: DraftAction = editIndex === null ? 'add' : 'done';
     const counts = checkCounts(this.routine.danceId, draft.counts);
-    if (counts.problem) return { valid: false, counts: counts.counts, reason: counts.problem };
     const named = draft.name.trim() !== '';
-    if (counts.empty) return { valid: false, counts: counts.counts, reason: null };
-    return { valid: named, counts: counts.counts, reason: named ? null : 'name' };
+    const same = named ? this.sameName(draft.name, editIndex) : undefined;
+    const matches = !!same && !counts.problem && !counts.empty && counts.counts === normalizeCounts(same.counts);
+    if (editIndex === null && same && !matches) return { valid: false, counts: counts.counts, reason: 'sameName', action: 'addCopy', same };
+    if (counts.problem) return { valid: false, counts: counts.counts, reason: counts.problem, action: plain };
+    if (editIndex !== null && same) {
+      const current = this.routine.figures[editIndex]!;
+      const renamed = foldFigureName(draft.name) !== foldFigureName(current.name);
+      if (renamed && !matches) return { valid: false, counts: counts.counts, reason: 'sameName', action: 'matchCounts', same };
+      if (!renamed && !counts.empty && counts.counts !== normalizeCounts(current.counts)) {
+        return { valid: true, counts: counts.counts, reason: null, action: 'updateAll', same };
+      }
+    }
+    if (counts.empty) return { valid: false, counts: counts.counts, reason: null, action: plain };
+    return { valid: named, counts: counts.counts, reason: named ? null : 'name', action: plain };
   }
 
   openRow(index: number): boolean {
@@ -80,12 +101,13 @@ export class RoutineEditor {
     return this.close();
   }
 
-  // 閉じ方の原則: 有効なら確定・無効なら捨てる。
+  // 閉じ方の原則: 有効なら確定・無効なら捨てる。名前そのままで仲間のカウントを変えた時は、同じ名前の全行のカウントを
+  // 1 回の変更でそろえる（Ruling 50-4。ほかの行の名前の表記は触らない。元に戻す 1 回で全部戻る）。
   close(): boolean {
     const open = this.open;
     this.open = null;
     if (!open) return false;
-    const check = this.check(open.draft);
+    const check = this.check(open.draft, open);
     if (!check.valid) return false;
     const figure = { name: open.draft.name.trim(), counts: check.counts };
     if (open.kind === 'add') {
@@ -94,8 +116,30 @@ export class RoutineEditor {
     }
     const current = this.routine.figures[open.index];
     if (!current || (current.name === figure.name && current.counts === figure.counts)) return false;
-    this.edits.update((value: { figures: RoutineFigure[] }) => { Object.assign(value.figures[open.index]!, figure); });
+    const group = check.action === 'updateAll' ? foldFigureName(current.name) : null;
+    this.edits.update((value: { figures: RoutineFigure[] }) => {
+      if (group !== null) value.figures.forEach(item => { if (foldFigureName(item.name) === group) item.counts = figure.counts; });
+      Object.assign(value.figures[open.index]!, figure);
+    });
     return true;
+  }
+
+  // 「複製して追加」（Ruling 50-2）: 同じ名前の代表と同じ名前（代表の表記）・同じカウントを末尾に 1 件足して閉じる。打ったカウントは使わない。
+  addCopy(): boolean {
+    if (this.open?.kind !== 'add') return false;
+    const { action, same } = this.check();
+    if (action !== 'addCopy' || !same) return false;
+    this.open = null;
+    this.edits.addFigure({ id: this.newFigureId(), name: same.name, counts: same.counts });
+    return true;
+  }
+
+  // 「カウントを合わせる」（Ruling 50-3）: 欄を代表のカウントと表記にそろえるだけ。行は開いたまま（変更はまだ無いので false）。
+  matchCounts(): boolean {
+    if (this.open?.kind !== 'edit') return false;
+    const { action, same } = this.check();
+    if (action === 'matchCounts' && same) this.open = { ...this.open, draft: { name: same.name, counts: same.counts } };
+    return false;
   }
 
   setMoreOpen(open: boolean): boolean {
@@ -194,6 +238,15 @@ export class RoutineEditor {
     if (this.open.kind === 'add') return { figures: [...figures, draftFigure], index: figures.length };
     figures[this.open.index] = { ...draftFigure, id: figures[this.open.index]!.id };
     return { figures, index: this.open.index };
+  }
+
+  // 自分以外で同じ名前の行（Ruling 50-1）。代表は番号の若い行。無ければ undefined。
+  private sameName(name: string, exceptIndex: number | null): SameName | undefined {
+    const folded = foldFigureName(name);
+    const indexes = this.routine.figures.flatMap((figure, index) => (index !== exceptIndex && foldFigureName(figure.name) === folded ? [index] : []));
+    if (indexes.length === 0) return undefined;
+    const first = this.routine.figures[indexes[0]!]!;
+    return { index: indexes[0]!, name: first.name, counts: first.counts, others: indexes.length };
   }
 
   private draftOf(index: number): FigureDraft {

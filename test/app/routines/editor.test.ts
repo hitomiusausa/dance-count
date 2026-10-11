@@ -18,9 +18,9 @@ const names = (e: RoutineEditor) => e.routine.figures.map(figure => `${figure.na
 test('add: the form opens empty, "Add" works only when valid, the counts are normalized', () => {
   const e = editor([]);
   e.openAdd();
-  assert.deepEqual(e.check(), { valid: false, counts: '', reason: null });
+  assert.deepEqual(e.check(), { valid: false, counts: '', reason: null, action: 'add' });
   e.setDraft({ name: 'ウィスク', counts: '１２ａ３' });
-  assert.deepEqual(e.check(), { valid: false, counts: '12a3', reason: 'symbols' });
+  assert.deepEqual(e.check(), { valid: false, counts: '12a3', reason: 'symbols', action: 'add' });
   assert.equal(e.decide(), false);
   e.setDraft({ counts: '１２＆３' });
   assert.equal(e.decide(), true);
@@ -198,4 +198,106 @@ test('duplicate with an invalid draft drops the draft, copies the stored figure 
   assert.equal(e.duplicateOpen(), true);
   assert.deepEqual(names(e), ['A:123', 'B:123', 'B:123', 'C:123']);
   assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'B', counts: '123' } });
+});
+
+// Ruling 50（D13）: 名前の仲間に入る時はその仲間のカウントを受け取る。仲間のカウントを変える時は仲間ごと変わる。
+test('add with the same name and empty counts: "Add a copy" adds the first same-named figure as it is, one undo step (Ruling 50-2a)', () => {
+  const e = editor([['ナチュラルターン', '123'], ['ウィスク', '12&3'], ['ウィスク', '123']]);
+  e.openAdd();
+  e.setDraft({ name: ' ウィスク ' });
+  const check = e.check();
+  assert.equal(check.action, 'addCopy');
+  assert.equal(check.reason, 'sameName');
+  assert.equal(check.valid, false);
+  assert.deepEqual(check.same, { index: 1, name: 'ウィスク', counts: '12&3', others: 2 });
+  assert.equal(e.close(), false); // 無効＝捨てる（別の行をタップして勝手に複製が増えない）
+  assert.equal(e.routine.figures.length, 3);
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク', counts: '123' });
+  assert.equal(e.addCopy(), true);
+  assert.equal(e.open, null);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3', 'ウィスク:123', 'ウィスク:12&3']);
+  e.undo();
+  assert.equal(e.routine.figures.length, 3);
+});
+
+test('add with the same name and the same counts is a plain "Add" (Ruling 50-2b)', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク', counts: '１２＆３' });
+  const check = e.check();
+  assert.deepEqual([check.valid, check.reason, check.action], [true, null, 'add']);
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3', 'ウィスク:12&3']);
+});
+
+test('add with the same name and invalid counts: the same name comes before the counts reason (Ruling 50-2c)', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク', counts: '12a3' });
+  assert.deepEqual([e.check().valid, e.check().reason, e.check().action], [false, 'sameName', 'addCopy']);
+  e.setDraft({ counts: '&123' });
+  assert.equal(e.check().reason, 'sameName');
+});
+
+test('edit: renaming into a same-named group asks to use that count; close drops it; after matching it is "Done" (Ruling 50-3d)', () => {
+  const e = editor();
+  e.openRow(0);
+  e.setDraft({ name: 'うぃすく' });
+  assert.equal(e.check().action, 'done'); // ひらがなは別の名前
+  e.setDraft({ name: 'ｳｨｽｸ' });
+  const check = e.check();
+  assert.deepEqual([check.valid, check.reason, check.action], [false, 'sameName', 'matchCounts']);
+  assert.deepEqual(check.same, { index: 1, name: 'ウィスク', counts: '12&3', others: 1 });
+  assert.equal(e.close(), false);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3']);
+  e.openRow(0);
+  e.setDraft({ name: 'ｳｨｽｸ', counts: '12a3' });
+  assert.equal(e.check().reason, 'symbols'); // 編集の行はカウントの理由が先
+  e.setDraft({ counts: '123' });
+  assert.equal(e.matchCounts(), false);
+  assert.deepEqual(e.open?.draft, { name: 'ウィスク', counts: '12&3' });
+  assert.deepEqual([e.check().valid, e.check().action], [true, 'done']);
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e), ['ウィスク:12&3', 'ウィスク:12&3']);
+});
+
+test('edit: same name, new counts, two others: "Update all 3" changes all three in one undo step (Ruling 50-4e)', () => {
+  const e = editor([['ウィスク', '12&3'], ['ナチュラルターン', '123'], ['whisk', '12&3'], ['WHISK', '12&3'], ['Whisk', '12&3']]);
+  e.openRow(2);
+  e.setDraft({ counts: '123' });
+  const check = e.check();
+  assert.deepEqual([check.valid, check.reason, check.action], [true, null, 'updateAll']);
+  assert.deepEqual(check.same, { index: 3, name: 'WHISK', counts: '12&3', others: 2 });
+  assert.equal(e.close(), true);
+  assert.deepEqual(names(e), ['ウィスク:12&3', 'ナチュラルターン:123', 'whisk:123', 'WHISK:123', 'Whisk:123']);
+  e.undo();
+  assert.deepEqual(names(e), ['ウィスク:12&3', 'ナチュラルターン:123', 'whisk:12&3', 'WHISK:12&3', 'Whisk:12&3']);
+});
+
+test('same name: half-width kana and letter case fold together; spaces inside the name do not (Ruling 50-1f)', () => {
+  const e = editor([['ウィスク', '12&3'], ['Natural Turn', '123'], ['ナチュラル ターン', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'ｳｨｽｸ' });
+  assert.equal(e.check().action, 'addCopy');
+  e.setDraft({ name: 'natural turn' });
+  assert.equal(e.check().action, 'addCopy');
+  e.setDraft({ name: 'naturalturn' });
+  assert.equal(e.check().action, 'add');
+  e.setDraft({ name: 'ナチュラルターン' });
+  assert.equal(e.check().action, 'add');
+});
+
+test('the open row is not its own same name; old mismatched data stays until touched (Ruling 50-1g・5)', () => {
+  const e = editor([['ウィスク', '12&3'], ['ナチュラルターン', '123']]);
+  e.openRow(0);
+  e.setDraft({ counts: '123' });
+  assert.deepEqual([e.check().valid, e.check().action], [true, 'done']);
+  e.setDraft({ name: 'ｳｨｽｸ' }); // 自分の表記を変えただけ（ほかに同じ名前なし）
+  assert.equal(e.check().action, 'done');
+  const old = editor([['ウィスク', '12&3'], ['ウィスク', '123']]);
+  old.openRow(1);
+  assert.deepEqual([old.check().valid, old.check().action], [true, 'done']); // 触るまで何もしない
+  old.setDraft({ counts: '1&23' });
+  assert.equal(old.check().action, 'updateAll');
 });

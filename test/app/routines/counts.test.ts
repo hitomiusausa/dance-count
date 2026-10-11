@@ -15,7 +15,7 @@ test('allowed symbols are listed per dance without @ (Ruling 38 table)', () => {
     waltz: '1 2 3 &', vwaltz: '1 2 3 &', tango: 'S Q &', slowfox: 'S Q &', quickstep: 'S Q &',
     rumba: '1 2 3 4 &', chacha: '1 2 3 4 & a', samba: '1 2 S Q & a', pasodoble: '1 2 3 4 5 6 7 8 &', jive: '1 2 3 4 5 6 a'
   };
-  for (const [danceId, symbols] of Object.entries(expected)) assert.equal(allowedSymbols(danceId), symbols, danceId);
+  for (const [danceId, symbols] of Object.entries(expected)) assert.equal(allowedSymbols(danceId, 'en').split(' · ').join(' '), symbols, danceId);
 });
 
 test('valid counts pass after normalizing', () => {
@@ -44,4 +44,21 @@ test('a count starting with & or a is "leading" (every figure fails AMBIGUOUS_LE
 test('right symbols in an order that cannot be counted are "invalid"', () => {
   assert.equal(checkCounts('waltz', '1&&2').problem, 'invalid');
   assert.equal(checkCounts('samba', 'Q&').problem, 'invalid'); // サンバの Q は半拍で & を足す余地がない
+});
+
+// Ruling 50（D14）: 使える文字は「・」区切りで常に見せる。案内どおり「・」を打っても通る。
+test('the middle dot (and its half-width form) is removed like spaces (Ruling 50-D14-5)', () => {
+  assert.equal(normalizeCounts('1・2・3・&'), '123&');
+  assert.equal(normalizeCounts('1･2･3'), '123');
+  assert.equal(checkCounts('waltz', '1・2・&・3').problem, null);
+});
+
+test('allowed symbols in Japanese are joined by 「・」 with no spaces (Ruling 50-D14-1)', () => {
+  assert.equal(allowedSymbols('waltz', 'ja-JP'), '1・2・3・&');
+  assert.equal(allowedSymbols('chacha', 'ja-JP'), '1・2・3・4・&・a');
+});
+
+test('allowed symbols in English are joined by " · " (Ruling 50-D14-1)', () => {
+  assert.equal(allowedSymbols('waltz', 'en'), '1 · 2 · 3 · &');
+  assert.equal(allowedSymbols('tango', 'en'), 'S · Q · &');
 });
