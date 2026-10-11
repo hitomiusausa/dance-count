@@ -3,7 +3,11 @@ export type ScreenId = 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | '
 export type ScreenKind = 'root' | 'focus' | 'list';
 export type TabId = 'practice' | 'routines' | 'settings';
 export type RouteParams = { danceId?: string; routineId?: string };
-export interface Route { screen: ScreenId; params: RouteParams }
+// 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33）。設定・hints・再生状態には書かない。
+export type UiState = 'no-sound' | 'wakelock-tip';
+export type RouteQuery = { uiState?: UiState };
+export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery }
+export type RouteTarget = Pick<Route, 'screen' | 'params'>;
 
 interface ScreenSpec { kind: ScreenKind; parent: ScreenId | null; tab: TabId; path: string }
 
@@ -28,7 +32,7 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
 const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'S4', path: '/routines/:routineId/edit' }];
 
 const ID_SEGMENT = /^[A-Za-z0-9_-]+$/;
-const HOME: Route = { screen: 'S1', params: {} };
+const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip'];
 
 const PATTERNS = [
   ...(Object.entries(SCREENS) as Array<[ScreenId, ScreenSpec]>).map(([screen, spec]) => ({ screen, path: spec.path })),
@@ -36,7 +40,9 @@ const PATTERNS = [
 ].map(({ screen, path }) => ({ screen, segments: path.split('/').filter(Boolean) }));
 
 export function parseHash(hash: string): Route {
-  const path = hash.replace(/^#/, '').split('?')[0] ?? '';
+  const [rawPath = '', rawQuery = ''] = hash.replace(/^#/, '').split('?');
+  const path = rawPath;
+  const query = parseQuery(rawQuery);
   const segments = path.split('/').filter(Boolean);
   for (const pattern of PATTERNS) {
     if (pattern.segments.length !== segments.length) continue;
@@ -50,12 +56,20 @@ export function parseHash(hash: string): Route {
       }
       return expected === actual;
     });
-    if (matched) return { screen: pattern.screen, params };
+    if (matched) return { screen: pattern.screen, params, query };
   }
-  return { ...HOME, params: {} };
+  return { screen: 'S1', params: {}, query };
 }
 
-export function buildHash(route: Route): string {
+// 知らないキー・値は捨てる。
+function parseQuery(raw: string): RouteQuery {
+  const value = new URLSearchParams(raw).get('ui-state');
+  const uiState = UI_STATES.find(state => state === value);
+  return uiState ? { uiState } : {};
+}
+
+// クエリは出さない（遷移すると ui-state は消える）。
+export function buildHash(route: RouteTarget): string {
   const params = route.params as Record<string, string | undefined>;
   const candidates = PATTERNS.filter(pattern => pattern.screen === route.screen);
   for (const pattern of candidates) {

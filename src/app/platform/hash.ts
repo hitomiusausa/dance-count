@@ -18,3 +18,8 @@ export function setHash(hash: string, { replace = false }: { replace?: boolean }
     window.location.hash = hash;
   }
 }
+
+// 「戻る」で履歴を1つ戻る（戻り先があると分かっている時だけ呼ぶ。state/route.ts の goBack）。
+export function historyBack(): void {
+  window.history.back();
+}

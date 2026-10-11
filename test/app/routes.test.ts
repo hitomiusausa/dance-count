@@ -20,20 +20,35 @@ test('every screen hash from spec §3 parses to its screen and params', () => {
     ['#/about', 'S13', {}]
   ];
   for (const [hash, screen, params] of cases) {
-    assert.deepEqual(parseHash(hash), { screen, params }, hash);
+    assert.deepEqual(parseHash(hash), { screen, params, query: {} }, hash);
     assert.equal(buildHash({ screen, params }), hash, `round trip ${hash}`);
   }
 });
 
 test('empty, malformed and unknown hashes fall back to home instead of throwing', () => {
   for (const hash of ['', '#', '#/nope', '#/practice', '#/practice/', '#/practice/a/b', '#/routines/x/delete', 'garbage', '#/practice/%E3%81%82', '#/practice/<script>']) {
-    assert.deepEqual(parseHash(hash), { screen: 'S1', params: {} }, JSON.stringify(hash));
+    assert.deepEqual(parseHash(hash), { screen: 'S1', params: {}, query: {} }, JSON.stringify(hash));
   }
 });
 
-test('trailing slash and a query after the path are ignored', () => {
-  assert.deepEqual(parseHash('#/settings/'), { screen: 'S6', params: {} });
-  assert.deepEqual(parseHash('#/practice/jive?ui-state=no-sound'), { screen: 'S2', params: { danceId: 'jive' } });
+test('trailing slash is ignored', () => {
+  assert.deepEqual(parseHash('#/settings/'), { screen: 'S6', params: {}, query: {} });
+});
+
+test('known ui-state values are read from the hash query (Ruling 33)', () => {
+  assert.deepEqual(parseHash('#/practice/jive?ui-state=no-sound'), { screen: 'S2', params: { danceId: 'jive' }, query: { uiState: 'no-sound' } });
+  assert.deepEqual(parseHash('#/practice/waltz?x=1&ui-state=wakelock-tip').query, { uiState: 'wakelock-tip' });
+});
+
+test('unknown ui-state values and other keys are dropped', () => {
+  for (const hash of ['#/practice/waltz?ui-state=boom', '#/practice/waltz?ui-state=NO-SOUND', '#/practice/waltz?ui-state=', '#/practice/waltz?debug=1', '#/practice/waltz?']) {
+    assert.deepEqual(parseHash(hash).query, {}, hash);
+  }
+});
+
+test('buildHash never writes the query, so navigating clears ui-state', () => {
+  const route = parseHash('#/practice/waltz?ui-state=no-sound');
+  assert.equal(buildHash(route), '#/practice/waltz');
 });
 
 test('tabs show on root and list screens only (Ruling 17)', () => {
