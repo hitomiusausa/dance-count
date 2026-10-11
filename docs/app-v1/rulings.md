@@ -307,3 +307,117 @@
 **外れた時の代償**: 英語・日本語が混ざった数え方（「スロー・クイック」＋「いち・に」）を1パックにできない。要望があれば `vocabularyId` を増やす（語彙の追加で対応でき、形式は変えない）。
 - **D9 問い合わせ先（2026-10-11）**: プライバシーポリシー・アプリについての問い合わせ先は **info@kugainc.com**。
 - **仕様書承認（2026-10-11）**: ひとみうさが仕様書（§4・§13 を中心に確認）を承認。実装計画へ進む。
+
+---
+
+## 追加裁定 3（2026-10-11・段2計画の前に）
+
+前提: 計画担当（Opus）の問い Q1〜Q14 への裁定。段の順序は全体地図「仕様 §13 からの読み替え」（2 → 3 → 4 → 5 は逐次、並列は段6のみ）を前提にする。
+
+## Ruling 26（Q1）設定の保存は段2に前倒し（IndexedDB v2 の器）
+
+**決定**: 計画者の推奨に同意。`src/app/platform/storage.ts` を段2で実装し、DB `dance-count-v2` を version 2 に上げる。
+- 版上げ（`onupgradeneeded`）: `voice-packs` は触らない（無ければ keyPath `id` で作る＝旧店の互換）。`routines`（keyPath `id`）と `settings`（out-of-line key・文字列）を無ければ作る。削除・改名はしない。手続きは `upgradeAppDatabase(db, oldVersion)` として export し、スタブで単体テスト（0→2 と 1→2 の両方で3ストアが揃う・`voice-packs` の既存データが残る）。段1の `AppStorage.put(store, key, value)` は仮の型なので、keyPath を持つストア（`voice-packs`・`routines`）では key を渡さない形に直してよい。
+- 設定は `settings` ストアの **1レコード（key `'app'`）**に仕様 §7 の形で持ち、`schemaVersion: 1` を含める。読みは起動時に1回（欠けたキーは既定値で埋める）、書きは変更のたびに read-merge-write。S1 の描画は設定の読み込み完了後。IndexedDB が開けない・失敗したらメモリ内の既定値で続行し、画面には何も出さない（設定は失って困るデータではない）。
+- 段2で保存する項目: `uiLocale`・`lastDanceId`・`lastTemplateByDance`・`speedPresetByDance`・`customBpmByDance`・`metronome`・`countInBars`・`loop`・`hints.wakeLockTipShown`。`selectedVoiceId`／`voiceLocale`／`voiceOffsetMsByVoiceId` は段4、`hints.homeScreenCardDismissed` は段7、`hints.backupTip*` は段3・4で足す。
+- `uiLocale`: 保存値があれば端末言語より優先。切替（S1 右上・S6）で即保存。`<html lang>`・`<title>` も追従（HANDOVER §5-2）。localStorage `dance-count-v2-ui-locale` の移行は**段2**（uiLocale の持ち主がやる。読めたら保存して消す）。`dance-count-v2-routine-draft:*` の移行は段3のまま。
+- `lastDanceId` は **S2 を開いた時点**（タイル・前回カードのタップ）で書く。再生した時ではない。「前回」カードの表示条件はこの値の有無。
+- `recorded-voice-store.js`（version 1 直開き）は段2では触らない。新アプリから呼ぶ段4までに段3で `platform/storage` 経由へ作り直す（HANDOVER §5）。`navigator.storage.persist()` は段7のまま。
+- 旧画面（`npm run legacy`＝4173）と新アプリ（5173／4174）はオリジンが別なので `VersionError` は起きない。同一オリジンで旧画面を開かない運用を段2計画にも1行書く。
+
+**理由**: G2（1タップ再生）と「種目ごとの記憶」は保存が無いと成り立たず、段2と段3は逐次なので前倒ししても衝突しない。「版上げは1か所・1回」の原則（全体地図の持ち越し表）は、やる段が変わるだけで守られる。
+
+**外れた時の代償**: 段3の仕事が減るだけ。版上げの手続きにバグがあると録音パック（段4）に波及するので、スタブ試験で 1→2 の既存データ保持を固定する。
+
+## Ruling 27（Q2）行き先がまだ無い画面の扱い
+
+**決定**: (a)(b)(c) とも計画者の推奨に同意。
+- (a) S7 は段2で「最小の一覧」: `[data-group="voice"]` に `role="radio"` の行1つ「標準の声（英語）/ Standard voice (English)」、`aria-checked="true"`。試聴 ▶・受け取る・録音するのボタンは**置かない**（動かないボタンを見せない。段4・5で足す）。一覧画面なので下タブ＋「‹ 戻る」。タブの強調は `routes.ts` のとおり「設定」（S1 から来ても）。これが気になるかは段2の終わりの見た目確認で見る。
+- (b) S11 は段2で静的3項目＋「もう一度 ▶ を押してください」（仕様 §4 S11・§11 の文言をそのまま i18n キーに）。集中画面（戻るのみ）。監修は段8。
+- (c) 「ホーム画面に追加」初回案内カードは段7（S12 と同時）。段2の S1 には出さない。`hints.homeScreenCardDismissed` も段7で足す。
+
+**理由**: タップして何も起きないリンクを段2の実機確認に持ち込まない。S7・S11 の最小版は i18n キーと画面の器だけで、後段の実装を縛らない。
+
+**外れた時の代償**: 段2の実機確認で「先生の声で練習」が行き止まり（標準の声1行だけ）。害はない。
+
+## Ruling 28（Q3・Q4）現在カウントの表示語と「はじめの合図」中の表示
+
+**決定**:
+- Q3: 計画者の推奨に同意。大きな表示（96px／PC 200px）は副題と同じトークン表記。整形関数は `src/app/`（例 `src/app/lib/count-display.ts`、純粋）に1つ: `voiceKey → 表示語`＝ one〜eight → `1`〜`8`、slow → `S`、quick → `Q`、and → `&`、ah → `a`（トークン `e` は voiceKey `and` 経由で `&`）。副題はテンプレートをトークン化（`rhythm-parser` か compile 結果の events）→ voiceKey → この関数 → 空白区切り。声の言語・UI 言語に依存しない。「Slow」「スロー」「いち」は出さない。`count-vocabularies` の `prompts` は録音用の表記であり、表示には使わない。単体テストで10種目の `templates[0]` が Ruling 22 の表と一致することを固定。`font-variant-numeric: tabular-nums`。
+- Q4: 計画者の推奨に同意。`countIn:true` の間は大きな数字の代わりに「はじめの合図… / Lead-in…」（32px、`--ink2`）。拍インジケータは全て「現在でない状態」（灰の下線 3px）で琥珀なし。■ はそのまま押せる。**エンジンは変えない**。
+  - 将来、合図中も拍を光らせたくなったら、UI で時刻から計算せず、エンジンの `frame()` に `countInBeat`（同じ `beatSeconds` から算出）を**追加フィールド**として足す。それは第2の時間計算ではない。v1 ではやらない。
+
+**理由**: 表示語を音声から切り離せば、声を日本語に替えても画面は変わらず、幅も安定する。合図中の拍表示は「あると嬉しい」程度で、エンジン無変更の価値の方が大きい。
+
+**外れた時の代償**: 「S」「Q」の意味が分からない初見者がいる可能性。副題と同じ表記なので一貫はしている。要望があれば S11 系の説明に「S＝スロー、Q＝クイック」を1行足す。
+
+## Ruling 29（Q5）Bluetooth の表示遅延はエンジンの `frame()` に表示用の遅れを渡す（計画者の推奨を却下）
+
+**決定**: UI 側の setTimeout 遅延キューは**採用しない**。代わりに `PracticeAudioEngine` のコンストラクタオプションに `displayLatencySeconds: () => number`（既定 `() => 0`）を足し、`frame()` の経過時間だけを `elapsed = this.audioContext.currentTime - this.displayLatencySeconds() - startTime` にする。予約（`scheduleAhead`・`scheduleClick`・`start()` の戻り値）は一切触らない。
+- 呼び出し側: `platform/audio-context.ts` が `() => clamp(context.outputLatency ?? 0, 0, 0.5)` を渡す（取れない・NaN・負・0.5秒超は 0）。毎フレーム読むので Bluetooth の接続・切断に追従する。
+- テスト: `test/engine/audio-engine.test.js` に「latency 0.2 のとき currentTime=T の frame は、latency 0 の currentTime=T−0.2 と同じ `originalTick`・`countIn` を返す」を追加。`npm run timing:compare` と予約時刻のゴールデンは**変化ゼロ**が条件（既定 0 なので既存テストも不変）。
+- 手動つまみ（±200ms）は v1 では入れない（同意）。
+
+**理由**: 「表示だけ遅らせる」は仕様 §9「表示は currentTime（＋outputLatency）から tick を読む」そのもので、その計算は `frame()` にある。setTimeout の列は壁時計で動く第2の時計で、AGENTS.md「第2の時間計算を作らない」に反し、停止時の掃除・順序・ジッタの面倒も増える。エンジンの変更は `frame()` の1行＋オプション1つで、onFrame の出力契約は変わらない。
+
+**外れた時の代償**: `src/engine` に手を入れる例外が1つ増える（仕様 §10）。範囲は `frame()` のみと明記し、レビューで予約経路に触れていないことを diff で確認する。
+
+## Ruling 30（Q6・Q13）警告の枠は1つ、中断の1行も同じ枠
+
+**決定**: S2/S5 は見出し直下に `[data-alert]`（`role="status"`）の枠を**1つだけ**持ち、同時に出すのは1件。優先順位: 音が出ないバナー ＞ 中断の1行 ＞ WakeLock の案内。
+- Q6（WakeLock 不可の案内）: 計画者の推奨に同意。文言は §11 のまま、「閉じる / Close」は `[data-alert-action]`（U4 除外、U1/U3/U7 適用）。表示した時点で `hints.wakeLockTipShown=true`（閉じなくても次回は出さない）。警告バナーと重なったら案内は出さず（フラグも立てず）次の再生時に回す。「取れない」＝`navigator.wakeLock` が無い、または最初の `request('screen')` が reject。375 幅で高さ 120px 以下（Ruling 23 と同じ制約）。
+- Q13（中断）: 計画者の推奨に同意。`statechange` で `suspended` / `'interrupted'`（iOS 独自値。文字列比較）を検知したら**エンジンが再生中のときだけ**停止し、`[data-alert]` に「再生が止まりました。もう一度 ▶ を押してください。」（操作なし）。▶ を押したら消す。再開は ▶ のタップ内で `resume()` → 通常の開始（途中からの再開はしない）。コンテキストが勝手に `running` に戻っても**自動再開しない**。WakeLock は停止時に解放し、`visibilitychange` で visible に戻ったら再生中のときだけ再取得。
+- `ui:check` は S2 を通常・`ui-state=no-sound`・`ui-state=wakelock-tip` の3状態で検査（Ruling 33）。強制表示はフラグを書かない。
+
+**理由**: 枠を1つにすれば「同時に出たら」の組み合わせが消え、U4 の例外も `[data-alert-action]` の1語で済む。中断後の自動再開は予約済みの音が失われていて同期が取れないので、必ず人の ▶ から始め直す方が安全。
+
+**外れた時の代償**: 案内を見逃すと WakeLock の助言は二度と出ない。S6 から読める導線が無いので、要望があれば S11 に1行足す。
+
+## Ruling 31（Q7・Q8）「くわしく」の範囲と任意の速さ
+
+**決定**:
+- Q8: 計画者の推奨に同意。段2の「くわしく」は 1 カウントの型（テンプレート2つ以上の種目のみ、`[data-group="pattern"]`）・2 速さの細かい調整（`[data-group="speed-fine"]`＝スライダー 40〜220 step 1 と「競技の速さ（♩=min〜max）」ボタン、同じグループ）・3 繰り返す（`role="switch"`）。4 声のタイミングは段4（標準音声の `voiceOffsetMsByVoiceId` 込み）。5 Bluetooth 補正は **v1 に入れない**（Ruling 29 の自動分のみ）。開いた状態の主要操作数: 5＋型(1)＋細かい調整(1)＋繰り返す(1)＝8、段4で 9。上限ちょうどになるので、これ以上の項目は追加前に裁定を取る。
+- Q7: 計画者の推奨に同意し、1点足す。任意の値のとき速さ3択は全て `aria-checked="false"`、`summary[data-more]` のラベルに「くわしく · ♩=100 / More options · ♩=100」の形で値を併記（閉じていても現在の速さが分かる）。3択を押すと `customBpmByDance[danceId]` を消し、`speedPresetByDance[danceId]` をそのプリセットにする。「競技の速さ」は `competitionBpm.min` を任意値として入れる。**追加**: 任意の値が3択のどれかの値と一致したら（例 ワルツで競技の速さ 84＝標準）その選択肢を選んだ扱いにし、任意値は持たない（「84 なのに何も選ばれていない」を作らない）。
+
+**理由**: 任意値の表示場所を「くわしく」の行に固定すれば、閉じた状態でも速さが見え、3択の「選択なし」が説明できる。一致時の吸収は小さな規則で画面の矛盾を消す。
+
+**外れた時の代償**: スライダーで 84 に合わせると「標準」に吸われ、任意値として残らない。実害なし。
+
+## Ruling 32（Q9・Q12）即再生の印とアンマウント時の停止
+
+**決定**:
+- Q9: 計画者の推奨に同意。「前回」カードのタップ内で (1) `getPlaybackAudio().unlockInsideTap()`、(2) アプリ内メモリの一回限りの印 `pendingAutoplay = { danceId }`（`src/app/state/` に置く。URL・storage には書かない）、(3) `setHash(S2)`。S2 はマウント時に印が自分の `danceId` と一致すれば**先に印を消してから**再生を開始する（開始に失敗しても印は残さない）。再読み込み・ブラウザの戻る・直接開いたときは印が無いので鳴らない。印の消費が1回限りであることを単体テストで固定。
+- Q12: 計画者の推奨に同意。S2 のクリーンアップ（`useEffect` の戻り）で必ず `engine.stop()` と WakeLock 解放。戻る・ハッシュ変更・どの経路でも同じ。AudioContext 自体は閉じない（platform の単一インスタンスを使い回す）。言語切替は S2 に無いので考慮不要。S2 内での速さ・トグル・型の変更は仕様どおり停止→適用→再開。
+
+**理由**: URL に印を付けると履歴・再読み込みで勝手に鳴り、iOS では解除なしで失敗もする。停止をアンマウントに結び付ければ「止め忘れ」の経路が消える。
+
+**外れた時の代償**: 印を消し忘れると次に S2 を開いた時に鳴る。単体テストで固定。
+
+## Ruling 33（Q10・Q14）ui-state クエリと ui:check の対象
+
+**決定**:
+- Q10: 計画者の推奨に同意し、値を列挙する。形は `#/practice/waltz?ui-state=no-sound`（ハッシュ内）。`Route` に `query: { uiState?: 'no-sound' | 'wakelock-tip' }` を足す（`query` は常に存在、空なら `{}`）。未知のキー・値は捨てる。`buildHash` はクエリを出さない（遷移で消える）。`ui-state` は表示だけを変え、設定・hints・再生状態に書かない。本番ビルドでも有効（害なし）。`test/app/routes.test.ts` に既知値・未知値・クエリなしの3件を足す。
+- Q14: 計画者の推奨に同意。`npm run ui:check` の既定は `http://localhost:5173/`、`DC_BASE_URL` で `npm run preview`（4174）にも向けられる。旧スクリプトは `ui:check:legacy` に改名して残す（既定 URL は 4173 のまま）。段2で検査する画面と状態（375×667・1280×900 の両方、Ruling 7）:
+  - S1 初回（新しいブラウザコンテキスト、U4=2・U12）→ `#/practice/waltz` を開いて `#/` に戻る → S1 前回あり（U4=3・U12）。前回カードは `lastDanceId` の実経路で出す（偽装クエリは作らない。Ruling 26 の「S2 を開いた時点で書く」が前提）。
+  - S2 くわしく閉（U4=5）／開（全体 ≤9）／`ui-state=no-sound`／`ui-state=wakelock-tip`（後2つは `[data-group="speed"]`・`[data-play]` が初期ビューポート内、Ruling 23）。1280 では Ruling 21 の判定も。
+  - S7 最小・S11・S3・S6 の器（U1〜U15 のうち該当するもの。U11 の種別照合を含む）。
+  - U14（禁止語）は `node --test` 側（既存）。
+
+**理由**: 状態を URL で強制できれば検査は決定的で、実経路で作れる状態（前回カード）は実経路で作る方が証拠として強い。
+
+**外れた時の代償**: `ui-state` の値が増えると列挙の保守が要る。3つ目以降は裁定を取ってから足す。
+
+## Ruling 34（Q11）書体は段2で両方同梱
+
+**決定**: 計画者の推奨に同意。`@fontsource/inter` と `@fontsource/noto-sans-jp` を段2で同梱し、**使う太さの CSS だけ** import（例 `@fontsource/inter/400.css`・`/600.css`・`/700.css`・`/800.css`。Noto Sans JP も同じ太さ。パッケージにその太さが無ければ1段下で代用し計画に記録）。`font-display: swap`。`font-family: "Inter", "Noto Sans JP", sans-serif`（仕様 §5）。Google Fonts 等の外部読み込みは禁止（§12）。採用バージョンは段2計画に記録（Context7 で確認）。precache／runtime cache の振り分けは段7（Inter は precache、Noto Sans JP の分割ファイルは runtime cache）。`npm run build` 後に `tools/check-dist.js` が通ること（woff2 が数百ファイルになるのは想定内）。
+
+**理由**: 段2の終わりの見た目確認（D8 の B 案）は日本語の書体が無いと判断できない。unicode-range 分割なので同梱しても初回読み込みは使う範囲だけ。
+
+**外れた時の代償**: dist のファイル数が増える。配信・precache の設計は段7で吸収。
+
+### ひとみうさ判断（段2）
+
+裁定を要する製品判断は**なし**（Q1〜Q14 は仕様・既存裁定の範囲で決められた。お金・公開に関わるものもなし）。段2の終わりの「見た目確認」で、次の3点は実物を見て違和感があれば言ってほしい（判断ではなく確認）:
+1. 大きな現在カウントが「S」「Q」「&」「a」の表記であること（Ruling 28）。
+2. はじめの合図の間は数字の代わりに「はじめの合図…」の文字が出ること（Ruling 28）。
+3. 「くわしく」でスライダーの速さにしたとき、3択はどれも選ばれず「くわしく · ♩=100」のように見えること（Ruling 31）。
