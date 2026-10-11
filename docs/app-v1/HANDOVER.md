@@ -1,34 +1,83 @@
 # アプリ化 v1 — 引き継ぎ（HANDOVER）
 
-更新: 2026-10-12（段3 追加便（D13〜D21）完了（F1〜F7・最終レビュー2・修正便2）。Task F8（D22 同じフィガーなら同じ名前）も完了 `7ba21f5` — ひとみうさの実機の再確認待ち）
-ブランチ: `agent/app-v1`（段3の最終コミットは `git log` 参照）。**main 未マージ・未 push**（ひとみうさの判断で、段4〜8もこのブランチで続け、公開直前にまとめる）
+更新: 2026-10-12 夜〜朝（ひとみうさ就寝中の委任で: 段6a 完了・**段4（声 S7・S8 の録音）完了（実装・レビュー）— 実機確認待ち**・代理決定 D23〜D35 を記録）
+ブランチ: `agent/app-v1`（最新は `git log`。段4の最後は「docs: 段4の締め…」のコミット）。**main 未マージ・未 push**（ひとみうさの判断で、段4〜8もこのブランチで続け、公開直前にまとめる）
 
 ---
 
-## 0. 次のセッションで最初にやること
+## 0. ひとみうさへ — 寝ている間に起きたこと／起きたら最初にやること
 
-1. このファイルを読む
-2. **段3 追加便の実機の再確認**（`docs/app-v1/stage3-device-check.md` の **17〜42**。1〜16 は 2026-10-11 に確認済みで、その指摘が D13〜D18 になった。17〜39 は D13〜D21、40・41 は最終レビュー2 の修正、42 は D22（F8）。ひとみうさの iPhone・Mac の開発サーバーに同じ Wi‑Fi で）→ OK なら **段4（声 S7・S8 録音）の詳細計画**を書く
-   - **確かめる前に必ずページを再読み込み**（Safari が古いコードを持っていることがある。シミュレーターでは最初の表示で文言の鍵がそのまま出た）
-   - 再確認と同じ時に、§6 の「ひとみうさに決めてほしいこと」（a 一覧の形・c 行き先の線の見た目）に答えをもらう
-   - **Task F8（D22: 同じ照合済みフィガーなら同じ名前）は完了**（`7ba21f5`。`figureIdentity` で日英・かなを 1 か所で判定）。関係する行（17〜19・35・39 と英語の画面）は 42 と一緒に見る
-   - 書き手: Opus（superpowers:writing-plans）。全体地図の「段の一覧」「段をまたぐ持ち越し」「人が必要な確認点」と、下の §5 を必ず拾う
-   - 計画の手順は、スクラッチのコピーで実際に動かして確かめてから書く（段1〜3と同じやり方）
-3. `docs/app-v1/stage3-ledger.md` の「持ち越し」「Ruling」と、末尾の「追加便（iPhone 実機確認の指摘 D13〜D18）」（F1〜F7・最終レビュー2・修正便2・D22 まで）を読む
-4. 実機で直しが出たら小さな修正便で。ひとみうさに計画を見せて OK をもらってから superpowers:subagent-driven-development で実装
+### 寝ている間に起きたこと（委任の範囲。お金は 1 円もかかっていない・push もしていない）
+
+1. **段6を 3 つに分けた**（Fable の Ruling 64〜70）。**6a（日本語の標準の声を「作る・測る・確かめる・出荷を止める」仕組み）を完了**。音は 1 本も作っていない（Google Cloud のお試し期間が終わっていて、続けるには従量課金への切り替えが要る → **決定カード**で止まっている）。
+2. **段4（声 S7・S8 の録音）を計画 → 実装 → レビューまで完了**。12 語を録る → ワルツが自分の声で鳴る・声の一覧・声のタイミングまで。テスト 418 → **472**・`ui:check` 113 → **192**・新しいスモーク `smoke:voice`。エンジン（`src/engine`）は 1 行も変えていない。
+3. 途中の判断は Fable が裁定し、**ひとみうさが決める級のものは「代理決定」D23〜D35 として記録**した（下の §0b。全部ひっくり返せる）。
+4. 60〜70代の初めての人の目での通し確認と、**iOS シミュレーター（iPhone SE・iOS 26.3）**での確認をした。わかったこと: (a) iPhone SE の Safari は見える高さが約 548 しかなく、ワルツの画面で声やトグルがスクロールの下に隠れていた → 高さ 600 未満の時だけ配置を詰めた（D33）(b) iOS 26 の Safari は webm でも mp4 でも録って読める (c) **OS のマイク許可のダイアログはシミュレーターでは押せない**ので、録音の先（語の画面・完成の画面）は実機でしか確かめられていない。
+5. 段4の最終レビュー（段4の実装に関わっていない別エージェント）は、この締めの後に別便で走る。結果と直しは `docs/app-v1/stage4-ledger.md` の末尾に足す。
+
+### 起きたら最初にやること
+
+1. このファイルを読む（特に下の **§0b「ひとみうさに見て・決めてほしいこと」**）
+2. **段6の決定カード**（`docs/app-v1/stage6-decision-card.md`）に答える: く！ちゃんのおすすめは **A＝Google で作る（従量課金に切り替え＋月 500 円の予算アラート）**。A ならひとみうさの作業は 5〜10 分（カードの手順）。B（自分で 12 語を録る）なら、段4の実機確認の日に録音の画面で日本語を録るだけ。
+3. **iPhone の実機確認を 1 日で**（Mac で `npm run dev -- --host --port 5199` → iPhone の Safari で `http://<Mac の IP>:5199/?r=<時刻>`。**確かめる前に必ず再読み込み**）:
+   - `docs/app-v1/stage3-device-check.md` の **17〜42**（段3 追加便の再確認。まだ見ていない）
+   - `docs/app-v1/stage4-device-check.md`（段4。A 録音と再生 1〜18・B Safari の小さい画面 19〜24・C 代理決定を実物で 25〜31・F8）
+4. 答えと実機の指摘が出たら、小さな修正便で直す → **段5（配る・受け取る）の詳細計画**へ（書き手: Opus。全体地図の持ち越し表と下の §5 を必ず拾う）。段6b は決定カードの答えしだい（段5と並べて差し込める）。
+5. push したくなったら一言（`agent/app-v1` の push はひとみうさの許可の後だけ）。
+
+## 0b. ひとみうさに見て・決めてほしいこと（ここだけ見れば足りる一覧）
+
+**決めてほしいこと（お金・方向）**
+
+| # | 何を | どこで見る |
+|---|---|---|
+| 1 | **段6の決定カード**: 日本語の標準の声を A（Google・従量課金＋予算アラート。おすすめ）／B（ひとみうさの録音）／C（VOICEVOX。外す）のどれで作るか | `docs/app-v1/stage6-decision-card.md` |
+| 2 | 段3 追加便の (a) 種目のフィガーの一覧の形（今の折り返すボタン／縦の一覧／先頭の数個＋「もっと見る」） | §6・`stage3-device-check.md` 34・37 |
+| 3 | 段3 追加便の (c) ドラッグ中の行き先の線が文字にかかって見えるのが気になるか | §6・`stage3-device-check.md` 20 |
+
+**代理で決めたこと（このままでよければ何もしなくてよい。変えたければ一言）** — 正本は `docs/app-v1/rulings.md` の D23〜D35
+
+| D | 一行で | どこで見る |
+|---|---|---|
+| D23（D31 で訂正） | 録音の前の説明 3 行「12 語を、1 語ずつ録音します。」「録音は、この端末の中にだけ残ります。」「いつでも消せます。」・声の既定名「自分の声（英語）／（日本語）」 | `stage4-device-check.md` 1・5・25 |
+| D24 | 声のタイミングは「‹ 早く」「遅く ›」の 2 ボタン・10ms 刻み・±200・「−20 ms」と数字で出す | 同 8・26 |
+| D25 | 録音の帯に「‹ 前の語」・語は飛ばせない・録り終えた言語は完成画面から・「戻る」は録音を出る（録れた語は保存済み） | 同 6・7・18・27 |
+| D26 | 日本語の標準の声の名前（ID）は `default-ja-female-v1` に固定（男性の声でも変えない） | 決定カード |
+| D27 | VOICEVOX と Mac の読み上げ（`say`）は使わない | 決定カード |
+| D28 | B（自分の録音）を採っても画面の表示は「標準の声（日本語）」（生徒さんに誰の声かは出さない） | 決定カード |
+| D29 | 読ませる文字は いち・に・さん・よん・ご・ろく・なな・はち・スロー・クイック・アンド・ア（「し」「しち」は使わない） | 決定カード |
+| D30 | マイクを拒否した時は、別の画面にせず説明の画面に枠を出し、同じ「録音をはじめる」でやり直せる | 同 13・28 |
+| D31 | 説明の 2 行目は「この iPhone」ではなく「この端末」（Android・PC で違う機種名を見せない） | 同 1・25 |
+| D32 | 途中の声の行はタップで開いて「続きを録音する」「削除」（タップでいきなり録音に行かない） | 同 7・29 |
+| D33 | iPhone SE の Safari（見える高さ 548）の時だけ配置を詰める（ワルツの数字 96 → 72・種目のタイル 64 → 48 など）。ホーム画面のアプリ（667）は変えない。ルーティン再生（S5）の声のチップだけはスクロールの下 | 同 19〜24・30 |
+| D34 | 語の画面の 1 行「ボタンを押したら、すぐ「Slow」と言ってください。」（「1.5 秒」は出さない） | 同 2・4・31 |
+| D35 | 声のタイミングの下に「声が遅れて聞こえたら「早く」を押します。」 | 同 8・26 |
+
+あわせて見てほしい（判断でなく確認）: 完成画面のボタンが「録り直す」ではなく「1 語目から見直す」（何も消えないことが分かる文。D25 と一緒に）・英語の表示で録っても声の既定名は日本語のまま（段5で受け取った声の表示と一緒に決める）。段3 追加便の実機確認の時には、Ruling 50〜54 の「ひとみうさ判断」（区切り「・」・「3件まとめて決定」の文字・常設の行の太さ・影の濃さ・全体の注意の色・カウントの形の並べ方と見出し）も実物を見て決める（§6）。
+
+**実機確認（ひとみうさの iPhone でしかできない）**
+
+- `docs/app-v1/stage3-device-check.md` の **17〜42**（段3 追加便）
+- `docs/app-v1/stage4-device-check.md` の全部（段4。録音の先はシミュレーターで入れなかったので、ここが段4の関門）
+- 段6b の聞き比べ（決定カードで A か B を選んだ後。`docs/app-v1/stage6-listening-check.md`）
 
 ## 1. 読む順番
 
 | 順 | ファイル | 中身 |
 |---|---|---|
 | 1 | `docs/app-v1/HANDOVER.md` | これ |
-| 2 | `docs/app-v1/rulings.md` | 裁定台帳（Ruling 1〜54）と **ひとみうさの決定 D1〜D22** |
+| 2 | `docs/app-v1/rulings.md` | 裁定台帳（Ruling 1〜78）と **ひとみうさの決定 D1〜D22・代理決定 D23〜D35**（一覧は「ひとみうさ判断（Ruling 52）」の節。Ruling 55 以降は Fable の文書をそのまま末尾に足してある） |
 | 3 | `docs/superpowers/specs/2026-10-11-app-v1-design.md` | 承認済み仕様（§3 画面と導線・§4 画面ごと・§5 デザイン・§6 高齢者向け数値基準・§13 段・§14 検証） |
 | 4 | `docs/superpowers/plans/2026-10-11-app-v1-master.md` | 全体地図（段1〜8・担当モデル・人の確認点・持ち越し表） |
 | 5 | `docs/app-v1/stage1-ledger.md` | 段1の作業台帳（裁定・持ち越し・修正の記録） |
 | 5b | `docs/app-v1/stage3-ledger.md` | 段3の作業台帳（SDD の台帳。タスクごとの結果・修正便・持ち越し。末尾に追加便 F1〜F7・最終レビュー2・修正便2） |
 | 5c | `docs/superpowers/plans/2026-10-11-app-v1-stage3.md` | 段3の詳細計画（実装済み。段4の計画の見本）。追加便は `…-stage3-followup.md` |
 | 5d | `docs/app-v1/stage3-device-check.md` | 段3の実機確認表（42項目。17〜42 が追加便の再確認）と撮影済みの画像の一覧 |
+| 5e | `docs/app-v1/stage4-ledger.md` | 段4の作業台帳（タスクごとの結果・修正便・計画者の発見・Open questions の答え・置いておいた Minor・完了条件の再実行） |
+| 5f | `docs/app-v1/stage4-device-check.md` | 段4の実機確認表（A 録音と再生・B Safari の小さい画面・C 代理決定・F8） |
+| 5g | `docs/superpowers/plans/2026-10-12-app-v1-stage4.md` | 段4の詳細計画（実装済み。段5の計画の見本） |
+| 5h | `docs/app-v1/stage4-usability-walk.md` | 段4の使いやすさの通し確認（60〜70代の初見の目・375/1280/320・iOS シミュレーター）。問い 10 個 → Ruling 71〜78 |
+| 5i | `docs/app-v1/stage6-decision-card.md`・`stage6-listening-check.md`・`docs/superpowers/plans/2026-10-12-app-v1-stage6a.md` | 段6の決定カード（ひとみうさ待ち）・聞き比べの確認表（6b で埋める）・段6a の計画 |
 | 参考 | `docs/app-v1/mockups/b-studio-navy.html` | 採用した見た目（B Studio Navy）のモック |
 | 参考 | `docs/app-v1/music-sources.md` | 第2弾「曲＋カウント」の音源調査 |
 | 参考 | `HANDOFF.md`・`AGENTS.md` | プロジェクト全体の歴史と作業ルール |
@@ -53,20 +102,20 @@
 | 1 | 器（エンジン移設・tempo-map・legacy 退避・Vite+Preact+TS の殻） | **完了 2026-10-11** |
 | 2 | 生徒の再生（S1・S2）・iOS 音声解除・WakeLock・ui:check 移植 | **完了 2026-10-11（iPhone 確認 OK）** |
 | 3 | ルーティン（S3〜S5） | **完了（実装・レビュー）2026-10-11**。実機確認 1〜16 済み → 指摘を追加便（D13〜D21）で実装・レビュー済み（2026-10-12 最終レビュー2・修正便2）。Task F8（D22）も完了（`7ba21f5`）— **追加便の実機の再確認待ち**（`stage3-device-check.md` 17〜42） |
-| 4 | 声（S7・S8 録音） | **次**（段3の実機確認の後。詳細計画から） |
-| 5 | 配る・受け取る（S9・S10） | 未着手 |
-| 6 | 日本語標準音声（TTS生成・実測・聴感ゲート） | 未着手（段2〜5と並列可） |
+| 4 | 声（S7・S8 録音） | **完了（実装・レビュー）2026-10-12 — 実機確認待ち**（`stage4-device-check.md`）。最終レビュー（別エージェント）は締めの後に別便 |
+| 5 | 配る・受け取る（S9・S10） | **次**（段3・段4の実機確認の後。詳細計画から） |
+| 6 | 日本語標準音声（TTS生成・実測・聴感ゲート） | 3 つに分けた（Ruling 64）。**6a 仕組み＝完了 2026-10-12**（音は 0 本・課金 0）。**6b 生成とゲート＝決定カード待ち**。6c 接続（S7 に「標準の声（日本語）」）＝6b と同じ便 |
 | 7 | PWA（オフライン・更新・インストール） | 未着手 |
 | 8 | 仕上げ（文言監修・法務・エラー・アクセシビリティ） | 未着手 |
 
-段2→3→4→5 は**逐次**（同じ `App.tsx`・`messages.ts` を触るため）。並列は段6だけ。
+段2→3→4→5 は**逐次**（同じ `App.tsx`・`messages.ts` を触るため）。段6も worktree は切らず `agent/app-v1` の上で逐次に差し込む（Ruling 64-3）。
 
 ## 4. 段1でできたもの（現物）
 
 - `src/engine/` … 旧 `src/v2/` を無改変で移設。tick↔時刻は **`src/engine/tempo-map.js` だけ**（例外: 検算用の `tools/audit-all-dance-timing.js` と開発用 `tools/render-subdivision-audio-review.js`）
 - `src/app/` … Vite 8.3.4・Preact 10.29.8・TypeScript 6.0.3。i18n（日英）・ハッシュルーター（純粋関数）・platform アダプタ（hash/locale は実装、音声・録音・保存・ファイル・WakeLock は「未実装」を投げる空実装）・下タブ3つの空画面
 - `legacy/` … 旧画面（保守停止）。標準音声は `public/audio/default-en-female-v1/` のまま
-- テスト 349件（段3の追加便 F6・F7・修正便2 で 320 → 349。段3の追加便 F1〜F5 で 292 → 320。段3で 224 → 292。段3の最終レビューの修正便で +1。段2で 154 → 224。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
+- テスト **472件**（段4で 418 → 472。段6a で 358 → 418。Task F8 で 349 → 358。段3の追加便 F6・F7・修正便2 で 320 → 349。段3の追加便 F1〜F5 で 292 → 320。段3で 224 → 292。段3の最終レビューの修正便で +1。段2で 154 → 224。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
 
 ### 番人（壊したら自動で止まるもの）
 
@@ -74,13 +123,14 @@
 |---|---|
 | `test/engine/engine-schedule.test.js`＋ゴールデン | 再生エンジンが予約する全時刻がビット単位で移設前と一致 |
 | `npm run timing:compare` | `timing:audit` の出力が基準（`output/timing-audit-before.json`）と一致 |
-| `tools/check-dist.js`（`npm run build` で実行） | 公開ビルドに legacy/・未監修ルーティンデータが入らない |
+| `tools/check-dist.js`（`npm run build` で実行） | 公開ビルドに legacy/・未監修ルーティンデータが入らない。段6a から: 標準の声は `src/app/voices/standard-voices.json` が正本で、JSON に無い・ゲート未承認・語の欠けたパックは出荷しない。音声ファイルは `dist/audio/<一覧の ID>/` の下だけ |
 | `test/app/platform-boundary.test.ts` | window/navigator/storage/AudioContext 等は `src/app/platform/` からだけ |
 | `test/meta/test-glob.test.js` | テストファイルが `npm test` から漏れない |
 | `tools/smoke-app-shell.js` | 375/1280 × 日英で殻が動く・旧画面の標準音声13ファイルが 200 |
-| `npm run ui:check`（`tools/check-app-ui.js`） | 新アプリの U1〜U15（文字・タップ・主要操作数・コントラスト・動き・折り返し等）を S1〜S5/S6/S7/S11 × 375/1280 で検査（113項目 PASS。段3本体で 93・追加便 F1〜F5 で 97・F6 で 101・F7 で 113。段2時点は 41項目） |
+| `npm run ui:check`（`tools/check-app-ui.js`） | 新アプリの U1〜U15（文字・タップ・主要操作数・コントラスト・動き・折り返し等）を S1〜S8/S11 × 375×667・1280×900（reduced-motion 有無）・**375×548（iPhone SE の Safari）**＋ 640×450 拡大 ＋ **320×568 の横スクロール**で検査（**192項目 PASS**。段4で 113 → 192＝320 幅 1・S6/S7 で 126・S8 で 154・375×548 の 1 周 +38。段3本体で 93・追加便 F1〜F5 で 97・F6 で 101・F7 で 113。段2時点は 41項目） |
 | `npm run smoke:routines` | 段3の完了条件と追加便（同じ名前・小節の注意・カウントの形・種目のフィガーの一覧・かなとカナ・キーボードの間の帯（visualViewport を縮める代わり）・キーボードを出したままのドラッグ・試聴中の帯）。後半に WebKit の一本（入っていない時だけ飛ばす） |
 | `npm run smoke:practice` | G1（初回2タップで鳴る）・G2（前回カード1タップで鳴る）・再読み込みで勝手に鳴らない・戻るの置き換え |
+| `npm run smoke:voice`（段4） | Chrome の偽マイク（`test/fixtures/voice/*.wav`）で 12 語を録る（途中で抜けて続きから）→ 聞き比べ → 選ぶ → 再読み込みの後 S2 が**録った声で**鳴る（標準の声の音を 1 本も取りに行かない・IndexedDB に 12 語）→ 声のタイミングが残る → 削除。無音と小さすぎる音（ピーク 0.002）は「声が入っていませんでした」で止まる |
 
 **ゴールデンと基準は書き換え禁止**。作り直すのは rulings.md に理由と差分の要約を書いた時だけ。
 
@@ -110,31 +160,59 @@
 - テスト **349件**（F6 で 336・F7 で 347・修正便2 で 349）。`npm run ui:check` は **113 PASS**（F6 で 101・F7 で 113。名前の一覧の状態は U5 の上限 20＝`[data-catalog]`。S4 の一覧 7・0件で追加の行 5・名前を選んだ後 6・複製 6・開いた既存の行 8）。`smoke:routines` は F6・F7・修正便2 の場面と WebKit の一本まで通す。
 - 記録: `docs/app-v1/stage3-ledger.md` の末尾「追加便」（F6・F7・最終レビュー2・修正便2・D22）。
 
-## 5. 段4以降への持ち越し（段3から。段2からの残りは 5b）
+## 4c. 段4でできたもの（現物・2026-10-12）
+
+- **S7 声の一覧**（`#/voices`）: 「標準の声（英語）」・自分の声（完成）・途中の声「自分の声（日本語） · 7 / 12 語」。1 回目のタップで選ぶ・選んだ行をもう一度で開く（「削除」。途中の声は「続きを録音する」「削除」＝D32）。選んだ行の右端に「▶ 試聴」（ワルツ 1 小節）。下に「自分の声を録音する」。主要操作 閉 2・開 3。
+- **S8 自分の声を録音**（`#/voices/record`）: 説明 3 行（マイクの許可の**前**）＋言葉の 2 択（英語／日本語。途中なら「7 / 12 語まで録音済み」）→「録音をはじめる」→ 1 語 1 画面（12 マスの進み具合・語 56px・「ボタンを押したら、すぐ「Slow」と言ってください。」・直径 144px の丸＝1.5 秒で自動停止・波形と「▶ 聞く」・帯に「‹ 前の語」「次へ」）→ 完成（名前・ワルツで「▶ 自分の声」「▶ 標準の声」の聞き比べ・「1 語目から見直す」・「完了」で S7 へ戻りこの声を選ぶ）。マイク拒否・使用中は説明の画面に枠（D30）、非対応のブラウザは枠だけ。1 語ごとに端末へ保存（途中で閉じても残る）。
+- **再生への接続**: 選んだ声で S2・S5・S4 の試聴が鳴る（`selectedVoiceId` を保存。録った声が無い・途中なら黙って標準（英語））。声チップ「声: 自分の声（英語）」。急いで ▶ を押しても選んだ声を待ってから鳴る。
+- **声のタイミング**: S2・S5・S4 の「くわしく」の最後の行（「‹ 早く」「遅く ›」・10ms 刻み・±200・補助文 1 行）。標準の声は設定（`voiceOffsetMsByVoiceId`）、録った声はパックの `timingAdjustments.globalOffsetMs`。くわしく開の主要操作 S2・S5 9（上限ちょうど）・S4 8。
+- **S6 設定**: 「声 › 標準（英語）」と「先生の方へ」の下に「自分の声を録音する ›」（主要操作 3）。
+- **見える高さ 600px 未満の詰めた配置**（D33）: iPhone SE の Safari（375×548）で S1・S2・S8 の主要操作が初期表示に入る。`base.css` の `@media (max-height: 599px) and (max-width: 1023px)` の 1 か所だけ。667 以上は 1px も変わらない（Task 9b がスクリーンショットのバイト比較で確認）。
+- 新しいファイル: `src/app/voices/`（`store.ts`＝声の保存・`take-check.ts`・`normalize.ts`＝1 語の判定と正規化・`wizard.ts`・`wave.ts`・`standard.ts`・`selection.ts` など）・`src/app/platform/recorder.ts`（マイク・1 語ごとに開閉・`withRecordingSession`）・`src/app/screens/VoicesScreen.tsx`・`RecordVoiceScreen.tsx`・`tools/smoke-voice.js`・`tools/make-fake-mic-wav.js`・`test/fixtures/voice/*.wav`。**`src/engine` は 0 行**（正規化・onset 検出はエンジンの関数を呼ぶだけ）。
+- テスト **472件**（418 → 472）。`npm run ui:check` **192 PASS**（dev と公開ビルドの両方）。S6＝3・S7＝2/2/3・S8＝2/2/4/4/2/2/0（説明・1 語目・前の語・完成・拒否・声が入っていない・非対応）・S2/S5 くわしく 9・S4 くわしく 8・320 幅で横スクロール無し・375×548 で主要操作が入る（例外は S5 の声チップ）。
+- 実行中に**レビューが見つけた本物のバグ**（すべて修正済み）: Task 4＝録音の開始が投げると `ReferenceError` で「使えませんでした」にならない／Task 5＝録った声を選んだ直後に急いで ▶ を押すと黙って標準の声で鳴る／Task 7＝録音の途中のマイクの失敗が拒否の画面に飛ぶ（同じ語で「声が入っていませんでした」が正しい）／Task 8＝スモークが「録った声で鳴っている」を証明していなかった・無音の判定のしきい値を守っていなかった。
+- 決定: Ruling 55〜63・71〜78、代理決定 D23〜D25・D30〜D35（§0b）。記録: `docs/app-v1/stage4-ledger.md`。
+
+## 4d. 段6a でできたもの（現物・2026-10-12。音は 0 本・課金 0）
+
+- `tools/voices/`: 生成（`voices:plan`＝既定で dry-run と費用見積もり。お金のかかる生成は `--yes` と `VOICES_ALLOW_PAID=1` の二重の鍵）・処理経路（モノ化 → 頭の検出 → 頭詰め → 尻尾 → 音量合わせ → 再実測 → manifest）・`voices:check`（1 パックの検査）・`voices:gate`（聞き比べのページを描く）・`voices:adopt`（採用）。古い生成スクリプトにも同じ二重の鍵と「出荷済みの英語の声を上書きしない」守り。
+- `src/app/voices/standard-voices.json` が標準の声の正本（今は英語の 1 行）。`check-dist` が同じ JSON を見る。
+- 決定カード `docs/app-v1/stage6-decision-card.md`・聞き比べの確認表 `docs/app-v1/stage6-listening-check.md`（6b で埋める）。Ruling 64〜70・代理決定 D26〜D29。
+- 6a で決めたこと（コントローラー）: 聴感ゲートの機械の確認は「英語の声より悪くない」で判定（「練習の速さで重なり 0」は今の英語の声でも満たせない＝サンバ `1a2`）。Ruling 66-1 の「25」は「30」の誤記。
+
+## 5. 段5以降への持ち越し（段4・段3から。段2からの残りは 5b）
+
+段4から（段5で必ず拾う）:
+- S7「ファイルから受け取る」・開いた行の「配る」「ファイルに保存」（`[data-group="voice-actions"]` に足す）・S8 完成の「配る」（主要操作 5＝上限ちょうど。以後は足せない）・完成時の「ファイルに保存（バックアップ）」の 1 行と `hints.backupTipShownForRecording`（Ruling 55-3）。
+- 受け取った声の ID の付け直し（配布ファイルの `id` は先生の端末の固定 ID `user-recorded-v1`／`user-recorded-ja-v1`＝衝突する。Ruling 56-3）・`VOICE_LIMITS.packs`（20）で受け取りを拒む・受け取った声の `wordOffsetsMs` の扱い（Ruling 62-5 は残す）。
+- S7 の `[data-group="voice"]` は受け取った声が増えると U5（選択肢 10）を超えうる（標準 1〜2＋自分 2＋受け取り N＋試聴・開いた行）。段5で一覧の数え方を裁定する。
+- 英語 UI で録った声の既定名が日本語のまま（Ruling 76-1）・選んでいない声を消すと標準（英語）に戻る（Ruling 76-2。受け取った声が増えて困ったら「開く前に選んでいた声へ戻す」に）。
+- 6c（S7 に「標準の声（日本語）」）: 文言キーは段4で足し済み。残りは `standard-voices.json` の 1 行・ui:check の S7 の期待値・`smoke-voice.js` の日本語の場面（Ruling 70-3）。
+- 段4の小さな残り（触る時に）: `stage4-ledger.md` の「置いておいた Minor」。
+
+
 
 段3 追加便から（`stage3-ledger.md` 末尾の「追加便」も参照）:
 - **決定済み D22（最終レビュー M1・最終レビュー2 M3）**: 英語の画面で一覧の "Whisk" をタップすると、日本語で保存した「ウィスク」と別の名前になり、違うカウントの "Whisk" が足せた。→ ひとみうさの決定 **D22**: 同じ照合済みフィガーに当たる名前は同じ名前とみなす（日英の対応表で判定。A 案）→ **Task F8 で実装済み（`7ba21f5`）**。B 案（行に「どのフィガーか」を保存し表示を言語で切り替える）は**段5の計画**で配る形式と一緒に決める。正本は `rulings.md` の D22。
 - ひとみうさに決めてほしいこと（a・c）は §6。
 - 小さな残り（直さなくてよいが、触る時に）: S5 の自動スクロールの下端（`RoutinePlayScreen.tsx` の帯の矩形。S5 は帯を隠さないので今は無害。S5 で帯を隠すなら `autoScrollBottom` を使う）・`data-catalog` の例外が figure-names に限られていない（F7）・シミュレーターのハードウェアキーボードの時だけ帯が IME の帯の上に白い隙間つきで浮く（F7・iPhone では起きない）・開いた行が閉じる時の位置補正に自動の検査が無い（F2 M2）・`smoke-routines.js` 13 行目のコメントが「1小節」のまま（F4）・`practiceLeadInBars` の戻り値の型が `LEAD_IN_BARS` と別に手書き（F4）・updateAll 中の移動／複製が全行を確定することの単体テスト（F1）。
 
-段4:
-- `src/engine/recorded-voice-store.js` の IndexedDB v1 直開きを `platform/storage` 経由に作り直す（Ruling 41。DB は v2 なので新アプリから呼ぶと `VersionError`）。
-- 「くわしく」に声のタイミングを足す（S2・S5 とも主要操作が 9 になる。上限ちょうど）。S4 の「くわしく」にも声のタイミング（7→8）。
-- `selectedVoiceId` の保存（`normalizeSettings` が標準音声へ戻す処理を緩める）。
+段4（**すべて済**）: `recorded-voice-store.js` の v1 直開き → `src/app/voices/store.ts`（`platform/storage` 経由）・「くわしく」の声のタイミング（9/9/8）・`selectedVoiceId` の保存・`persist()` の前倒し・エンジンの日本語固定文言の i18n 化（不要で閉じた。Ruling 58-5）。
 
-段5:
+段5（段3から）:
 - S3 の開いた行に「配る」。S4 の初回保存時のバックアップの1行（`hints.backupTipShownForRoutine`）。
 - `provenance.sourceKind:'received'` の列挙を `routine-provenance.js` に足す。受け取ったルーティンを編集できるかの裁定。
 
 段7:
 - 書き込みの確定前にアプリを閉じると失われうる（発見 #8）。PWA 化の時に `visibilitychange: hidden` で開いている行を確定する案を検討（今は戻る・画面を離れる時だけ確定）。
+- ホーム画面のアプリ（見える高さ 667）では D33 の詰めた配置は当たらない＝S5 の声チップも初期表示に戻る。`persist()` はルーティン側も含めて見直す。
 
 ## 5b. 段2から残っている持ち越し
 
 段3で消化済み: `SIMPLE_SCREENS` と S4/S5 の ID 検査（`resolveScreen`）・`PracticeScreen` と S5 を分ける（Ruling 42）・S2 連打の穴・ルーティンIDの `'new'` 予約・check-dist の `src/engine/data/` 目印の自己検査・`dance-count-v2-routine-draft:*` の移行（不要で閉じた）。
 
 まだ残る:
-- 「くわしく」の主要操作は段4で 9（上限ちょうど）。以後の追加は裁定が要る（Ruling 31）。
+- 「くわしく」の主要操作は段4で 9（上限ちょうど）になった。以後の追加は裁定が要る（Ruling 31）。
 - 前回カードの即再生は iPhone 実機で要確認（段2の確認は「いい感じ」。段7の https で再確認）。
 
 第2弾（曲）で必ず: 再生エンジンは tempo を「拍の長さ」「区間の長さ」「区間ローカルtick」として使っている。beatMap では誤るので「絶対tickの位置の差」で作り直す（今は `start()` が constant 以外を拒否して守っている）。一定テンポの経路は今の式のまま残すこと（変えるとゴールデンが落ちる）。
@@ -150,7 +228,8 @@
   - **(a) 種目のフィガーの一覧の形（最終レビュー2 M1・確認表 34・37）**: 375 幅で、短いカタカナの名前でも 1 個 150〜210px あり 2 個並ばないので、実際は 1 行に 1 個。高さはワルツ約 944px・タンゴ約 1,099px（Ruling 54-5 の見込み 700〜750px より長く、「縦の一覧（約 1,000px）」とほぼ同じ）。選択肢: 今の折り返すボタンのまま／1 行 1 個の縦の一覧に整える／先頭の数個＋「もっと見る」。詰めたいならチップを 16px にする・余白を減らす手もある。撮影 `~/.playwright-mcp/stage3-fix2-{waltz,tango,slowfox}-list-375.png`
   - **(b) 英語表示の名前と保存した日本語の名前（同じ名前の判定）**: **決定済み（D22）**。A 案 → Task F8 で実装済み（`7ba21f5`）・B 案 → 段5の計画（§5）
   - **(c) ドラッグ中の行き先の線（F2 レビュー M1・確認表 20）**: 線が浮いた行の文字の上にかかって見える（線を上に出さないと行き先が見えなくなるので、コードは Ruling 51 どおり）。気になるか
-- **段6**: 日本語標準音声の試聴（聴感ゲート）
+- **段4の終わり（実機確認待ち）**: `docs/app-v1/stage4-device-check.md` を iPhone で（段3 追加便の 17〜42 と同じ日に）。要は**録音の先**（語の画面・完成の画面。シミュレーターでは OS のマイク許可ダイアログが押せず入れなかった）・録った後の再生の音量（F11）・録った形を iPhone が読めるか（Ruling 78）・Safari の見える高さ 548 の配置（D33）。あわせて代理決定 D23〜D25・D30〜D35（§0b）を実物で
+- **段6**: 決定カード（§0b の 1）→ 6b で日本語標準音声の試聴（聴感ゲート。`stage6-listening-check.md`）
 - **公開前**: dancemap.jp のサブドメイン・配信基盤（DNS 設定）の許可
 - 可能なら 60〜70代の方に説明なしで触ってもらう
 
@@ -168,7 +247,7 @@
 cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
 npm run dev        # 新アプリ http://localhost:5173
 npm run legacy     # 旧画面 http://localhost:4173/legacy/practice.html
-npm test           # 349件
+npm test           # 472件
 npm run typecheck
 npm run build      # check-dist まで走る
 npm run timing:audit && npm run -s timing:compare
@@ -176,20 +255,28 @@ npm run ui:check          # dev 起動中に（DC_BASE_URL=http://localhost:4174
 npm run ui:check:legacy   # 旧画面用（legacy を 4173 で起動してから）
 npm run smoke:practice    # G1・G2（dev 起動中に）
 npm run smoke:routines    # 段3の完了条件（dev 起動中に）
-DC_ONLY=S5 npm run ui:check   # ui:check を状態名の頭で絞る
+npm run smoke:voice       # 段4の完了条件（dev 起動中に。Chrome の偽マイクで 12 語 → 自分の声で鳴る・無音は止める）
+node tools/make-fake-mic-wav.js   # 偽マイクの WAV（test/fixtures/voice/）を作り直す（同じバイト列になる）
+npm run voices:plan       # 段6: 日本語の標準の声の生成の見積もり（dry-run。お金はかからない・ネットにも出ない）
+DC_ONLY=S5 npm run ui:check   # ui:check を状態名の頭で絞る（カンマで複数: DC_ONLY=S7,S8）
 node tools/smoke-app-shell.js   # dev と legacy を起動してから（DC_SHOT_DIR で撮影先を変更可）
 git checkout -- output    # timing:audit の後は必ず
 ```
 
 ほかの作業で 5173 番が使われている時は、自分の開発サーバーを別の番号で（`npm run dev -- --port 5199`）。ui:check・smoke は `DC_BASE_URL=http://localhost:5199/` で向ける。
 
-### iOS シミュレーターでの確かめ方（段3 追加便 F6・F7 で使った）
+### iOS シミュレーターでの確かめ方（段3 追加便 F6・F7 と段4の Task 9・9b で使った）
 
-iPhone でしか出ないキーボードまわり（付属の帯・帯の持ち上がり・visualViewport）は、Chromium の smoke（visualViewport の高さを縮める代わり）では再現しきれない。コントローラーは次の手順で確かめた。
+iPhone でしか出ないキーボードまわり（付属の帯・帯の持ち上がり・visualViewport）や Safari の見える高さ・録音の形は、Chromium の smoke では再現しきれない。コントローラーは次の手順で確かめた。
 
-- **Xcode の Simulator**（iPhone 16e・iOS 26.3）。Safari で `xcrun simctl openurl booted "http://localhost:5199/#/routines?r=<時刻>"`（`?r=<時刻>` はキャッシュよけ。古いコードが残ると文言の鍵がそのまま出る）。画面は `xcrun simctl io booted screenshot <ファイル>.png`。
-- **ソフトウェアキーボードを出す**: `defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false`（Simulator を開き直す）＋ Simulator で Cmd+K。ハードウェアキーボードのままだと、iPhone では起きない見え方（帯が IME の帯の上に隙間つきで浮く）になる。
-- **タップと入力は AXe CLI**（v1.8.0）。Homebrew での入れ方はコマンドラインツールが古くて失敗したので、GitHub releases（`cameroncooke/AXe`）の配布済みバイナリをその回のスクラッチのフォルダに置いて使った。**次回は GitHub releases から入れ直す**か、コマンドラインツールを更新してから Homebrew で入れる。
+- **段4からは iPhone SE（第3世代）・iOS 26.3** を使う（UDID `0E53FFB2-C56B-43E9-B055-EAE45DDCE641`。375 幅で、Safari のツールバーが出ている時の見える高さが 549＝実機の SE の Safari と同じ。`xcrun simctl boot 0E53FFB2-C56B-43E9-B055-EAE45DDCE641` → `open -a Simulator`）。段3は iPhone 16e（`710C669B-A638-4137-8C8D-B293411783F1`）。
+- **Xcode の Simulator**（iOS 26.3）。Safari で `xcrun simctl openurl booted "http://localhost:5199/#/routines?r=<時刻>"`（`?r=<時刻>` はキャッシュよけ。古いコードが残ると文言の鍵がそのまま出る）。画面は `xcrun simctl io booted screenshot <ファイル>.png`。
+- **ソフトウェアキーボードを出す**: `defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false`（Simulator を開き直す。今の Mac は false のまま＝`defaults read com.apple.iphonesimulator ConnectHardwareKeyboard` が 0）＋ Simulator で Cmd+K。ハードウェアキーボードのままだと、iPhone では起きない見え方（帯が IME の帯の上に隙間つきで浮く）になる。
+- **タップと入力は AXe CLI**（v1.8.0）。Homebrew での入れ方はコマンドラインツールが古くて失敗したので、GitHub releases（`cameroncooke/AXe`）の配布済みバイナリ（`AXe-macOS-v1.8.0-universal.tar.gz`）をその回のスクラッチのフォルダに展開して使った。**スクラッチはセッションごとに消えるので、次回は GitHub releases から入れ直す**（展開したフォルダの `axe` を、同じフォルダの `Frameworks`・`AXe_AXe.bundle` と一緒に置いたまま使う）か、コマンドラインツールを更新してから Homebrew で入れる。
+- **AXe は OS のマイク許可のダイアログ（「“localhost” がマイクへのアクセスを求めています」）を押せない**（許可もキャンセルも反応なし。設定でマイクを許可にしても出る）。だから**録音の先（語の画面・完成の画面）はシミュレーターでは入れない**＝実機確認表へ。見た目だけなら `?ui-state=mic-denied`・`no-voice`・`no-recorder` で強制表示できる。
+- **Web インスペクター無しでコンソールの値を読む「探りのページ」**: スクラッチに小さな HTML（例: ボタン 1 つで `MediaRecorder.isTypeSupported(...)`・`navigator.audioSession.type`・`getUserMedia` を試し、結果を `<pre>` に書く）を置き、Mac で `python3 -m http.server <番号> --directory <スクラッチのフォルダ>` → シミュレーターの Safari で開いてタップ → スクリーンショットで結果を読む。Task 9 はこれで `isTypeSupported`・`audioSession` の既定値・`playback` のまま `getUserMedia` すると `InvalidStateError` を確かめ、Fable は webm/mp4 の decode を確かめた。
+- **録った声を入れた状態を見る（seed）**: アプリと同じオリジンに一時ページ（`tools/ui-check-voices.js` の `seedVoicePacksInPage` を呼ぶだけ）を置いて開く（commit しない・確かめたら消す）。**先にアプリを 1 回開いて DB を作ってから** seed する（seed 側が版 2 の DB を空のまま作ると、アプリの upgrade が走らない）。
+- 詰めた配置（D33）が当たっているかは、探りのページで `matchMedia('(max-height: 599px) and (max-width: 1023px)').matches`（SE の Safari で true・`innerHeight` 549）。
 - **ウェブの中身はアクセシビリティの木に出ない**ので、スクリーンショットから座標を読んでタップする（AXe の座標タップ）。日本語は HID のローマ字打ち（例 `uisuku`）で日本語キーボードに打ち込む。
 
 ## 9. 落とし穴
@@ -201,6 +288,12 @@ iPhone でしか出ないキーボードまわり（付属の帯・帯の持ち�
 - 4173番には古い `python3 -m http.server` が居座っていることがある（プロジェクト直下を配信していれば `npm run legacy` の代わりにそのまま使える）
 - 実機・シミュレーターで確かめる前はページを再読み込み（`?r=<時刻>` を付けると確実）。古いコードが残っていて、直したはずの見え方や文言の鍵がそのまま出ることがある
 - `constantTempo` は `'84'` のような文字列も受け付けて `.bpm` が文字列のまま残る。段2の再生画面では必ず数値を渡す
+- **WebKit は `audioSession.type='playback'` のままだとマイクを開けない**（`InvalidStateError: AudioSession category is not compatible with audio capture.`。iOS 26.3 のシミュレーターでも確認）。アプリは起動時に `playback` を書く（マナーモード対策）ので、録音は必ず `platform/recorder.ts` の `recordTake`／`requestMicrophone` から（中で `withRecordingSession` を通す。参照カウントなので重なっても壊れない）。画面から `getUserMedia` を直接呼ばない
+- **Playwright の WebKit は `permissions: ['microphone']` を知らない**（`Unknown permission`）＝WebKit で録音の自動検査はできない。WebKit で見られるのは `ui-state` の表示だけ。デスクトップの WebKit は mp4 の decode に失敗する（iOS の代わりにならない）
+- **偽マイクの WAV は `getUserMedia` のたびに頭から鳴る**。1 つのブラウザに 1 ファイル（無音・小さすぎる音の場面は別のブラウザを起動する。`smoke-voice.js` のとおり）。`quiet.wav`（ピーク 0.002）は Chrome の自動音量調整があっても「声が入っていない」になる前提
+- **ui:check の 375×548 は「iPhone SE の Safari」**、375×667 は「ホーム画面のアプリ」。詰めた配置は `max-height: 599px` で切っているので、667 の見た目を変える時は 548 でも ui:check が通るか見る（S1 の余裕は 4px・S2 は 8px）
+- `word-break: auto-phrase` は Chrome だけ。iOS Safari では「録音できませ／ん。」「も／う一度」のように語の途中で折れることがある（通し確認で「好み」。手動の改行は入れない＝折り返しは幅から診断）
+- `smoke:practice`・`smoke:routines` は ui:check の直後に 1 回だけ落ちることがある（段3からの揺れ。再実行で通る。続くなら S2 を開いた時の声の解決と即再生の順を疑う）
 
 ## 10. このアプリとは別件（参考）
 

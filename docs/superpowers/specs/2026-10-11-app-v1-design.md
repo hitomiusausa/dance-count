@@ -143,7 +143,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 
 ### S2 再生（集中）
 - 初期表示（上から）: 「‹ 戻る」→ 種目名見出し 28px ＋副題 16px（選択中のカウントの型を同じ整形で表示。Ruling 22）→ 現在カウント（鳴っている語をそのまま表示。スマホ 96px／PC 200px、琥珀色）と小節内の拍インジケータ（操作ではない。現在拍だけ琥珀色の下線 6px＋太字、他は灰の下線 3px）→ 速さ3択（`[data-group="speed"]`）→ トグル2つ（メトロノーム・はじめの合図、Ruling 19）→ 声チップ「声: 標準（英語）」→「くわしく」（`summary[data-more]`）。画面下固定に ▶ 再生／■ 停止（72px 以上・幅は画面の60%以上）。
-- 主要操作数（Ruling 18）: 速さ(1)＋メトロノーム(1)＋はじめの合図(1)＋声チップ(1)＋▶(1)＝5。375×667 の初期表示に5つとも完全に入ること。
+- 主要操作数（Ruling 18）: 速さ(1)＋メトロノーム(1)＋はじめの合図(1)＋声チップ(1)＋▶(1)＝5。375×667 の初期表示に5つとも完全に入ること。**iPhone SE の Safari（375×548）でも 5 つとも入る**（見える高さ 600px 未満の詰めた配置。§5・D33・Ruling 71）。
 - 初期値（Ruling 13・18・D3）: 繰り返しオン、メトロノームオン、はじめの合図オン（2小節。D17）、速さ「標準」＝`practiceBpm`、カウントの型＝`templates[0]`（種目ごとに記憶）、声＝英語の標準音声。
 - 速さ3択（Ruling 24）: 「ゆっくり / Slower」＝`round(practiceBpm × 0.8)`、「標準 / Standard」＝`practiceBpm`、「速め / Faster」＝`min(round(practiceBpm × 1.1), competitionBpm.max)`。定数 `SPEED_SLOW_RATIO=0.8`・`SPEED_FAST_RATIO=1.1` を1か所で持つ。ワルツは 67 / 84 / 90。単体テストで10種目すべて「ゆっくり < 標準 < 速め ≤ 競技上限」を固定。選択中のボタンに「♩=84」の形で数値を小さく併記（「BPM」の語は出さない）。選択はネイビー塗り＋チェックのアイコン＋文字（色だけに頼らない）。種目ごとに記憶（`speedPresetByDance`）。
 - トグル: アイコン＋ラベル＋スイッチ形＋「オン / On」「オフ / Off」の文字。`role="switch"`。
@@ -152,7 +152,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
   1. カウントの型（`[data-group="pattern"]`。テンプレートが2つ以上の種目のみ。ワルツ `1 2 3`／`1 2 & 3`、クイックステップ `S Q Q`／`Q Q S`、サンバ `1 a 2`／`S Q Q`、パソドブレ `1 2 3 4`／`1〜8`）
   2. 速さの細かい調整（`[data-group="speed-fine"]`: スライダー 40〜220 と「競技の速さ（♩=84〜90）」ボタン。競技の速さは `competitionBpm` の範囲内の値に合わせる）
   3. 繰り返す（初期オン）
-  4. 声のタイミング（±200ms・1つまみ。§7 の保存先）
+  4. 声のタイミング（±200ms・1つまみ。§7 の保存先）。**段4**: 「‹ 早く」「遅く ›」の 2 ボタン・10ms 刻み・値「−20 ms」の表示（D24・Ruling 62）と、下に補助文「声が遅れて聞こえたら「早く」を押します。」（D35・Ruling 75）。S2・S5 の「くわしく」開は主要操作 9（上限ちょうど）、S4 は 8
   5. Bluetooth 補正（±200ms。Ruling 6-4 で v1 必須ではない。入れる場合も同じ「くわしく」内）
   - 第2弾で「曲に合わせる」が入る（Ruling 20）。v1 では出さない。
 - 再生中の操作: 速さ・メトロノーム・声・型の変更は内部で停止→適用→再開。「反映されました」等の文言は出さない。
@@ -193,15 +193,18 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 載せない: 開発者向け項目、キャッシュ操作。「データを全て消す」は S13 の最下部。
 
 ### S7 声（一覧）
-- 大きなラジオ形のリスト（`[data-group="voice"]`）: 「標準の声（英語）」「標準の声（日本語）」（Ruling 5 のゲート通過後のみ）「○○さんの声」（受け取った）「自分の声」（録音途中なら「7/12」）。選択中の行に ▶ 試聴（ワルツ1小節）。
-- 下に2ボタン: 「ファイルから受け取る / Receive from a file」（→ S10）「自分の声を録音する / Record your voice」（→ S8）。
-- 受け取った声・自分の声の行を展開: 「配る」（→ S9、この声を入れた状態）「ファイルに保存」「削除」（確認ダイアログ）。
+- 大きなラジオ形のリスト（`[data-group="voice"]`）: 「標準の声（英語）」「標準の声（日本語）」（Ruling 5 のゲート通過後のみ＝段6c）「○○さんの声」（受け取った）「自分の声」（録音途中なら「7/12」）。選択中の行に ▶ 試聴（ワルツ1小節）。並びは 標準 → 自分 → 受け取った → 途中（Ruling 60-1）。
+- **途中の声の行（段4・D32・Ruling 60-2 の読み替え・Ruling 73）**: 「自分の声（日本語） · 7 / 12 語」（名前は黒、数だけ灰色）。選べない（`role="button"`）。タップで開き「続きを録音する / Continue recording」（→ S8 の説明の画面をその言語で）→「削除」。
+- 下に2ボタン: 「ファイルから受け取る / Receive from a file」（→ S10。**段5で足す**。Ruling 55-3）「自分の声を録音する / Record your voice」（→ S8）。段4の主要操作は 閉 2・行を開 3。
+- 受け取った声・自分の声の行を展開（1 回目のタップで選ぶ・選んだ行をもう一度タップで開く。Ruling 60-4）: 「配る」（→ S9、この声を入れた状態）「ファイルに保存」（この 2 つは**段5で足す**。Ruling 55-3。`[data-group="voice-actions"]` に）「削除」（確認ダイアログ。消すと標準（英語）が選ばれる）。
 - 声の言語の選択（Ruling 12）はこの画面の選択そのもの（英語の声を選べば英語カウント）。
 
 ### S8 自分の声を録音（集中・ウィザード）
-- 0 説明: 何を録るか（12語）、録音は端末内にだけ保存、いつでも削除できる → **録音する言語**の大型2択（`[data-group="record-language"]`、Ruling 25）「英語で数える（One, Two, Slow…）/ Count in English」「日本語で数える（いち、に、スロー…）/ Count in Japanese」、初期値は英語 →「録音をはじめる」のタップで初めて `getUserMedia`（Ruling 8）。主要操作数＝2。選んだ言語でパックの `locale`／`vocabularyId`（`en`／`ja-JP`）と既定名「○○の声（英語）／（日本語）」が決まる。1パック1言語（両方録る先生は2回録る）。
-- 1〜12（1画面1語、順番は `REQUIRED_VOICE_KEYS`: スロー・クイック・1〜8・アンド・ア）: 進み具合「3 / 12 語」と12マスの棒、語（56px・選んだ言語の語）ともう一方の言語の表記（20px）、「ボタンを押すと 1.5 秒だけ録音します」、大きな録音ボタン（直径 144px。押す→1.5秒録る→自動停止、もう一度押すと録り直し）、自動頭出し後の波形ミニ表示と「▶ 聞く」、下固定「次へ」。
+- 0 説明: 何を録るか（12語）、録音は端末内にだけ保存、いつでも削除できる（段4の文言は「12 語を、1 語ずつ録音します。」「録音は、この端末の中にだけ残ります。」「いつでも消せます。」。D23・D31。言語の 2 択の下に途中なら「7 / 12 語まで録音済み」）→ **録音する言語**の大型2択（`[data-group="record-language"]`、Ruling 25）「英語で数える（One, Two, Slow…）/ Count in English」「日本語で数える（いち、に、スロー…）/ Count in Japanese」、初期値は英語 →「録音をはじめる」のタップで初めて `getUserMedia`（Ruling 8）。主要操作数＝2。選んだ言語でパックの `locale`／`vocabularyId`（`en`／`ja-JP`）と既定名「○○の声（英語）／（日本語）」が決まる。1パック1言語（両方録る先生は2回録る）。
+- 1〜12（1画面1語、順番は `REQUIRED_VOICE_KEYS`: スロー・クイック・1〜8・アンド・ア）: 進み具合「3 / 12 語」と12マスの棒、語（56px・選んだ言語の語）ともう一方の言語の表記（20px）、「ボタンを押すと 1.5 秒だけ録音します」（**段4で「ボタンを押したら、すぐ「{語}」と言ってください。」に**。D34・Ruling 72。説明と枠は同じ高さ 60 の箱で、枠が出ても丸は動かない）、大きな録音ボタン（直径 144px。押す→1.5秒録る→自動停止、もう一度押すと録り直し）、自動頭出し後の波形ミニ表示と「▶ 聞く」、下固定「次へ」。**段4**: 2 語目からは帯に「‹ 前の語」。語は飛ばせない。完成済みの言語で開くと完成画面から。「‹ 戻る」は S8 を出る（録れた語は 1 語ごとに保存済み）（D25・Ruling 59）。主要操作は 1 語目 2・録れた語（2 語目以降）4。
 - 13 完成: ワルツで試聴（標準の声と聞き比べ）、名前（既定「○○の声」）、「配る」（→ S9）「あとで」。完成時に1回だけ「ファイルに保存（バックアップ）」を勧める1行（Ruling 11）。
+  - **段4の読み替え（Ruling 55-3・59-5）**: 「配る」「あとで」→ 段4は下固定の「完了」だけ（S7 へ戻り、この声を選ぶ）。「配る」は段5で足す（主要操作 5＝上限ちょうど）。「ファイルに保存（バックアップ）を勧める1行」も**段5**。名前の既定は「自分の声（英語）／（日本語）」（D23）。「1 語目から見直す」（何も消えない）。主要操作 4。
+- マイクが使えない時（段4・D30）: 別画面にせず、説明の画面の説明 3 行の場所に枠を出し、言葉の 2 択と「録音をはじめる」は残す（主要操作 2。§11）。非対応のブラウザは枠だけ（主要操作 0）。
 - 載せない: ゲイン・onset の数値、mimeType、正規化のオン／オフ。
 
 ### S9 配る（集中）
@@ -274,6 +277,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 | ▶ 再生ボタン | 高さ 72・文字 24（800）・アイコン 32 | 高さ 80・幅 64% |
 | 次へ・主ボタン | 高さ 56・文字 20 | 同 |
 | 下タブ | 高さ 68・文字 16 | 1024px 以上で上部横並び・高さ 56 以上（Ruling 21。段2で実装。段1は全幅で下タブ） |
+| 見える高さ 600px 未満（段4・D33・Ruling 71） | iPhone SE の Safari（375×548）と横向きのスマホ: 現在カウント S2 も 72・種目タイル 48（S4 の種目選びも）・S1 見出し 20・トグル 83・声チップ 48・上の余白 8 など。`@media (max-height: 599px) and (max-width: 1023px)` の 1 か所だけ。667 以上は 1px も変えない | 当たらない |
 
 ### 余白・角丸・境界
 - 画面の左右余白 16px、上 16px。見出しの上 24／下 12。要素間 8〜12px、区切りの上 24px。
@@ -319,6 +323,8 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 4. 同じ `[data-group]` 祖先を持つ要素は合わせて **1**。
 5. 一覧 `[data-list]` は閉じた行（行の見出し）をまとめて **1**。開いた行の中身 `[data-row-body]` は 4. の規則で数える。`[data-list]` は `[data-group]`・`[data-list]` の中に置かない（Ruling 35）。一覧の行は `li` にしない（補助文 16px が U1 の本文の規則に当たるため。`div role="list"`）。
 6. 当てはめ（期待値）: S1＝3（初回2）、S2＝5、S3＝1（0件）・3（行を開く）、S4＝1（種目選択）・3（0件）・5（1件以上）・8（行を開く。Ruling 53）・7（くわしく開）・7（追加の行で名前が空＝一覧あり。名前が入れば 6。0件で追加の行は 5。Ruling 54）、S5＝5（くわしく開 8）、S8 ステップ0＝2。
+   - **段4で足した期待値**: S2・S5 くわしく開＝9、S4 くわしく開＝8（声のタイミング）。S6＝3。S7＝2（標準だけ）・2（3 本）・3（行を開）。S8＝2（説明）・2（1 語目）・4（録れた語・前の語あり）・4（完成）・2（マイク拒否。D30）・2（声が入っていない）・0（非対応）。
+7. **画面の大きさ（段4）**: 375×667・1280×900 に加えて、(a) **320×568 で全状態に横スクロールが出ない**、(b) **375×548（iPhone SE の Safari）でも各画面の主要操作が初期表示に入る**（全状態を同じ規則で検査。例外は S5 の声チップ＝スクロールの下（S5 くわしく閉の 3 状態は期待値 4）と、警告の枠つきの S2/S5＝速さと ▶ だけ。Ruling 71・23）。`ui:check` は段4の終わりで 192 項目。
 
 ### 手動レビュー項目（チェックリスト）
 - 状態を色だけで示していない（色＋形＋文字）。
@@ -344,8 +350,8 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 ### 保存先（Ruling 11）
 - IndexedDB `dance-count-v2` を version 1 → 2 に上げる。既存 `voice-packs` ストアを維持し、`routines`・`settings` を追加。
 - 移行: localStorage の `dance-count-v2-ui-locale` は初回起動時に読み取って IndexedDB へ移し、移せたら消す（段2で済）。`dance-count-v2-routine-draft:*` は旧画面（別オリジン）の旧ルーティン（`legacy-import`）の下書きなので移行しない（Ruling 41）。
-- 初回の保存成功時に `navigator.storage.persist()` を要求（結果は画面に出さない）。
-- 消失対策: 先生の録音完成時とルーティンの初回保存時に「ファイルに保存（バックアップ）」を勧める1行を各1回だけ出す。「ファイルに保存」は配布ファイルと同じ形式（§7 配布ファイル）で、同意欄は付けない。
+- 初回の保存成功時に `navigator.storage.persist()` を要求（結果は画面に出さない）。**段4で前倒し**: 録音の最初の語を保存した後（Ruling 56）。段7はルーティン側も含めて見直す。
+- 消失対策: 先生の録音完成時（**段5**）とルーティンの初回保存時（**段5**。Ruling 41・55-3）に「ファイルに保存（バックアップ）」を勧める1行を各1回だけ出す。「ファイルに保存」は配布ファイルと同じ形式（§7 配布ファイル）で、同意欄は付けない。
 - Service Worker のキャッシュにユーザーデータは入れない。
 
 ### ルーティン（既存形式を拡張。既存キーは変えない）
@@ -363,7 +369,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 複製は名前を変えずに行う（「（コピー）」を付けない。エンジンの既定値つき引数に `''` を渡す。i18n キーは作らない。Ruling 39）。
 
 ### 声のパック
-- 端末内: 既存 `recorded-voice-pack` schemaVersion 1（語ごとに Blob・onsetMs・gainDb・normalized・sourceOnsetMs・durationMs、`wordOffsetsMs`）。追加フィールド `origin:'recorded'|'received'`、`distributor?`、`consent?`。録音は MediaRecorder（iOS `audio/mp4`、Chrome `audio/webm;codecs=opus`）→ `recording-normalizer` で WAV 化して保存（Ruling 15）。
+- 端末内: 既存 `recorded-voice-pack` schemaVersion 1（語ごとに Blob・onsetMs・gainDb・normalized・sourceOnsetMs・durationMs、`wordOffsetsMs`）。追加フィールド `origin:'recorded'|'received'`、`distributor?`、`consent?`（段4は `recorded` だけを作る。保存は `src/app/voices/store.ts`＝`platform/storage` 経由・DB は v2 のまま。Ruling 56）。録音・受け取った声の「声のタイミング」は `timingAdjustments.globalOffsetMs`（[仕様差] Ruling 62-3。下の「設定」の最後の行の読み替え）。録音は MediaRecorder（iOS `audio/mp4`、Chrome `audio/webm;codecs=opus`）→ `recording-normalizer` で WAV 化して保存（Ruling 15）。
 - 標準音声: `public/audio/<packId>/manifest.json`（schemaVersion 2・words.<key>.onsetMs 実測済み）。英語 `default-en-female-v1`（既存）、日本語 `default-ja-female-v1`（Ruling 5 のゲート通過後）。
 
 ### 設定
@@ -372,11 +378,12 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
   lastTemplateByDance:{}, speedPresetByDance:{}, customBpmByDance:{},
   speedPresetByRoutine:{}, customBpmByRoutine:{},  // S5 の速さはルーティンごと（Ruling 40）。ルーティン削除で消す
   metronome:true, countInBars:1 /* オン。S2 のオンは2小節（D17） */, loop:true,
-  voiceOffsetMsByVoiceId:{},                     // 標準音声の「声のタイミング」（読み取り専用パックのため設定側に持つ）
+  voiceOffsetMsByVoiceId:{},                     // 標準音声の「声のタイミング」（読み取り専用パックのため設定側に持つ。段4: 標準の声だけ）
   hints:{ homeScreenCardDismissed, wakeLockTipShown, backupTipShownForRecording, backupTipShownForRoutine } }
 ```
 - `voiceLocale` の初期値は UI 言語に関わらず `'en'`（D3）。録音・受け取ったパックを選ぶと `voiceLocale` はそのパックの `locale` に従う（Ruling 25）。言語を別に選べるのは標準音声だけ。
-- 録音・受け取った声の「声のタイミング」はそのパックの `wordOffsetsMs` に12語同じ値で保存（既存の範囲検査 ±1000ms の内側、UI は ±200ms）。
+- 録音・受け取った声の「声のタイミング」はそのパックの `wordOffsetsMs` に12語同じ値で保存（既存の範囲検査 ±1000ms の内側、UI は ±200ms）。**[仕様差] 段4**: `timingAdjustments.globalOffsetMs` に 1 つの値で持つ（Ruling 62-3。`wordOffsetsMs` は使わない。受け取った声の `wordOffsetsMs` の扱いは段5）。
+- **段4**: `selectedVoiceId` は録音・受け取った声の ID も残す（`normalizeSettings` は標準へ戻さない。パックが無い・途中なら再生時に黙って標準（英語）。Ruling 61）。`voiceLocale` は選んだ声から導いて同時に書く（Ruling 60-3）。
 
 ### 配布ファイル（Ruling 4）
 ```
@@ -526,10 +533,11 @@ App: <public URL>
 |---|---|---|---|---|
 | 音が鳴らない（2秒判定） | S2/S5 上部バナー | 音が出ていません。本体の消音スイッチを確かめて、もう一度 ▶ を押してください。 | No sound is playing. Check the silent switch and press ▶ again. | 音が出ない時は（→ S11） |
 | 再生が中断（電話・ロック復帰） | S2/S5 の1行 | 再生が止まりました。もう一度 ▶ を押してください。 | Playback stopped. Press ▶ again. | ▶（点滅させない） |
-| マイク拒否 | S8 | マイクが使えない設定になっています。 | The microphone is turned off for this app. | 設定の開き方／あとで |
+| マイク拒否 | S8（**段4: 説明の画面の中の枠**。言葉の 2 択と「録音をはじめる」は残る。D30） | マイクが使えない設定になっています。 | The microphone is turned off for this app. | 設定の開き方（枠の中で 3 行に開く: 「iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前）」「Android・PC：アドレスバーの左のマーク → マイク」「許可したら、もう一度「録音をはじめる」を押してください。」。Ruling 74）／あとで（→ 段4は「‹ 戻る」） |
+| マイクが使えない（通話中・ほかのアプリ・見つからない） | S8 説明の画面の中の枠（段4・Fable Q2） | マイクを使えませんでした。ほかのアプリや通話を終えてから、もう一度「録音をはじめる」を押してください。 | The microphone couldn't be used. Close other apps or end the call, then tap “Start recording” again. | （枠の中には無し。同じ「録音をはじめる」） |
 | マイク非対応 | S8 | このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。 | This browser can't record. Please open in Safari (iPhone) or Chrome. | 戻る |
-| 録音が無音・短すぎ | S8 の語の画面 | 声が入っていませんでした。もう一度録音してください。 | We couldn't hear your voice. Please record again. | 録音する |
-| 保存失敗・容量不足 | 発生画面 | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | ファイルに保存 |
+| 録音が無音・短すぎ | S8 の語の画面（説明の 1 行と同じ箱。録音の途中のマイクの失敗も同じ。Task 7 修正便） | 声が入っていませんでした。もう一度録音してください。 | We couldn't hear your voice. Please record again. | 録音する |
+| 保存失敗・容量不足 | 発生画面 | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | ファイルに保存（**段5**。段4は文だけ） |
 | 壊れたファイル・別の種類 | S10 | このファイルは読めませんでした。先生に送り直してもらってください。（ファイル名） | This file couldn't be read. Ask your teacher to send it again. | ファイルを選ぶ |
 | 20MB 超 | S10 | このファイルは大きすぎて受け取れません。 | This file is too large. | ファイルを選ぶ |
 | 新しすぎる schemaVersion | S10 | 新しいアプリで作られたファイルです。アプリを更新してください。 | This file was made by a newer version. Please update the app. | 更新する（再読み込み） |
@@ -580,7 +588,8 @@ App: <public URL>
 ### 自動
 - `npm test`: エンジン（移設前 95件）＋新規（tempo-map、i18n キー一致・禁止語、bundle の書き出し／読み込み／互換／拒否、設定の移行）。
 - `npm run timing:audit`: 移設前の `output/timing-audit-before.json` と、`generatedAt` を除いて diff ゼロ（例 `jq 'del(.generatedAt)'` で両方を整形して `diff`）。段1の移設直後と tempo-map 集約直後の2回。
-- `npm run ui:check`: §6 の U1〜U15、全画面、375×667 と 1280×900、くわしく開閉の両方。
+- `npm run ui:check`: §6 の U1〜U15、全画面、375×667 と 1280×900、くわしく開閉の両方（段4で 375×548 の 1 周と 320×568 の横スクロールを足した。§6 の 7.）。
+- `npm run smoke:voice`（段4）: Chrome の偽マイク（`test/fixtures/voice/*.wav`。`node tools/make-fake-mic-wav.js` で作り直せる）で 12 語を録る → 聞き比べ → 選ぶ → S2 が録った声で鳴る（標準の声の音を取りに行かない）→ 声のタイミングが残る → 削除。無音と小さすぎる音は止める。
 - Playwright（MCP または `playwright-core`）で 375 と 1280 の両方を開き、スクロール領域ごと上から下まで撮って目視。撮影ファイルは `~/.playwright-mcp/` に。検収後は自動操作ブラウザを必ず閉じる。
 - インストール可能性: Lighthouse の PWA 区分は現行版で廃止されているため、Chrome DevTools の Application → Manifest でインストール可能（エラーなし）と、SW の precache 一覧に標準音声が入っていることで確認する。
 
