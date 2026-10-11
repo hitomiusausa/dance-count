@@ -1,3 +1,5 @@
+> 2026-10-11 注記: 旧 public/*.html は legacy/ へ、src/v2 は src/engine へ移動した（本文は当時の記録）
+
 # Dance Count for Ballroom v2 設計図
 
 作成日: 2026-07-12  

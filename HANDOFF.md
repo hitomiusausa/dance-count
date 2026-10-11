@@ -40,12 +40,13 @@
 
 ### タイミングの中核
 
-- `src/v2/dance-profiles.js`: 10種目の拍子、BPM、カウント語彙、標準パターン。
-- `src/v2/data/imported-routine-sources.json`: 旧アプリ以外から取り込んだルーティンの正本（2026-07-15新設。紙資料の転記は原文をprintedName/printedCountsに保存し、フリガナを表示名にする）。`routines:migrate` が旧データと合わせて検証・レポートへ統合する。
-- `src/v2/rhythm-parser.js`: カウント表記を解析。
-- `src/v2/rhythm-compiler.js`: 960 ticks/beatの整数タイムラインへ変換。
-- `src/v2/audio-engine.js`: 同じtickタイムラインから音声とメトロノームをスケジュール。
-- `src/v2/timeline-view-model.js`: 同じtickタイムラインから拍・小節内ハイライトを生成。
+- `src/engine/dance-profiles.js`: 10種目の拍子、BPM、カウント語彙、標準パターン。
+- `src/engine/data/imported-routine-sources.json`: 旧アプリ以外から取り込んだルーティンの正本（2026-07-15新設。紙資料の転記は原文をprintedName/printedCountsに保存し、フリガナを表示名にする）。`routines:migrate` が旧データと合わせて検証・レポートへ統合する。
+- `src/engine/rhythm-parser.js`: カウント表記を解析。
+- `src/engine/rhythm-compiler.js`: 960 ticks/beatの整数タイムラインへ変換。
+- `src/engine/tempo-map.js`: tick↔秒/ms の唯一の場所（tick を時刻に変えるのはここだけ。一定テンポ `constantTempo` と拍の地図 `beatMapTempo`。返すのは曲の時間軸上の位置で、長さは位置の差）。第2の時間計算を作らない（例外は検算用の `tools/audit-all-dance-timing.js`・`tools/render-subdivision-audio-review.js` の独立した式だけ＝段1 裁定 P4）。
+- `src/engine/audio-engine.js`: 同じtickタイムラインから音声とメトロノームをスケジュール。
+- `src/engine/timeline-view-model.js`: 同じtickタイムラインから拍・小節内ハイライトを生成。
 
 音声、メトロノーム、画面ハイライトは別計算にせず、同じ整数tickを唯一の基準にしている。
 
@@ -134,7 +135,7 @@
 
 - `output/all-dance-timing-audit.json`
 - `output/figure-terminology-audit.json`
-- `src/v2/data/legacy-routines-report.json`
+- `src/engine/data/legacy-routines-report.json`
 
 ## 6. 現在の要確認事項
 
@@ -173,7 +174,7 @@
 
 ## 7. フィガー名称の根拠
 
-現在の英語名称レジストリは `src/v2/figure-terminology.js`。
+現在の英語名称レジストリは `src/engine/figure-terminology.js`。
 
 使用済み一次資料:
 
