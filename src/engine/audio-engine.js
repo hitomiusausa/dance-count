@@ -1,13 +1,16 @@
 import { TICKS_PER_BEAT } from './dance-profiles.js';
 import { eventTimeSeconds } from './rhythm-compiler.js';
+import { constantTempo } from './tempo-map.js';
 import { scheduleVoiceEvent } from './voice-pack-loader.js';
 
 const DEFAULT_LOOKAHEAD_SECONDS = 0.35;
 
-export function patternDurationSeconds(durationTicks, bpm) {
+// tempo は省略可（既定は constantTempo(bpm)）。既定は検査の後で作る（引数の既定値にすると
+// 既存の検査より先に評価され、エラーの順番が変わるため）。BPM の検査は constantTempo が同じ文言で行う。
+export function patternDurationSeconds(durationTicks, bpm, tempo) {
   if (!(durationTicks > 0)) throw new RangeError('Pattern duration must be greater than zero');
-  if (!(bpm > 0)) throw new RangeError('BPM must be greater than zero');
-  return durationTicks / TICKS_PER_BEAT * 60 / bpm;
+  tempo ??= constantTempo(bpm);
+  return tempo.tickToSeconds(durationTicks);
 }
 
 export function eventOccurrenceTime({ event, iteration, durationTicks, bpm, startTime }) {
@@ -15,9 +18,10 @@ export function eventOccurrenceTime({ event, iteration, durationTicks, bpm, star
   return eventTimeSeconds({ ...event, absoluteTick: loopTick }, bpm, startTime);
 }
 
-export function rangeEventTimeSeconds({ event, iteration, rangeStartTick, rangeDurationTicks, bpm, startTime }) {
+export function rangeEventTimeSeconds({ event, iteration, rangeStartTick, rangeDurationTicks, bpm, startTime, tempo }) {
   const localTick = event.absoluteTick - rangeStartTick + iteration * rangeDurationTicks;
-  return startTime + localTick / TICKS_PER_BEAT * 60 / bpm;
+  tempo ??= constantTempo(bpm);
+  return startTime + tempo.tickToSeconds(localTick);
 }
 
 export function isAccentedBeat(beatIndex, beatsPerBar) {
@@ -58,21 +62,25 @@ export class PracticeAudioEngine {
     wordOffsetsMs = {},
     countInBars = 1,
     rangeStartTick = 0,
-    rangeEndTick = compiled.durationTicks
+    rangeEndTick = compiled.durationTicks,
+    tempo
   }) {
     this.stop();
     if (!this.voicePack) throw new Error('Voice pack is not loaded');
     if (!(rangeStartTick >= 0 && rangeEndTick > rangeStartTick && rangeEndTick <= compiled.durationTicks)) {
       throw new RangeError('Invalid playback range');
     }
-    const beatSeconds = 60 / bpm;
     const countInBeats = countInBeatCount(compiled.profile.beatsPerBar, countInBars);
+    // 既定のテンポは stop() と既存の検査（範囲・はじめの合図の小節数）の後で作る。
+    tempo ??= constantTempo(bpm);
+    const beatSeconds = tempo.tickToSeconds(TICKS_PER_BEAT);
     const patternStartTime = this.audioContext.currentTime + 0.12 + countInBeats * beatSeconds;
     const countInStartTime = patternStartTime - countInBeats * beatSeconds;
 
     this.state = {
       compiled,
       bpm,
+      tempo,
       loop,
       metronome,
       voiceOffsetMs,
@@ -115,8 +123,8 @@ export class PracticeAudioEngine {
 
   scheduleAhead() {
     if (!this.playing) return;
-    const { compiled, bpm, loop, startTime } = this.state;
-    const duration = patternDurationSeconds(this.state.rangeDurationTicks, bpm);
+    const { bpm, tempo, loop, startTime } = this.state;
+    const duration = patternDurationSeconds(this.state.rangeDurationTicks, bpm, tempo);
     const horizon = this.audioContext.currentTime + this.lookaheadSeconds;
 
     if (!loop && this.state.nextIteration > 0) {
@@ -135,25 +143,25 @@ export class PracticeAudioEngine {
   }
 
   scheduleIteration(iteration) {
-    const { compiled, bpm, loop, metronome, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
+    const { compiled, bpm, tempo, loop, metronome, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
 
     if (metronome) {
       const firstBeat = Math.ceil(rangeStartTick / TICKS_PER_BEAT);
       for (let beat = firstBeat; beat * TICKS_PER_BEAT < rangeEndTick; beat += 1) {
         const originalTick = beat * TICKS_PER_BEAT;
         const localTick = originalTick - rangeStartTick + iteration * rangeDurationTicks;
-        const time = startTime + localTick / TICKS_PER_BEAT * 60 / bpm;
+        const time = startTime + tempo.tickToSeconds(localTick);
         this.scheduleClick(time, beat % compiled.profile.beatsPerBar === 0);
       }
     }
 
     const voiceEvents = compiled.events.filter(item => item.voiceKey && item.absoluteTick >= rangeStartTick && item.absoluteTick < rangeEndTick);
     for (const [eventIndex, event] of voiceEvents.entries()) {
-      const targetTime = rangeEventTimeSeconds({ event, iteration, rangeStartTick, rangeDurationTicks, bpm, startTime });
+      const targetTime = rangeEventTimeSeconds({ event, iteration, rangeStartTick, rangeDurationTicks, bpm, startTime, tempo });
       const nextEvent = voiceEvents[eventIndex + 1] ?? (loop ? voiceEvents[0] : null);
       const nextIteration = eventIndex + 1 < voiceEvents.length ? iteration : iteration + 1;
       const endTime = nextEvent
-        ? rangeEventTimeSeconds({ event: nextEvent, iteration: nextIteration, rangeStartTick, rangeDurationTicks, bpm, startTime })
+        ? rangeEventTimeSeconds({ event: nextEvent, iteration: nextIteration, rangeStartTick, rangeDurationTicks, bpm, startTime, tempo })
           + effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, nextEvent.voiceKey) / 1000
         : null;
       const source = scheduleVoiceEvent({
@@ -188,14 +196,14 @@ export class PracticeAudioEngine {
 
   frame() {
     if (!this.playing) return;
-    const { compiled, bpm, loop, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
-    const duration = patternDurationSeconds(rangeDurationTicks, bpm);
+    const { compiled, bpm, tempo, loop, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
+    const duration = patternDurationSeconds(rangeDurationTicks, bpm, tempo);
     const elapsed = this.audioContext.currentTime - startTime;
     if (elapsed < 0) {
       this.onFrame({ playing: true, event: null, progress: 0, countIn: true, originalTick: null });
     } else {
       const localSeconds = loop ? elapsed % duration : Math.min(elapsed, duration);
-      const localTick = localSeconds / (60 / bpm) * TICKS_PER_BEAT;
+      const localTick = tempo.secondsToTick(localSeconds);
       const originalTick = rangeStartTick + localTick;
       const iteration = Math.floor(elapsed / duration);
       const rangeEvents = compiled.events.filter(event => event.absoluteTick >= rangeStartTick && event.absoluteTick < rangeEndTick);

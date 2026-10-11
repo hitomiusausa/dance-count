@@ -1,5 +1,6 @@
-import { DANCE_PROFILES, TICKS_PER_BEAT } from './dance-profiles.js';
+import { DANCE_PROFILES } from './dance-profiles.js';
 import { compileRhythm } from './rhythm-compiler.js';
+import { constantTempo } from './tempo-map.js';
 
 const SUBDIVISIONS = new Set(['&', 'a', 'e']);
 
@@ -43,12 +44,12 @@ export function auditCompiledTransitions(compiled, bpm, postOnsetMsByVoice, { lo
 }
 
 export function expectedEventTimeMs(event, bpm) {
-  return event.absoluteTick / TICKS_PER_BEAT * 60_000 / bpm;
+  return constantTempo(bpm).tickToMs(event.absoluteTick);
 }
 
 function transition(from, to, bpm, postOnsetMsByVoice) {
   const gapTicks = to.absoluteTick - from.absoluteTick;
-  const gapMs = gapTicks / TICKS_PER_BEAT * 60_000 / bpm;
+  const gapMs = constantTempo(bpm).tickToMs(gapTicks);
   const activeAfterOnsetMs = Number(postOnsetMsByVoice[from.voiceKey] ?? 0);
   return {
     from: from.voiceKey,

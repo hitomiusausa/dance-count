@@ -1,5 +1,6 @@
 import { getDanceProfile, TICKS_PER_BEAT } from './dance-profiles.js';
 import { parseRhythm, RhythmSyntaxError } from './rhythm-parser.js';
+import { constantTempo } from './tempo-map.js';
 
 const SUBDIVISION_TICKS = Object.freeze({ '&': 480, e: 480, a: 240 });
 
@@ -124,9 +125,9 @@ export function compileRoutine({ danceId, figures, leadingSubdivision = null }) 
   };
 }
 
+// 再生経路からは呼ばれない（再生は audio-engine の rangeEventTimeSeconds）。BPM の検査は constantTempo が同じ文言で行う。
 export function eventTimeSeconds(event, bpm, transportStartTime = 0) {
-  if (!(bpm > 0)) throw new RangeError('BPM must be greater than zero');
-  return transportStartTime + (event.absoluteTick / TICKS_PER_BEAT) * (60 / bpm);
+  return transportStartTime + constantTempo(bpm).tickToSeconds(event.absoluteTick);
 }
 
 function compileLeadingSubdivision({ value, cursor, leadingSubdivision, events, token, profile }) {
