@@ -4,6 +4,7 @@
   --bg: #FFFFFF; --surface: #FFFFFF; --dockbg: #FFFFFF;
   --ink: #14213D; --ink2: #4A5670; --primary: #1B2A4A; --on-primary: #FFFFFF;
   --soft: #EEF0F5; --line: #8790A3; --focus: #B45309;
+  --line-on-soft: #7D8699; /* --soft の上の罫線・枠（3.21:1。白の上の --line と同じ強さ。U7） */
   --sel: #1B2A4A; --sel-ink: #FFFFFF; --sel-line: #1B2A4A;
   --count-ink: #A54D06; --beat-on: #A54D06;
   --warn-bg: #FFFFFF; --warn-ink: #7A3A05; --warn-line: #A54D06;
@@ -131,6 +132,34 @@ button { cursor: pointer; }
 .dc-radio-row[aria-checked="true"] { color: var(--primary); }
 .dc-steps { margin: 0 0 16px; padding-left: 1.4em; }
 .dc-steps li { font-size: 18px; margin-bottom: 8px; }
+
+/* 段3 共通: ボタン・一覧・確認ダイアログ（S3〜S5。Ruling 35・44） */
+.dc-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; min-width: 48px; padding: 0 14px;
+  border: var(--bw) solid var(--primary); border-radius: var(--r-s); background: var(--surface); color: var(--primary); font-size: 18px; font-weight: 700; text-decoration: none; }
+.dc-button.dc-primary { min-height: 56px; border-color: var(--primary); border-radius: var(--r); background: var(--primary); color: var(--on-primary); font-size: 20px; font-weight: 800; }
+.dc-button:disabled { border-color: var(--line); background: var(--soft); color: var(--ink2); cursor: not-allowed; }
+.dc-wide { width: 100%; }
+.dc-empty { margin: 16px 0 0; color: var(--ink2); }
+/* 一覧はカードを使わず罫線で区切る。行は div（li は本文 18px の規則に当たるため・U1）。開いた行だけ中身を出す */
+.dc-list { margin: 16px 0 0; padding: 0; border-top: var(--bw) solid var(--line); }
+.dc-row { padding: 4px 0; border-bottom: var(--bw) solid var(--line); }  /* 行のボタン同士の間隔 4+1+4px（U3 の 8px 以上） */
+.dc-row-head { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 72px; padding: 8px 2px; border: none; background: none; color: var(--ink); text-align: left; }
+.dc-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.dc-row-text b { font-size: 18px; overflow-wrap: anywhere; }
+.dc-row-text small { font-size: 16px; color: var(--ink2); overflow-wrap: anywhere; }
+.dc-row-chev { color: var(--ink2); }
+.dc-row[data-open] { --line: var(--line-on-soft); background: var(--soft); }  /* 開いた行の中の罫線・枠は --soft の上でも 3:1（U7） */
+.dc-row[data-open] .dc-row-chev { transform: rotate(180deg); }
+.dc-row-body { padding: 8px 10px 12px; }
+.dc-row-note { margin: 0 0 12px; font-size: 18px; color: var(--ink2); }
+.dc-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dc-row-actions .dc-button--secondary { flex: 1; }
+.dc-dialog { width: min(100% - 32px, 420px); padding: 20px 16px 16px; border: none; border-radius: var(--r); background: var(--surface); color: var(--ink); }
+.dc-dialog::backdrop { background: rgba(20, 33, 61, 0.55); }
+.dc-dialog-title { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+.dc-dialog-detail { margin: 0 0 16px; font-size: 18px; color: var(--ink2); overflow-wrap: anywhere; }
+.dc-dialog-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dc-dialog-buttons .dc-button { min-height: 56px; }
 
 /* PC（Ruling 21）: タブは上部、S2 は2領域（最大 960px）。他は1カラム 640px のまま */
 @media (min-width: 1024px) {

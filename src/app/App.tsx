@@ -37,10 +37,9 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2・S4・S5 は下で個別に描く）。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2〜S5 は下で個別に描く）。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
-  S3: RoutinesScreen,
   S6: SettingsScreen,
   S7: VoicesScreen,
   S11: SoundHelpScreen
@@ -112,8 +111,8 @@ export function App() {
         <RoutinesContext.Provider value={routinesValue}>
           <div class="dc-shell" lang={locale}>
             <IconSprite />
-            {screen === 'S2'
-              ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+            {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+              : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
               : <Simple />}
             {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
           </div>
