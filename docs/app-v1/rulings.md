@@ -1617,3 +1617,219 @@
 - **Task 9**: 通し確認 13 を「設定で許可 → 戻らずに同じボタンで通る」に。
 - **Task 10**: §6 期待値 `2/2/4/4/2/2/0`・§11 注記・Ruling 59-6/60-2/68-4 の注記・D23 訂正・D30〜D32 転記・実機確認表 13 と「通話中」の 1 行追加。
 - Task 1・2・4・5・6・8: 変更なし。
+
+---
+
+# 段4の使いやすさの通し確認への裁定 — Fable（2026-10-12・Ruling 71〜78・D33〜D35 は代理決定・ひとみうさ確認待ち）
+
+
+対象: `docs/app-v1/stage4-usability-walk.md` §5 の 10 問。実装は **Task 9b**（Task 10 の前）。
+前提の重みづけ（ひとみうさの常設要件）: 60〜70代の初見者が**止まらない・迷わない** ＞ **iPhone SE 375×667 が主画面。ただし実機の iOS Safari はツールバーのぶん見える高さが約 548pt**＝どの画面も主要操作が **375×548 でスクロール無しに見える** ＞ 320 で横スクロール無し ＞ 既存の裁定の字面。
+番号: `docs/app-v1/rulings.md` の最後は Ruling 70・D32 なので、ここは **Ruling 71〜78・D33〜D35**。PO 判断級は「代理決定・ひとみうさ確認待ち」。
+
+## 0. 裁定の前に確かめた事実（コードと実測。推測は明記）
+
+- **実測 1（寸法・Chrome 375×548、今の作業ツリー）**: S2 ワルツ（くわしく閉）は 帯の上端 451 に対し トグル下端 490・声チップ下端 558＝**2 つの主要操作が帯の下**（計画者の S2 寸法は 375×667 用）。S8 録れた語は 波形＋「聞く」の下端 529（帯 467）。S8 1 語目・声が入っていない は丸の下端 439／467（入るが余裕 0〜28）。S1 前回ありは 10 番目のタイルの下端 587（帯 480）＝**S1 も 548 では 10 種目が入らない**。S5（13 件）は声チップ下端 ≈ 578。S3・S6・S7・S8 説明・S8 完成・S4 は 548 でも入る。測定スクリプトは scratch `measure/measure.mjs`（tracked ファイルは触っていない）。
+- **実測 2（候補 CSS を注入して再測定・`measure/compact.css`＋`validate.mjs`）**: Ruling 71 の数値はこの実測で **375×548 に入ること**（S2 チップ下端 443／451、S1 前回あり 10 番目タイル下端 475／480、S8 録れた語 下端 450／467、S8 1 語目・枠 丸下端 444／467）と、**375×667 では何も変わらない**ことを確認済み。見た目は `~/.playwright-mcp/stage4-fable-548-{s2,s1-resume,s8-word1,s8-taken}.png`（詰めても窮屈に見えない）。
+- **実測 3（iOS 26.3 シミュレーター・SE 第3世代・Safari）**: マイク無しで作れる `createMediaStreamDestination()` の流れを `MediaRecorder` で録り、同じページで `decodeAudioData` した（scratch `probe/decode-probe.html`。`sim/probe1.png`）。結果: `audio/webm;codecs=opus` 録音 → **decode OK**（1.18 秒・48kHz）、`audio/mp4`（`mp4a.40.2`）→ **decode OK**。つまり **iOS 26.3 では webm で録っても `processTake` が通る**（Open question 10 の懸念は実機でも起きない見込み。実機のマイク音での最終確認は残す）。参考: Playwright の WebKit（デスクトップ）は mp4 の decode に失敗し webm は通る＝デスクトップ WebKit は iOS の代わりにならない。
+- **コード**: `processTake` は decode 失敗を `'failed'` にし、画面は `!result.ok` を全部 `'no-voice'`（「声が入っていませんでした」）にする（`RecordVoiceScreen.tsx:140`）。形式が decode できない端末ではこの文が毎回出て**初見者が抜けられない**構造。実測 3 でこの経路が iOS 26.3 で閉じていることを確かめたので、段4では構造を変えない（Ruling 78）。
+- **コード**: 語の画面の説明 1 行と枠は排他（`alert !== 'none' ? <NoticeLine/> : <p class="dc-record-hint">`）。だから説明を依頼形にしても「〜してください」は 1 画面 1 つのまま（Ruling 7）。
+- **コード**: `.dc-voice-partial { color: var(--ink2) }` が行全体（名前・アイコン・山形）を灰にしている。`voiceInProgress` は 1 つの文言キー `'{name} · {count} / 12 語'`。
+- **コード**: `VoiceOffsetRow` は S2・S5・S4 共通部品（補助文を足せば 3 画面に出る。操作は増えない）。
+- **推測（未確認）**: ホーム画面に追加した Web アプリの設定の道順「設定 → アプリ → ＜アプリ名＞ → マイク」は iOS 18 以降の推測。Safari の道順「設定 → アプリ → Safari → マイク」は Task 9 がシミュレーターで実際にたどった（確認済み）。
+
+## 1. 結論の一覧
+
+| # | 問い | 結論 | 直す場所 |
+|---|---|---|---|
+| 1 | 途中の声の行が灰色 | **既定を採用**（名前は `--ink`、「· 7 / 12 語」だけ `--ink2`） | Ruling 73・Task 9b |
+| 2 | 英語 UI で既定名が日本語 | **据え置き**（段5の受け取り表示と一緒に） | Ruling 76 |
+| 3 | 消すには先に選ぶ | **Ruling 60-4 のまま** | Ruling 76 |
+| 4 | 語の画面の 1 行 | **変更**: 「ボタンを押したら、すぐ「{語}」と言ってください。」（D34） | Ruling 72・Task 9b |
+| 5 | 548 で「聞く」が帯の後ろ | **変更**: 高さ 600px 未満の「詰めた配置」＋説明と枠を同じ箱に（D33） | Ruling 71・72・Task 9b |
+| 6 | 設定の道順 | **変更**: 「設定 → アプリ → Safari → マイク」 | Ruling 74・Task 9b |
+| 7 | 声のタイミングの向き | **変更**: 補助文 1 行を足す（D35） | Ruling 75・Task 9b |
+| 8 | SE の Safari で S2 の初期表示に主要操作が入らない | **段4で直す**（Ruling 71 の S2 の数値＋ui:check に 375×548 の検査） | Ruling 71・Task 9b |
+| 9 | 完成の画面のキーボード | **据え置き・実機確認表に 1 行**。隠れたら S4 の型を掛ける（裁定済み） | Ruling 77・Task 10 |
+| 10 | iOS 26 は webm で録る | **そのまま**（シミュレーターで decode を実証。実機の 1 行は残す） | Ruling 78・Task 10 |
+
+---
+
+## Ruling 71（Q5・Q8・Q4 の寸法）[仕様差] 見える高さ 600px 未満の「詰めた配置」— S1・S2・S5・S8 の数値と、ui:check の 375×548
+
+**決定**:
+1. **1 つのメディアクエリ** `@media (max-height: 599px) and (max-width: 1023px)` を `base.css` の末尾（PC の `min-width: 1024px` ブロックの前後どちらでも可。`max-width: 1023px` で PC の上部タブの余白と競合させない）に置き、下の規則を入れる。**600px 以上（375×667・ホーム画面のアプリ・PC）は 1px も変えない**（モック B・Ruling 47/48 の値はそのまま）。しきい値 599 は「iOS Safari のツールバー表示時の SE＝548pt」と「ホーム画面のアプリの SE＝667pt」の間（どちらからも 50px 以上離れている。`lib/keyboard.ts` の 150 と同じ考え）。
+2. **共通**: `.dc-screen { padding-top: 8px }`（16 → 8）。
+3. **S1**（Ruling 16「10 種目とカードが初期表示に入る」を 548 でも守る）:
+   ```css
+   .dc-home { padding-top: 8px; }
+   .dc-appbar { margin-bottom: 2px; }
+   .dc-resume { min-height: 56px; padding: 4px 12px 4px 20px; }   /* 60 → 56（主ボタン基準 56 は守る） */
+   .dc-teacher { margin-top: 4px; padding: 2px 4px; }               /* 58 → 56 */
+   .dc-home .dc-heading { margin: 0; }
+   .dc-tiles { gap: 8px 14px; }                                     /* 行間 8 は U3 の下限。4 にしない */
+   .dc-tile { min-height: 48px; padding: 2px; gap: 0; }             /* 64 → 48（U3 の下限。中身 40px なので Safari の書体差を 8px 吸収できる） */
+   .dc-tile b, .dc-tile small { line-height: 1.15; }
+   ```
+   実測: 前回ありで 10 番目のタイル下端 475 ≤ 帯 480（初回は 417）。
+4. **S2・S5**（`.dc-practice` 共通。S5 は 6. の例外あり）:
+   ```css
+   .dc-practice .dc-playhead h1 { margin: 4px 0; }
+   .dc-practice .dc-now:not(.dc-now--lead) { min-height: 72px; font-size: 72px; }   /* S5 と同じ 72（Ruling 47/48 の値を流用） */
+   .dc-practice .dc-countbox { padding-bottom: 4px; margin-bottom: 4px; }
+   .dc-practice .dc-beats { margin-top: 4px; }
+   .dc-practice .dc-beats li { height: 28px; }                      /* 文字 18px・下線 3/6px は変えない */
+   .dc-practice .dc-field-label { margin: 2px 0 4px; }
+   .dc-practice .dc-opt { min-height: 56px; }                       /* 64 → 56（2 段の文字 41px＋余白 8 が入る） */
+   .dc-practice .dc-toggles { margin-top: 8px; }
+   .dc-practice .dc-toggle { min-height: 0; padding: 4px 2px; gap: 2px; }   /* 108 → 83 */
+   .dc-practice .dc-toggle-label { line-height: 1.2; }
+   .dc-practice .dc-chip-row { margin-top: 8px; min-height: 48px; }  /* 56 → 48（タップ対象の下限） */
+   .dc-practice .dc-more { margin-top: 8px; }
+   ```
+   実測（S2 ワルツ・375×548）: 速さ 240–296・トグル 304–387・声チップ 395–443 ≤ 帯 451（余裕 8）。**主要操作 5 つが全部入る**。「くわしく」の summary（451–499）は帯の下＝スクロールで届く（主要操作ではない。Ruling 18）。タップ間隔はすべて 8px 以上のまま（トグル同士 20・速さ 8・トグル→チップ 8）。
+5. **S2 の警告の枠つき（`?ui-state=no-sound`）**: 548 ではトグルと声チップが帯の下に落ちる（枠 101px のぶん）。**Ruling 23 のとおり「速さと ▶ が入る」だけを求める**（実測 速さ 349–405 ≤ 451）。枠は閉じれば戻る。これ以上は詰めない。
+6. **S5 の例外**: S5 は見出し 2 行＋「今のフィガー」の 1 行があり、4. を当てても声チップ下端 493 > 451（42px 不足）。**S5 は 548 で声チップだけスクロールの下に落ちることを許す**（速さ・トグル 2 つ・▶ の 4 つは入る: トグル下端 437）。「今のフィガー」や副題を消してまで入れない（S5 は先生が作るルーティンの画面＝生徒の主画面 S2 より優先度が低く、段7でホーム画面のアプリ＝667 になれば解ける）。— ひとみうさに後で見てもらう（§3）。
+7. **S8 語の画面**（Ruling 72 の「同じ箱」と組）:
+   ```css
+   .dc-record-progress { margin-top: 0; }
+   .dc-record-word { margin: 8px 0 4px; }
+   .dc-record-slot { margin-bottom: 8px; }                                      /* Ruling 72 の箱（通常 12） */
+   .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行を出さない（役目を終えている。Fable Q5） */
+   .dc-take { margin-top: 8px; padding: 4px 0; }
+   ```
+   実測（375×548）: 1 語目・枠あり とも丸の下端 444 ≤ 467、録れた語は 丸 214–376・波形＋「聞く」384–450 ≤ 467（余裕 17）。**枠（声が入っていない等）と録れた語が同時の時**（録り直しの失敗。Ruling 58-2 で前の録音は残る）は箱を出すので「聞く」が帯の下に落ちる＝押せる物は丸と「次へ」で止まらない。許容。
+8. **S3・S6・S7・S8 説明／完成／拒否・S4**: 548 でも入る（実測）。変更なし。320×568 の「拒否の 3 行を開いた時に 2 択の 2 つ目が帯の下」（Task 9 #13）と「S1 前回ありで 10 番目のタイルが 2px 帯の下」は 320 の要件（横スクロール無し）の外なので直さない。
+9. **ui:check に 375×548 の検査を足す**（`tools/check-app-ui.js`）: `SE_SAFARI_VIEWPORT = { width: 375, height: 548 }`（コメント: iOS Safari のツールバー表示時の iPhone SE の見える高さ。Task 9 の実測）。**全状態**を `reducedMotion: 'no-preference'` だけで回し、既存の `audit` をそのまま当てる（U1〜U13・R21/23・R59 等）。違いは 2 つ: (a) 状態に `opsSmall` があれば `ops` の代わりに期待値にする（S5 くわしく閉・S5 40字の名前（全角）・（英数字）の 3 つに `opsSmall: 4`＝6. の例外）、(b) `chipToDock`（R47）は 548 では当てない（`innerHeight < 600` で skip）。ラベルは `@ 375x548 (Safari SE)`。件数は 154 → **192**（38 状態 × 1）。`U12`（S1 のタイル）・`speedAndPlay`・`recordButton`・`takeShown`・`alert` の 120px はそのまま当たる＝これが「主要操作が 548 で見える」規則の機械判定。
+10. **仕様・台帳**: 仕様 §6 に「iPhone SE の Safari（375×548）でも各画面の主要操作が初期表示に入る。入らない例外は S5 の声チップ（スクロール）と警告の枠つきの S2/S5（Ruling 23）」を 1 行。§5 の寸法表に「高さ 600px 未満: 現在カウント 72・タイル 48・トグル 83・声チップ 48」を 1 行。Ruling 16・47 に注記。
+
+**理由**: 実機の SE で Safari から開く限り見える高さは 548 で、これが段7までのひとみうさの確認環境でもある。「主画面は 375×667」のまま 548 を無視すると、生徒の主画面 S2 で声チップとトグルが毎回スクロールの下になり、「声が変えられる」ことに初見者が気づけない。寸法だけの変更で DOM・操作数・文言は変えないので、既存の検査（U4 の数え方・状態表）がそのまま効く。しきい値で切れば 667 の見た目（PO 合意済み）を 1px も動かさない。
+
+**外れた時の代償**: 548 の S2 は現在カウントが 72（S5 と同じ）になり、667 と見た目が少し変わる（同じ端末でホーム画面に追加すると 96 に戻る＝「アプリにしたら大きくなった」と見える。悪い方向ではない）。詰めた配置は Safari の書体の高さの差に対して余裕 5〜17px（S1 前回あり 5・S2 8・S8 録れた語 17）。実機で 1〜2px 落ちたら、その画面の値を 1 段詰める（候補: S1 `.dc-home .dc-heading` 22 → 20px、S2 `.dc-beats li` 28 → 26）。ui:check の実行時間が約 1/4 増える。
+
+---
+
+## Ruling 72（Q4・Task 7 M-2・M-4）語の画面の 1 行は「押したら、すぐその語を言う」— 文言と、説明と枠を同じ箱に（D34）
+
+**決定**:
+1. **文言**（Ruling 59-2 の固定文「ボタンを押すと 1.5 秒だけ録音します。」を置き換える。`messages.ts` の `recordHint` に `{word}` を足す）:
+   - ja `recordHint`: **「ボタンを押したら、すぐ「{word}」と言ってください。」**
+   - en `recordHint`: **`Tap the button, then say “{word}” right away.`**
+   - `{word}` ＝ その語の画面の大きい語（`wordPrompts(pack.locale, word).main`。英語のパックなら Slow・日本語なら スロー／よん）。「1.5 秒」は出さない（押してから言うまでの間が無いことが伝われば足りる。長さは輪の進みで見える）。
+   - 「〜してください」は語の画面でこの 1 つ（枠と排他なので Ruling 7 の「1 画面 1 つ」のまま。`check-app-ui.js` の R52 の数え方は S4 用で S8 には当たらない）。375 で 2 行・320 で 2 行（「クイック」でも 2 行）。
+2. **説明と枠は同じ箱** `.dc-record-slot`（新しい要素。`data-slot="hint"|"alert"`）: `display:flex; align-items:center; min-height: 60px; margin: 4px 0 12px`（600px 未満は下 8。Ruling 71-7）。中の `.dc-record-hint`（`p`・18px・`--ink2`・中央・`margin:0`）または `NoticeLine` の `.dc-alert`（`margin:0`）。60 は枠の 2 行（59px。375・320 とも）以上。**これで「声が入っていませんでした」が出ても丸が動かない**（Task 7 M-4 の 25〜28px の跳びが消える）。`main` に `data-taken={take ? 'true' : 'false'}` を足す。
+3. **ui:check**: `S8 1 語目・未録音` に `recordHintWord: 'Slow'`（`.dc-record-hint` の文字に含む）と `recordSlot: 60`（`.dc-record-slot` の高さが 60）、`S8 声が入っていない` に `recordSlot: 60`（枠でも同じ高さ＝丸が同じ位置）。`S8 8 語目から前の語へ` は 375×667 では説明が見えたまま（`takeShown` に加え「`.dc-record-hint` が見える」を 1 行）、375×548 では見えない（`takeShownCompact: true` で「`.dc-record-slot[data-slot="hint"]` が無い」）。
+4. **テスト**: `test/app/i18n.test.ts` のキー一致はそのまま通る（両言語に `{word}`）。`wizard.ts` の `wordPrompts` の既存テストで `main` が確かめられているので新しい単体テストは不要。
+
+**理由**: 1.5 秒しか無いのに「押してからどうする」を言っていないのが M-2 の本体。語そのものを文に入れれば「何を言うか」と「すぐ」が 1 文で伝わる。箱を揃えるのは、枠が出た時に丸が動く（M-4）のを文言の変更と同じ場所で一緒に消せるから。
+
+**外れた時の代償**: 1.5 秒という数字を初見者は知らないまま押す（輪の動きで分かる）。説明が 2 行になるぶん 667 では丸が 310px から始まる（今 277。帯 586 なので余裕 114）。
+
+**D34（代理決定・ひとみうさ確認待ち）語の画面の 1 行の文言**: 上の 1.。— 代案: 計画の固定文のまま（1.5 秒を言う）。
+
+---
+
+## Ruling 73（Q1・Task 9 #4・#6）途中の声の行 — 名前は `--ink`、「· 7 / 12 語」だけ `--ink2`。開いた行の 2 ボタンは同じ強さのまま
+
+**決定**:
+1. `VoicesScreen.tsx` の途中の行: `.dc-voice-name` の中を `<span>{name}</span> <small class="dc-voice-count">{t('voiceInProgressCount', { count })}</small>` に分ける（間に半角空白 1 つ。`textContent` は今までどおり「自分の声（日本語） · 7 / 12 語」＝`check-app-ui.js` の `voiceRows` の期待値は変えない）。
+2. `messages.ts`: `voiceInProgress` を消し、`voiceInProgressCount` を足す。ja **`'· {count} / 12 語'`**／en **`'· {count} / 12 words'`**（320 で折れない。smoke-voice の nbsp 正規化はそのまま効く）。
+3. CSS: `.dc-voice-partial { color: var(--ink); }`（灰をやめる。マイクのアイコンも `--ink`）、`.dc-voice-count { font-size: 18px; font-weight: 400; color: var(--ink2); white-space: nowrap; }`、山形は既存の `.dc-row-chev`（`--ink2`）のまま。
+4. 開いた行の「続きを録音する」「削除」は**同じ強さのまま**（Task 9 #6）。D32 の「外れた時の代償」どおり、ひとみうさが「開いたのに始まらない」と感じたら「続きを録音する」を `.dc-primary` の見た目にする（その時に）。
+
+**理由**: 押せない行に見える原因は色だけ。構造（`role="button"`・開く型）は D32 で決めたばかりなので変えない。数だけ灰にすれば「名前＝押せる・数＝状態」と読める。
+
+**外れた時の代償**: 文言キーが 1 つ入れ替わる（`voiceInProgress` を参照している所は `VoicesScreen.tsx` と ui:check の期待文字列だけ。grep で確かめること）。
+
+---
+
+## Ruling 74（Q6・D30 の文言）マイクの設定の道順は「設定 → アプリ → Safari → マイク」
+
+**決定**: `messages.ts` の `micHowToIphone` を
+- ja **「iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前）」**
+- en **`iPhone: Settings → Apps → Safari → Microphone (if you opened it from the Home Screen, this app’s name instead of Safari)`**
+に替える（「アプリ」が 1 語増えるだけ。iOS 18 以降の道順。Task 9 がシミュレーター iOS 26.3 で実際にたどった）。括弧の中（ホーム画面のアプリの道順）は推測のまま＝実機確認表 13 の「ホーム画面のアプリで本当に『設定 → アプリ → ＜アプリ名＞ → マイク』か」で確かめる（D30 のとおり）。開いた枠の高さは 203px（375）で変わらない（R23 の 120px は閉じた枠にだけ当たる）。
+
+**理由**: 道順が 1 段抜けていると、60〜70代は「アプリ」の一覧で止まる。事実が確認できた所だけ直す。
+
+**外れた時の代償**: iOS 17 以前（「設定 → Safari」直下）の人には 1 段余計。iOS 17 以前の端末は Ruling 6 の対象外（`audioSession` も無い）なので許容。
+
+---
+
+## Ruling 75（Q7・Task 5 M3）声のタイミングに向きの補助文を 1 行足す（D35）
+
+**決定**:
+1. `VoiceOffsetRow`（`controls.tsx`）の 2 つのボタンの下に補助文 `<div class="dc-offset-hint">`: ja **「声が遅れて聞こえたら「早く」を押します。」**／en **`If the voice sounds late, press “Earlier”.`**（`voiceTimingHint`。「〜してください」は使わない＝依頼の数に数えない。16px・400・`--ink2`・`margin-top: 6px`。U1 の補助文 16px の下限ちょうど）。操作は増えない（S2・S5 くわしく開は 9 のまま・S4 は 8 のまま）。
+2. ラベル「声のタイミング」が `--ink2` 16px なのは `.dc-field-label` 共通（「速さ」も同じ）。変えない。押すたびに合図から鳴り直すのは Ruling 62-2 の仕様（S2 の設定変更と同じ型）。変えない。
+3. 実機確認表 (8) に「補助文を読んで『早く』を押す向きが分かるか」を足す（ひとみうさの確認。D24 と一緒に見てもらう）。
+
+**理由**: 文言 1 行で済み、操作も構造も増えない。向きを間違えても 1〜2 タップで戻れるが、「どっちか分からない」は「迷う」そのもの。D24（ms の表示）が確認待ちなので、文言も代理決定で一緒に見てもらう。
+
+**外れた時の代償**: くわしくの縦が 16px＋6px 伸びる（320 で 1162 → 1184px。スクロールで届く）。
+
+**D35（代理決定・ひとみうさ確認待ち）声のタイミングの補助文**: 上の 1.。— 代案: 文言を足さず実機で向きが分かるかだけ見る（Task 9 の既定）。
+
+---
+
+## Ruling 76（Q2・Q3・持ち越しの残り）据え置きにするもの
+
+**決定**:
+1. **Q2 英語 UI でも既定名が日本語**: 変えない。名前は録った時の UI 言語で付き、完成の画面の名前欄で直せる。表示時に既定名だけ訳す仕組みは段5（配布）で「受け取った声」の表示（`{distributor}さんの声`）と一緒に決める。§3 に載せる。
+2. **Q3 選んでいない声を消すには先に選ぶ・消すと標準（英語）**: Ruling 60-4 のまま。確認ダイアログの 2 行目に「消すと標準（英語）に戻ります」は足さない（Ruling 44 の型＝質問 1 つ・名前 1 行を守る）。段5で受け取った声が増えて「別の声を選んでいたのに、消したら標準に戻った」が実際に起きたら、`forgetVoiceSettings` を「開く前に選んでいた声へ戻す」に広げる（その時の裁定。純粋関数 1 つの変更で済む）。実機確認表 (9) に「削除 → 標準に戻る」は既にある。
+3. **Task 3 M2（「アドレスバー」「ブラウザ」）・Task 5 N2（保存失敗の枠が他の案内を隠す）・Task 6 M2（S6 の一瞬「標準」）・Task 9 #8'・#12・#14（Safari の折り返し）**: Task 9 の判定どおり記録だけ。手動の改行は入れない（折り返しは幅から診断する方針）。
+
+**理由**: どれも「止まる」「迷う」ではなく「好み」で、今直すと段5の設計に先回りして二度手間になる。
+
+---
+
+## Ruling 77（Q9）完成の画面の名前欄とキーボード — 実機確認表に 1 行。隠れたら S4 の型（裁定済み・Task 9b では触らない）
+
+**決定**: `stage4-device-check.md` に **「完成の画面で名前をタップ → キーボードが出ても名前欄が見え、打ち終えて『完了』（キーボードの『done』）で閉じる → 下の帯『完了』が戻る」** を足す。名前欄は画面の上（548 で 151–203）で、iOS 26 が帯をキーボードの上へ持ち上げても欄にはかからない見込み（S4 で起きたのは「帯が欄のすぐ下のフォームを覆う」だった。完成の画面で帯の下に来るのは聞き比べのボタンで、打っている間は使わない）。**隠れた・覆った場合**は、`RecordVoiceScreen` の完成の画面に S4 と同じ型を掛ける＝`viewportHeights()`＋`isKeyboardOpen` で `main` に `data-keyboard` を付け、`.dc-screen[data-screen="S8"][data-keyboard] .dc-dock { display:none }`（`lib/keyboard.ts` の `hidesDock(keyboardOpen, comparePlaying)`＝聞き比べ中は隠さない）。これは裁定済みなので、起きたら実装者が直してよい。
+
+**理由**: シミュレーターで完成の画面に入れなかった（OS の許可ダイアログ）ので、先回りして帯を隠す経路を足すより、起きた時に S4 の型をそのまま写す方が小さい。
+
+**外れた時の代償**: 実機で隠れていたら 1 往復増える（文言・構造は変わらない）。
+
+---
+
+## Ruling 78（Q10）iOS 26 は webm で録る — `MIME_TYPES` の順はそのまま。実機の 1 行は残す
+
+**決定**: `MIME_TYPES` の順（`audio/webm;codecs=opus` → `audio/mp4` → …）は変えない。根拠は §0 実測 3（iOS 26.3 シミュレーターで webm/opus を録って同じページで decode できた。mp4 も decode できた）。実機確認表 (2)(3) に **「録った語の『聞く』が鳴る＝録った形（Safari のコンソールで `MediaRecorder` の `mimeType`。webm のはず）を decode できている」** を明記し、**鳴らない・毎回「声が入っていませんでした」になる** なら `MIME_TYPES` の先頭を `audio/mp4` に替える（1 行。`recorder.ts` の既存テスト `pickMimeType` の期待値を 1 つ直す）。F8 の表は「iOS 26.3: webm/opus・mp4 とも `isTypeSupported` true・decode 可（シミュレーター実測）」に更新（Task 10）。
+
+**理由**: 推測で順を入れ替えると、Chrome 側（webm が最も確実）を揺らす。シミュレーターの実測で iOS 側の懸念が消えたので、変えない方が安全。
+
+**外れた時の代償**: 実機のマイク入力（AAC/Opus のエンコーダーの違い・サンプルレート）でだけ decode が落ちる場合、初見者は「声が入っていませんでした」を繰り返して止まる。その時は上の 1 行の差し替えで直る（ひとみうさの実機確認が段4の関門なので、公開前に必ず通る）。
+
+---
+
+## 代理決定の台帳（D32 の続き。`rulings.md` へ転記は Task 10）
+
+- **D33（代理決定・ひとみうさ確認待ち）見える高さ 600px 未満の詰めた配置**: iPhone SE の Safari（375×548）で S1・S2・S8 の主要操作が初期表示に入るよう、現在カウント 96 → 72・タイル 64 → 48・トグル 108 → 83・声チップ 56 → 48 などに詰める（Ruling 71）。667 以上は変えない。S5 は声チップだけスクロール。— 代案: 詰めずに「ホーム画面に追加（段7）までは Safari でスクロールする」と割り切る。
+- **D34（代理決定・ひとみうさ確認待ち）語の画面の 1 行**: 「ボタンを押したら、すぐ「{語}」と言ってください。」（Ruling 72）。— 代案: 「ボタンを押すと 1.5 秒だけ録音します。」のまま。
+- **D35（代理決定・ひとみうさ確認待ち）声のタイミングの補助文**: 「声が遅れて聞こえたら「早く」を押します。」（Ruling 75）。— 代案: 足さない。
+
+## 3. ひとみうさに後で見てもらうこと（判断でなく確認。Task 10 の実機確認表へ）
+
+1. Safari で S2 を開いた時（548）: 速さ・メトロノーム・はじめの合図・声・▶ が**スクロール無しで全部見える**か。現在カウント 72 の大きさで困らないか（ホーム画面に追加すると 96 に戻る）。
+2. Safari で S5（13 件）: 声チップがスクロールの下にあることを許せるか（Ruling 71-6）。
+3. S8 で録った直後、説明の 1 行が消えて丸が上に寄る（548 だけ）。気になるか。
+4. 語の画面の文「ボタンを押したら、すぐ「Slow」と言ってください。」で、押してすぐ言えたか（D34）。
+5. 声のタイミングの補助文で向きが分かったか（D35・D24）。
+6. 英語 UI で録った声の既定名（Ruling 76-1）・削除の後に標準へ戻る動き（Ruling 76-2）。
+7. 完成の画面の名前欄とキーボード（Ruling 77）。
+8. 録った語の「聞く」が鳴る（Ruling 78）。設定の道順（Ruling 74。ホーム画面のアプリの名前の行）。
+
+## 計画への反映 — Task 9b 実装者のチェックリスト（Task 10 の前・`agent/app-v1` 逐次・1 コミットで可）
+
+- [ ] **`src/app/styles/base.css`**: Ruling 71 のメディアクエリ `@media (max-height: 599px) and (max-width: 1023px)` を 1 ブロック追加（2.〜4.・7. の値をそのまま。S1・S2/S5・S8 の 3 段に分けてコメント）。Ruling 72-2 の `.dc-record-slot`（通常 `min-height: 60px; margin: 4px 0 12px`）と `.dc-record-hint { margin: 0 }`・`.dc-record[data-step="word"] .dc-alert { margin: 0 }`（今の `.dc-record .dc-alert { margin: 4px 0 12px }` は説明の画面の枠に残す＝`[data-step="denied"]` の 16px も残す）。Ruling 73-3 の `.dc-voice-partial`・`.dc-voice-count`。Ruling 75 の `.dc-offset-hint`。
+- [ ] **`src/app/screens/RecordVoiceScreen.tsx`**: 語の画面に `data-taken`、`<div class="dc-record-slot" data-slot={alert !== 'none' ? 'alert' : 'hint'}>` で説明／枠を包む。説明は `translator.t('recordHint', { word: prompts.main })`。
+- [ ] **`src/app/screens/VoicesScreen.tsx`**: 途中の行の名前と数を分ける（Ruling 73-1。`textContent` は不変）。
+- [ ] **`src/app/practice/controls.tsx`**: `VoiceOffsetRow` の下に `voiceTimingHint` の 1 行。
+- [ ] **`src/app/i18n/messages.ts`**: `recordHint`（en/ja・`{word}`）、`voiceInProgress` → `voiceInProgressCount`、`micHowToIphone`（en/ja）、`voiceTimingHint`（en/ja）。禁止語テストを通す。
+- [ ] **`tools/check-app-ui.js`**: `SE_SAFARI_VIEWPORT`（375×548）の 1 周（no-preference のみ・全状態・`opsSmall`・R47 skip。Ruling 71-9）。状態表に `recordHintWord: 'Slow'`・`recordSlot: 60`（1 語目／声が入っていない）・`takeShownCompact`（8 語目）。S5 閉の 3 状態に `opsSmall: 4`。期待件数 **192 PASS**。私が 548 で実測したのは S1×2・S2×2・S5・S3・S4 13件・S6・S7・S8×6（§0）で、**S4 新規・S4 0件・S4 0件の追加の行 は未測定**＝548 で `ops` が正当に減る（帯の下に落ちる）なら、その状態だけ `opsSmall` を足して report に数値を書く（期待値を黙って変えない。U4 の上限 5 は当てたまま）。
+- [ ] **参照の洗い出し**: `voiceInProgress`・`recordHint`・`micHowToIphone` を参照するのは `VoicesScreen.tsx:108`・`RecordVoiceScreen.tsx:225,324` と ui:check の期待文字列だけ（grep 済み。テストに固定文字列は無い）。禁止語リストに「ボタン」「アプリ」「押します」は無い。
+- [ ] **検証**: `npm test`（472 ＋ 0 を想定。文言キーの一致は既存テストが見る）・`typecheck`・`build`・`ui:check`（192）・`smoke:voice`（**HEAD の版で**。作業ツリーの未コミットの smoke 変更は別のエージェントの物＝触らない・commit に含めない）・`smoke:practice`・`smoke:routines`。
+- [ ] **撮影（`~/.playwright-mcp/stage4-t9b-<幅x高>-<状態>.png`）**: 375×548 で S1 前回あり・S2 ワルツ・S2 no-sound・S5・S8 1 語目・S8 声が入っていない・S8 録れた語・S7 3 本（途中の行の色）・S2 くわしく開（補助文）。375×667 で S2・S8 1 語目・S8 録れた語（**変わっていないこと**を Task 9 の `stage4-walk-375-*` と見比べる）。320×568 で S2・S8 録れた語。終わったら自動操作ブラウザを閉じる。
+- [ ] **シミュレーター（任意・できれば）**: SE iOS 26.3 の Safari で `#/practice/waltz` と `#/voices/record?ui-state=no-voice` を開き、548 の実機相当で主要操作が入ることを撮る（HANDOVER §8 の手順）。
+- [ ] **コミット**: 変更ファイルをパス指定で add（`git add -A` 禁止）。メッセージ例 `fix(app): 見える高さ 600px 未満の詰めた配置・語の画面の 1 行・途中の声の行の色・設定の道順・声のタイミングの補助文（段4 Task 9b・Ruling 71〜78）`。
+- [ ] **Task 10 へ引き継ぐ物**: Ruling 71〜78・D33〜D35 を `rulings.md` へ転記／仕様 §4 S8（説明の文・箱）・§5（600px 未満の寸法）・§6（375×548 の検査・S5 の例外）・§11（道順）の注記／Ruling 16・23・47・59-2・60-2・62 への注記／F8 の更新（iOS 26.3 シミュレーターの decode 実測）／実機確認表に §3 の 8 項目と Ruling 74・77・78 の行。
