@@ -55,6 +55,13 @@
 - テスト: editor/count-patterns 等の純粋部分（複製の時に出す部品・ボタンの文言の引数）。ui:check: 状態「S4 同じ名前（追加）」を足す or 既存状態の期待値を更新（主要操作数・U5・U10 2行以内）。smoke:routines の複製の段（17・28行相当）を新しい形に合わせる。実機確認表の 17 行を書き換え、名前の下の注意・ボタンの文言の行を足す。
 - 完了: 関門すべて＋375×667 で「追加の行で同じ名前」の画面を撮る。
 
+## Task F7: 種目ごとのフィガーの一覧・かなとカナは同じ名前（D20・D21） — Ruling 54
+
+- 正: Ruling 54 の全文（`[data-group="figure-names"][data-catalog]`・U5 の例外 `LIMITS.catalogChoices`・`FIGURE_CHOICES_MAX`・出す条件・`formLayout` の `namePicker`・主要操作数・見た目・D21 の `foldFigureName` のかな畳みと綴りの `spellingKey`・テスト・ui:check 3 状態・smoke・実機確認表・仕様の読み替え）。
+- 注意（Ruling 54 の後に入った F6 の修正便）: 下の帯は「キーボードが開いている間だけ」隠れる（D19 round 4・`src/app/lib/keyboard.ts`）。Chromium の ui:check では帯は常に見える前提で数える。複製の形の切り替えは名前だけで決まる（F6 I1）。
+- TDD: figure-names・editor のテストを先に。
+- 完了: 関門すべて＋375×667 で一覧の画面（ワルツ・タンゴ）を撮る。
+
 ## 締め
 
 - 段3台帳 `docs/app-v1/stage3-ledger.md` に追加便の記録（各 Task の完了・修正便・裁定）を追記。`docs/app-v1/HANDOVER.md` の段3の行と §0 を更新（実機の再確認＝追加便ぶんの確認表の行）。
