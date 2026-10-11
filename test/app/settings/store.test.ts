@@ -3,15 +3,7 @@ import assert from 'node:assert/strict';
 import type { AppStorage, StoreName } from '../../../src/app/platform/storage.ts';
 import { DEFAULT_SETTINGS } from '../../../src/app/settings/settings.ts';
 import { SETTINGS_SCHEMA_VERSION, loadSettings, saveSettings } from '../../../src/app/settings/store.ts';
-
-function memoryStorage(initial: Record<string, unknown> = {}, { failWrites = false, failReads = false } = {}) {
-  const data = new Map<string, unknown>(Object.entries(initial));
-  const storage: AppStorage = {
-    async get<T>(store: StoreName, key: string) { if (failReads) throw new Error('read'); return data.get(`${store}/${key}`) as T | undefined; },
-    async put<T>(store: StoreName, value: T, key?: string) { if (failWrites) throw new Error('quota'); data.set(`${store}/${key}`, value); }
-  };
-  return { storage, data };
-}
+import { memoryStorage } from '../helpers/memory-storage.ts';
 
 function legacySource(value: string | null) {
   const state = { value, forgotten: false };
@@ -61,7 +53,9 @@ test('back-to-back saves do not erase each other (serialized read-merge-write)',
   const data = new Map<string, unknown>();
   const storage: AppStorage = {
     async get<T>(store: StoreName, key: string) { const value = data.get(`${store}/${key}`) as T | undefined; await new Promise(r => setTimeout(r, 0)); return value; },
-    async put<T>(store: StoreName, value: T, key?: string) { await new Promise(r => setTimeout(r, 0)); data.set(`${store}/${key}`, value); }
+    async put<T>(store: StoreName, value: T, key?: string) { await new Promise(r => setTimeout(r, 0)); data.set(`${store}/${key}`, value); },
+    async getAll() { return []; },
+    async delete() {}
   };
   const results = await Promise.all([saveSettings(storage, { lastDanceId: 'waltz' }), saveSettings(storage, { metronome: false })]);
   assert.deepEqual(results, [true, true]);
@@ -75,7 +69,9 @@ test('a failed save does not break the chain: the next save still writes', async
   let puts = 0;
   const storage: AppStorage = {
     async get<T>(store: StoreName, key: string) { return data.get(`${store}/${key}`) as T | undefined; },
-    async put<T>(store: StoreName, value: T, key?: string) { if (puts++ === 0) throw new Error('quota'); data.set(`${store}/${key}`, value); }
+    async put<T>(store: StoreName, value: T, key?: string) { if (puts++ === 0) throw new Error('quota'); data.set(`${store}/${key}`, value); },
+    async getAll() { return []; },
+    async delete() {}
   };
   const first = saveSettings(storage, { loop: false });
   const second = saveSettings(storage, { metronome: false });

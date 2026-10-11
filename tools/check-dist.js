@@ -7,20 +7,29 @@ const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root, 'dist');
 const REQUIRED = ['index.html', 'audio/default-en-female-v1/manifest.json'];
 const FORBIDDEN_PATHS = [/(^|\/)legacy\//, /six-candidates/, /subdivision-review/, /\.html$/];
-// src/engine/data/ 配下の JSON（未監修ルーティン）が1つでも束ねられたら落とす。ファイルごとに固有のキーを置く。
-// 新しい JSON を src/engine/data/ に足したら、そのファイル固有のキーをここへ足すこと。
-const FORBIDDEN_CONTENT = [
-  'legacy-routines-report', 'imported-routine-sources', 'mechanically-valid-unreviewed',
-  'issueCounts',   // legacy-routines-report.json 固有
-  'printedCounts', 'printedName'   // imported-routine-sources.json 固有
-];
+// src/engine/data/ 配下の JSON（未監修ルーティン）が1つでも束ねられたら落とす。ファイルごとに固有のキー（目印）を置く。
+// 新しい JSON を src/engine/data/ に足したら、下の DATA_MARKERS にそのファイル固有の目印を足すこと（足し忘れは自己検査で落ちる）。
+const DATA_MARKERS = {
+  'legacy-routines-report.json': ['legacy-routines-report', 'mechanically-valid-unreviewed', 'issueCounts'],
+  'imported-routine-sources.json': ['imported-routine-sources', 'printedCounts', 'printedName']
+};
+const FORBIDDEN_CONTENT = Object.values(DATA_MARKERS).flat();
 // 音声などの実バイナリ以外は拡張子を問わず（.map・.webmanifest・.txt も含め）すべて走査する。
 const BINARY_EXT = /\.(wav|mp3|ogg|m4a|png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i;
+
+// 自己検査: src/engine/data/ の全 JSON に目印があり、その目印が本当にファイルの中にあること。
+const dataDir = path.join(root, 'src/engine/data');
+const problems = [];
+for (const name of (await fs.readdir(dataDir)).filter(file => file.endsWith('.json'))) {
+  const markers = DATA_MARKERS[name];
+  if (!markers) { problems.push(`src/engine/data/${name} has no marker in DATA_MARKERS (tools/check-dist.js)`); continue; }
+  const text = await fs.readFile(path.join(dataDir, name), 'utf8');
+  if (!markers.some(marker => text.includes(marker))) problems.push(`src/engine/data/${name} contains none of its markers ${markers.join(', ')}`);
+}
 
 const files = (await fs.readdir(dist, { recursive: true, withFileTypes: true }))
   .filter(entry => entry.isFile())
   .map(entry => path.relative(dist, path.join(entry.parentPath, entry.name)).split(path.sep).join('/'));
-const problems = [];
 for (const file of REQUIRED) if (!files.includes(file)) problems.push(`missing ${file}`);
 for (const file of files) {
   if (file !== 'index.html' && FORBIDDEN_PATHS.some(pattern => pattern.test(file))) problems.push(`must not ship ${file}`);

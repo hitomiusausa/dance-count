@@ -1,7 +1,7 @@
 // 端末内の保存（仕様 §7・Ruling 11）。IndexedDB `dance-count-v2` を version 2 に上げ、
 // 既存の voice-packs を残したまま routines と settings を足す。版上げはここ1か所だけで行う。
 // 注意: src/engine/recorded-voice-store.js は version 1 を直接開くので、v2 にした後に呼ぶと VersionError。
-// 新アプリからは段4まで呼ばない（段3で platform/storage 経由に作り直す）。
+// 新アプリからは段4まで呼ばない（段4で platform/storage 経由に作り直す。Ruling 41）。
 export const DB_NAME = 'dance-count-v2';
 export const DB_VERSION = 2;
 export type StoreName = 'routines' | 'settings' | 'voice-packs';
@@ -28,8 +28,10 @@ export function upgradeAppDatabase(db: UpgradableDatabase, _oldVersion: number):
 
 export interface AppStorage {
   get<T>(store: StoreName, key: string): Promise<T | undefined>;
+  getAll<T>(store: StoreName): Promise<T[]>;
   // keyPath を持つストア（voice-packs・routines）は値の id がキー。settings は key を渡す。
   put<T>(store: StoreName, value: T, key?: string): Promise<void>;
+  delete(store: StoreName, key: string): Promise<void>;
 }
 
 let opening: Promise<AppStorage> | null = null;
@@ -59,16 +61,30 @@ function wrap(db: IDBDatabase): AppStorage {
     get<T>(store: StoreName, key: string) {
       return run<T | undefined>(db, store, 'readonly', objectStore => objectStore.get(key));
     },
+    async getAll<T>(store: StoreName) {
+      return (await run<T[] | undefined>(db, store, 'readonly', objectStore => objectStore.getAll())) ?? [];
+    },
     async put<T>(store: StoreName, value: T, key?: string) {
       await run(db, store, 'readwrite', objectStore => (objectStore.keyPath ? objectStore.put(value) : objectStore.put(value, key)));
+    },
+    async delete(store: StoreName, key: string) {
+      await run(db, store, 'readwrite', objectStore => objectStore.delete(key));
     }
   };
 }
 
+// 読みは要求の成功で返す。書き（put・delete）はトランザクションの完了（確定）まで待つ: 要求が成功しても確定前に
+// 再読み込み・アプリを閉じると取り消されるので、true を返すのは本当に残った時だけ（S4 の「保存できませんでした」の根拠）。
 function run<T>(db: IDBDatabase, store: StoreName, mode: IDBTransactionMode, action: (objectStore: IDBObjectStore) => IDBRequest): Promise<T> {
   return new Promise((resolve, reject) => {
-    const request = action(db.transaction(store, mode).objectStore(store));
-    request.onsuccess = () => resolve(request.result as T);
+    const transaction = db.transaction(store, mode);
+    const request = action(transaction.objectStore(store));
     request.onerror = () => reject(request.error ?? new Error(`IndexedDB ${mode} failed`));
+    if (mode === 'readonly') {
+      request.onsuccess = () => resolve(request.result as T);
+      return;
+    }
+    transaction.oncomplete = () => resolve(request.result as T);
+    transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB write was aborted'));
   });
 }

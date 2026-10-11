@@ -91,3 +91,12 @@ test('routine playback preferences survive state snapshots', () => {
   assert.equal(state.undo().bpm, 100);
   assert.equal(state.value.countInBars, 2);
 });
+
+test('duplicate keeps the old suffix by default and can keep the name unchanged (Ruling 39)', () => {
+  const legacy = new RoutineEditorState(routine);
+  legacy.duplicateFigure(0, 'f2');
+  assert.deepEqual(legacy.value.figures.map(item => item.name), ['Natural', 'Natural（コピー）']);
+  const app = new RoutineEditorState(routine);
+  app.duplicateFigure(0, 'f2', '');
+  assert.deepEqual(app.value.figures.map(item => [item.id, item.name, item.counts]), [['f1', 'Natural', '123'], ['f2', 'Natural', '123']]);
+});

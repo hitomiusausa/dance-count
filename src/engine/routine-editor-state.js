@@ -46,14 +46,15 @@ export class RoutineEditorState {
     });
   }
 
-  duplicateFigure(index, newId) {
+  // nameSuffix は旧画面の既定（「（コピー）」）。新アプリは名前を変えずに複製する（'' を渡す。Ruling 39）。
+  duplicateFigure(index, newId, nameSuffix = '（コピー）') {
     if (!Number.isInteger(index) || index < 0 || index >= this.current.figures.length || !newId) return this.value;
     return this.update(value => {
       const original = value.figures[index];
       value.figures.splice(index + 1, 0, {
         ...original,
         id: newId,
-        name: `${original.name}（コピー）`
+        name: `${original.name}${nameSuffix}`
       });
     });
   }
