@@ -53,3 +53,19 @@ test('deleting a routine forgets its speed memory only', () => {
   });
   assert.deepEqual(forgetRoutineSettings(settings, 'r-aaaaaaaa'), { speedPresetByRoutine: { 'r-bbbbbbbb': 'fast' }, customBpmByRoutine: {} });
 });
+
+test('a recorded or received voice id is kept; a malformed one falls back to the standard voice (Ruling 61-1)', () => {
+  assert.equal(normalizeSettings({ selectedVoiceId: 'user-recorded-v1' }).selectedVoiceId, 'user-recorded-v1');
+  assert.equal(normalizeSettings({ selectedVoiceId: 'v-recv_01' }).selectedVoiceId, 'v-recv_01');
+  for (const bad of ['', 'a b', '../x', 'x'.repeat(65), 3, null]) {
+    assert.equal(normalizeSettings({ selectedVoiceId: bad }).selectedVoiceId, 'default-en-female-v1', String(bad));
+  }
+  assert.equal(DEFAULT_SETTINGS.selectedVoiceId, 'default-en-female-v1');
+});
+
+test('voice offsets keep integers within ±200 under valid ids and drop zeros (Ruling 61-1・62)', () => {
+  const settings = normalizeSettings({ voiceOffsetMsByVoiceId: { 'default-en-female-v1': -20, 'user-recorded-v1': 0, big: 300, frac: 1.5, 'a b': 10, str: '10' } });
+  assert.deepEqual(settings.voiceOffsetMsByVoiceId, { 'default-en-female-v1': -20 });
+  assert.deepEqual(normalizeSettings({ voiceOffsetMsByVoiceId: 'x' }).voiceOffsetMsByVoiceId, {});
+  assert.deepEqual(DEFAULT_SETTINGS.voiceOffsetMsByVoiceId, {});
+});

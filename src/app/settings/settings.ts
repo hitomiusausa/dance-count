@@ -2,16 +2,20 @@ import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
 import type { AppLocale } from '../i18n/index.ts';
 import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
 import { isRoutineId } from '../routines/ids.ts';
+import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
+import { isVoiceId } from '../voices/ids.ts';
 
 // 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
-// selectedVoiceId・voiceOffsetMsByVoiceId は段4、バックアップの案内（hints.backupTip*）は段4・段5で足す（Ruling 41）。
+// selectedVoiceId は録音・受け取った声の ID も残す（段4・Ruling 61-1）。voiceOffsetMsByVoiceId は標準の声のタイミング（Ruling 62-3。
+// 録音の声は声そのものの timingAdjustments に持つ）。バックアップの案内（hints.backupTip*）は段5（Ruling 55-3）。
 export const SETTINGS_KEY = 'app';
 export const STANDARD_VOICE_ID = 'default-en-female-v1';
 
 export interface AppSettings {
   uiLocale: AppLocale | null;               // null = 端末の言語に従う
   voiceLocale: 'en' | 'ja-JP';              // D3: 初期値は UI 言語に関わらず英語
-  selectedVoiceId: string;
+  selectedVoiceId: string;                  // 声の ID（標準・録音・受け取り）。見つからない・未完成なら再生時に標準（英語）へ落とす（Ruling 61-2）
+  voiceOffsetMsByVoiceId: Record<string, number>;   // 標準の声のタイミング（ms・±200・0 は持たない）
   lastDanceId: string | null;               // 「前回」カード（無ければ出さない）
   lastTemplateByDance: Record<string, string>;
   speedPresetByDance: Record<string, SpeedChoice>;
@@ -28,6 +32,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   uiLocale: null,
   voiceLocale: 'en',
   selectedVoiceId: STANDARD_VOICE_ID,
+  voiceOffsetMsByVoiceId: {},
   lastDanceId: null,
   lastTemplateByDance: {},
   speedPresetByDance: {},
@@ -50,7 +55,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
   return {
     uiLocale: source.uiLocale === 'en' || source.uiLocale === 'ja-JP' ? source.uiLocale : null,
     voiceLocale: source.voiceLocale === 'ja-JP' ? 'ja-JP' : 'en',
-    selectedVoiceId: STANDARD_VOICE_ID,
+    selectedVoiceId: isVoiceId(source.selectedVoiceId) ? source.selectedVoiceId : STANDARD_VOICE_ID,
+    voiceOffsetMsByVoiceId: pickVoiceOffsets(source.voiceOffsetMsByVoiceId),
     lastDanceId: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) ? source.lastDanceId : null,
     lastTemplateByDance: pickByDance(source.lastTemplateByDance, (danceId, value) =>
       typeof value === 'string' && DANCES[danceId]!.templates.includes(value) ? value : undefined),
@@ -84,6 +90,16 @@ function pickByRoutine<T>(value: unknown, accept: (item: unknown) => T | undefin
     if (!isRoutineId(routineId)) continue;
     const accepted = accept(item);
     if (accepted !== undefined) result[routineId] = accepted;
+  }
+  return result;
+}
+
+function pickVoiceOffsets(value: unknown): Record<string, number> {
+  const result: Record<string, number> = {};
+  if (!isRecord(value)) return result;
+  for (const [voiceId, item] of Object.entries(value)) {
+    const offset = normalizeVoiceOffset(item);
+    if (isVoiceId(voiceId) && offset !== null && offset !== 0) result[voiceId] = offset;
   }
   return result;
 }
