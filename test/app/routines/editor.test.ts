@@ -171,3 +171,31 @@ test('move to the same place or out of range changes nothing and adds no history
   assert.equal(e.move(-1, 0), false);
   assert.equal(e.canUndo, false);
 });
+
+test('changing the dance closes the open add-draft first; a committed figure keeps the old dance (Ruling 36-1)', () => {
+  const e = editor([]);
+  e.openAdd();
+  e.setDraft({ name: 'A', counts: '123' });
+  assert.equal(e.changeDance('tango', 'タンゴのルーティン'), true);
+  assert.equal(e.routine.danceId, 'waltz');
+  assert.equal(e.routine.figures.length, 1);
+  assert.equal(e.open, null);
+});
+
+test('up / down with an invalid draft drops the draft, moves the stored figure, and the row follows', () => {
+  const e = editor([['A', '123'], ['B', '123'], ['C', '123']]);
+  e.openRow(0);
+  e.setDraft({ counts: '12a3' });
+  assert.equal(e.moveOpen(1), true);
+  assert.deepEqual(names(e), ['B:123', 'A:123', 'C:123']);
+  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'A', counts: '123' } });
+});
+
+test('duplicate with an invalid draft drops the draft, copies the stored figure below, and the original row stays open', () => {
+  const e = editor([['A', '123'], ['B', '123'], ['C', '123']]);
+  e.openRow(1);
+  e.setDraft({ counts: '12a3' });
+  assert.equal(e.duplicateOpen(), true);
+  assert.deepEqual(names(e), ['A:123', 'B:123', 'B:123', 'C:123']);
+  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'B', counts: '123' } });
+});

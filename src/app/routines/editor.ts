@@ -152,8 +152,8 @@ export class RoutineEditor {
 
   // 種目を変える（フィガー0件の時だけ。仕様 §4 S4）。名前は呼び出し側が決める（既定の名前のままなら新しい種目の既定へ）。
   changeDance(danceId: string, name: string): boolean {
-    if (this.routine.figures.length > 0 || this.routine.danceId === danceId) return false;
-    this.close();
+    const closed = this.close();  // 先に開いている行を原則どおり閉じる（Ruling 36-1）。確定でフィガーが増えたら種目は変えない（仕様 §4 S4）
+    if (this.routine.figures.length > 0 || this.routine.danceId === danceId) return closed;
     this.edits.update((value: { danceId: string; name: string }) => { value.danceId = danceId; value.name = name.trim().slice(0, ROUTINE_NAME_MAX) || value.name; });
     return true;
   }
