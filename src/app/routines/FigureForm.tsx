@@ -6,7 +6,7 @@ import { beatsPerBar } from './bar-check.ts';
 import { countPatterns, pressedPattern } from './count-patterns.ts';
 import { allowedSymbols } from './counts.ts';
 import type { IconName } from '../components/icon-names.ts';
-import type { DraftAction, DraftCheck, DraftReason, FigureDraft } from './editor.ts';
+import { formLayout, type DraftAction, type DraftCheck, type DraftReason, type FigureDraft } from './editor.ts';
 import { figureNameSuggestions, hasFigureNameSuggestions } from './figure-names.ts';
 import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 
@@ -18,6 +18,9 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // 理由が無い時だけ、止めない知らせ（まとめて変更の予告 → 小節の注意の短い形。Ruling 52-3）を同じ位置に出す。
 // 主ボタンは editor の action で文字・アイコンを替えるだけ（ボタンは増やさない。Ruling 50-6）。
 // 「複製して追加」の時は形を押した見た目にしない（欄のカウントは捨てるため。pressedPattern）。
+// 同じ名前の時（D19・formLayout）: 注意は名前の欄のすぐ下（aria-describedby も名前の欄へ）。追加の行で複製の時は
+// カウントの欄・使える文字・カウントの形を出さず、主ボタンに複製元のカウントを入れる（「1 2 3 で複製して追加」）。
+// 欄を出さない間も draft.counts は残す（名前を変えて同じ名前でなくなれば、打った値のまま欄が戻る）。
 const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | null>, MessageKey> = {
   leading: 'startWithBeat', invalid: 'countsInvalid', sameName: 'sameNameExists', name: 'nameNeeded'
 };
@@ -38,8 +41,14 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
   const reasonId = `${idPrefix}-reason`;
   const symbolsBad = check.reason === 'symbols';
   const others = check.same?.others ?? 0;
-  const reasonText = check.reason && check.reason !== 'symbols'
-    ? translator.t(REASON_TEXT[check.reason], { counts: check.same ? formatCounts(danceId, check.same.counts) : '' })
+  const layout = formLayout(check);
+  const sameCounts = check.same ? formatCounts(danceId, check.same.counts) : '';
+  const sameId = `${idPrefix}-same`;
+  const renameId = `${idPrefix}-rename`;
+  const sameText = layout.sameName === 'copy' ? translator.t('sameNameCopy', { name: check.same?.name ?? '', counts: sameCounts })
+    : layout.sameName === 'match' ? translator.t('sameNameExists', { counts: sameCounts }) : null;
+  const reasonText = check.reason && check.reason !== 'symbols' && check.reason !== 'sameName'
+    ? translator.t(REASON_TEXT[check.reason])
     : check.note === 'othersWillChange' ? translator.t('othersWillChange', { count: others })
     : check.note === 'offBar' ? translator.t('offBarFigure', { beats: beatsPerBar(danceId) }) : null;
   const primary = PRIMARY[check.action];
@@ -52,44 +61,55 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
         <div class="dc-field">
           <div class="dc-field-label" id={`${idPrefix}-name-label`}>{translator.t('figureName')}</div>
           <input class="dc-input" type="text" aria-labelledby={`${idPrefix}-name-label`} value={draft.name} maxLength={FIGURE_NAME_MAX}
+            aria-describedby={layout.sameName === 'copy' ? `${sameId} ${renameId}` : layout.sameName ? sameId : undefined}
             autocomplete="off" onInput={event => onDraft({ name: (event.currentTarget as HTMLInputElement).value })} />
+          {sameText && (
+            <div class="dc-reason" id={sameId}>
+              <Icon name="alert" /><span>{sameText}</span>
+            </div>
+          )}
+          {layout.sameName === 'copy' && <div class="dc-hint" id={renameId}>{translator.t('renameForOtherCount')}</div>}
           {suggestions.length > 0 && (
             <div class="dc-suggestions" role="group" aria-label={translator.t('figureSuggestions')}>
               {suggestions.map(name => <button key={name} type="button" class="dc-suggestion" onClick={() => onDraft({ name })}>{name}</button>)}
             </div>
           )}
         </div>
-        <div class="dc-field">
-          <div class="dc-field-label" id={`${idPrefix}-counts-label`}>{translator.t('counts')}</div>
-          <input class={`dc-input dc-input--counts${countsBad ? ' dc-input--bad' : ''}`} type="text" aria-labelledby={`${idPrefix}-counts-label`}
-            aria-invalid={countsBad ? 'true' : undefined} aria-describedby={reasonText ? `${hintId} ${reasonId}` : hintId}
-            value={draft.counts} maxLength={COUNTS_MAX} autocomplete="off" autocapitalize="characters" spellcheck={false}
-            onInput={event => onDraft({ counts: (event.currentTarget as HTMLInputElement).value })}
-            onKeyDown={event => { if (event.key === 'Enter' && check.valid) onPrimary(); }} />
-          <div class={`dc-hint${symbolsBad ? ' dc-hint--bad' : ''}`} id={hintId}>
-            {symbolsBad && <Icon name="alert" />}
-            <span>{translator.t('allowedSymbols', { symbols: allowedSymbols(danceId, translator.locale) })}</span>
-          </div>
-          {reasonText && (
-            <div class="dc-reason" id={reasonId}>
-              {check.reason !== 'name' && <Icon name="alert" />}
-              <span>{reasonText}</span>
+        {layout.countsShown && (
+          <div class="dc-field">
+            <div class="dc-field-label" id={`${idPrefix}-counts-label`}>{translator.t('counts')}</div>
+            <input class={`dc-input dc-input--counts${countsBad ? ' dc-input--bad' : ''}`} type="text" aria-labelledby={`${idPrefix}-counts-label`}
+              aria-invalid={countsBad ? 'true' : undefined} aria-describedby={reasonText ? `${hintId} ${reasonId}` : hintId}
+              value={draft.counts} maxLength={COUNTS_MAX} autocomplete="off" autocapitalize="characters" spellcheck={false}
+              onInput={event => onDraft({ counts: (event.currentTarget as HTMLInputElement).value })}
+              onKeyDown={event => { if (event.key === 'Enter' && check.valid) onPrimary(); }} />
+            <div class={`dc-hint${symbolsBad ? ' dc-hint--bad' : ''}`} id={hintId}>
+              {symbolsBad && <Icon name="alert" />}
+              <span>{translator.t('allowedSymbols', { symbols: allowedSymbols(danceId, translator.locale) })}</span>
             </div>
-          )}
-        </div>
+            {reasonText && (
+              <div class="dc-reason" id={reasonId}>
+                {check.reason !== 'name' && <Icon name="alert" />}
+                <span>{reasonText}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div class="dc-count-patterns" data-group="count-patterns">
-        <div class="dc-field">
-          <div class="dc-field-label">{patternsLabel}</div>
-          <div class="dc-chips" role="group" aria-label={patternsLabel}>
-            {countPatterns(danceId).map(counts => (
-              <button key={counts} type="button" class="dc-chip" aria-pressed={counts === pressed ? 'true' : 'false'}
-                onClick={() => onDraft({ counts })}>{formatCounts(danceId, counts)}</button>
-            ))}
+        {layout.countsShown && (
+          <div class="dc-field">
+            <div class="dc-field-label">{patternsLabel}</div>
+            <div class="dc-chips" role="group" aria-label={patternsLabel}>
+              {countPatterns(danceId).map(counts => (
+                <button key={counts} type="button" class="dc-chip" aria-pressed={counts === pressed ? 'true' : 'false'}
+                  onClick={() => onDraft({ counts })}>{formatCounts(danceId, counts)}</button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <button type="button" class="dc-button dc-primary dc-wide" disabled={!alwaysPressable && !check.valid} onClick={onPrimary}>
-          {primary.icon && <Icon name={primary.icon} />}<span>{translator.t(primary.text, { count: others + 1 })}</span>
+          {primary.icon && <Icon name={primary.icon} />}<span>{translator.t(primary.text, { count: others + 1, counts: sameCounts })}</span>
         </button>
       </div>
     </div>

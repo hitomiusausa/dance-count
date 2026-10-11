@@ -24,6 +24,18 @@ export interface SameName { index: number; name: string; counts: string; others:
 export type DraftNote = 'othersWillChange' | 'offBar' | null;
 export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason; action: DraftAction; note: DraftNote; same?: SameName }
 
+// 開いた行の形（D19）。画面はこれで出す部品を選ぶ（画面に判定を書かない）。
+// - countsShown: 追加の行で「複製して追加」の時は false＝カウントの欄・使える文字・カウントの形を出さない（複製では使わないため。
+//   フォームが短くなり、キーボードが出ていても主ボタンが見える）。打っていたカウントは draft に残るので、名前を変えて
+//   同じ名前でなくなれば欄ごと元に戻る。
+// - sameName: 同じ名前の注意を名前の欄のすぐ下に出す形。'copy'＝追加の行（複製元の「名前（カウント）」＋名前を変える道の一言）、
+//   'match'＝編集の行で既存の名前に打ち替えた時（「カウントを合わせる」。文は今のまま、位置だけ名前の欄の下）。
+export interface FormLayout { countsShown: boolean; sameName: 'copy' | 'match' | null }
+export function formLayout(check: Pick<DraftCheck, 'action' | 'reason'>): FormLayout {
+  const copy = check.action === 'addCopy';
+  return { countsShown: !copy, sameName: check.reason !== 'sameName' ? null : copy ? 'copy' : 'match' };
+}
+
 type Meta = Omit<Routine, 'id' | 'danceId' | 'name' | 'bpm' | 'countInBars' | 'source' | 'status' | 'figures'>;
 
 export class RoutineEditor {

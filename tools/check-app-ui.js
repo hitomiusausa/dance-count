@@ -44,6 +44,10 @@ const STATES = [
   { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 7 },
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true, patterns: 8, pressed: 0,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
+  // D19: 追加の行に既にある名前（1 件目＝templates[0] の 123）→ 複製専用の形。カウント欄・使える文字・形は出ず、注意は名前の欄の下、主ボタンは「1 2 3 で複製して追加」。
+  // total 6＝閉じた 13 件の画面の 5 から「＋ フィガーを追加」が消え（追加の行を開いている間は出ない）、追加の行の 2 グループ（figure-form・count-patterns）が足される。D19 で数は変わらない
+  { name: 'S4 同じ名前（追加）', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, sameNameCopy: '1 2 3 で複製して追加',
+    steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', R.waltz13.figures[0].name] }] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
@@ -413,6 +417,23 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (document.querySelector('.dc-reason')) issues.push('R50 a reason line is shown under the red allowed-symbols line');
     const decide = [...document.querySelectorAll('.dc-figure-form .dc-primary')].pop();
     if (!decide?.disabled) issues.push('R36 "Add" is pressable with invalid counts');
+  }
+  // D19: 同じ名前の追加は複製専用の形。注意は名前の欄のすぐ下（aria-describedby も名前の欄）、カウント欄・使える文字・形は出さない、
+  // 主ボタンは複製元のカウント入りで押せる。依頼（「してください」）は画面に 1 つまで（Ruling 52・Ruling 7）
+  if (state.sameNameCopy) {
+    const form = [...document.querySelectorAll('.dc-figure-form')].pop();
+    const name = form?.querySelector('input');
+    const notice = name?.nextElementSibling;
+    if (!notice?.matches('.dc-reason') || !visible(notice)) issues.push('D19 the same-name notice is not right under the name field');
+    else if (!(name.getAttribute('aria-describedby') ?? '').split(' ').includes(notice.id)) issues.push('D19 the name field is not described by the same-name notice');
+    if (form?.querySelector('.dc-input--counts')) issues.push('D19 the counts field is shown while adding a copy');
+    if (form?.querySelector('[data-group="count-patterns"] .dc-chip')) issues.push('D19 count patterns are shown while adding a copy');
+    if ([...(form?.querySelectorAll('.dc-hint') ?? [])].some(hint => hint.textContent.includes('使える文字'))) issues.push('D19 the allowed-symbols line is shown while adding a copy');
+    const button = form?.querySelector('.dc-primary');
+    if (button?.textContent.trim() !== state.sameNameCopy) issues.push(`D19 the main button reads "${button?.textContent.trim()}", expected "${state.sameNameCopy}"`);
+    if (button?.disabled) issues.push('D19 the copy button is not pressable');
+    const requests = (document.body.innerText.match(/してください/g) ?? []).length;
+    if (requests > 1) issues.push(`R52 ${requests} requests on one screen (Ruling 7)`);
   }
   // Ruling 53・D18: カウントの形はワルツで 8 個・欄と一致するチップだけ押された印（開いた行は 1 個・不正なカウントは 0 個）・文字はチップの中で折れない
   if (state.patterns !== undefined) {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RoutineEditor } from '../../../src/app/routines/editor.ts';
+import { formLayout, RoutineEditor } from '../../../src/app/routines/editor.ts';
 import { FIGURES_MAX } from '../../../src/app/routines/limits.ts';
 import { createRoutine, type Routine } from '../../../src/app/routines/routine.ts';
 
@@ -337,4 +337,50 @@ test('the off-bar note is only for waltz and Viennese waltz (D16)', () => {
   const e = new RoutineEditor(routine, () => 'f-new00000');
   e.openRow(0);
   assert.deepEqual([e.check().valid, e.check().note], [true, null]);
+});
+
+// D19: 同じ名前の時は「複製専用の形」。判断は formLayout（画面はこれで出す部品を選ぶだけ）。
+test('add with a same name hides the counts parts, shows the notice under the name, and keeps the typed counts for when the name changes (D19)', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'クローズドチェンジ', counts: '1&23' });
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  e.setDraft({ name: 'ウィスク' });
+  const check = e.check();
+  assert.equal(check.action, 'addCopy');
+  assert.deepEqual(formLayout(check), { countsShown: false, sameName: 'copy' });
+  assert.deepEqual([check.same?.name, check.same?.counts], ['ウィスク', '12&3']); // ボタンの「{counts} で複製して追加」の引数
+  assert.equal(e.open?.draft.counts, '1&23'); // 欄を出さない間も打った値は残る
+  e.setDraft({ name: 'ウィスク（短）' });
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  assert.deepEqual([e.check().action, e.check().counts, e.check().valid], ['add', '1&23', true]);
+});
+
+test('add with a same name and the same counts stays a plain "Add" with the counts shown (D19)', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク', counts: '12&3' });
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+});
+
+test('edit: renaming into another name keeps the counts shown and moves only the notice under the name (D19)', () => {
+  const e = editor();
+  e.openRow(0);
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.check().action, 'matchCounts');
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: 'match' });
+  e.setDraft({ counts: '12a3' }); // 編集の行はカウントの理由が先＝名前の下の注意は出ない
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  e.setDraft({ name: 'ナチュラルターン', counts: '12&3' });
+  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+});
+
+test('old mismatched same-name rows stay as they are; the copy source is the first one (D19・Ruling 50-1・5)', () => {
+  const e = editor([['ウィスク', '123'], ['ウィスク', '12&3']]);
+  assert.deepEqual(names(e), ['ウィスク:123', 'ウィスク:12&3']);
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  assert.deepEqual([e.check().same?.index, e.check().same?.counts], [0, '123']);
+  assert.equal(e.addCopy(), true);
+  assert.deepEqual(names(e), ['ウィスク:123', 'ウィスク:12&3', 'ウィスク:123']);
 });
