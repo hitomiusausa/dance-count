@@ -31,3 +31,10 @@ export function onDragInterrupt(listener: () => void): () => void {
     document.removeEventListener('visibilitychange', onHidden);
   };
 }
+
+// 見えている範囲（キーボードを除く）。iOS は visualViewport の高さがキーボードと付属の帯のぶん縮む。無い環境は窓の高さ（D19・F6）。
+export function visibleViewport(): { top: number; bottom: number } {
+  const visual = window.visualViewport;
+  if (!visual) return { top: 0, bottom: window.innerHeight };
+  return { top: visual.offsetTop, bottom: visual.offsetTop + visual.height };
+}

@@ -221,13 +221,13 @@ test('add with the same name and empty counts: "Add a copy" adds the first same-
   assert.equal(e.routine.figures.length, 3);
 });
 
-test('add with the same name and the same counts is a plain "Add" (Ruling 50-2b)', () => {
+test('add with the same name and the same counts is still "Add a copy" with the same result (Ruling 50-2b, changed by F6 I1)', () => {
   const e = editor();
   e.openAdd();
   e.setDraft({ name: 'ウィスク', counts: '１２＆３' });
   const check = e.check();
-  assert.deepEqual([check.valid, check.reason, check.action], [true, null, 'add']);
-  assert.equal(e.decide(), true);
+  assert.deepEqual([check.valid, check.reason, check.action], [false, 'sameName', 'addCopy']);
+  assert.equal(e.addCopy(), true);
   assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3', 'ウィスク:12&3']);
 });
 
@@ -356,11 +356,15 @@ test('add with a same name hides the counts parts, shows the notice under the na
   assert.deepEqual([e.check().action, e.check().counts, e.check().valid], ['add', '1&23', true]);
 });
 
-test('add with a same name and the same counts stays a plain "Add" with the counts shown (D19)', () => {
+test('on the add row the layout depends on the name only: editing the counts never hides the field in use (D19・F6 I1)', () => {
   const e = editor();
   e.openAdd();
-  e.setDraft({ name: 'ウィスク', counts: '12&3' });
-  assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null });
+  for (const counts of ['', '12&3', '12', '123', '12a3', '&123']) {
+    e.setDraft({ name: 'クローズドチェンジ', counts });
+    assert.deepEqual(formLayout(e.check()), { countsShown: true, sameName: null }, counts);
+    e.setDraft({ name: 'ウィスク' });
+    assert.deepEqual(formLayout(e.check()), { countsShown: false, sameName: 'copy' }, counts);
+  }
 });
 
 test('edit: renaming into another name keeps the counts shown and moves only the notice under the name (D19)', () => {

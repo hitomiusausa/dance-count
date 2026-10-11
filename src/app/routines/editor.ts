@@ -25,7 +25,7 @@ export type DraftNote = 'othersWillChange' | 'offBar' | null;
 export interface DraftCheck { valid: boolean; counts: string; reason: DraftReason; action: DraftAction; note: DraftNote; same?: SameName }
 
 // 開いた行の形（D19）。画面はこれで出す部品を選ぶ（画面に判定を書かない）。
-// - countsShown: 追加の行で「複製して追加」の時は false＝カウントの欄・使える文字・カウントの形を出さない（複製では使わないため。
+// - countsShown: 追加の行で「複製して追加」の時は false（追加の行の「複製して追加」は名前だけで決まる＝カウントを触って欄が消えることは無い）＝カウントの欄・使える文字・カウントの形を出さない（複製では使わないため。
 //   フォームが短くなり、キーボードが出ていても主ボタンが見える）。打っていたカウントは draft に残るので、名前を変えて
 //   同じ名前でなくなれば欄ごと元に戻る。
 // - sameName: 同じ名前の注意を名前の欄のすぐ下に出す形。'copy'＝追加の行（複製元の「名前（カウント）」＋名前を変える道の一言）、
@@ -79,7 +79,9 @@ export class RoutineEditor {
     const named = draft.name.trim() !== '';
     const same = named ? this.sameName(draft.name, editIndex) : undefined;
     const matches = !!same && !counts.problem && !counts.empty && counts.counts === normalizeCounts(same.counts);
-    if (editIndex === null && same && !matches) return { valid: false, counts: counts.counts, reason: 'sameName', action: 'addCopy', same };
+    // 追加の行は名前だけで決める（F6 I1 の裁定。Ruling 50-2b を改める）: 同じ名前ならカウントが同じでも「複製して追加」。結果は同じで、
+    // カウントを打ち直して欄やチップが指の下で消えることが無い（形の切り替えは名前を変えた時だけ）。
+    if (editIndex === null && same) return { valid: false, counts: counts.counts, reason: 'sameName', action: 'addCopy', same };
     if (counts.problem) return { valid: false, counts: counts.counts, reason: counts.problem, action: plain };
     if (editIndex !== null && same) {
       const current = this.routine.figures[editIndex]!;

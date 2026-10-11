@@ -1,6 +1,10 @@
+import { useEffect, useRef } from 'preact/hooks';
+import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
+import { revealScrollBy } from '../lib/reveal.ts';
+import { nextFrame, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
 import { useI18n } from '../state/i18n.ts';
 import { beatsPerBar } from './bar-check.ts';
 import { countPatterns, pressedPattern } from './count-patterns.ts';
@@ -45,7 +49,8 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
   const sameCounts = check.same ? formatCounts(danceId, check.same.counts) : '';
   const sameId = `${idPrefix}-same`;
   const renameId = `${idPrefix}-rename`;
-  const sameText = layout.sameName === 'copy' ? translator.t('sameNameCopy', { name: check.same?.name ?? '', counts: sameCounts })
+  const sameName = check.same ? figureDisplayName(danceId, check.same.name, translator.locale) : '';
+  const sameText = layout.sameName === 'copy' ? translator.t('sameNameCopy', { name: sameName, counts: sameCounts })
     : layout.sameName === 'match' ? translator.t('sameNameExists', { counts: sameCounts }) : null;
   const reasonText = check.reason && check.reason !== 'symbols' && check.reason !== 'sameName'
     ? translator.t(REASON_TEXT[check.reason])
@@ -55,12 +60,32 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
   const alwaysPressable = check.action === 'addCopy' || check.action === 'matchCounts';
   const pressed = pressedPattern(draft.counts, check.action);
   const patternsLabel = translator.t('commonCounts');
+  // 複製の形に切り替わった時、名前の欄を打っている最中なら主ボタンをキーボードの上へ（D19 の (3)・F6 の iOS シミュレーターの所見）。
+  // iOS はフォーカスのある欄だけを見える所へ動かすので、ボタンはキーボードの付属の帯の下に残る。動きは付けない（すぐ動かす）。
+  const nameInput = useRef<HTMLInputElement>(null);
+  const primaryButton = useRef<HTMLButtonElement>(null);
+  const copying = layout.sameName === 'copy';
+  useEffect(() => {
+    const input = nameInput.current;
+    if (!copying || !input || input.ownerDocument.activeElement !== input) return undefined;
+    const reveal = () => {
+      const button = primaryButton.current;
+      if (!button) return;
+      const visible = visibleViewport();
+      const dock = button.ownerDocument.querySelector('.dc-dock');
+      const dy = revealScrollBy({ bottom: button.getBoundingClientRect().bottom, keepTop: input.getBoundingClientRect().top,
+        visibleTop: visible.top, visibleBottom: visible.bottom, coverTop: dock?.getBoundingClientRect().top });
+      if (dy > 0) scrollPageBy(dy);
+    };
+    reveal();
+    return nextFrame(reveal);   // キーボードの高さが描画の後で決まる端末のために、次の描画の前にもう 1 回
+  }, [copying]);
   return (
     <div class="dc-figure-form">
       <div class="dc-figure-fields" data-group="figure-form">
         <div class="dc-field">
           <div class="dc-field-label" id={`${idPrefix}-name-label`}>{translator.t('figureName')}</div>
-          <input class="dc-input" type="text" aria-labelledby={`${idPrefix}-name-label`} value={draft.name} maxLength={FIGURE_NAME_MAX}
+          <input ref={nameInput} class="dc-input" type="text" aria-labelledby={`${idPrefix}-name-label`} value={draft.name} maxLength={FIGURE_NAME_MAX}
             aria-describedby={layout.sameName === 'copy' ? `${sameId} ${renameId}` : layout.sameName ? sameId : undefined}
             autocomplete="off" onInput={event => onDraft({ name: (event.currentTarget as HTMLInputElement).value })} />
           {sameText && (
@@ -83,7 +108,7 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
               value={draft.counts} maxLength={COUNTS_MAX} autocomplete="off" autocapitalize="characters" spellcheck={false}
               onInput={event => onDraft({ counts: (event.currentTarget as HTMLInputElement).value })}
               onKeyDown={event => { if (event.key === 'Enter' && check.valid) onPrimary(); }} />
-            <div class={`dc-hint${symbolsBad ? ' dc-hint--bad' : ''}`} id={hintId}>
+            <div class={`dc-hint${symbolsBad ? ' dc-hint--bad' : ''}`} id={hintId} data-allowed-symbols>
               {symbolsBad && <Icon name="alert" />}
               <span>{translator.t('allowedSymbols', { symbols: allowedSymbols(danceId, translator.locale) })}</span>
             </div>
@@ -108,7 +133,7 @@ export function FigureForm({ idPrefix, danceId, draft, check, onDraft, onPrimary
             </div>
           </div>
         )}
-        <button type="button" class="dc-button dc-primary dc-wide" disabled={!alwaysPressable && !check.valid} onClick={onPrimary}>
+        <button ref={primaryButton} type="button" class="dc-button dc-primary dc-wide" disabled={!alwaysPressable && !check.valid} onClick={onPrimary}>
           {primary.icon && <Icon name={primary.icon} />}<span>{translator.t(primary.text, { count: others + 1, counts: sameCounts })}</span>
         </button>
       </div>

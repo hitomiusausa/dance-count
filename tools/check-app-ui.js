@@ -428,7 +428,7 @@ function audit({ state, LIMITS, reducedMotion }) {
     else if (!(name.getAttribute('aria-describedby') ?? '').split(' ').includes(notice.id)) issues.push('D19 the name field is not described by the same-name notice');
     if (form?.querySelector('.dc-input--counts')) issues.push('D19 the counts field is shown while adding a copy');
     if (form?.querySelector('[data-group="count-patterns"] .dc-chip')) issues.push('D19 count patterns are shown while adding a copy');
-    if ([...(form?.querySelectorAll('.dc-hint') ?? [])].some(hint => hint.textContent.includes('使える文字'))) issues.push('D19 the allowed-symbols line is shown while adding a copy');
+    if (form?.querySelector('[data-allowed-symbols]')) issues.push('D19 the allowed-symbols line is shown while adding a copy');
     const button = form?.querySelector('.dc-primary');
     if (button?.textContent.trim() !== state.sameNameCopy) issues.push(`D19 the main button reads "${button?.textContent.trim()}", expected "${state.sameNameCopy}"`);
     if (button?.disabled) issues.push('D19 the copy button is not pressable');
