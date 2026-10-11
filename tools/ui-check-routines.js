@@ -1,0 +1,61 @@
+// ui:check と smoke:routines が使う検査用のルーティン（Ruling 43）。
+// カウントは種目の templates だけで組み、名前は figure-terminology の照合済みの語だけを使う
+// （未監修の旧ルーティンのカウント列を新アプリの経路に流さない）。
+import { DANCE_PROFILES } from '../src/engine/dance-profiles.js';
+import { FIGURE_TERMINOLOGY } from '../src/engine/figure-terminology.js';
+
+const CREATED = '2026-10-11T08:00:00.000Z';
+
+function verifiedNames(danceId) {
+  const names = [];
+  for (const entry of Object.values(FIGURE_TERMINOLOGY)) {
+    if (entry.danceId === danceId && entry.claimStatus === 'verified' && !names.includes(entry.sourceAliases[0])) names.push(entry.sourceAliases[0]);
+  }
+  return names;
+}
+
+function routine(id, danceId, name, figureCount, minute, firstFigureName) {
+  const names = verifiedNames(danceId);
+  const templates = DANCE_PROFILES[danceId].templates;
+  const createdAt = CREATED.replace('08:00', `08:${String(minute).padStart(2, '0')}`);
+  return {
+    id, danceId, name, bpm: null, countInBars: 1, source: 'user-created', status: 'ready',
+    figures: Array.from({ length: figureCount }, (_, index) => ({
+      id: `f-uicheck-${String(index).padStart(4, '0')}`,
+      name: index === 0 && firstFigureName ? firstFigureName : names[index % names.length],
+      counts: templates[index % templates.length]
+    })),
+    provenance: { sourceKind: 'user-created', authority: null, authorityClaimStatus: 'not-applicable', reviewStatus: 'unreviewed' },
+    createdWith: { app: 'dance-count', version: 'ui-check' },
+    createdAt, updatedAt: createdAt
+  };
+}
+
+// 40 字ちょうどの名前（Ruling 47: 全角 40 字と英数字 40 字の2本）。
+const LONG_JA = 'ワルツの通し練習・金曜クラス発表会に向けて先生と一緒に確認する用の大事なルーティン'.slice(0, 40);
+const LONG_EN = 'Friday class waltz run-through for show!'.padEnd(40, 'x').slice(0, 40);
+// 先生が自由に打った長いフィガー名（40 字）。名前だけで、カウントは templates のまま（Ruling 3・43）。
+const LONG_FIGURE = 'ナチュラルターンからスピンターンへつなぐ先生オリジナルの入り方（金曜クラス用・前半）'.slice(0, 40);
+
+export const UI_CHECK_ROUTINES = {
+  waltz13: routine('r-uicheck-waltz13', 'waltz', 'ワルツの練習', 13, 0),
+  empty: routine('r-uicheck-empty00', 'tango', 'タンゴの練習', 0, 1),
+  longJa: routine('r-uicheck-longja40', 'waltz', LONG_JA, 3, 2, LONG_FIGURE),
+  longEn: routine('r-uicheck-longen40', 'jive', LONG_EN, 3, 3)
+};
+
+// ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB（dance-count-v2 v2）の routines へ直接書く。
+export async function seedRoutinesInPage(routines) {
+  const db = await new Promise((resolve, reject) => {
+    const request = indexedDB.open('dance-count-v2', 2);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction('routines', 'readwrite');
+    for (const item of routines) transaction.objectStore('routines').put(item);
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+  db.close();
+}

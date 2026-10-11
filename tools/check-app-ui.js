@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// 新アプリの高齢者向け数値基準（仕様 §6 U1〜U15・Ruling 7・16・18・21・23・33）を Playwright で検査する。
+// 新アプリの高齢者向け数値基準（仕様 §6 U1〜U15・Ruling 7・16・18・21・23・33・35・43・47）を Playwright で検査する。
 // 前提: `npm run dev`（既定 http://localhost:5173/）を起動しておく。DC_BASE_URL で `npm run preview`（4174）にも向けられる。
+// DC_ONLY=S5,S4 のように状態名の頭で絞れる（直しながらの確認用。完了の判定は絞らずに全部で）。
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
 import { chromium } from 'playwright-core';
+import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
@@ -15,11 +17,16 @@ const LIMITS = Object.freeze({
   contrastText: 4.5, contrastLarge: 3, contrastUi: 3, // U7
   motionMs: 300, // U8
   buttonLines: 2, // U10
-  alertHeight: 120 // Ruling 23（375 幅）
+  alertHeight: 120, // Ruling 23（375 幅）
+  chipToDock: 8 // Ruling 47（S5: 声チップの下端〜▶ の帯の上端）
 });
 
-// 検査する画面と状態（Ruling 33）。kind は仕様 §3 の種別、ops は初期表示の主要操作数の期待値（Ruling 18）。
-// prepare は「前回あり」を実経路で作る（偽装クエリは使わない）。
+// 検査する画面と状態（Ruling 33・43）。kind は仕様 §3 の種別、ops は初期表示・total は画面全体の主要操作数の期待値（Ruling 18・35・36・40）。
+// prepare は「前回あり」を実経路で作る（偽装クエリは使わない）。seed はブラウザの IndexedDB に検査用のルーティンを書く（Ruling 43）。
+// steps は開いた後の人の操作（クリック・入力）。人の操作の後の状態は「初期表示 5 以下」を当てず全体（9 以下）だけを見る。
+const SEEDED = [R.waltz13, R.empty, R.longJa, R.longEn];
+const S4_13 = `#/routines/${R.waltz13.id}/edit`;
+const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
   { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
   { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
@@ -27,11 +34,28 @@ const STATES = [
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 8 },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
-  { name: 'S3', hash: '#/routines', screen: 'S3', kind: 'root' },
+  { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
+  { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3 },
+  { name: 'S3 削除の確認', hash: '#/routines?ui-state=confirm-delete', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], confirm: true },
+  { name: 'S4 新規・種目選択', hash: '#/routines/new', screen: 'S4', kind: 'focus', ops: 1, total: 1 },
+  { name: 'S4 0件', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, ops: 3, total: 3 },
+  { name: 'S4 13件・閉', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5 },
+  { name: 'S4 13件・行を開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-figure-head >> nth=2' }], total: 7 },
+  { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 7 },
+  { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true,
+    steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'ウィスク'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },
+  { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
+  { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
+  { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root' },
   { name: 'S7', hash: '#/voices', screen: 'S7', kind: 'list' },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
+
+const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
+const CHECKED = ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES;
 
 const browser = await chromium.launch({ channel: 'chrome' }).catch(error => {
   console.error('Google Chrome を起動できませんでした。Chrome のインストールと開発サーバー（npm run dev）を確認してください。');
@@ -47,7 +71,7 @@ const report = (label, problems) => {
 };
 
 try {
-  for (const state of STATES) {
+  for (const state of CHECKED) {
     for (const viewport of VIEWPORTS) {
       for (const reducedMotion of ['no-preference', 'reduce']) {
         const label = `${state.name} @ ${viewport.width}x${viewport.height}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
@@ -56,17 +80,24 @@ try {
         const consoleErrors = [];
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
         page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
-        if (state.prepare) {
-          await page.goto(BASE + state.prepare);
+        if (state.prepare || state.seed) {
+          await page.goto(BASE + (state.prepare ?? '#/'));
           await page.waitForSelector('[data-screen]');
         }
+        if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
         await page.goto(BASE + state.hash);
+        if (state.seed) await page.reload();
         await page.waitForSelector(`[data-screen="${state.screen}"]`);
+        for (const step of state.steps ?? []) {
+          if (step.click) await page.locator(step.click).click();
+          if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
+        }
         if (state.openMore) await page.locator('summary[data-more]').click();
+        if (state.confirm) await page.waitForSelector('dialog[open][data-confirm]');
         const opened = state.openMore ? await page.locator('details[open]').count() : 0;
         await page.evaluate(() => document.fonts.ready);
         await page.evaluate(() => window.scrollTo(0, 0));
-        const problems = await page.evaluate(audit, { state, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+        const problems = await page.evaluate(audit, { state: { ...state, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
         const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
         report(label, [...openFail, ...problems, ...consoleErrors]);
         await context.close();
@@ -78,7 +109,13 @@ try {
   const context = await browser.newContext({ viewport: ZOOM_VIEWPORT, locale: 'en-US' });
   const page = await context.newPage();
   const problems = [];
-  for (const state of STATES) {
+  // S4・S5 は検査用のルーティンが要る（無いと S3 へ置き換わる）。先に入れて読み直してから全画面を回る。
+  await page.goto(BASE);
+  await page.waitForSelector('[data-screen]');
+  await page.evaluate(seedRoutinesInPage, SEEDED);
+  await page.reload();
+  await page.waitForSelector('[data-screen]');   // アプリがハッシュの変化を聞き始めてから次のハッシュへ
+  for (const state of CHECKED) {
     await page.goto(BASE + state.hash);
     await page.waitForSelector(`[data-screen="${state.screen}"]`);
     const { scrollWidth, clientWidth, meta } = await page.evaluate(() => ({
@@ -187,20 +224,29 @@ function audit({ state, LIMITS, reducedMotion }) {
     }
   }
 
-  // U4 主要操作数（Ruling 18）: 同じ [data-group] は1つ、除外の要素は数えない
+  // U4 主要操作数（Ruling 18・35）: 同じ [data-group] は1つ、除外の要素は数えない。
+  // 一覧 [data-list] は閉じた行（行の見出し）をまとめて1つ。開いた行の中身 [data-row-body] はその中の [data-group] ごと・グループ外は個別。
+  const operationKey = element => {
+    if (element.closest('[data-row-body]')) return element.closest('[data-group]') ?? element;
+    return element.closest('[data-list]') ?? element.closest('[data-group]') ?? element;
+  };
   const operations = scope => {
     const keys = new Set();
     for (const element of document.querySelectorAll(OPS)) {
       if (!visible(element) || element.closest(EXCLUDED_OPS)) continue;
       if (scope === 'initial' && !fullyInView(element)) continue;
-      keys.add(element.closest('[data-group]') ?? element);
+      keys.add(operationKey(element));
     }
     return keys.size;
   };
+  // Ruling 35: [data-list] は [data-group] の中にも [data-list] の中にも置かない
+  for (const list of document.querySelectorAll('[data-list]')) {
+    if (list.parentElement?.closest('[data-group], [data-list]')) issues.push(`U4 [data-list] must not be nested in a group or list ${describe(list)}`);
+  }
   const initialOps = operations('initial');
   const totalOps = operations('all');
   // 「初期表示」は画面を開いた直後のこと。「くわしく」を開いた状態は人の操作の後なので全体（9以下）だけを見る（Ruling 31: 開くと8）。
-  if (!state.openMore && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
+  if (!state.afterAction && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
   if (totalOps > LIMITS.totalOps) issues.push(`U4 total operations ${totalOps} > ${LIMITS.totalOps}`);
   if (state.total !== undefined && totalOps !== state.total) issues.push(`U4 total operations ${totalOps}, expected ${state.total}`);
   if (state.ops !== undefined && initialOps !== state.ops) issues.push(`U4 initial operations ${initialOps}, expected ${state.ops}`);
@@ -257,8 +303,9 @@ function audit({ state, LIMITS, reducedMotion }) {
     }
   }
 
-  // U10 はみ出し・ボタン文言は2行まで
+  // U10 はみ出し・ボタン文言は2行まで（[data-ellipsis] は「…」で省略してよい要素。Ruling 47）
   for (const element of textElements) {
+    if (element.closest('[data-ellipsis]')) continue;
     if (element.scrollWidth > element.clientWidth + 1 && getComputedStyle(element).overflowX !== 'visible') {
       issues.push(`U10 clipped text ${element.scrollWidth} > ${element.clientWidth} ${describe(element)}`);
     }
@@ -329,6 +376,39 @@ function audit({ state, LIMITS, reducedMotion }) {
       const actions = [...alert.querySelectorAll(OPS)].filter(visible);
       if (actions.length > 1 || actions.some(action => !action.matches('[data-alert-action]'))) issues.push('R23 alert has an action other than one [data-alert-action]');
     }
+  }
+  // Ruling 47: S5 は声チップの下端〜▶ の帯の上端に 8px 以上の余裕。見出し（ルーティン名）は1行
+  if (state.chipToDock) {
+    const chip = document.querySelector('.dc-chip-row');
+    const dock = document.querySelector('.dc-dock');
+    if (chip && dock && innerWidth < 1024) {
+      const room = dock.getBoundingClientRect().top - chip.getBoundingClientRect().bottom;
+      if (room < LIMITS.chipToDock - 0.5) issues.push(`R47 voice chip to dock ${Math.round(room)}px < ${LIMITS.chipToDock}`);
+    }
+  }
+  if (state.singleLineHeading) {
+    const heading = document.querySelector('h1');
+    const lines = heading ? Math.round(heading.getBoundingClientRect().height / parseFloat(getComputedStyle(heading).lineHeight)) : 0;
+    if (lines !== 1) issues.push(`R47 heading is ${lines} lines, expected 1`);
+  }
+  // Ruling 44: 確認ダイアログは質問1つ・ボタン2つ・取り消しが左
+  if (state.confirm) {
+    const dialog = document.querySelector('dialog[open][data-confirm]');
+    if (!dialog) issues.push('R44 confirm dialog is not open');
+    else {
+      const buttons = [...dialog.querySelectorAll('button')].filter(visible);
+      if (buttons.length !== 2) issues.push(`R44 dialog has ${buttons.length} buttons, expected 2`);
+      const [left] = buttons.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+      if (!left?.matches('[data-cancel]')) issues.push('R44 the cancel button is not on the left');
+    }
+  }
+  // Ruling 36・38: 不正なカウントは赤枠と理由の1行、「追加する」は押せない
+  if (state.invalidCounts) {
+    if (!document.querySelector('.dc-input--bad[aria-invalid="true"]')) issues.push('R38 invalid counts are not marked');
+    const reason = document.querySelector('.dc-reason');
+    if (!reason || !visible(reason)) issues.push('R38 the reason line is not shown');
+    const decide = [...document.querySelectorAll('.dc-figure-form .dc-primary')].pop();
+    if (!decide?.disabled) issues.push('R36 "Add" is pressable with invalid counts');
   }
   return issues;
 }

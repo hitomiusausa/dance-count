@@ -25,6 +25,7 @@
     "ui:check": "node tools/check-app-ui.js",
     "ui:check:legacy": "node tools/check-ui-accessibility.js",
     "smoke:practice": "node tools/smoke-practice.js",
+    "smoke:routines": "node tools/smoke-routines.js",
     "timing:compare": "node tools/compare-timing-audit.js"
   },
   "dependencies": {
