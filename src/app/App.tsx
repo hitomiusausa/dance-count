@@ -15,9 +15,12 @@ import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
 import { SoundHelpScreen } from './screens/SoundHelpScreen.tsx';
 import { VoicesScreen } from './screens/VoicesScreen.tsx';
-import { DEFAULT_SETTINGS, type AppSettings } from './settings/settings.ts';
+import type { Routine } from './routines/routine.ts';
+import { deleteRoutine, loadRoutines, saveRoutine, sortRoutines } from './routines/store.ts';
+import { DEFAULT_SETTINGS, forgetRoutineSettings, type AppSettings } from './settings/settings.ts';
 import { loadSettings, saveSettings } from './settings/store.ts';
 import { I18nContext } from './state/i18n.ts';
+import { RoutinesContext, type RoutinesValue } from './state/routines.ts';
 import { useRoute } from './state/route.ts';
 import { SettingsContext } from './state/settings.ts';
 
@@ -54,13 +57,24 @@ export function App() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const storage = useRef<AppStorage | null>(null);
   const current = useRef<AppSettings>(DEFAULT_SETTINGS);
+  const [routines, setRoutines] = useState<Routine[]>([]);
+  const currentRoutines = useRef<Routine[]>([]);
 
-  // 設定を読み終えてから描画する（前回カードのちらつき防止。Ruling 26）。開けなければ既定値で続行。
+  // 設定とルーティンを読み終えてから描画する（前回カードのちらつき防止。Ruling 26）。開けなければ既定値で続行。
   useEffect(() => {
     let alive = true;
     openStorageWithin(STORAGE_OPEN_TIMEOUT_MS)
-      .then(opened => { storage.current = opened; return loadSettings(opened, { read: readLegacyUiLocale, forget: forgetLegacyUiLocale }); })
-      .then(loaded => { if (alive) { current.current = loaded; setSettings(loaded); } });
+      .then(opened => {
+        storage.current = opened;
+        return Promise.all([loadSettings(opened, { read: readLegacyUiLocale, forget: forgetLegacyUiLocale }), loadRoutines(opened)]);
+      })
+      .then(([loaded, savedRoutines]) => {
+        if (!alive) return;
+        current.current = loaded;
+        currentRoutines.current = savedRoutines;
+        setRoutines(savedRoutines);
+        setSettings(loaded);
+      });
     return () => { alive = false; };
   }, []);
 
@@ -69,6 +83,21 @@ export function App() {
     setSettings(current.current);
     void saveSettings(storage.current, patch);
   }, []);
+
+  const routinesValue = useMemo<RoutinesValue>(() => ({
+    routines,
+    save(routine) {
+      currentRoutines.current = sortRoutines([...currentRoutines.current.filter(item => item.id !== routine.id), routine]);
+      setRoutines(currentRoutines.current);
+      return saveRoutine(storage.current, routine);
+    },
+    remove(id) {
+      currentRoutines.current = currentRoutines.current.filter(item => item.id !== id);
+      setRoutines(currentRoutines.current);
+      update(forgetRoutineSettings(current.current, id));
+      return deleteRoutine(storage.current, id);
+    }
+  }), [routines, update]);
 
   const locale: AppLocale = settings?.uiLocale ?? resolveAppLocale(deviceLanguages());
   const translator = useMemo(() => createAppTranslator(locale), [locale]);
@@ -81,13 +110,15 @@ export function App() {
   return (
     <I18nContext.Provider value={i18n}>
       <SettingsContext.Provider value={{ settings, update }}>
-        <div class="dc-shell" lang={locale}>
-          <IconSprite />
-          {screen === 'S2'
-            ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
-            : <Simple />}
-          {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
-        </div>
+        <RoutinesContext.Provider value={routinesValue}>
+          <div class="dc-shell" lang={locale}>
+            <IconSprite />
+            {screen === 'S2'
+              ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+              : <Simple />}
+            {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
+          </div>
+        </RoutinesContext.Provider>
       </SettingsContext.Provider>
     </I18nContext.Provider>
   );

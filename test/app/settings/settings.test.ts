@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS, normalizeSettings } from '../../../src/app/settings/settings.ts';
+import { DEFAULT_SETTINGS, forgetRoutineSettings, normalizeSettings } from '../../../src/app/settings/settings.ts';
 
 test('nothing saved yet gives the spec defaults (Ruling 13・D3)', () => {
   for (const raw of [undefined, null, 'x', 3, [], {}]) assert.deepEqual(normalizeSettings(raw), DEFAULT_SETTINGS, JSON.stringify(raw));
@@ -17,6 +17,7 @@ test('valid saved values survive a round trip', () => {
     uiLocale: 'ja-JP', lastDanceId: 'jive',
     lastTemplateByDance: { waltz: '12&3' }, speedPresetByDance: { waltz: 'custom', tango: 'fast' },
     customBpmByDance: { waltz: 100 }, metronome: false, countInBars: 0, loop: false,
+    speedPresetByRoutine: { 'r-aaaaaaaa': 'fast' }, customBpmByRoutine: { 'r-bbbbbbbb': 120 },
     hints: { wakeLockTipShown: true }
   };
   assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(saved))), saved);
@@ -28,7 +29,9 @@ test('broken or foreign values fall back field by field', () => {
     lastTemplateByDance: { waltz: '1234', tango: 'SSQQS', hiphop: '1' },
     speedPresetByDance: { waltz: 'turbo', rumba: 'slow' },
     customBpmByDance: { waltz: 'abc', samba: 999, jive: 30 },
-    metronome: 'yes', countInBars: 2, loop: null, hints: 'none'
+    metronome: 'yes', countInBars: 2, loop: null, hints: 'none',
+    speedPresetByRoutine: { 'r-aaaaaaaa': 'slow', new: 'fast', 'r-bbbbbbbb': 'turbo' },
+    customBpmByRoutine: { 'r-aaaaaaaa': 300, waltz: 90 }
   });
   assert.equal(settings.uiLocale, null);
   assert.equal(settings.voiceLocale, 'en');
@@ -40,4 +43,13 @@ test('broken or foreign values fall back field by field', () => {
   assert.equal(settings.countInBars, 1);
   assert.equal(settings.loop, true);
   assert.deepEqual(settings.hints, { wakeLockTipShown: false });
+  assert.deepEqual(settings.speedPresetByRoutine, { 'r-aaaaaaaa': 'slow' });
+  assert.deepEqual(settings.customBpmByRoutine, { 'r-aaaaaaaa': 220 });
+});
+
+test('deleting a routine forgets its speed memory only', () => {
+  const settings = normalizeSettings({
+    speedPresetByRoutine: { 'r-aaaaaaaa': 'slow', 'r-bbbbbbbb': 'fast' }, customBpmByRoutine: { 'r-aaaaaaaa': 100 }
+  });
+  assert.deepEqual(forgetRoutineSettings(settings, 'r-aaaaaaaa'), { speedPresetByRoutine: { 'r-bbbbbbbb': 'fast' }, customBpmByRoutine: {} });
 });

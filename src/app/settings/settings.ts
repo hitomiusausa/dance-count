@@ -1,9 +1,10 @@
 import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
 import type { AppLocale } from '../i18n/index.ts';
 import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
+import { isRoutineId } from '../routines/ids.ts';
 
 // 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
-// 段2で使う項目だけを持つ（selectedVoiceId・voiceOffsetMsByVoiceId・バックアップの案内は段4・段5で足す）。
+// selectedVoiceId・voiceOffsetMsByVoiceId は段4、バックアップの案内（hints.backupTip*）は段4・段5で足す（Ruling 41）。
 export const SETTINGS_KEY = 'app';
 export const STANDARD_VOICE_ID = 'default-en-female-v1';
 
@@ -15,6 +16,8 @@ export interface AppSettings {
   lastTemplateByDance: Record<string, string>;
   speedPresetByDance: Record<string, SpeedChoice>;
   customBpmByDance: Record<string, number>;
+  speedPresetByRoutine: Record<string, SpeedChoice>;   // S5 の速さはルーティンごと（Ruling 40）。キーはルーティンID
+  customBpmByRoutine: Record<string, number>;
   metronome: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン=1小節 / オフ=0
   loop: boolean;
@@ -29,6 +32,8 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   lastTemplateByDance: {},
   speedPresetByDance: {},
   customBpmByDance: {},
+  speedPresetByRoutine: {},
+  customBpmByRoutine: {},
   metronome: true,
   countInBars: 1,
   loop: true,
@@ -52,6 +57,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     speedPresetByDance: pickByDance(source.speedPresetByDance, (_danceId, value) =>
       SPEED_CHOICES.find(choice => choice === value)),
     customBpmByDance: pickByDance(source.customBpmByDance, (_danceId, value) => clampBpm(value) ?? undefined),
+    speedPresetByRoutine: pickByRoutine(source.speedPresetByRoutine, value => SPEED_CHOICES.find(choice => choice === value)),
+    customBpmByRoutine: pickByRoutine(source.customBpmByRoutine, value => clampBpm(value) ?? undefined),
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
@@ -68,6 +75,24 @@ function pickByDance<T>(value: unknown, accept: (danceId: string, item: unknown)
     if (accepted !== undefined) result[danceId] = accepted;
   }
   return result;
+}
+
+function pickByRoutine<T>(value: unknown, accept: (item: unknown) => T | undefined): Record<string, T> {
+  const result: Record<string, T> = {};
+  if (!isRecord(value)) return result;
+  for (const [routineId, item] of Object.entries(value)) {
+    if (!isRoutineId(routineId)) continue;
+    const accepted = accept(item);
+    if (accepted !== undefined) result[routineId] = accepted;
+  }
+  return result;
+}
+
+// ルーティンを消した時に、そのルーティンの速さの記憶も消す差分（Ruling 44）。
+export function forgetRoutineSettings(settings: AppSettings, routineId: string): Partial<AppSettings> {
+  const { [routineId]: _preset, ...speedPresetByRoutine } = settings.speedPresetByRoutine;
+  const { [routineId]: _custom, ...customBpmByRoutine } = settings.customBpmByRoutine;
+  return { speedPresetByRoutine, customBpmByRoutine };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
