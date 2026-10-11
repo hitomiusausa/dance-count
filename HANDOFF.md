@@ -1,6 +1,6 @@
 # Dance Count for Ballroom — 作業引き継ぎ
 
-更新日: 2026-07-15
+更新日: 2026-10-11
 
 2026-10-11: アプリ化v1 段1完了。旧画面は legacy/ へ。新アプリは src/app（docs/superpowers/specs/2026-10-11-app-v1-design.md）
 
@@ -231,8 +231,9 @@
 ## 9. 起動と再検証
 
 ```bash
-cd "/Users/usausagi/Documents/Playground/Dance Count for Ballroom"
-npm start
+cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
+npm run dev      # 新アプリ http://localhost:5173
+npm run legacy   # 旧画面 http://localhost:4173/legacy/（別ターミナル）
 ```
 
 別ターミナルで:
@@ -243,7 +244,7 @@ npm run timing:audit
 npm run terminology:audit
 ```
 
-UI（練習・編集画面）の機械ゲートを確認する場合（要 `npm start` 起動・Chrome。両画面・390px/1280pxでタッチサイズ44px以上・コントラスト4.5:1以上・コンソールエラー0件を検証）:
+UI（練習・編集画面）の機械ゲートを確認する場合（要 `npm run legacy` 起動・Chrome。両画面・390px/1280pxでタッチサイズ44px以上・コントラスト4.5:1以上・コンソールエラー0件を検証）:
 
 ```bash
 npm run ui:check
