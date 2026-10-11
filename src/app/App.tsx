@@ -16,6 +16,7 @@ import { RoutinePlayScreen } from './screens/RoutinePlayScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
 import { SoundHelpScreen } from './screens/SoundHelpScreen.tsx';
+import { RecordVoiceScreen } from './screens/RecordVoiceScreen.tsx';
 import { VoicesScreen } from './screens/VoicesScreen.tsx';
 import type { Routine } from './routines/routine.ts';
 import { deleteRoutine, loadRoutines, saveRoutine, sortRoutines } from './routines/store.ts';
@@ -119,6 +120,7 @@ export function App() {
                 : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
                 : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
                 : screen === 'S7' ? <VoicesScreen uiState={route.query.uiState} />
+                : screen === 'S8' ? <RecordVoiceScreen key={route.query.uiState ?? ''} uiState={route.query.uiState} />
                 : <Simple />}
               {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
             </div>

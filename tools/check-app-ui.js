@@ -79,13 +79,27 @@ const STATES = [
   { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
+  // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
+  // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
+  { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en' },
+  { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true,
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
+  { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, takeShown: true,
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
+      { click: '.dc-record-dock .dc-button--secondary' }, { wait: '.dc-take' }] },
+  { name: 'S8 完成', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 4, doneName: '自分の声（英語）',
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
+  { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
+  { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true },
+  { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
 
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
 const CHECKED = ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES;
 
-const browser = await chromium.launch({ channel: 'chrome' }).catch(error => {
+// 偽マイク（ファイル指定なし＝既定のビープ。S8 に「録音をはじめる」で入るため。既存の状態には無害。Ruling 63-4）
+const browser = await chromium.launch({ channel: 'chrome', args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] }).catch(error => {
   console.error('Google Chrome を起動できませんでした。Chrome のインストールと開発サーバー（npm run dev）を確認してください。');
   console.error(error.message);
   process.exit(2);
@@ -103,7 +117,7 @@ try {
     for (const viewport of VIEWPORTS) {
       for (const reducedMotion of ['no-preference', 'reduce']) {
         const label = `${state.name} @ ${viewport.width}x${viewport.height}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
-        const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion });
+        const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'] });
         const page = await context.newPage();
         const consoleErrors = [];
         page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
@@ -120,6 +134,7 @@ try {
         for (const step of state.steps ?? []) {
           if (step.click) await page.locator(step.click).click();
           if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
+          if (step.wait) await page.waitForSelector(step.wait);
         }
         if (state.openMore) await page.locator('summary[data-more]').click();
         if (state.confirm) await page.waitForSelector('dialog[open][data-confirm]');
@@ -540,11 +555,35 @@ function audit({ state, LIMITS, reducedMotion }) {
   }
   // 段4（Ruling 60）: S7 の行の並び・選ばれているのは 1 つ・途中の声は選べない
   if (state.voiceRows) {
-    const rows = [...document.querySelectorAll('[data-group="voice"] .dc-voice-name')].map(row => row.textContent.trim());
+    const rows = [...document.querySelectorAll('[data-group="voice"] .dc-voice-name')].map(row => row.textContent.replace(/\s+/g, ' ').trim());   // 「7 / 12 語」の改行しない空白も 1 つの空白として
     if (JSON.stringify(rows) !== JSON.stringify(state.voiceRows)) issues.push(`R60 voice rows ${JSON.stringify(rows)}, expected ${JSON.stringify(state.voiceRows)}`);
     const checked = [...document.querySelectorAll('[data-group="voice"] [role="radio"][aria-checked="true"]')];
     if (checked.length !== 1) issues.push(`R60 ${checked.length} chosen voices, expected 1`);
     if (document.querySelector('[data-group="voice"] .dc-voice-partial[role="radio"]')) issues.push('R60 a partial voice is a radio (it must not be choosable)');
+  }
+  // 段4（Ruling 59）: 言葉の初期値は英語・録音ボタンは 144px で初期表示に入る・1 語目に「前の語」は無い・録れた語は波形と「聞く」が初期表示に入る・完成画面
+  if (state.recordLanguage) {
+    const checked = document.querySelector('[data-group="record-language"] [role="radio"][aria-checked="true"]');
+    const first = document.querySelector('[data-group="record-language"] [role="radio"]');
+    if (!checked || checked !== first) issues.push('R59 the record language does not start on English');
+  }
+  if (state.recordButton) {
+    const button = document.querySelector('.dc-rec');
+    const rect = button?.getBoundingClientRect();
+    if (!rect || Math.round(rect.width) !== 144 || Math.round(rect.height) !== 144) issues.push(`R59 record button ${rect ? `${Math.round(rect.width)}x${Math.round(rect.height)}` : 'missing'}, expected 144x144`);
+    else if (!fullyInView(button)) issues.push('R59 the record button is not fully in the first view');
+  }
+  if (state.noPrevious && document.querySelector('.dc-record-dock .dc-button--secondary')) issues.push('R59 "Previous" is shown on the first word');
+  if (state.takeShown) {
+    const take = document.querySelector('.dc-take');
+    if (!take || !visible(take)) issues.push('R59 the waveform and "Play" are not shown for a recorded word');
+    else if (!fullyInView(take)) issues.push('R59 the waveform and "Play" are not fully in the first view');
+    if (document.querySelectorAll('.dc-wave rect').length !== 41) issues.push(`R59 waveform has ${document.querySelectorAll('.dc-wave rect').length} marks, expected 40 bars + the onset line`);
+  }
+  if (state.doneName) {
+    const value = document.querySelector('#dc-s8-name')?.value;
+    if (value !== state.doneName) issues.push(`R59 the name field reads "${value}", expected "${state.doneName}"`);
+    if ([...document.querySelectorAll('[data-group="compare"] button')].length !== 2) issues.push('R59 the comparison does not have 2 buttons');
   }
   return issues;
 }

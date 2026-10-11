@@ -109,6 +109,48 @@ test('if the chosen mime type cannot be used, it retries once with the browser d
   }
 });
 
+test('leaving S8 mid-take stops the take, closes the mic and gives the audio session back (Task 7)', async () => {
+  const fake = installFakeRecorder({});
+  const session = { type: 'playback' };
+  Object.defineProperty(globalThis.navigator, 'audioSession', { value: session, configurable: true });
+  try {
+    const controller = new AbortController();
+    let started = false;
+    const take = recordTake({ ms: 60_000, onStart: () => { started = true; }, signal: controller.signal });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(started, true);
+    assert.equal(session.type, 'play-and-record');
+    controller.abort();
+    await assert.rejects(take, (error: unknown) => error instanceof RecorderError && error.kind === 'failed');
+    assert.equal(fake.log.tracksStopped, 1);
+    assert.equal(session.type, 'playback');
+    await assert.rejects(recordTake({ signal: controller.signal }), (error: unknown) => error instanceof RecorderError && error.kind === 'failed');
+    assert.equal(session.type, 'playback');
+  } finally {
+    fake.restore();
+    delete (globalThis.navigator as { audioSession?: unknown }).audioSession;
+  }
+});
+
+test('overlapping recording sessions go back to playback only when the last one ends (Task 7)', async () => {
+  const session = { type: 'playback' };
+  Object.defineProperty(globalThis.navigator, 'audioSession', { value: session, configurable: true });
+  try {
+    let endFirst!: () => void;
+    let endSecond!: () => void;
+    const first = withRecordingSession(() => new Promise<void>(resolve => { endFirst = resolve; }));
+    const second = withRecordingSession(() => new Promise<void>(resolve => { endSecond = resolve; }));
+    endFirst();
+    await first;
+    assert.equal(session.type, 'play-and-record', 'the later take is still recording');
+    endSecond();
+    await second;
+    assert.equal(session.type, 'playback');
+  } finally {
+    delete (globalThis.navigator as { audioSession?: unknown }).audioSession;
+  }
+});
+
 test('playBuffer still reports the end when the sound cannot start (review M-4)', async () => {
   let ended = 0;
   const source = { buffer: null as unknown, onended: null as (() => void) | null, connect() {}, start() { throw new Error('closed'); }, stop() {} };

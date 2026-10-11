@@ -48,12 +48,15 @@ export function requestMicrophone(): Promise<void> {
 }
 
 // 1 語を録る: 開く → 録音開始（onStart）→ ms 後に止める → 閉じる。timeslice は使わない（iOS の MP4 を 1 つの Blob で受ける）。
-export function recordTake({ ms = TAKE_MS, onStart }: { ms?: number; onStart?: () => void } = {}): Promise<WordRecording> {
+// signal で途中でやめる（S8 を離れた・語を移った）: すぐ止めてマイクを閉じ、音声セッションを戻して 'failed' で終わる（結果は呼び出し側が捨てる）。
+export function recordTake({ ms = TAKE_MS, onStart, signal }: { ms?: number; onStart?: () => void; signal?: AbortSignal } = {}): Promise<WordRecording> {
   if (!recorderSupported()) return Promise.reject(new RecorderError('unsupported'));
+  if (signal?.aborted) return Promise.reject(new RecorderError('failed'));
   return withRecordingSession(async () => {
     const stream = await openMicrophone();
     try {
-      return await capture(stream, ms, onStart);
+      if (signal?.aborted) throw new RecorderError('failed');   // 許可を待つ間に離れた
+      return await capture(stream, ms, onStart, signal);
     } finally {
       stopStream(stream);
     }
@@ -72,7 +75,7 @@ function stopStream(stream: MediaStream): void {
   for (const track of stream.getTracks()) track.stop();
 }
 
-function capture(stream: MediaStream, ms: number, onStart?: () => void): Promise<WordRecording> {
+function capture(stream: MediaStream, ms: number, onStart?: () => void, signal?: AbortSignal): Promise<WordRecording> {
   return new Promise((resolve, reject) => {
     const created = createRecorder(stream);
     if (!created) {
@@ -84,14 +87,20 @@ function capture(stream: MediaStream, ms: number, onStart?: () => void): Promise
     let settled = false;
     let stopTimer: ReturnType<typeof setTimeout> | undefined;
     let giveUpTimer: ReturnType<typeof setTimeout> | undefined;
+    const onAbort = () => {
+      finish(new RecorderError('failed'));
+      try { if (recorder.state !== 'inactive') recorder.stop(); } catch { /* もう止まっている */ }
+    };
     const finish = (outcome: WordRecording | RecorderError) => {
       if (settled) return;
       settled = true;
       clearTimeout(stopTimer);
       clearTimeout(giveUpTimer);
+      signal?.removeEventListener('abort', onAbort);
       if (outcome instanceof RecorderError) reject(outcome);
       else resolve(outcome);
     };
+    signal?.addEventListener('abort', onAbort);
     recorder.ondataavailable = event => { if (event.data.size > 0) chunks.push(event.data); };
     recorder.onerror = () => finish(new RecorderError('failed'));
     recorder.onstop = () => {

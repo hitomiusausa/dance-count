@@ -37,8 +37,9 @@ test('unknown ids and the reserved word "new" go back to the list (Ruling 37)', 
 test('the practice screen needs a known dance; unbuilt screens show home', () => {
   assert.deepEqual(resolve('#/practice/waltz'), { screen: 'S2', redirect: null });
   assert.deepEqual(resolve('#/practice/hiphop'), { screen: 'S1', redirect: null });
-  for (const hash of ['#/voices/record', '#/share', '#/receive', '#/help/install', '#/about']) assert.deepEqual(resolve(hash), { screen: 'S1', redirect: null }, hash);
+  for (const hash of ['#/share', '#/receive', '#/help/install', '#/about']) assert.deepEqual(resolve(hash), { screen: 'S1', redirect: null }, hash);
   for (const hash of ['#/', '#/routines', '#/settings', '#/voices', '#/help/sound']) assert.equal(resolve(hash).redirect, null, hash);
+  assert.deepEqual(resolve('#/voices/record'), { screen: 'S8', redirect: null }, 'S8 is built in stage 4');
 });
 
 test('a new routine is refused by hash too once the list is full (Ruling 37)', () => {
