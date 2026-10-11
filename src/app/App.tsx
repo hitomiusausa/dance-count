@@ -25,6 +25,7 @@ import { I18nContext } from './state/i18n.ts';
 import { RoutinesContext, type RoutinesValue } from './state/routines.ts';
 import { replaceRoute, useRoute } from './state/route.ts';
 import { SettingsContext } from './state/settings.ts';
+import { StorageContext } from './state/storage.ts';
 
 // 端末の保存領域が開くのをこれ以上は待たない（固まっても画面を出す。以後このセッションでは使わない）。
 const STORAGE_OPEN_TIMEOUT_MS = 1500;
@@ -111,15 +112,17 @@ export function App() {
     <I18nContext.Provider value={i18n}>
       <SettingsContext.Provider value={{ settings, update }}>
         <RoutinesContext.Provider value={routinesValue}>
-          <div class="dc-shell" lang={locale}>
-            <IconSprite />
-            {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
-              : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
-              : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
-              : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
-              : <Simple />}
-            {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
-          </div>
+          <StorageContext.Provider value={storage.current}>
+            <div class="dc-shell" lang={locale}>
+              <IconSprite />
+              {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+                : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
+                : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
+                : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
+                : <Simple />}
+              {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
+            </div>
+          </StorageContext.Provider>
         </RoutinesContext.Provider>
       </SettingsContext.Provider>
     </I18nContext.Provider>

@@ -1,7 +1,9 @@
 // 端末内の保存（仕様 §7・Ruling 11）。IndexedDB `dance-count-v2` を version 2 に上げ、
 // 既存の voice-packs を残したまま routines と settings を足す。版上げはここ1か所だけで行う。
 // 注意: src/engine/recorded-voice-store.js は version 1 を直接開くので、v2 にした後に呼ぶと VersionError。
-// 新アプリからは段4まで呼ばない（段4で platform/storage 経由に作り直す。Ruling 41）。
+// 新アプリからは呼ばない（声の保存は src/app/voices/store.ts がここを経由する。Ruling 56）。
+// 版上げの方針（Ruling 56-5）: 上げる時は DB_VERSION と upgradeAppDatabase の 1 か所だけ。test/app/settings/storage-upgrade.test.ts に
+// 0→N・1→N・2→N の 3 経路を足す。既存ストアの削除・改名はしない。
 export const DB_NAME = 'dance-count-v2';
 export const DB_VERSION = 2;
 export type StoreName = 'routines' | 'settings' | 'voice-packs';
@@ -87,4 +89,15 @@ function run<T>(db: IDBDatabase, store: StoreName, mode: IDBTransactionMode, act
     transaction.oncomplete = () => resolve(request.result as T);
     transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB write was aborted'));
   });
+}
+
+// 端末が勝手に消さないように頼む（Ruling 11・56-6。段7から前倒し）。最初の語の保存が成功した直後に 1 回だけ呼ぶ。
+// 無い端末・断られた時は黙って続ける（結果は画面に出さない）。
+export async function requestPersistentStorage(): Promise<void> {
+  try {
+    const manager = typeof navigator === 'undefined' ? undefined : navigator.storage;
+    if (!manager?.persist) return;
+    if (await manager.persisted?.()) return;
+    await manager.persist();
+  } catch { /* 何もしない */ }
 }

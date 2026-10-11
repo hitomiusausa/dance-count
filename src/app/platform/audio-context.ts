@@ -42,3 +42,37 @@ export function outputLatencySeconds(audio: AudioContext): number {
   const value = (audio as AudioContext & { outputLatency?: number }).outputLatency;
   return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= MAX_DISPLAY_LATENCY_SECONDS ? value : 0;
 }
+
+// 録音の間だけ音声セッションを「録音＋再生」にし、終わったら「再生」に戻す（Ruling 57-4）。
+// 2026-10-12 実測（Playwright WebKit 26.5）: 'playback' のままの getUserMedia は即座に
+// InvalidStateError「AudioSession category is not compatible with audio capture.」で落ちる＝この切り替えは必須。
+// run は同期で呼ぶ（getUserMedia をタップの処理の中・最初の await より前に発行するため）。無い端末では何もしない。
+export function withRecordingSession<T>(run: () => Promise<T>): Promise<T> {
+  const session = (navigator as AudioSessionNavigator).audioSession;
+  const set = (type: string) => { if (session) { try { session.type = type; } catch { /* 古い実装は書き込み不可 */ } } };
+  set('play-and-record');
+  let pending: Promise<T>;
+  try {
+    pending = run();
+  } catch (error) {
+    set('playback');
+    return Promise.reject(error);
+  }
+  return pending.finally(() => set('playback'));
+}
+
+// 1 つの音を 1 回鳴らす（S8 の「聞く」。new Audio は使わない＝境界テスト）。戻り値で止める。鳴り終わり・止めた時に onEnded。
+export function playBuffer(audio: AudioContext, buffer: AudioBuffer, onEnded: () => void): () => void {
+  const source = audio.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audio.destination);
+  let ended = false;
+  source.onended = () => { if (!ended) { ended = true; onEnded(); } };
+  source.start();
+  return () => {
+    if (ended) return;
+    ended = true;
+    try { source.stop(); } catch { /* もう止まっている */ }
+    onEnded();
+  };
+}

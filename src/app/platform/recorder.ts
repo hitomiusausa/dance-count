@@ -1,8 +1,112 @@
-import { PlatformNotReadyError } from './not-ready.ts';
+import { withRecordingSession } from './audio-context.ts';
 
-// MediaRecorder（iOS audio/mp4・Chrome audio/webm;codecs=opus）→ WAV 化は段4（仕様 §7・Ruling 15）。
+// 録音の面（仕様 §7・Ruling 15・57）。getUserMedia・MediaRecorder はここだけ（test/app/platform-boundary.test.ts）。
+// 1 回の呼び出しでマイクを開き、1.5 秒録り、必ず閉じる（マイクを開いたままにしない＝iOS の音声セッションの罠と
+// 「録っていない間もマイクの印が点く」不安を消す。Ruling 57-4）。呼ぶのはタップの処理の中・最初の await より前（Ruling 8）。
+export const TAKE_MS = 1500;                 // 仕様 §4 S8「1.5 秒だけ録音」
+const STOP_GRACE_MS = 3000;                  // stop の後 'stop' が来ない時に諦めるまで
+// legacy/voice-recorder.html と同じ順（iOS は audio/mp4、Chrome は webm/opus。2026-10-12 実測: macOS の Chrome・Playwright WebKit とも先頭が通る）
+export const MIME_TYPES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'] as const;
+const CONSTRAINTS: MediaStreamConstraints = { audio: true, video: false };   // OS の既定のまま（Ruling 57-5）
+
+export type RecorderUnavailable = 'unsupported' | 'denied' | 'failed';
+
+export class RecorderError extends Error {
+  readonly kind: RecorderUnavailable;
+  constructor(kind: RecorderUnavailable) {
+    super(`recorder ${kind}`);
+    this.name = 'RecorderError';
+    this.kind = kind;
+  }
+}
+
 export interface WordRecording { blob: Blob; mimeType: string }
 
-export async function recordWord(_durationMs: number): Promise<WordRecording> {
-  throw new PlatformNotReadyError('voice recording', 4);
+export function recorderSupported(): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function' && typeof MediaRecorder !== 'undefined';
+}
+
+// 録れる形の最初の 1 つ。どれも無ければ undefined（＝ブラウザ既定）。
+export function pickMimeType(isSupported: (type: string) => boolean = type => MediaRecorder.isTypeSupported(type)): string | undefined {
+  return MIME_TYPES.find(type => { try { return isSupported(type); } catch { return false; } });
+}
+
+// getUserMedia の失敗の分け方（Ruling 57-1）。拒否は 'denied'、それ以外（マイクが無い・使用中・音声セッション）は 'failed'。
+export function recorderErrorKind(error: unknown): RecorderUnavailable {
+  if (error instanceof RecorderError) return error.kind;
+  const name = typeof error === 'object' && error !== null ? (error as { name?: unknown }).name : undefined;
+  return name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'failed';
+}
+
+// S8 ステップ0「録音をはじめる」: 許可だけを取って、すぐ閉じる（Ruling 57-2）。
+export function requestMicrophone(): Promise<void> {
+  if (!recorderSupported()) return Promise.reject(new RecorderError('unsupported'));
+  return withRecordingSession(async () => {
+    const stream = await openMicrophone();
+    stopStream(stream);
+  });
+}
+
+// 1 語を録る: 開く → 録音開始（onStart）→ ms 後に止める → 閉じる。timeslice は使わない（iOS の MP4 を 1 つの Blob で受ける）。
+export function recordTake({ ms = TAKE_MS, onStart }: { ms?: number; onStart?: () => void } = {}): Promise<WordRecording> {
+  if (!recorderSupported()) return Promise.reject(new RecorderError('unsupported'));
+  return withRecordingSession(async () => {
+    const stream = await openMicrophone();
+    try {
+      return await capture(stream, ms, onStart);
+    } finally {
+      stopStream(stream);
+    }
+  });
+}
+
+async function openMicrophone(): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia(CONSTRAINTS);
+  } catch (error) {
+    throw new RecorderError(recorderErrorKind(error));
+  }
+}
+
+function stopStream(stream: MediaStream): void {
+  for (const track of stream.getTracks()) track.stop();
+}
+
+function capture(stream: MediaStream, ms: number, onStart?: () => void): Promise<WordRecording> {
+  return new Promise((resolve, reject) => {
+    const mimeType = pickMimeType();
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    } catch {
+      reject(new RecorderError('failed'));
+      return;
+    }
+    const chunks: Blob[] = [];
+    let settled = false;
+    const finish = (outcome: WordRecording | RecorderError) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(stopTimer);
+      clearTimeout(giveUpTimer);
+      if (outcome instanceof RecorderError) reject(outcome);
+      else resolve(outcome);
+    };
+    recorder.ondataavailable = event => { if (event.data.size > 0) chunks.push(event.data); };
+    recorder.onerror = () => finish(new RecorderError('failed'));
+    recorder.onstop = () => {
+      const type = recorder.mimeType || mimeType || chunks[0]?.type || '';
+      const blob = new Blob(chunks, type ? { type } : undefined);
+      finish(blob.size > 0 ? { blob, mimeType: type } : new RecorderError('failed'));
+    };
+    try {
+      recorder.start();
+    } catch {
+      finish(new RecorderError('failed'));
+      return;
+    }
+    onStart?.();
+    const stopTimer = setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, ms);
+    const giveUpTimer = setTimeout(() => finish(new RecorderError('failed')), ms + STOP_GRACE_MS);
+  });
 }

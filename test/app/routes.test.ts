@@ -41,6 +41,14 @@ test('known ui-state values are read from the hash query (Ruling 33)', () => {
   assert.deepEqual(parseHash('#/routines?ui-state=confirm-delete'), { screen: 'S3', params: {}, query: { uiState: 'confirm-delete' } });
 });
 
+test('the three S8 display states are read too (Ruling 63-3)', () => {
+  for (const uiState of ['mic-denied', 'no-voice', 'no-recorder'] as const) {
+    assert.deepEqual(parseHash(`#/voices/record?ui-state=${uiState}`), { screen: 'S8', params: {}, query: { uiState } });
+  }
+  assert.deepEqual(parseHash('#/voices?ui-state=confirm-delete').query, { uiState: 'confirm-delete' });
+  assert.deepEqual(parseHash('#/voices/record?ui-state=MIC-DENIED').query, {});
+});
+
 test('unknown ui-state values and other keys are dropped', () => {
   for (const hash of ['#/practice/waltz?ui-state=boom', '#/practice/waltz?ui-state=NO-SOUND', '#/practice/waltz?ui-state=', '#/practice/waltz?debug=1', '#/practice/waltz?']) {
     assert.deepEqual(parseHash(hash).query, {}, hash);
