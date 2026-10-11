@@ -509,3 +509,15 @@ test('free-text names still compare by folded spelling only (D22)', () => {
   e.setDraft({ name: 'My Step', counts: '123' });
   assert.equal(e.check().action, 'add');
 });
+
+test('editing a received routine keeps it received and keeps who it came from (Ruling 84-3)', () => {
+  const base = createRoutine({ id: 'r-aaaaaaaa', danceId: 'waltz', name: '山田さんのワルツ', now: NOW });
+  const receivedFrom = { distributor: '山田', receivedAt: NOW, sourceId: 'r-teacher-0001' };
+  const routine: Routine = { ...base, source: 'received', provenance: { ...base.provenance, sourceKind: 'received' }, receivedFrom,
+    figures: [{ id: 'f-00000000', name: 'ナチュラルターン', counts: '123' }] };
+  const e = new RoutineEditor(routine, () => 'f-new00000');
+  assert.equal(e.rename('自分用のワルツ'), true);
+  assert.equal(e.routine.source, 'received');
+  assert.equal(e.routine.provenance.sourceKind, 'received');
+  assert.deepEqual(e.routine.receivedFrom, receivedFrom);
+});

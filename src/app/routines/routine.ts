@@ -7,22 +7,26 @@ import { isFigureId, isRoutineId } from './ids.ts';
 import { COUNTS_MAX, FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 
 // 端末に保存するルーティン（仕様 §7・Ruling 37・44）。既存のキーは変えず、createdAt を足す。
-// 段3で作るのは自分で作ったものだけ（受け取ったもの source:'received' は段5で足す。Ruling 41）。
+// 自分で作ったもの（source:'user-created'）と、配布ファイルから受け取ったもの（source:'received'・段5・Ruling 84-2）。
+// 受け取ったものは receivedFrom が必須で、編集しても source と receivedFrom は変わらない（Ruling 84-3）。
+export type RoutineSource = 'user-created' | 'received';
 export interface RoutineFigure { id: string; name: string; counts: string }
 export interface RoutineProvenance {
-  sourceKind: 'user-created'; authority: null; authorityClaimStatus: 'not-applicable'; reviewStatus: 'unreviewed';
+  sourceKind: RoutineSource; authority: null; authorityClaimStatus: 'not-applicable'; reviewStatus: 'unreviewed';
 }
+// sourceId＝先生の端末でのルーティンの ID（同じルーティンを受け取り直した時に置き換えるため。Ruling 84-4）
+export interface ReceivedFrom { distributor: string; receivedAt: string; sourceId?: string }
 export interface Routine {
   id: string;
   danceId: string;
   name: string;
   bpm: number | null;          // null = 種目の標準（practiceBpm）
   countInBars: 1 | 2;          // はじめの合図がオンの時の小節数（オン/オフは設定。Ruling 40）
-  source: 'user-created';
+  source: RoutineSource;
   status: 'ready';
   figures: RoutineFigure[];
   provenance: RoutineProvenance;
-  receivedFrom?: { distributor: string; receivedAt: string };
+  receivedFrom?: ReceivedFrom;
   createdWith: { app: 'dance-count'; version: string };
   createdAt: string;
   updatedAt: string;
@@ -68,8 +72,10 @@ export function normalizeRoutine(raw: unknown): Routine | null {
   if (!isName(name, ROUTINE_NAME_MAX)) return null;
   if (!(bpm === null || (Number.isInteger(bpm) && (bpm as number) >= BPM_MIN && (bpm as number) <= BPM_MAX))) return null;
   if (countInBars !== 1 && countInBars !== 2) return null;
-  if (source !== 'user-created' || status !== 'ready') return null;
+  if ((source !== 'user-created' && source !== 'received') || status !== 'ready') return null;
   if (!isRecord(provenance) || provenance.sourceKind !== source) return null;
+  const from = readReceivedFrom(receivedFrom);
+  if (source === 'received' && !from) return null;   // 受け取ったものは「誰から」が無ければ出さない（Ruling 84-2）
   try { validateRoutineProvenance(provenance); } catch { return null; }
   if (!Array.isArray(figures) || figures.length > FIGURES_MAX) return null;
   const cleanFigures: RoutineFigure[] = [];
@@ -81,15 +87,18 @@ export function normalizeRoutine(raw: unknown): Routine | null {
   if (typeof updatedAt !== 'string' || !isRecord(createdWith) || createdWith.app !== 'dance-count' || typeof createdWith.version !== 'string') return null;
   const routine: Routine = {
     id, danceId, name: name as string, bpm: bpm as number | null, countInBars, source, status, figures: cleanFigures,
-    provenance: { ...USER_PROVENANCE },
+    provenance: { ...USER_PROVENANCE, sourceKind: source },
     createdWith: { app: 'dance-count', version: createdWith.version },
     createdAt: typeof createdAt === 'string' ? createdAt : updatedAt,
     updatedAt
   };
-  if (isRecord(receivedFrom) && typeof receivedFrom.distributor === 'string' && typeof receivedFrom.receivedAt === 'string') {
-    routine.receivedFrom = { distributor: receivedFrom.distributor, receivedAt: receivedFrom.receivedAt };
-  }
+  if (from) routine.receivedFrom = from;
   return routine;
+}
+
+function readReceivedFrom(value: unknown): ReceivedFrom | null {
+  if (!isRecord(value) || typeof value.distributor !== 'string' || typeof value.receivedAt !== 'string') return null;
+  return { distributor: value.distributor, receivedAt: value.receivedAt, ...(isRoutineId(value.sourceId) ? { sourceId: value.sourceId } : {}) };
 }
 
 function isName(value: unknown, max: number): value is string {

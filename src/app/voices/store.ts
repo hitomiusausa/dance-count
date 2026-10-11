@@ -40,6 +40,10 @@ export interface VoicePackRecord {
   origin: 'recorded' | 'received';
   distributor?: { name: string };          // 受け取った声（段5が書く）
   consent?: { voiceDistribution: true; consentedAt: string };   // 段5が書く
+  // 受け取った声だけ（段5・Ruling 84-1）: 先生の端末での ID と更新時刻（同じ先生の声を受け取り直した時に置き換える）・受け取った時刻
+  sourceId?: string;
+  sourceUpdatedAt?: string;
+  receivedAt?: string;
 }
 
 // 保存されていた値を信用しない。形が外れた物は null（一覧に出さない・消さない。段3の normalizeRoutine と同じ）。

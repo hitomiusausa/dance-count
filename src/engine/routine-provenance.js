@@ -20,7 +20,7 @@ export function legacyRoutineProvenance(sourceFile) {
 
 export function validateRoutineProvenance(metadata) {
   if (!metadata || typeof metadata !== 'object') throw new Error('Routine provenance is required');
-  if (!['legacy-import', 'reviewed-preset', 'user-created'].includes(metadata.sourceKind)) throw new Error(`Unknown source kind: ${metadata.sourceKind}`);
+  if (!['legacy-import', 'reviewed-preset', 'user-created', 'received'].includes(metadata.sourceKind)) throw new Error(`Unknown source kind: ${metadata.sourceKind}`);
   if (metadata.authority != null && !DANCE_AUTHORITIES.includes(metadata.authority)) throw new Error(`Unknown dance authority: ${metadata.authority}`);
   if (!AUTHORITY_CLAIM_STATUSES.includes(metadata.authorityClaimStatus)) throw new Error(`Unknown authority claim status: ${metadata.authorityClaimStatus}`);
   if (!ROUTINE_REVIEW_STATUSES.includes(metadata.reviewStatus)) throw new Error(`Unknown routine review status: ${metadata.reviewStatus}`);

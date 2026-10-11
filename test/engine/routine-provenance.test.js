@@ -31,3 +31,10 @@ test('verified authority claims require evidence and reviewed presets require re
   assert.equal(validateRoutineProvenance(reviewed), true);
   assert.equal(beginnerPresetEligible(reviewed), true);
 });
+
+test('a received routine (stage 5, Ruling 84-2) is a known source kind and never a beginner preset', () => {
+  const received = { sourceKind: 'received', authority: null, authorityClaimStatus: 'not-applicable', reviewStatus: 'unreviewed' };
+  assert.equal(validateRoutineProvenance(received), true);
+  assert.equal(beginnerPresetEligible(received), false);
+  assert.throws(() => validateRoutineProvenance({ ...received, sourceKind: 'shared' }), /Unknown source kind/);
+});

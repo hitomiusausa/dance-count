@@ -151,3 +151,18 @@ test('delete returns the list without the voice only after storage confirms; a f
   assert.equal(await removeVoicePack(failing.storage, [en, ja], en.id), null);
   assert.equal(await removeVoicePack(null, [en], en.id), null);
 });
+
+test('a received voice keeps its source id, source time and received time through save and load (Ruling 84-1)', async () => {
+  const { storage } = memoryStorage();
+  const received = {
+    ...packFixture('ja-JP', 12, { name: '自分の声（日本語）' }), id: 'v-0f8fad5b-d9cb-469f-a165-70867728950e', origin: 'received' as const,
+    distributor: { name: '山田' }, consent: { voiceDistribution: true as const, consentedAt: NOW },
+    sourceId: 'user-recorded-ja-v1', sourceUpdatedAt: '2026-10-01T00:00:00.000Z', receivedAt: NOW
+  };
+  assert.equal(await saveVoicePack(storage, received), true);
+  const loaded = await loadVoicePack(storage, received.id);
+  assert.equal(loaded?.sourceId, 'user-recorded-ja-v1');
+  assert.equal(loaded?.sourceUpdatedAt, '2026-10-01T00:00:00.000Z');
+  assert.equal(loaded?.receivedAt, NOW);
+  assert.deepEqual(loaded?.consent, { voiceDistribution: true, consentedAt: NOW });
+});

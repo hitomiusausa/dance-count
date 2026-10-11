@@ -11,7 +11,8 @@ function defaultSource(): IdSource {
   return { randomUUID: uuid, now: () => Date.now(), random: () => Math.random() };
 }
 
-export function makeId(prefix: 'r' | 'f', source: IdSource = defaultSource()): string {
+// 'v' は受け取った声（`v-<uuid>`。voices/ids.ts の isVoiceId を通る。Ruling 84-1）。
+export function makeId(prefix: 'r' | 'f' | 'v', source: IdSource = defaultSource()): string {
   const uuid = source.randomUUID?.();
   if (uuid && /^[A-Za-z0-9-]+$/.test(uuid)) return `${prefix}-${uuid}`;
   const random = Math.floor(source.random() * 36 ** FALLBACK_RANDOM_DIGITS).toString(36).padStart(FALLBACK_RANDOM_DIGITS, '0');

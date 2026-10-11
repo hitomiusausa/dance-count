@@ -62,3 +62,19 @@ test('received-from is kept only in the right shape (display only until stage 5)
   assert.deepEqual(normalizeRoutine({ ...waltz(), receivedFrom: { distributor: '山田', receivedAt: NOW } })?.receivedFrom, { distributor: '山田', receivedAt: NOW });
   assert.equal(normalizeRoutine({ ...waltz(), receivedFrom: { distributor: 3 } })?.receivedFrom, undefined);
 });
+
+test('a received routine keeps who it came from, including the teacher-side id (Ruling 84-2)', () => {
+  const received: Routine = {
+    ...waltz(), source: 'received', provenance: { ...waltz().provenance, sourceKind: 'received' },
+    receivedFrom: { distributor: '山田', receivedAt: NOW, sourceId: 'r-teacher-0001' }
+  };
+  assert.deepEqual(normalizeRoutine(JSON.parse(JSON.stringify(received))), received);
+  const odd = normalizeRoutine({ ...received, receivedFrom: { ...received.receivedFrom, sourceId: 'not an id' } });
+  assert.deepEqual(odd?.receivedFrom, { distributor: '山田', receivedAt: NOW });
+});
+
+test('a received routine without receivedFrom, or with a mismatched provenance, is not listed (Ruling 84-2)', () => {
+  const received = { ...waltz(), source: 'received', provenance: { ...waltz().provenance, sourceKind: 'received' } };
+  assert.equal(normalizeRoutine(received), null);
+  assert.equal(normalizeRoutine({ ...received, receivedFrom: { distributor: '山田', receivedAt: NOW }, provenance: waltz().provenance }), null);
+});

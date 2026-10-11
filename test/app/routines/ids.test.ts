@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isFigureId, isRoutineId, makeId } from '../../../src/app/routines/ids.ts';
+import { isVoiceId } from '../../../src/app/voices/ids.ts';
 
 test('ids are r-/f- plus a UUID and pass their own check', () => {
   const routineId = makeId('r');
@@ -22,4 +23,11 @@ test('the reserved word "new" and other junk are never routine ids (Ruling 37)',
   }
   assert.equal(isFigureId('r-12345678'), false);
   assert.equal(isRoutineId('r-12345678'), true);
+});
+
+test('a received voice gets a v- id that the voice id check accepts (Ruling 84-1)', () => {
+  const id = makeId('v');
+  assert.match(id, /^v-[0-9a-f-]{36}$/);
+  assert.equal(isVoiceId(id), true);
+  assert.equal(isVoiceId(makeId('v', { now: () => 1760000000000, random: () => 0.5 })), true);
 });
