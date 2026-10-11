@@ -3,6 +3,7 @@ import { APP_VERSION } from '../app-version.ts';
 import { USER_PROVENANCE, normalizeRoutine, routinePlayability, type Routine } from '../routines/routine.ts';
 import { ROUTINE_NAME_MAX } from '../routines/limits.ts';
 import { isCompletePack, normalizeVoicePackRecord, type VoicePackRecord } from '../voices/store.ts';
+import { stripInvisible } from './clean-text.ts';
 import { BUNDLE_ROUTINES_MAX, BUNDLE_SCHEMA_VERSION, BUNDLE_TYPE, DISTRIBUTOR_NAME_MAX } from './limits.ts';
 
 // 配布ファイル（仕様 §7・Ruling 80）を作る・読む純粋な部品。端末には触らない（ファイルの共有・保存・読みは platform/files.ts）。
@@ -28,7 +29,7 @@ export async function exportVoiceForBundle(pack: VoicePackRecord): Promise<Expor
 }
 
 export function cleanDistributorName(name: string): string {
-  return [...name.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('');
+  return [...stripInvisible(name).trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('');
 }
 
 // 束の JSON 文字列。名前が空・何も入っていない・上限を超える時は投げる（S9 は主ボタンを押せなくしているので、ここに来ない）。
@@ -119,7 +120,8 @@ export function parseBundle(text: string): ParsedBundle {
   const rejected: Array<{ name: string | null }> = [];
   if (rawRoutines !== undefined) {
     if (!Array.isArray(rawRoutines) || rawRoutines.length > BUNDLE_ROUTINES_MAX) return BROKEN;
-    for (const raw of rawRoutines) {
+    for (const rawRoutine of rawRoutines) {
+      const raw = withCleanNames(rawRoutine);
       const routine = normalizeRoutine(raw);
       if (routine && routinePlayability(routine) === 'ok') routines.push(routine);
       else rejected.push({ name: readableName(raw) });
@@ -134,9 +136,21 @@ function readVoice(raw: unknown): ParsedVoice | null {
   if (!isRecord(raw)) return null;
   let imported: Record<string, unknown>;
   try { imported = importRecordedVoicePack(JSON.stringify(raw)) as Record<string, unknown>; } catch { return null; }
-  const pack = normalizeVoicePackRecord({ ...imported, origin: 'recorded' });
+  const name = typeof imported.name === 'string' ? stripInvisible(imported.name) : imported.name;
+  const pack = normalizeVoicePackRecord({ ...imported, name, origin: 'recorded' });
   if (!pack || !isCompletePack(pack)) return null;
   return { pack, sourceUpdatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null };
+}
+
+// ルーティンとフィガーの名前から見えない文字を除いてから形を確かめる（除いて空になった名前は「読めない」）。
+function withCleanNames(raw: unknown): unknown {
+  if (!isRecord(raw)) return raw;
+  const clean = { ...raw };
+  if (typeof raw.name === 'string') clean.name = stripInvisible(raw.name);
+  if (Array.isArray(raw.figures)) {
+    clean.figures = raw.figures.map(figure => isRecord(figure) && typeof figure.name === 'string' ? { ...figure, name: stripInvisible(figure.name) } : figure);
+  }
+  return clean;
 }
 
 function readableName(raw: unknown): string | null {

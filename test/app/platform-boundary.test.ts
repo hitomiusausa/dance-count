@@ -6,15 +6,15 @@ import path from 'node:path';
 const appDir = path.resolve(import.meta.dirname, '../../src/app');
 
 // 端末依存の入口。ここ以外の src/app から直接触ったら落とす（仕様 §10「lint で禁止」の代わり）。
-// - 常に禁止（前に . があっても）: storage 系・indexedDB・matchMedia・new AudioContext/MediaRecorder/Audio・webkitAudioContext・
+// - 常に禁止（前に . があっても）: storage 系・indexedDB・matchMedia・clipboard・URL.createObjectURL/revokeObjectURL・new AudioContext/MediaRecorder/Audio・webkitAudioContext・
 //   document.defaultView・document の可視状態とイベント（visibilityState・hidden・add/removeEventListener）
 // - 裸の識別子だけ禁止（obj.history / obj.addEventListener のような他人のプロパティは許す）: window・navigator・globalThis・self・
-//   location・history・addEventListener・removeEventListener・requestAnimationFrame・cancelAnimationFrame・fetch
+//   location・history・addEventListener・removeEventListener・requestAnimationFrame・cancelAnimationFrame・fetch・caches（段5）
 //   → `const history = []` のような同名ローカル変数も検出する（紛らわしいので別名にする方針）。
 // - 文字列の中身を見て禁止: document.createElement('audio')・'visibilitychange'（iOS の音声解除と WakeLock 再取得の経路）
 // - document は描画の入口 main.tsx が使うので対象外（上の document.* だけ禁止）。
-const ALWAYS = /\b(localStorage|sessionStorage|indexedDB|webkitAudioContext|matchMedia)\b|\bnew\s+(AudioContext|MediaRecorder|Audio)\b|\bdocument\s*\.\s*(defaultView|visibilityState|hidden|addEventListener|removeEventListener)\b/;
-const BARE = /(?<![.\w$])(window|navigator|globalThis|self|location|history|addEventListener|removeEventListener|requestAnimationFrame|cancelAnimationFrame|fetch)\b/;
+const ALWAYS = /\b(localStorage|sessionStorage|indexedDB|webkitAudioContext|matchMedia|clipboard)\b|\bURL\s*\.\s*(createObjectURL|revokeObjectURL)\b|\bnew\s+(AudioContext|MediaRecorder|Audio)\b|\bdocument\s*\.\s*(defaultView|visibilityState|hidden|addEventListener|removeEventListener)\b/;
+const BARE = /(?<![.\w$])(window|navigator|globalThis|self|location|history|addEventListener|removeEventListener|requestAnimationFrame|cancelAnimationFrame|fetch|caches)\b/;
 const IN_STRINGS = /\bcreateElement\s*\(\s*['"`]audio['"`]|['"`]visibilitychange['"`]/;
 
 // コメントと文字列の中身を落とす（ブロックコメントは行をまたいで追う）。
@@ -86,6 +86,11 @@ const MUST_FLAG = [
   'const response = await fetch(url);',
   'const width = `${window.innerWidth}px`;',
   'const label = `${a} and ${navigator.language}`;',
+  'const cache = await caches.open("dance-count-inbox");',
+  'const url = URL.createObjectURL(blob);',
+  'URL.revokeObjectURL(url);',
+  'await nav.clipboard.writeText(text);',
+  'const { clipboard } = nav;',
 ];
 
 const MUST_NOT_FLAG = [
@@ -103,6 +108,9 @@ const MUST_NOT_FLAG = [
   "document.createElement('div');",
   'const { fetchImpl } = options;',
   'engine.requestAnimationFrame;',
+  'const url = new URL(base);',
+  'store.caches.length;',
+  'const clipboardText = text;',
 ];
 
 test('detector flags every realistic device access', () => {

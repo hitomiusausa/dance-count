@@ -96,6 +96,23 @@ test('a routine that cannot be read is listed by name and the rest is still rece
   assert.deepEqual(parsed.rejected, [{ name: 'こわれたルーティン' }, { name: null }]);
 });
 
+test('received names lose invisible control and direction characters; a name left empty is unreadable (stage-5 review)', async () => {
+  const good = waltzRoutine('r-11111111', '\u202eワルツ\u202c');
+  const bundle = JSON.parse(buildBundle({ distributorName: '山田', voice: null, routines: [good], now: NOW }));
+  bundle.distributor.name = '\u2066山田\u2069\u0007';
+  bundle.routines[0].figures[0].name = 'ナチュラル\u200fターン';
+  bundle.routines.push({ ...good, id: 'r-22222222', name: '\u202e\n' });
+  const parsed = ok(JSON.stringify(bundle));
+  assert.deepEqual(parsed.distributor, { name: '山田' });
+  assert.deepEqual(parsed.routines.map(routine => routine.name), ['ワルツ']);
+  assert.equal(parsed.routines[0].figures[0].name, 'ナチュラルターン');
+  assert.deepEqual(parsed.rejected, [{ name: null }]);
+  assert.equal(problem(JSON.stringify({ ...bundle, distributor: { name: '\u202e' } })), 'broken');
+  const voice = JSON.parse(await voiceBundle());
+  voice.voicePack.name = '自分の\u202e声';
+  assert.equal(ok(JSON.stringify(voice)).voice?.pack.name, '自分の声');
+});
+
 test('more than 50 routines, routines that are not a list, or nothing readable is "broken" (Ruling 80-4・80-5)', () => {
   const routines = Array.from({ length: BUNDLE_ROUTINES_MAX }, (_, index) => waltzRoutine(`r-${String(index).padStart(8, '0')}`));
   const bundle = JSON.parse(buildBundle({ distributorName: '山田', voice: null, routines, now: NOW }));

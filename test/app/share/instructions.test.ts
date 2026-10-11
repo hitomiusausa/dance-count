@@ -12,7 +12,7 @@ test('the Japanese instructions are the spec §8 text with the stage-5 Android l
     'Dance Count で、私の声のカウントを使えます。',
     '【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」',
     '2. Dance Count を開き「先生の声で練習」→「ファイルから受け取る」→「ファイルを選ぶ」',
-    '3. 「最近の項目」からこのファイルを選び「使う」',
+    '3. 「最近使った項目」からこのファイルを選び「使う」',
     '【Android】このファイルを保存してから、同じ手順で「ファイルを選ぶ」',
     '（スマホで受け取るのが便利です）',
     'アプリ: https://count.dancemap.jp/?openExternalBrowser=1'

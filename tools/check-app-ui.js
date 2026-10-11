@@ -118,7 +118,7 @@ const STATES = [
       { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
   // S10（Ruling 83・87-2）: 選ぶ 1・確認 2（やめる・使う）・受け取った 1。ファイルは実経路（setInputFiles）。枠は 1 つ・中の操作は 1 つまで。
   { name: 'S10 選ぶ', hash: '#/receive', screen: 'S10', kind: 'focus', ops: 1, total: 1,
-    texts: ['LINE で届いたファイルは、先に「"\u2060ファイル\u2060"に保存」しておくと、ここで選べます。', '選ぶ画面では「最近の項目」にあります。'] },
+    texts: ['LINE で届いたファイルは、先に「"\u2060ファイル\u2060"に保存」しておくと、ここで選べます。', '選ぶ画面では「最近使った項目」にあります。'] },
   { name: 'S10 LINE の中', hash: '#/receive', screen: 'S10', kind: 'focus', userAgent: LINE_UA, alert: true, ops: 1, total: 1, texts: ['LINE の中で開いています。'] },
   { name: 'S10 確認', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2, firstView: ['.dc-receive-dock .dc-primary'],
     texts: ['山田さんの声（日本語）· 12 語', 'ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ'],
