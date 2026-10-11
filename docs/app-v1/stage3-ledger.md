@@ -164,8 +164,16 @@ F3 の裁定（コントローラー）:
 
 ### PO の決定 D22（最終レビュー2 M3・保留 M1 の答え）
 
-同じ照合済みフィガーに当たる名前は同じ名前とみなす（日英の対応表で判定。A 案）→ **Task F8 で実装予定**。B 案（行に「どのフィガーか」を保存して表示を言語で切り替える）は段5の計画で決める。正本は `rulings.md` の D22。
+同じ照合済みフィガーに当たる名前は同じ名前とみなす（日英の対応表で判定。A 案）→ **Task F8 で実装済み（`7ba21f5`。下の節）**。B 案（行に「どのフィガーか」を保存して表示を言語で切り替える）は段5の計画で決める。正本は `rulings.md` の D22。
+
+### Task F8（D22 同じフィガーなら同じ名前・`7ba21f5`）
+
+- `figure-names.ts` に `figureIdentity(danceId, name)`: 同じ種目の照合済みフィガーに当たる名前（日本語の別名・英語名・かなの畳み）はそのフィガーの印（`figure:<種目>:<英語名>`）、当たらない名前は `'text:'`＋`foldFigureName`。同じ種目で 2 つのフィガーが同じ畳んだ名前を持つ時（曖昧）は印を付けず綴りで比べる（今の登録簿には無いことをテストで固定。曖昧の振る舞いは `buildFigureIdentity` に作り物の登録簿を渡して検査）。
+- `editor.ts` の `sameName`・`renamed`・`updateAll` の仲間分け（＝複製の形・カウントを合わせる）をすべて `figureIdentity` 経由に（判定は 1 か所）。保存データ・表示（注意は今どおり代表の保存名を `figureDisplayName` で）・`spellingKey`（候補の「選び終えた」）は不変。
+- D22 で意味が変わった既存テスト 2 件の期待値を直した（「ナチュラルターン」＝ "Natural Turn"、「ウィスク」＝ "whisk"）。
+- テスト 349 → **358**（figure-names 5・editor 4）。smoke:routines に 1 本（英語表示・waltz13 の追加の行で一覧の "Whisk" → "Same name exists: Whisk (1 2 & 3)"・"Add a copy (1 2 & 3)"・カウントの欄なし → 14 行目）。実機確認表に 42。撮影 `~/.playwright-mcp/f8-en-whisk-copy-375.png`。
+- ゲート（5199 番の自前の開発サーバー）: テスト 358・typecheck・build（dist OK・1064 files）・ui:check **113 PASS**（exit 0）・`smoke:routines`（WebKit 込み）・`smoke:practice` OK。
 
 ### 実機の再確認
 
-`docs/app-v1/stage3-device-check.md` の **17〜41**（追加便ぶん）をひとみうさの iPhone で（先にページを再読み込み）。OK なら段4の詳細計画へ。
+`docs/app-v1/stage3-device-check.md` の **17〜42**（追加便ぶん）をひとみうさの iPhone で（先にページを再読み込み）。OK なら段4の詳細計画へ。
