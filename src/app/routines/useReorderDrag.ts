@@ -103,6 +103,7 @@ export function useReorderDrag(options: ReorderDragOptions) {
       latest.current.onTap(index);   // 軽く押した・Enter・Space
     },
     onKeyDown(event: KeyboardEvent) {
+      ignoreClick.current = false;   // ドラッグの後に click が来ず残った印で、この後の Enter・Space の click を捨てない
       if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
       event.preventDefault();
       latest.current.onStep(index, event.key === 'ArrowUp' ? -1 : 1);

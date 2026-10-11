@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { NoticeBox } from '../practice/controls.tsx';
 import { danceName } from '../i18n/index.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
 import type { UiState } from '../router/routes.ts';
@@ -19,6 +20,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
   const { routines, remove } = useRoutines();
   const [openId, setOpenId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Routine | null>(null);
+  const [deleteFailed, setDeleteFailed] = useState(false);   // 端末から消せなかった（画面を離れるまで出す）
   const locale = translator.locale;
   useEffect(() => { if (uiState === 'confirm-delete' && routines[0]) setDeleting(routines[0]); }, [uiState]);
 
@@ -32,6 +34,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
   return (
     <main class="dc-screen" data-screen="S3">
       <h1 class="dc-heading">{translator.t('routinesTitle')}</h1>
+      <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
       <button type="button" class="dc-button dc-primary dc-wide" disabled={routines.length >= ROUTINES_MAX}
         onClick={() => navigate({ screen: 'S4', params: {} })}>
         <Icon name="plus" /><span>{translator.t('newRoutine')}</span>
@@ -81,7 +84,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
       {deleting && (
         <ConfirmDialog title={translator.t('confirmDeleteTitle')} detail={deleting.name} confirmLabel={translator.t('confirmDelete')}
           onCancel={() => setDeleting(null)}
-          onConfirm={() => { void remove(deleting.id); setDeleting(null); setOpenId(null); }} />
+          onConfirm={() => { void remove(deleting.id).then(ok => setDeleteFailed(!ok)); setDeleting(null); setOpenId(null); }} />
       )}
     </main>
   );

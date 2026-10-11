@@ -115,7 +115,7 @@ button { cursor: pointer; }
 .dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dc-chip { min-height: 48px; min-width: 48px; padding: 0 16px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
   font-size: 18px; font-weight: 700; }
-.dc-chip[aria-checked="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
+.dc-chip[aria-checked="true"], .dc-chip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-fine { display: flex; flex-direction: column; gap: 8px; }
 .dc-fine input[type="range"] { width: 100%; min-height: 48px; accent-color: var(--primary); }
 .dc-more-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 56px; border-bottom: var(--bw) solid var(--line); }

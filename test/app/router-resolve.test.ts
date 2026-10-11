@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveScreen } from '../../src/app/router/resolve.ts';
 import { parseHash } from '../../src/app/router/routes.ts';
+import { ROUTINES_MAX } from '../../src/app/routines/limits.ts';
 import { createRoutine, type Routine } from '../../src/app/routines/routine.ts';
 
 const NOW = '2026-10-11T09:00:00.000Z';
@@ -38,4 +39,11 @@ test('the practice screen needs a known dance; unbuilt screens show home', () =>
   assert.deepEqual(resolve('#/practice/hiphop'), { screen: 'S1', redirect: null });
   for (const hash of ['#/voices/record', '#/share', '#/receive', '#/help/install', '#/about']) assert.deepEqual(resolve(hash), { screen: 'S1', redirect: null }, hash);
   for (const hash of ['#/', '#/routines', '#/settings', '#/voices', '#/help/sound']) assert.equal(resolve(hash).redirect, null, hash);
+});
+
+test('a new routine is refused by hash too once the list is full (Ruling 37)', () => {
+  const full = Array.from({ length: ROUTINES_MAX }, (_, i) => createRoutine({ id: `r-limit${String(i).padStart(4, '0')}`, danceId: 'waltz', name: `R${i}`, now: NOW }));
+  assert.deepEqual(resolveScreen(parseHash('#/routines/new'), full), toRoutines);
+  assert.deepEqual(resolveScreen(parseHash('#/routines/new'), full.slice(1)), { screen: 'S4', redirect: null });
+  assert.deepEqual(resolveScreen(parseHash(`#/routines/${full[0]!.id}/edit`), full), { screen: 'S4', redirect: null });
 });

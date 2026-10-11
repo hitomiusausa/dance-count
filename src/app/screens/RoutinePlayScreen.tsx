@@ -15,6 +15,7 @@ import type { UiState } from '../router/routes.ts';
 import type { Routine } from '../routines/routine.ts';
 import type { AppSettings } from '../settings/settings.ts';
 import { takeAutoplay } from '../state/autoplay.ts';
+import { viewportHeight } from '../platform/viewport.ts';
 import { useI18n } from '../state/i18n.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
@@ -69,7 +70,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     if (!element || view.figureIndex === null) return;
     const box = element.getBoundingClientRect();
     const dock = element.ownerDocument.querySelector('.dc-dock');
-    const visibleBottom = dock ? dock.getBoundingClientRect().top : document.documentElement.clientHeight;
+    const visibleBottom = dock ? dock.getBoundingClientRect().top : viewportHeight();
     if (box.bottom <= 0 || box.top >= visibleBottom) return;
     element.children[view.figureIndex]?.scrollIntoView({ block: 'nearest' });
   }, [view.figureIndex]);
