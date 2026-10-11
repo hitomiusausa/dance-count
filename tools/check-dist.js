@@ -2,10 +2,13 @@
 // 使い方: npm run build（vite build のあとに自動で実行される）
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { checkDistAudio, findSecrets, loadStandardVoices } from './voices/check-pack.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root, 'dist');
-const REQUIRED = ['index.html', 'audio/default-en-female-v1/manifest.json'];
+// 標準音声は src/app/voices/standard-voices.json が正本（Ruling 68-3）。JSON に無いパック・聴感ゲート未通過のパックは出荷しない。
+const standardVoices = await loadStandardVoices();
+const REQUIRED = ['index.html', ...standardVoices.map(voice => `audio/${voice.id}/manifest.json`)];
 const FORBIDDEN_PATHS = [/(^|\/)legacy\//, /six-candidates/, /subdivision-review/, /\.html$/];
 // src/engine/data/ 配下の JSON（未監修ルーティン）が1つでも束ねられたら落とす。ファイルごとに固有のキー（目印）を置く。
 // 新しい JSON を src/engine/data/ に足したら、下の DATA_MARKERS にそのファイル固有の目印を足すこと（足し忘れは自己検査で落ちる）。
@@ -36,10 +39,12 @@ for (const file of files) {
   if (!BINARY_EXT.test(file)) {
     const text = await fs.readFile(path.join(dist, file), 'utf8');
     for (const word of FORBIDDEN_CONTENT) if (text.includes(word)) problems.push(`${file} contains "${word}"`);
+    for (const secret of findSecrets(text)) problems.push(`${file} contains a credential: ${secret}`);
   }
 }
+for (const problem of await checkDistAudio(dist, standardVoices)) if (!problems.includes(problem)) problems.push(problem);
 if (problems.length) {
   console.error(problems.join('\n'));
   process.exit(1);
 }
-console.log(`dist OK: ${files.length} files, no legacy pages or unreviewed data`);
+console.log(`dist OK: ${files.length} files, no legacy pages or unreviewed data, voices: ${standardVoices.map(voice => voice.id).join(', ')}`);
