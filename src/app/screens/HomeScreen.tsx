@@ -22,7 +22,7 @@ export function HomeScreen() {
   const resume = () => {
     if (!lastDanceId) return;
     try { unlockAudioInsideTap(); } catch { /* 音が使えない端末は S2 の2秒判定で案内する */ }
-    requestAutoplay(lastDanceId);
+    requestAutoplay({ kind: 'dance', id: lastDanceId });
     navigate({ screen: 'S2', params: { danceId: lastDanceId } });
   };
 

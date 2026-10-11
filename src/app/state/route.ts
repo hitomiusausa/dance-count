@@ -19,14 +19,19 @@ export function navigate(target: RouteTarget): void {
   setHash(buildHash(target));
 }
 
+// 履歴を積まずに画面を替える（新規ルーティンの ID 発行・見つからないルーティンから S3 へ。Ruling 37・40）。
+// 見てきた列の末尾も置き換えて、幻の履歴を残さない。
+export function replaceRoute(target: RouteTarget): void {
+  const hash = buildHash(target);
+  visited = replaceTop(visited, hash);
+  setHash(hash, { replace: true });
+}
+
 // 履歴があれば1つ戻る。直接開いた等で無ければ親画面へ置き換え（親は params を持たない画面だけ）。
 export function goBack(current: ScreenId): void {
   if (canGoBackInHistory(visited)) {
     historyBack();
     return;
   }
-  const parent = parentScreen(current) ?? 'S1';
-  const parentHash = buildHash({ screen: parent, params: {} });
-  visited = replaceTop(visited, parentHash);
-  setHash(parentHash, { replace: true });
+  replaceRoute({ screen: parentScreen(current) ?? 'S1', params: {} });
 }

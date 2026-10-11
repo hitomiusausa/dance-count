@@ -1,6 +1,5 @@
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { DANCE_PROFILES } from '../engine/dance-profiles.js';
 import { IconSprite } from './components/Icon.tsx';
 import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
@@ -8,7 +7,8 @@ import { forgetLegacyUiLocale, readLegacyUiLocale } from './platform/legacy-loca
 import { deviceLanguages } from './platform/locale.ts';
 import { applyDocumentLanguage } from './platform/page.ts';
 import { openAppStorage, type AppStorage } from './platform/storage.ts';
-import { showsTabs, tabOf, type Route, type ScreenId } from './router/routes.ts';
+import { resolveScreen } from './router/resolve.ts';
+import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
@@ -21,7 +21,7 @@ import { DEFAULT_SETTINGS, forgetRoutineSettings, type AppSettings } from './set
 import { loadSettings, saveSettings } from './settings/store.ts';
 import { I18nContext } from './state/i18n.ts';
 import { RoutinesContext, type RoutinesValue } from './state/routines.ts';
-import { useRoute } from './state/route.ts';
+import { replaceRoute, useRoute } from './state/route.ts';
 import { SettingsContext } from './state/settings.ts';
 
 // 端末の保存領域が開くのをこれ以上は待たない（固まっても画面を出す。以後このセッションでは使わない）。
@@ -37,7 +37,7 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身がある画面だけ登録する。未実装の画面はホームを出す（段3以降でここに足す）。
+// 中身だけで描ける画面（引数の要る S2・S4・S5 は下で個別に描く）。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S3: RoutinesScreen,
@@ -45,12 +45,6 @@ const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S7: VoicesScreen,
   S11: SoundHelpScreen
 };
-
-// S2 は種目が分かる時だけ。知らない種目・未実装の画面はホーム。
-export function resolveScreen(route: Route): ScreenId {
-  if (route.screen === 'S2') return route.params.danceId && Object.hasOwn(DANCE_PROFILES, route.params.danceId) ? 'S2' : 'S1';
-  return SIMPLE_SCREENS[route.screen] ? route.screen : 'S1';
-}
 
 export function App() {
   const route = useRoute();
@@ -104,8 +98,13 @@ export function App() {
   const i18n = useMemo(() => ({ translator, setLocale: (next: AppLocale) => update({ uiLocale: next }) }), [translator, update]);
   useEffect(() => applyDocumentLanguage(locale, translator.t('documentTitle')), [locale, translator]);
 
+  // 見つからない・鳴らせないルーティンは S3 へ置き換え（Ruling 37・40）。ルーティンを読み終える前は判断しない。
+  const resolved = resolveScreen(route, routines);
+  const redirectHash = settings && resolved.redirect ? buildHash(resolved.redirect) : null;
+  useEffect(() => { if (resolved.redirect && redirectHash) replaceRoute(resolved.redirect); }, [redirectHash]);
+
   if (!settings) return null;
-  const screen = resolveScreen(route);
+  const { screen } = resolved;
   const Simple = SIMPLE_SCREENS[screen] ?? HomeScreen;
   return (
     <I18nContext.Provider value={i18n}>

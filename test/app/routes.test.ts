@@ -38,6 +38,7 @@ test('trailing slash is ignored', () => {
 test('known ui-state values are read from the hash query (Ruling 33)', () => {
   assert.deepEqual(parseHash('#/practice/jive?ui-state=no-sound'), { screen: 'S2', params: { danceId: 'jive' }, query: { uiState: 'no-sound' } });
   assert.deepEqual(parseHash('#/practice/waltz?x=1&ui-state=wakelock-tip').query, { uiState: 'wakelock-tip' });
+  assert.deepEqual(parseHash('#/routines?ui-state=confirm-delete'), { screen: 'S3', params: {}, query: { uiState: 'confirm-delete' } });
 });
 
 test('unknown ui-state values and other keys are dropped', () => {

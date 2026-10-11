@@ -20,7 +20,7 @@ type Profile = DanceProfileLike & { beatsPerBar: number };
 
 const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standard: 'speedStandard', fast: 'speedFast' };
 // ui-state は見た目だけを強制する（Ruling 33）。設定・hints・再生には書かない。
-const FORCED_NOTICE: Record<UiState, SessionNotice> = { 'no-sound': 'no-sound', 'wakelock-tip': 'wake-tip' };
+const FORCED_NOTICE: Partial<Record<UiState, SessionNotice>> = { 'no-sound': 'no-sound', 'wakelock-tip': 'wake-tip' };
 
 // S2 再生（仕様 §4・Ruling 13・18・19・21・23・28〜32）。
 export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?: UiState }) {
@@ -47,7 +47,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   useEffect(() => {
     update({ lastDanceId: danceId });
     const unsubscribe = session.subscribe(setView);
-    if (takeAutoplay(danceId)) {
+    if (takeAutoplay({ kind: 'dance', id: danceId })) {
       try { void session.play(optionsFrom(settings)); } catch { /* 入力は practiceChoice 済み。万一でも画面は止まったまま */ }
     }
     return () => { unsubscribe(); session.dispose(); };
@@ -67,7 +67,8 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   };
 
   const presets = speedPresetBpms(profile);
-  const notice: SessionNotice = uiState && !forcedDismissed ? FORCED_NOTICE[uiState] : view.notice;
+  const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
+  const notice: SessionNotice = forced && !forcedDismissed ? forced : view.notice;
   const beat = view.playing && !view.countIn ? beatIndexInBar(view.originalTick, profile.beatsPerBar) : null;
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。

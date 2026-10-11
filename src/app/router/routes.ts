@@ -3,8 +3,8 @@ export type ScreenId = 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | '
 export type ScreenKind = 'root' | 'focus' | 'list';
 export type TabId = 'practice' | 'routines' | 'settings';
 export type RouteParams = { danceId?: string; routineId?: string };
-// 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33）。設定・hints・再生状態には書かない。
-export type UiState = 'no-sound' | 'wakelock-tip';
+// 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33。confirm-delete は S3 の削除確認・Ruling 43）。設定・hints・再生状態には書かない。
+export type UiState = 'no-sound' | 'wakelock-tip' | 'confirm-delete';
 export type RouteQuery = { uiState?: UiState };
 export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery }
 export type RouteTarget = Pick<Route, 'screen' | 'params'>;
@@ -32,7 +32,7 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
 const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'S4', path: '/routines/:routineId/edit' }];
 
 const ID_SEGMENT = /^[A-Za-z0-9_-]+$/;
-const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip'];
+const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip', 'confirm-delete'];
 
 const PATTERNS = [
   ...(Object.entries(SCREENS) as Array<[ScreenId, ScreenSpec]>).map(([screen, spec]) => ({ screen, path: spec.path })),
