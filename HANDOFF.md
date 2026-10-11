@@ -2,6 +2,8 @@
 
 更新日: 2026-07-15
 
+2026-10-11: アプリ化v1 段1完了。旧画面は legacy/ へ。新アプリは src/app（docs/superpowers/specs/2026-10-11-app-v1-design.md）
+
 ## 1. プロジェクトの目標
 
 社交ダンス初心者が、種目ごとの正しいカウントと拍位置を、メトロノーム・音声・視覚表示を使って練習できるサービスを作る。
@@ -27,13 +29,14 @@
 
 ### 主な画面
 
-- `public/practice.html`: シンプル再生画面。基本カウント／ルーティン練習、範囲再生、全フィガー一覧、カウントイン、BPM、音声選択。2026-07-15 UI刷新済み（アイコン+ラベル・44pxタッチ・下固定バー・タップ展開カード）。
-- `public/routine-editor.html`: メインの練習・編集画面。並べ替え、追加、複製、削除、フィガー単体試聴、全体試聴、音声タイミング調整。2026-07-15 UI刷新済み（アイコン+ラベル・44pxタッチ・下固定バー・タップ展開カード）。
-- `public/voice-recorder.html`: 英語・日本語の12語を録音、波形から自動頭出し・クリック除去・長さ正規化、試聴、書き出し／読み込み。
-- `public/routine-migration-review.html`: 旧ルーティンの機械監査と人間レビュー用画面。
-- `public/voice-calibration.html`: 標準音声のタイミング確認。
-- `public/subdivision-audio-review.html`: 短い分割拍での音声重なり確認。
-- `public/six-comparison.html`: six候補音声の比較用。
+- 新アプリ: `src/app`（Vite+Preact+TS。`npm run dev` で http://localhost:5173、`npm run build` で dist）。以下の旧画面は `legacy/` に退避（`npm run legacy` で http://localhost:4173/legacy/ から開く・公開しない）。
+- `legacy/practice.html`: シンプル再生画面。基本カウント／ルーティン練習、範囲再生、全フィガー一覧、カウントイン、BPM、音声選択。2026-07-15 UI刷新済み（アイコン+ラベル・44pxタッチ・下固定バー・タップ展開カード）。
+- `legacy/routine-editor.html`: メインの練習・編集画面。並べ替え、追加、複製、削除、フィガー単体試聴、全体試聴、音声タイミング調整。2026-07-15 UI刷新済み（アイコン+ラベル・44pxタッチ・下固定バー・タップ展開カード）。
+- `legacy/voice-recorder.html`: 英語・日本語の12語を録音、波形から自動頭出し・クリック除去・長さ正規化、試聴、書き出し／読み込み。
+- `legacy/routine-migration-review.html`: 旧ルーティンの機械監査と人間レビュー用画面。
+- `legacy/voice-calibration.html`: 標準音声のタイミング確認。
+- `legacy/subdivision-audio-review.html`: 短い分割拍での音声重なり確認。
+- `legacy/six-comparison.html`: six候補音声の比較用。
 
 ### タイミングの中核
 

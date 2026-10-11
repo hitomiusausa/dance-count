@@ -129,7 +129,7 @@
 
 共通: 全画面の文言は `src/app/i18n/` の日英キーで持つ（下の英語は初版。段8で監修）。種目名は `DANCE_NAMES`（`ui-messages.js`）を使い、`dance-profiles.js` の `name` は表示に使わない。種目の副題は **拍子ではなく** `templates[0]` を表示用に整形したカウント（ワルツ「1 2 3」・タンゴ「S S Q Q S」・スローフォックス「S Q Q」・サンバ「1 a 2」・パソドブレ「1 2 3 4」・ジャイブ「1 2 3 a 4 5 a 6」。整形関数は現在カウント表示と共通、日英共通）。拍子（2/4・3/4・4/4）はどこにも表示しない（Ruling 22）。
 
-PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央寄せ。例外は S2/S5 だけで、同じ DOM を CSS グリッドで2領域（左: 現在カウント＋拍インジケータ／右: 速さ・トグル・声チップ・くわしく）に並べ、内容幅は最大 960px。▶／■ の下固定帯は PC でも内容幅いっぱい。下タブは 1024px 以上で上部の横並び（同じ `[data-nav]` 要素、集中画面で隠す規則は同じ）。
+PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央寄せ。例外は S2/S5 だけで、同じ DOM を CSS グリッドで2領域（左: 現在カウント＋拍インジケータ／右: 速さ・トグル・声チップ・くわしく）に並べ、内容幅は最大 960px。▶／■ の下固定帯は PC でも内容幅いっぱい。下タブは 1024px 以上で上部の横並び（実装は段2。段1は下タブのみ。2026-10-11 注）（同じ `[data-nav]` 要素、集中画面で隠す規則は同じ）。
 
 ### S1 ホーム（ルート）
 - 上から: アプリ名（「Dance Count」22px 太字＋副題「for Ballroom」16px）と右上の言語ボタン（地球アイコン＋「日本語」/「English」）→「前回」カード（2回目以降のみ）→「先生の声で練習」カード → 見出し「種目を選んでください」→ 種目タイル 10個（2列×5行）。初回案内カード（§3）は最下段。
@@ -475,7 +475,7 @@ App: <public URL>
 2. `git mv src/v2 src/engine`、`git mv test/v2 test/engine`、`git mv public legacy`（音声は `public/audio/` に戻す）。
 3. import パスと `package.json` の `test` を `node --test test/engine/*.test.js` に。`html-module-syntax.test.js`・`ui-assets.test.js` は `legacy/` を見るよう修正。
 4. `npm test` 全緑、`timing:audit` を再実行し `generatedAt` を除いて diff ゼロ。
-5. `tempo-map.js` を追加し、`audio-engine.js` と `timeline-view-model.js` の tick→秒をここへ集約（constant を既定で注入）。再び `npm test`・`timing:audit` diff ゼロ。
+5. `tempo-map.js` を追加し、`audio-engine.js`・`rhythm-compiler.js`・`dance-timing-audit.js` の tick→秒をここへ集約（constant を既定で注入。`timeline-view-model.js` に該当計算はない。2026-10-11 訂正）。再び `npm test`・`timing:audit` diff ゼロ。
 
 ### `?v=` と `no-store` の撤去
 - `audio-engine.js` の `import ... from './voice-pack-loader.js?v=…'` を含め、`src/engine` 内の `?v=` を全て除去（Vite がハッシュ名を付ける。二重インスタンス化の防止）。
@@ -491,7 +491,7 @@ App: <public URL>
 - `base:'./'`（相対パス）、ハッシュルーティング、サーバー API ゼロ、端末依存は `platform/` のみ。manifest: `name:"Dance Count"`、`short_name:"Dance Count"`、副題「for Ballroom」は画面の見出しのみ（D2）、`display:"standalone"`、`share_target`。
 
 ### tempo-map の口（Ruling 20）
-- `src/engine/tempo-map.js`（純粋）: `constantTempo(bpm)` と `beatMapTempo(beatsMs[], beatsPerBar)`。どちらも `tickToMs(tick)`・`msToTick(ms)`。constant は `tick × 60000 / (bpm × 960)` と同値。beatMap は拍時刻の区分線形補間、範囲外は最後の拍間隔で外挿。
+- `src/engine/tempo-map.js`（純粋）: `constantTempo(bpm)` と `beatMapTempo(beatsMs[], beatsPerBar)`。どちらも `tickToMs(tick)`・`msToTick(ms)`。constant は `tick × 60000 / (bpm × 960)` と同値。beatMap は拍時刻の区分線形補間、範囲外の外挿は、最初の拍より前は最初の拍間隔、最後の拍より後は最後の拍間隔（2026-10-11 訂正）。
 - テスト: (a) constant が現行計算と全 tick で一致 (b) beatMap が拍時刻をちょうど返す (c) 単調増加。
 - 曲の音の再生・選択 UI・同梱・計測ツールは作らない（§15）。
 

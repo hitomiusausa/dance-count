@@ -7,17 +7,22 @@
 ## 起動
 
 ```bash
-cd "/Users/usausagi/Documents/Playground/Dance Count for Ballroom"
-npm start
+cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
+npm install
+npm run dev
 ```
 
-ブラウザで <http://localhost:4173> を開きます。
+ブラウザで <http://localhost:5173> を開きます（新アプリ。段1時点は下タブと空画面だけ）。
+
+旧画面（開発用・公開しない）は `npm run legacy` で <http://localhost:4173/legacy/practice.html> から開けます。
 
 ## テスト
 
 ```bash
 npm test
 ```
+
+移設前との一致は `npm run timing:audit && npm run timing:compare` で確かめます。
 
 ## 音声素材
 
@@ -27,7 +32,7 @@ npm test
 npm run voices:build
 ```
 
-個別のタイミングを耳で確認するときは <http://localhost:4173/public/voice-calibration.html> を開きます。
+個別のタイミングを耳で確認するときは `npm run legacy` のあと <http://localhost:4173/legacy/voice-calibration.html> を開きます。
 
 10種目の全原子カウント遷移、登録テンプレート、移行済みルーティン、標準音声の実波形をまとめて監査できます。
 
