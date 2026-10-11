@@ -1,18 +1,19 @@
 # アプリ化 v1 — 引き継ぎ（HANDOVER）
 
-更新: 2026-10-11（段1完了時点）
-ブランチ: `agent/app-v1`（最新 `4c0854b` 以降）。**main 未マージ・未 push**（ひとみうさの判断で、段2〜8もこのブランチで続け、公開直前にまとめる）
+更新: 2026-10-11（段2完了・実機確認待ち）
+ブランチ: `agent/app-v1`（段2の最終コミットは `git log` 参照）。**main 未マージ・未 push**（ひとみうさの判断で、段2〜8もこのブランチで続け、公開直前にまとめる）
 
 ---
 
 ## 0. 次のセッションで最初にやること
 
 1. このファイルを読む
-2. `docs/app-v1/stage1-ledger.md` の「持ち越し」と「Ruling」を読む（段2の計画に拾う項目がある）
-3. **段2（生徒の再生 S1・S2）の詳細計画を書く** → `docs/superpowers/plans/2026-10-11-app-v1-stage2.md`
-   - 書き手: Opus（superpowers:writing-plans）。全体地図 `docs/superpowers/plans/2026-10-11-app-v1-master.md` の「段の一覧」「段をまたぐ持ち越し」「人が必要な確認点」を必ず拾う
-   - 計画の手順は、スクラッチのコピーで実際に動かして確かめてから書く（段1と同じやり方）
-4. ひとみうさに計画を見せて OK をもらう → superpowers:subagent-driven-development で実装
+2. `docs/app-v1/stage2-ledger.md` の「持ち越し」と「Ruling」を読む（段3の計画に拾う項目がある）
+3. ひとみうさの iPhone 確認（`docs/app-v1/stage2-device-check.md`）の結果を聞く。マナーモードで鳴らない場合は Ruling 6 の代償を Fable に上げる（段3より先）
+4. **段3（ルーティン S3〜S5）の詳細計画を書く** → `docs/superpowers/plans/2026-10-11-app-v1-stage3.md`
+   - 書き手: Opus（superpowers:writing-plans）。全体地図 `docs/superpowers/plans/2026-10-11-app-v1-master.md` の「段の一覧」「段をまたぐ持ち越し」「人が必要な確認点」と、下の §5 を必ず拾う
+   - 計画の手順は、スクラッチのコピーで実際に動かして確かめてから書く（段1・2と同じやり方）
+5. ひとみうさに計画を見せて OK をもらう → superpowers:subagent-driven-development で実装
 
 ## 1. 読む順番
 
@@ -45,8 +46,8 @@
 |---|---|---|
 | 0 | 見た目の決定 | 完了（D8） |
 | 1 | 器（エンジン移設・tempo-map・legacy 退避・Vite+Preact+TS の殻） | **完了 2026-10-11** |
-| 2 | 生徒の再生（S1・S2）・iOS 音声解除・WakeLock・ui:check 移植 | **次** |
-| 3 | ルーティン（S3〜S5） | 未着手 |
+| 2 | 生徒の再生（S1・S2）・iOS 音声解除・WakeLock・ui:check 移植 | **完了（実機確認待ち）2026-10-11** |
+| 3 | ルーティン（S3〜S5） | **次**（実機確認の結果しだい） |
 | 4 | 声（S7・S8 録音） | 未着手 |
 | 5 | 配る・受け取る（S9・S10） | 未着手 |
 | 6 | 日本語標準音声（TTS生成・実測・聴感ゲート） | 未着手（段2〜5と並列可） |
@@ -60,7 +61,7 @@
 - `src/engine/` … 旧 `src/v2/` を無改変で移設。tick↔時刻は **`src/engine/tempo-map.js` だけ**（例外: 検算用の `tools/audit-all-dance-timing.js` と開発用 `tools/render-subdivision-audio-review.js`）
 - `src/app/` … Vite 8.3.4・Preact 10.29.8・TypeScript 6.0.3。i18n（日英）・ハッシュルーター（純粋関数）・platform アダプタ（hash/locale は実装、音声・録音・保存・ファイル・WakeLock は「未実装」を投げる空実装）・下タブ3つの空画面
 - `legacy/` … 旧画面（保守停止）。標準音声は `public/audio/default-en-female-v1/` のまま
-- テスト 154件（`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
+- テスト 221件（段2で 154 → 221。段1時点は 154件。`npm test` は `test/**/*.test.{js,ts}` を再帰で実行。`.tsx` のテストは Node の型除去で動かないので書かない — メタテストが検出して落とす）
 
 ### 番人（壊したら自動で止まるもの）
 
@@ -72,25 +73,31 @@
 | `test/app/platform-boundary.test.ts` | window/navigator/storage/AudioContext 等は `src/app/platform/` からだけ |
 | `test/meta/test-glob.test.js` | テストファイルが `npm test` から漏れない |
 | `tools/smoke-app-shell.js` | 375/1280 × 日英で殻が動く・旧画面の標準音声13ファイルが 200 |
+| `npm run ui:check`（`tools/check-app-ui.js`） | 新アプリの U1〜U15（文字・タップ・主要操作数・コントラスト・動き・折り返し等）を S1/S2/S3/S6/S7/S11 × 375/1280 で検査（dev も preview ビルドも 41項目 PASS） |
+| `npm run smoke:practice` | G1（初回2タップで鳴る）・G2（前回カード1タップで鳴る）・再読み込みで勝手に鳴らない・戻るの置き換え |
 
 **ゴールデンと基準は書き換え禁止**。作り直すのは rulings.md に理由と差分の要約を書いた時だけ。
 
-## 5. 段2の計画に必ず入れること（段1から持ち越し）
+## 5. 段3以降への持ち越し（段2から）
 
-1. **最初のタスク**: 境界テストに `new Audio(`・`document.createElement('audio')`・`document.visibilityState`／`visibilitychange`・裸の `addEventListener`／`requestAnimationFrame`／`fetch`・`.jsx` を追加（iOS 音声解除と WakeLock 再取得の経路そのもの）。テンプレート文字列 `${window.x}` の見逃しも塞ぐ
-2. 同じく最初に: `index.html` の `<html lang="ja">` と `<title>` を表示言語に合わせる
-3. `?ui-state=no-sound`（Ruling 23）をルーターで扱えるようにする（今は parseHash が落とす）。`ui:check` の新アプリ向け移植に必須
-4. PC（1024px 以上）の上部タブ（Ruling 21）・S2 の2領域配置
-5. タブのアイコン、「戻る」の動き（履歴が無ければ親画面へ置き換え。`routes.ts` の `parentScreen` と `setHash(…,{replace:true})` は用意済み）
-6. ui:check の移植（§6 U1〜U15）
+1. `src/engine/recorded-voice-store.js` の IndexedDB v1 直開きを `platform/storage`（`openAppStorage()`・`put(store, value)`）経由に作り直す（段2で DB は v2 になった。新アプリから呼ぶと `VersionError`）。
+2. `dance-count-v2-routine-draft:*` の localStorage 移行（段2は表示言語だけ移行済み）。
+3. App の `SIMPLE_SCREENS` に S3〜S5 を足す時は `resolveScreen` に S4/S5 の ID 検査を足す（S2 と同じ形）。
+4. `PracticeScreen` を S5 で再利用するか分けるかは段3の計画で決める（`[data-alert]` の1枠・`PracticeSession` はそのまま使える。範囲再生は `start()` の `rangeStartTick/rangeEndTick` を `PracticeOptions` に足す）。
+5. 「くわしく」の主要操作は段4で 9（上限ちょうど）。以後の追加は裁定が要る（Ruling 31）。
+6. 段4で `selectedVoiceId` を保存する時は、`normalizeSettings` が標準音声へ戻す処理を緩める。
+7. S2 の連打で change/toggle が古い settings を使う小さな穴（保存は正しい）。
+8. 前回カードの即再生は iPhone 実機で要確認（解除はタップ内、再生開始はマウント後）。
 
-段3で必ず: `src/engine/recorded-voice-store.js` が IndexedDB `dance-count-v2` を **version 1 で直接開いている**。§7 で v2 に上げると旧コードが `VersionError` で開けなくなるので、`platform/storage` 経由に作り直す。ルーティンID生成で `'new'` を予約語に。check-dist に「src/engine/data/ の全JSONに目印があるか」の自己検査。
+段3で必ず（段1から持ち越し・未消化）: ルーティンID生成で `'new'` を予約語に。check-dist に「src/engine/data/ の全JSONに目印があるか」の自己検査。
 
 第2弾（曲）で必ず: 再生エンジンは tempo を「拍の長さ」「区間の長さ」「区間ローカルtick」として使っている。beatMap では誤るので「絶対tickの位置の差」で作り直す（今は `start()` が constant 以外を拒否して守っている）。一定テンポの経路は今の式のまま残すこと（変えるとゴールデンが落ちる）。
 
+（段1から持ち越した段2の項目 — 境界テスト強化・html lang/title・`?ui-state=no-sound`・PC 上部タブ/S2 2領域・タブアイコン・戻る・ui:check 移植 — は段2で消化済み。詳細は `stage2-ledger.md`。）
+
 ## 6. 人が必要な確認点（ひとみうさ）
 
-- **段2の終わり**: iPhone 実機で、マナーモードで ▶ が鳴る／音が出ない時だけ警告が出る／ロック復帰／画面が消えない（WakeLock）／AirPods でずれない。あわせて見た目がモック B どおりか
+- **段2の終わり（今ここ）**: `docs/app-v1/stage2-device-check.md` の表（1〜9）を iPhone 実機で。マナーモードで ▶ が鳴る／音が出ない時だけ警告が出る／ロック復帰／画面が消えない（WakeLock）／AirPods でずれない／前回カード1タップ。あわせて見た目がモック B どおりか
 - **段6**: 日本語標準音声の試聴（聴感ゲート）
 - **公開前**: dancemap.jp のサブドメイン・配信基盤（DNS 設定）の許可
 - 可能なら 60〜70代の方に説明なしで触ってもらう
@@ -109,11 +116,15 @@
 cd "/Users/usausagi/Documents/AI_Playground/Dance Count for Ballroom"
 npm run dev        # 新アプリ http://localhost:5173
 npm run legacy     # 旧画面 http://localhost:4173/legacy/practice.html
-npm test           # 154件
+npm test           # 221件
 npm run typecheck
 npm run build      # check-dist まで走る
 npm run timing:audit && npm run -s timing:compare
-node tools/smoke-app-shell.js   # dev と legacy を起動してから
+npm run ui:check          # dev 起動中に（DC_BASE_URL=http://localhost:4174/ で preview ビルドにも）
+npm run ui:check:legacy   # 旧画面用（legacy を 4173 で起動してから）
+npm run smoke:practice    # G1・G2（dev 起動中に）
+node tools/smoke-app-shell.js   # dev と legacy を起動してから（DC_SHOT_DIR で撮影先を変更可）
+git checkout -- output    # timing:audit の後は必ず
 ```
 
 ## 9. 落とし穴

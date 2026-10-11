@@ -109,17 +109,25 @@
 
 | 持ち越し | 拾う段 | 内容 |
 |---|---|---|
-| 練習セッション状態の `track: null` | 2 | Ruling 20 の席の予約。セッション状態の型に `track: TrackProfile \| null`（初期 null）を置く。`TrackProfile` の JSDoc 型は段1で `src/engine/tempo-map.js` に定義済み |
-| `ui:check` の移植 | 2 | 段1では `tools/check-ui-accessibility.js` の対象を `legacy/` に向け直しただけ（旧画面用のまま）。段2で新アプリ向けに移植・拡張（§6 U1〜U15・`?ui-state=no-sound`） |
-| 書体の同梱 | 2（Inter）・7（precache） | `@fontsource/inter`・`@fontsource/noto-sans-jp`。段1はシステム書体のまま |
-| アイコン | 2 | モックの `<symbol>` を `src/app/components/icons.svg` へ。段1の下タブは文字だけ（アイコン単独は禁止、文字は必須） |
-| 「戻る」の動き | 2 | 段1の `routes.ts` に親画面の表（`parentScreen`）と `platform/hash.ts` の `setHash(…, {replace:true})` は用意済み。履歴の有無で親へ置き換える処理は段2 |
+| 練習セッション状態の `track: null` | 済（段2） | Ruling 20 の席の予約。セッション状態の型に `track: TrackProfile \| null`（初期 null）を置く。`TrackProfile` の JSDoc 型は段1で `src/engine/tempo-map.js` に定義済み |
+| `ui:check` の移植 | 済（段2） | 段1では `tools/check-ui-accessibility.js` の対象を `legacy/` に向け直しただけ（旧画面用のまま）。段2で新アプリ向けに移植・拡張（§6 U1〜U15・`?ui-state=no-sound`） |
+| 書体の同梱 | 済（段2）・7 | `@fontsource/inter`・`@fontsource/noto-sans-jp`。段1はシステム書体のまま |
+| アイコン | 済（段2） | モックの `<symbol>` を `src/app/components/icons.svg` へ。段1の下タブは文字だけ（アイコン単独は禁止、文字は必須） |
+| 「戻る」の動き | 済（段2） | 段1の `routes.ts` に親画面の表（`parentScreen`）と `platform/hash.ts` の `setHash(…, {replace:true})` は用意済み。履歴の有無で親へ置き換える処理は段2 |
 | エンジンの日本語固定文言の i18n 化 | 3（「（コピー）」）・4（recorded-voice-store/pack のエラー） | 仕様 §10 で `src/engine` を変えてよい数少ない例外 |
 | IndexedDB の版上げ（v1→v2） | 3 | **注意**: 版を上げると、同じオリジンで開いた `legacy/` の旧画面（`recorded-voice-store.js` は version 1 を指定）が `VersionError` になる。開発用の旧画面だけの問題だが、段3の計画で「旧画面は別ポート（`npm run legacy` = 4173、新アプリ = 5173）なのでオリジンが別」であることを確認し、同一オリジンで開かない運用を明記する |
 | 標準音声 URL の `?v=<revision>` | 7 | `voice-pack-loader.js` は manifest の `revision` を音声 URL の `?v=` に付ける（差し替え時のキャッシュ対策。段1では残した）。Workbox の precache は既定でこのクエリを無視しないため、**オフライン再生でキャッシュに当たらない恐れ**。段7で `ignoreURLParametersMatching` に `/^v$/` を足すか、precache 側の URL に revision を合わせるかを決める |
-| `fetch` のキャッシュ方針 | 2・7 | 段1で `cache:'no-store'` を外した。新アプリは `fetchImpl` を platform から渡す。旧画面は既定の HTTP キャッシュになる（旧画面の保守は止める方針: Ruling 10） |
+| `fetch` のキャッシュ方針 | 済（段2）・7 | 段1で `cache:'no-store'` を外した。新アプリは `fetchImpl` を platform から渡す。旧画面は既定の HTTP キャッシュになる（旧画面の保守は止める方針: Ruling 10） |
 | 案内文の `PUBLIC_APP_URL` | 5 | ビルド時定数。空なら行ごと出さない（§16-1） |
-| 速さ3択の定数 | 2 | `SPEED_SLOW_RATIO=0.8`・`SPEED_FAST_RATIO=1.1` と10種目の単体テスト（Ruling 24） |
+| 速さ3択の定数 | 済（段2） | `SPEED_SLOW_RATIO=0.8`・`SPEED_FAST_RATIO=1.1` と10種目の単体テスト（Ruling 24） |
+| `recorded-voice-store.js` の IndexedDB v1 直開き | 3 | 段2で DB は v2 になった。`platform/storage`（`openAppStorage()`・`put(store, value)`）経由に作り直す（新アプリから呼ぶと `VersionError`） |
+| `dance-count-v2-routine-draft:*` の移行 | 3 | localStorage から移行（段2は表示言語だけ移行済み） |
+| `SIMPLE_SCREENS` に S3〜S5 | 3 | `resolveScreen` に S4/S5 の ID 検査を足す（S2 と同じ形） |
+| `PracticeScreen` を S5 で再利用か分けるか | 3 | 段3の計画で決める。`[data-alert]` の1枠・`PracticeSession` はそのまま使える。範囲再生は `start()` の `rangeStartTick/rangeEndTick` を `PracticeOptions` に足す |
+| 「くわしく」の主要操作の上限 | 4 | 段4で 9（上限ちょうど）。以後の追加は裁定が要る（Ruling 31） |
+| `selectedVoiceId` の保存 | 4 | `normalizeSettings` が標準音声へ戻す処理を緩める |
+| S2 連打で change/toggle が古い settings を使う穴 | 3以降 | 小さな穴（保存は正しい） |
+| 前回カードの即再生 | 実機 | iPhone 実機で要確認（解除はタップ内・再生開始はマウント後） |
 | 禁止語テスト | 段1で土台 | `src/app/i18n/forbidden-words.ts` と `test/app/i18n.test.ts`。以後の段は文言を `messages.ts` に足すだけで自動的に検査される |
 
 ---
