@@ -1,5 +1,6 @@
 import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { DANCE_PROFILES } from '../engine/dance-profiles.js';
 import { IconSprite } from './components/Icon.tsx';
 import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
@@ -9,6 +10,7 @@ import { applyDocumentLanguage } from './platform/page.ts';
 import { openAppStorage, type AppStorage } from './platform/storage.ts';
 import { showsTabs, tabOf, type Route, type ScreenId } from './router/routes.ts';
 import { HomeScreen } from './screens/HomeScreen.tsx';
+import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutinesScreen } from './screens/RoutinesScreen.tsx';
 import { SettingsScreen } from './screens/SettingsScreen.tsx';
 import { DEFAULT_SETTINGS, type AppSettings } from './settings/settings.ts';
@@ -24,7 +26,9 @@ const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S6: SettingsScreen
 };
 
+// S2 は種目が分かる時だけ。知らない種目・未実装の画面はホーム。
 export function resolveScreen(route: Route): ScreenId {
+  if (route.screen === 'S2') return route.params.danceId && Object.hasOwn(DANCE_PROFILES, route.params.danceId) ? 'S2' : 'S1';
   return SIMPLE_SCREENS[route.screen] ? route.screen : 'S1';
 }
 
@@ -63,7 +67,9 @@ export function App() {
       <SettingsContext.Provider value={{ settings, update }}>
         <div class="dc-shell" lang={locale}>
           <IconSprite />
-          <Simple />
+          {screen === 'S2'
+            ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+            : <Simple />}
           {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
         </div>
       </SettingsContext.Provider>
