@@ -68,7 +68,9 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const element = list.current;
     if (!element || view.figureIndex === null) return;
     const box = element.getBoundingClientRect();
-    if (box.bottom <= 0 || box.top >= document.documentElement.clientHeight) return;
+    const dock = element.ownerDocument.querySelector('.dc-dock');
+    const visibleBottom = dock ? dock.getBoundingClientRect().top : document.documentElement.clientHeight;
+    if (box.bottom <= 0 || box.top >= visibleBottom) return;
     element.children[view.figureIndex]?.scrollIntoView({ block: 'nearest' });
   }, [view.figureIndex]);
 
@@ -140,10 +142,10 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
               <div class="dc-range" data-group="range">
                 <RangeStep label={translator.t('rangeStart')} index={range.startIndex} name={figureName(routine.figures[range.startIndex]!.name)}
                   canPrev={range.startIndex > 0} canNext={range.startIndex < last}
-                  onStep={delta => { const start = range.startIndex + delta; changeRange({ startIndex: start, endIndex: Math.max(range.endIndex, start) }); }} />
+                  onStep={delta => { const now = latest.current.range; const start = now.startIndex + delta; changeRange({ startIndex: start, endIndex: Math.max(now.endIndex, start) }); }} />
                 <RangeStep label={translator.t('rangeEnd')} index={range.endIndex} name={figureName(routine.figures[range.endIndex]!.name)}
                   canPrev={range.endIndex > 0} canNext={range.endIndex < last}
-                  onStep={delta => { const end = range.endIndex + delta; changeRange({ startIndex: Math.min(range.startIndex, end), endIndex: end }); }} />
+                  onStep={delta => { const now = latest.current.range; const end = now.endIndex + delta; changeRange({ startIndex: Math.min(now.startIndex, end), endIndex: end }); }} />
               </div>
             </div>
             <FineSpeed idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
