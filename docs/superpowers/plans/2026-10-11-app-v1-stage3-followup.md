@@ -62,6 +62,12 @@
 - TDD: figure-names・editor のテストを先に。
 - 完了: 関門すべて＋375×667 で一覧の画面（ワルツ・タンゴ）を撮る。
 
+## Task F8: 同じフィガーなら同じ名前（D22）
+
+- 正: rulings.md の **D22** 全文。Ruling 50 の同じ名前の判定を「同じ種目の照合済みフィガーに当たるなら同じ（日本語の別名・英語名・かな畳み）、当たらなければ畳んだ綴り」にする。判定は `src/app/routines/figure-names.ts` の純粋関数（例 `figureIdentity(danceId, name)`）にまとめ、sameName・matchCounts・updateAll・複製の形の全部が同じ関数を使う（判定を 2 か所に書かない）。保存データ・表示は変えない。
+- テスト: ウィスク＝Whisk＝うぃすく（ワルツ）・別の種目の同名は別・登録簿に無い名前は綴りで比べる・英語表示で一覧の "Whisk" を押すと複製の形・updateAll が日英混在の行をまとめて直す。smoke 1 本（英語表示で一覧の Whisk → 複製の形）。実機確認表 1 行。
+- 完了: 関門すべて。
+
 ## 締め
 
 - 段3台帳 `docs/app-v1/stage3-ledger.md` に追加便の記録（各 Task の完了・修正便・裁定）を追記。`docs/app-v1/HANDOVER.md` の段3の行と §0 を更新（実機の再確認＝追加便ぶんの確認表の行）。
