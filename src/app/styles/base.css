@@ -407,3 +407,25 @@ button { cursor: pointer; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 0; margin: 0; }
   .dc-take { margin-top: 8px; padding: 4px 0; }
 }
+/* S9 配る（Ruling 82）: 名前 → 声 → 同意 → ルーティン → 下固定「ファイルを作る」。押せない理由は近くに 1 行（.dc-hint・.dc-dock-note） */
+.dc-share-heading { margin-top: 16px; }
+.dc-share-empty { margin: 4px 0 0; color: var(--ink2); }
+.dc-check-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 6px 2px; border: none;
+  border-bottom: var(--bw) solid var(--line); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; text-align: left; line-height: 1.35; }
+.dc-check-row:disabled { color: var(--ink2); cursor: not-allowed; }
+.dc-checkbox { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--primary); border-radius: var(--r-s); background: var(--surface); }
+.dc-check-row[aria-checked="true"] .dc-checkbox { background: var(--primary); color: var(--on-primary); }
+.dc-check-row:disabled .dc-checkbox { border-color: var(--line); }
+.dc-consent { margin-top: 12px; }
+.dc-consent-row { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 8px; border-bottom: var(--bw) solid var(--line); }
+.dc-consent-box { flex: none; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: none; background: none; }
+.dc-consent-text { flex: 1; min-width: 0; padding-top: 10px; font-size: 18px; line-height: 1.45; cursor: pointer; }
+.dc-share-list { margin-top: 0; }
+.dc-share-routine { min-height: 64px; }
+.dc-share-dock { flex-direction: column; align-items: center; gap: 6px; }
+.dc-dock-note { font-size: 16px; color: var(--ink2); text-align: center; }
+.dc-share.dc-screen--dock { padding-bottom: calc(var(--dockh) + 48px + env(safe-area-inset-bottom)); }
+.dc-share-done { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; scroll-margin-top: 12px; }
+.dc-result { padding: 10px 12px; border: var(--bw) solid var(--primary); border-left-width: 4px; border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.dc-result-sub { margin-top: 4px; font-size: 16px; font-weight: 400; }
+.dc-instructions { min-height: 0; padding: 8px 12px; font-size: 16px; line-height: 1.5; resize: none; }

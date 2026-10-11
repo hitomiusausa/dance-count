@@ -101,6 +101,16 @@ const STATES = [
   { name: 'S8 録れた語で声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], alert: true, total: 3,
     recordButton: true, takeShown: true, steps: [{ wait: '.dc-wave rect:nth-of-type(41)' }] },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
+  // 段5（Ruling 82・87-2）: S9 は 名前・声・同意・ルーティン・「ファイルを作る」＝5（上限）。作った後は「案内文をコピー」が足されて 6。
+  // firstView: 375×548 でも名前・声・同意・主ボタンが初期表示に入る（声を選んだ後＝人の操作の後なので ops ではなく要素で見る）。
+  { name: 'S9 声あり', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: true,
+    firstView: ['[data-group="distributor"]', '[data-group="share-voice"]', '.dc-consent-row', '.dc-dock .dc-primary'],
+    steps: [{ click: '[data-group="share-voice"] [role="radio"] >> nth=1' }] },
+  { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'] },
+  { name: 'S9 作った後', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], fakeShare: true, total: 6,
+    texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
+    steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
+      { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
 ];
 
@@ -130,7 +140,9 @@ try {
   for (const state of CHECKED) {
     for (const { viewport, reducedMotion, compact } of RUNS) {
       const label = `${state.name} @ ${viewport.width}x${viewport.height}${compact ? ' (Safari SE)' : ''}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
-      const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'] });
+      const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'], ...(state.userAgent ? { userAgent: state.userAgent } : {}) });
+      // 共有シートの代わり（Ruling 87-2）: 共有できる端末として、すぐ「送った」で返す（headless の Chrome は共有シートを出せない）
+      if (state.fakeShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.resolve(); });
       const page = await context.newPage();
       const consoleErrors = [];
       page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
@@ -147,6 +159,7 @@ try {
       for (const step of state.steps ?? []) {
         if (step.click) await page.locator(step.click).click();
         if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
+        if (step.upload) await page.locator(step.upload[0]).setInputFiles(step.upload[1]);
         if (step.wait) await page.waitForSelector(step.wait);
       }
       if (state.openMore) await page.locator('summary[data-more]').click();
@@ -613,6 +626,19 @@ function audit({ state, LIMITS, reducedMotion }) {
     const shown = Boolean(hint && visible(hint));
     if (innerHeight < 600 && shown) issues.push('R71 the record hint is shown for a recorded word below 600px');
     if (innerHeight >= 600 && !shown) issues.push('R71 the record hint is hidden for a recorded word at 600px or more');
+  }
+  // 段5（Ruling 82・83・87-2）: 要素が初期表示に入る・主ボタンが押せない／押せる・画面に出る文
+  for (const selector of state.firstView ?? []) {
+    const element = document.querySelector(selector);
+    if (!element || !visible(element)) issues.push(`R87 ${selector} is not shown`);
+    else if (!fullyInView(element)) issues.push(`R87 ${selector} is not fully in the first view`);
+  }
+  if (state.primaryDisabled !== undefined) {
+    const primary = document.querySelector('.dc-dock .dc-primary');
+    if (!primary || primary.disabled !== state.primaryDisabled) issues.push(`R82 the main button is ${primary?.disabled ? 'disabled' : 'pressable'}, expected ${state.primaryDisabled ? 'disabled' : 'pressable'}`);
+  }
+  for (const text of state.texts ?? []) {
+    if (!document.body.innerText.replace(/\u00a0/g, ' ').includes(text)) issues.push(`R87 the screen does not say "${text}"`);
   }
   if (state.doneName) {
     const value = document.querySelector('#dc-s8-name')?.value;
