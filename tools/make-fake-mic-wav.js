@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+// 偽マイク用の WAV を作る（Ruling 63-5）。Chrome の --use-file-for-fake-audio-capture に渡す（ループで何度も鳴る）。
+// fake-mic.wav: 1.5 秒・48kHz・16bit・モノ。0.3 秒の無音 → 0.6 秒の 220Hz＋倍音（声の代わり）→ 0.6 秒の無音。
+// silence.wav : 1.5 秒の全 0。
+// 使い方: node tools/make-fake-mic-wav.js（test/fixtures/voice/ に書く。中身は決定的なので何度作っても同じバイト列）
+import fs from 'node:fs';
+import path from 'node:path';
+
+export const SAMPLE_RATE = 48000;
+export const TOTAL_SECONDS = 1.5;
+export const VOICE_START_SECONDS = 0.3;
+export const VOICE_SECONDS = 0.6;
+export const VOICE_PEAK = 0.5;
+
+export function fakeVoiceSamples({ silent = false } = {}) {
+  const samples = new Float32Array(Math.round(SAMPLE_RATE * TOTAL_SECONDS));
+  if (silent) return samples;
+  const start = Math.round(SAMPLE_RATE * VOICE_START_SECONDS);
+  const length = Math.round(SAMPLE_RATE * VOICE_SECONDS);
+  const ramp = Math.round(SAMPLE_RATE * 0.01);
+  for (let i = 0; i < length; i += 1) {
+    const t = i / SAMPLE_RATE;
+    const envelope = Math.min(1, i / ramp, (length - i) / ramp);
+    const tone = Math.sin(2 * Math.PI * 220 * t) + 0.5 * Math.sin(2 * Math.PI * 440 * t) + 0.25 * Math.sin(2 * Math.PI * 660 * t);
+    samples[start + i] = VOICE_PEAK * envelope * tone / 1.75;
+  }
+  return samples;
+}
+
+export function encodeMonoWav(samples, sampleRate = SAMPLE_RATE) {
+  const buffer = Buffer.alloc(44 + samples.length * 2);
+  buffer.write('RIFF', 0, 'ascii');
+  buffer.writeUInt32LE(36 + samples.length * 2, 4);
+  buffer.write('WAVE', 8, 'ascii');
+  buffer.write('fmt ', 12, 'ascii');
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36, 'ascii');
+  buffer.writeUInt32LE(samples.length * 2, 40);
+  samples.forEach((value, index) => {
+    const clamped = Math.max(-1, Math.min(1, value));
+    buffer.writeInt16LE(Math.round(clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff), 44 + index * 2);
+  });
+  return buffer;
+}
+
+if (path.resolve(process.argv[1] ?? "") === import.meta.filename) {
+  const dir = path.resolve(import.meta.dirname, '../test/fixtures/voice');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'fake-mic.wav'), encodeMonoWav(fakeVoiceSamples()));
+  fs.writeFileSync(path.join(dir, 'silence.wav'), encodeMonoWav(fakeVoiceSamples({ silent: true })));
+  console.log(`wrote ${dir}/fake-mic.wav and silence.wav`);
+}
