@@ -2,9 +2,11 @@
 // 公開ビルド（dist/）をそのまま配る小さな静的サーバー（段7・Ruling 95-2）。smoke:pwa が子プロセスで起動し、止めて「オフライン」、
 // 別のフォルダ（dist-b）で起動し直して「新しい版」を作る。Node の http だけ（新しい依存なし）。localhost だけで待ち受ける。
 // 使い方: node tools/serve-dist.js <フォルダ> <番号>   例: node tools/serve-dist.js dist 4176
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -18,7 +20,9 @@ export function startServer(dir, port) {
   const root = path.resolve(dir);
   const server = http.createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', 'http://localhost');
-    const pathname = decodeURIComponent(url.pathname) === '/' ? '/index.html' : decodeURIComponent(url.pathname);
+    let decoded;
+    try { decoded = decodeURIComponent(url.pathname); } catch { response.writeHead(400).end(); return; }   // 壊れた %エスケープ（URIError）で落ちない
+    const pathname = decoded === '/' ? '/index.html' : decoded;
     const file = path.join(root, pathname);
     if (request.method !== 'GET' && request.method !== 'HEAD') { response.writeHead(405).end(); return; }
     if (!file.startsWith(root + path.sep)) { response.writeHead(403).end(); return; }
@@ -40,7 +44,9 @@ export function startServer(dir, port) {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// 空白のあるパス（このリポジトリ）でも一致するように pathToFileURL で比べる（import.meta.url は空白を %20 にする）。
+// import.meta.url は実体のパスなので、シンボリックリンク（macOS の /var → /private/var など）も実体に直して比べる。
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [dir = 'dist', port = '4176'] = process.argv.slice(2);
   await startServer(dir, Number(port));
   console.log(`serving ${dir} at http://localhost:${port}/`);

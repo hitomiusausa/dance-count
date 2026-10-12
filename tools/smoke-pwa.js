@@ -35,11 +35,20 @@ const precacheUrls = readPrecacheList(fs.readFileSync(path.join(DIST, 'sw.js'), 
 const built = spawnSync('npx', ['vite', 'build', '--outDir', 'dist-b', '--emptyOutDir', '--logLevel', 'error'], { cwd: root, env: { ...process.env, DC_BUILD_TAG: B_TAG }, encoding: 'utf8' });
 if (built.status !== 0) {
   console.error(`dist-b を作れませんでした:\n${built.stderr}`);
+  fs.rmSync(DIST_B, { recursive: true, force: true });
   process.exit(2);
 }
 
-let server = await startServer(DIST, PORT);
-const stop = () => new Promise(resolve => { server.closeAllConnections(); server.close(() => resolve()); });
+// サーバーと Chrome の起動も try の中（番号が使用中・Chrome が起動しない時も dist-b を残さない。段7 レビュー m-2）
+let server = null;
+let browser = null;
+const stop = () => new Promise(resolve => {
+  if (!server) { resolve(); return; }
+  const closing = server;
+  server = null;
+  closing.closeAllConnections();
+  closing.close(() => resolve());
+});
 
 async function expectSounding(page, label) {
   const seen = new Set();
@@ -55,8 +64,9 @@ async function expectSounding(page, label) {
   if (seen.size < 3) errors.push(`${label}: count display did not advance (${[...seen].join(', ')})`);
 }
 
-const browser = await chromium.launch({ channel: 'chrome' });
 try {
+  server = await startServer(DIST, PORT);
+  browser = await chromium.launch({ channel: 'chrome' });
   const context = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
@@ -161,7 +171,7 @@ try {
   }
   await context.close();
 } finally {
-  await browser.close();
+  await browser?.close().catch(() => {});
   await stop();
   fs.rmSync(DIST_B, { recursive: true, force: true });
 }

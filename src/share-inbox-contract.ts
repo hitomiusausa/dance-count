@@ -1,7 +1,8 @@
 // Android の共有（share_target）の受け口の契約（Ruling 79-2・93-3）。正本はここ 1 つ。
 // 画面（src/app/platform/files.ts の takeInboxFile）と Service Worker（src/sw.ts）、manifest（vite.config.ts）が同じ値を import する。
 // SW は src/app の外の別ビルドなので、platform/files.ts から import しない（src/ 直下に置く）。
-import { BUNDLE_MAX_BYTES } from './app/share/limits.ts';
+// 配布ファイルの大きさの上限（仕様 §7）。正本はここ（SW が src/app を読まないように。src/app/share/limits.ts はこれを再び export する）。
+export const BUNDLE_MAX_BYTES = 20 * 1024 * 1024;
 
 export const INBOX_CACHE = 'dance-count-inbox';
 // 相対の鍵: SW は dist 直下（./sw.js）・index.html も直下なので、SW の put とページの match は同じ URL に解ける（Ruling 93-4）。

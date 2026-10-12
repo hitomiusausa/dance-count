@@ -6,6 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY, SHARE_TARGET_FIELD } from '../../../src/share-inbox-contract.ts';
 import * as files from '../../../src/app/platform/files.ts';
+import * as contract from '../../../src/share-inbox-contract.ts';
+import { BUNDLE_MAX_BYTES } from '../../../src/app/share/limits.ts';
 
 const root = path.resolve(import.meta.dirname, '../../..');
 const read = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -33,4 +35,12 @@ test('the service worker sits at the root next to index.html so the relative key
   assert.match(config, /srcDir: 'src'/);
   assert.match(config, /filename: 'sw\.ts'/);
   assert.match(config, /base: '\.\/'/);
+});
+
+test('the service worker side does not read src/app; the byte limit lives in the contract and limits.ts re-exports it (review m-5)', () => {
+  assert.equal(contract.BUNDLE_MAX_BYTES, 20 * 1024 * 1024);
+  assert.equal(BUNDLE_MAX_BYTES, contract.BUNDLE_MAX_BYTES);
+  for (const file of ['src/sw.ts', 'src/sw-navigation.ts', 'src/share-inbox-contract.ts']) {
+    assert.ok(!/from '\.\/app\//.test(read(file)), `${file} imports from src/app`);
+  }
 });
