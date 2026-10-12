@@ -51,6 +51,13 @@ test('the three S8 display states are read too (Ruling 63-3)', () => {
   assert.deepEqual(parseHash('#/voices/record?ui-state=MIC-DENIED').query, {});
 });
 
+test('the §11 looks that cannot happen on demand can be shown for checking (段8 Ruling 100-2)', () => {
+  for (const [hash, uiState] of [['#/practice/waltz', 'stopped'], ['#/practice/waltz', 'voice-missing'], ['#/practice/waltz', 'save-failed'],
+    ['#/voices', 'voice-missing'], ['#/voices/record', 'mic-failed'], ['#/voices/record', 'save-failed'], ['#/receive', 'save-failed']] as const) {
+    assert.deepEqual(parseHash(`${hash}?ui-state=${uiState}`).query, { uiState }, `${hash} ${uiState}`);
+  }
+});
+
 test('S13 is #/about and its delete-all confirmation can be shown for checking (段8 Ruling 99-3)', () => {
   assert.deepEqual(parseHash('#/about?ui-state=confirm-delete-all'), { screen: 'S13', params: {}, query: { uiState: 'confirm-delete-all' } });
   assert.equal(buildHash({ screen: 'S13', params: {} }), '#/about');

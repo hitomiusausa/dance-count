@@ -21,6 +21,8 @@ export interface PlaybackVoice {
   step(settings: OffsetSettings, direction: -1 | 1): VoiceOffsetStep | null;
   // 録音の声のタイミングを端末に保存できなかった（画面は「保存できませんでした」を出す。次に保存できたら消える）
   saveFailed: boolean;
+  // 「保存できませんでした」の枠の「閉じる」（段8 Ruling 103-3）
+  dismissSaveFailed(): void;
 }
 
 export function usePlaybackVoice(): PlaybackVoice {
@@ -60,6 +62,7 @@ export function usePlaybackVoice(): PlaybackVoice {
       if (result.pack) void saveVoicePack(storage, result.pack).then(ok => setSaveFailed(!ok));
       return result;
     },
-    saveFailed
+    saveFailed,
+    dismissSaveFailed() { setSaveFailed(false); }
   };
 }

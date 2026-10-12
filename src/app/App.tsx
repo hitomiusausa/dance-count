@@ -46,12 +46,11 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8・S10・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S6: SettingsScreen,
   S9: ShareScreen,
-  S10: ReceiveScreen,
   S11: SoundHelpScreen,
   S12: InstallHelpScreen
 };
@@ -127,10 +126,11 @@ export function App() {
               <IconSprite />
               {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
                 : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
-                : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} />
+                : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} uiState={route.query.uiState} />
                 : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
                 : screen === 'S7' ? <VoicesScreen uiState={route.query.uiState} />
                 : screen === 'S8' ? <RecordVoiceScreen key={route.query.uiState ?? ''} uiState={route.query.uiState} />
+                : screen === 'S10' ? <ReceiveScreen uiState={route.query.uiState} />
                 : screen === 'S13' ? <AboutScreen uiState={route.query.uiState} />
                 : <Simple />}
               {showsTabs(screen) && <TabBar current={tabOf(screen)} />}

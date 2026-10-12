@@ -54,6 +54,14 @@ function offBarRoutine() {
   return { ...base, figures: figures.map(([name, counts], index) => ({ id: `f-uicheck-${String(index).padStart(4, '0')}`, name, counts })) };
 }
 
+// 段8（Ruling 100）: ルーティン N 本（1 フィガーのワルツ）。199 本＋配布ファイルの 2 本で上限 200 を 1 本超える（S10「200 本までなので、1 本は受け取れません」）
+export function manyRoutines(count) {
+  return Array.from({ length: count }, (_, index) => {
+    const id = `r-uicheck-many${String(index).padStart(4, '0')}`;
+    return { ...routine(id, 'waltz', `ワルツ ${index + 1}`, 1, index % 60), id };
+  });
+}
+
 // ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB（dance-count-v2 v2）の routines へ直接書く。
 export async function seedRoutinesInPage(routines) {
   const db = await new Promise((resolve, reject) => {

@@ -101,7 +101,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
             <h1>{danceName(danceId, translator.locale)}</h1>
             <small>{formatCounts(danceId, choice.counts)}</small>
           </header>
-          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); }} />
+          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); playback.dismissSaveFailed(); }} />
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat} />
         </div>
         <div>

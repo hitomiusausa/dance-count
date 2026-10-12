@@ -28,6 +28,7 @@ import { defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, s
 // マイクが使えない（拒否・ほかのアプリや通話が使用中）は別画面にせず、説明の画面の説明 3 行の場所に枠を出す。
 // 言葉の 2 択と「録音をはじめる」は残す＝もう一度は同じボタン（D30・Fable Q2/Q4）。
 // ui-state: mic-denied（説明の画面に拒否の枠）・no-voice（1 語目に「声が入っていませんでした」）・no-recorder（非対応の枠）。見た目だけ（Ruling 63-3）。
+// 段8（Ruling 100-2）: mic-failed（説明の画面に「マイクを使えませんでした」）・save-failed（1 語目に「保存できませんでした」）。
 // ui-state の時は録っても名前を変えても端末の声・設定に書かない（画面の中だけ。最終レビュー M5）。no-voice は英語の声があればその写しから。
 const PROGRESS_TICK_MS = 100;   // 録音中の輪を描き直す間隔（1.5 秒の動きは transition ではなく描画の更新で。U8）
 const LANGUAGES: readonly VoiceLocale[] = ['en', 'ja-JP'];
@@ -49,9 +50,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const [language, setLanguage] = useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en');
   const [saved, setSaved] = useState<Record<VoiceLocale, VoicePackRecord | null> | null>(null);
   const [pack, setPack] = useState<VoicePackRecord | null>(null);
-  const [step, setStep] = useState<RecordStep>(() => (uiState === 'no-voice' ? { kind: 'word', index: 0 } : { kind: 'intro' }));
-  const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'no-recorder' || !recorderSupported() ? 'unsupported' : 'none'));
-  const [alert, setAlert] = useState<Alert>(uiState === 'no-voice' ? 'no-voice' : 'none');
+  const forcedWord = uiState === 'no-voice' || uiState === 'save-failed';
+  const [step, setStep] = useState<RecordStep>(() => (forcedWord ? { kind: 'word', index: 0 } : { kind: 'intro' }));
+  const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'mic-failed' ? 'failed' : uiState === 'no-recorder' || !recorderSupported() ? 'unsupported' : 'none'));
+  const [alert, setAlert] = useState<Alert>(uiState === 'no-voice' ? 'no-voice' : uiState === 'save-failed' ? 'save-failed' : 'none');
   const [howTo, setHowTo] = useState(false);
   const [recording, setRecording] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -72,7 +74,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     void Promise.all(LANGUAGES.map(locale => loadVoicePack(storage, recordedPackIdFor(locale)))).then(([en, ja]) => {
       if (!alive) return;
       setSaved({ en: en ?? null, 'ja-JP': ja ?? null });
-      if (uiState === 'no-voice') setPack(uiStateStartPack(en ?? null, newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString())));
+      if (forcedWord) setPack(uiStateStartPack(en ?? null, newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString())));
     });
     // 画面を離れた: 届く結果を捨て、録音中ならやめて（マイクを閉じ・音声セッションを「再生」に戻す）、「聞く」も止める。
     return () => { alive = false; generation.current += 1; abortTake.current?.abort(); abortTake.current = null; stopListening.current?.(); };

@@ -5,7 +5,7 @@
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
 import path from 'node:path';
 import { chromium } from 'playwright-core';
-import { UI_CHECK_ROUTINES as R, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
+import { UI_CHECK_ROUTINES as R, manyRoutines, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
@@ -58,6 +58,16 @@ const STATES = [
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
+  // 段8（Ruling 100・仕様 §11）: 強制表示できなかった見た目。枠は 1 つ・速さと ▶ は初期表示のまま
+  { name: 'S2 再生が止まった', hash: '#/practice/waltz?ui-state=stopped', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true,
+    texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },
+  { name: 'S2 声が端末に無い', hash: '#/practice/waltz?ui-state=voice-missing', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true,
+    texts: ['この声はまだ端末に入っていません。インターネットにつないで一度再生してください。'] },
+  { name: 'S2 保存できなかった', hash: '#/practice/waltz?ui-state=save-failed', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true,
+    texts: ['保存できませんでした。空き容量を確かめてください。', '閉じる'] },
+  // Ruling 103-3（段4 Task 5）: 保存失敗の枠は「閉じる」で閉じる（ほかの案内を隠したままにしない）
+  { name: 'S2 保存できなかった・閉じた', hash: '#/practice/waltz?ui-state=save-failed', screen: 'S2', kind: 'focus', total: 5,
+    steps: [{ click: '[data-alert="save-failed"] [data-alert-action]' }], absent: ['[data-alert]'] },
   { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
   { name: 'S3 更新あり', hash: '#/routines?ui-state=update-ready', screen: 'S3', kind: 'root', ops: 1, total: 1, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段5（Ruling 86-4）: 鳴らせる行には「配る」が編集と削除の間に（群は 1 つなので 3 のまま）
@@ -96,12 +106,20 @@ const STATES = [
   { name: 'S4 最初の保存の案内', hash: '#/routines/new', screen: 'S4', kind: 'focus', alert: true, total: 3, texts: ['ルーティンは「配る」でファイルにして、自分にも送っておけます。'],
     steps: [{ click: '.dc-tile >> nth=0' }, { fill: ['[aria-labelledby="dc-s4-name-label"]', '金曜のワルツ'] }, { press: ['[aria-labelledby="dc-s4-name-label"]', 'Enter'] },
       { wait: '[data-alert="backup-tip"]' }] },
+  { name: 'S4 保存できなかった', hash: `${S4_13}?ui-state=save-failed`, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5, alert: true,
+    texts: ['保存できませんでした。空き容量を確かめてください。'] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   // opsSmall: 375×548（Safari SE）では声チップが帯の下＝初期表示 4（Ruling 71-6）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
+  { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
+    texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },
+  { name: 'S5 声が端末に無い', hash: `${S5_13}?ui-state=voice-missing`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
+    texts: ['この声はまだ端末に入っていません。'] },
+  { name: 'S5 保存できなかった', hash: `${S5_13}?ui-state=save-failed`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
+    texts: ['保存できませんでした。'] },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   // 段8（Ruling 98）: 言語・声・「困った時は」の束（追加の方法・音が鳴らない時）・「先生の方へ」の束（録音・配る）・「プライバシー・アプリについて」＝5（上限ちょうど）。
@@ -118,6 +136,9 @@ const STATES = [
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
+  { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true,
+    texts: ['この声はまだ端末に入っていません。'] },
   // 段5 Task 10b: 600px 未満の高さでは「ファイルから受け取る」「自分の声を録音する」を横 1 行に並べ、声が 3 本でも 375×548 の初期表示に入る
   { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link', '.dc-record-link'] },
@@ -158,6 +179,11 @@ const STATES = [
   // 最終レビュー M3: 録れた語で枠が出ても、丸と波形・「聞く」は初期表示に入ったまま（375×548 では枠を進み具合の行に重ねる）。ui-state は声を書かない（M5）
   { name: 'S8 録れた語で声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], alert: true, total: 3,
     recordButton: true, takeShown: true, steps: [{ wait: '.dc-wave rect:nth-of-type(41)' }] },
+  // 段8（Ruling 100・§11）: マイクが見つからない・使用中は説明の画面の枠（ボタン無し）。言葉の 2 択と「録音をはじめる」は残る
+  { name: 'S8 マイクを使えない', hash: '#/voices/record?ui-state=mic-failed', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en',
+    texts: ['マイクを使えませんでした。'] },
+  { name: 'S8 保存できなかった', hash: '#/voices/record?ui-state=save-failed', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60,
+    texts: ['保存できませんでした。'] },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
   // 段5（Ruling 82・87-2）: S9 は 名前・声・同意・ルーティン・「ファイルを作る」＝5（上限）。作った後は「案内文をコピー」が足されて 6。
   // firstView: 375×548 でも名前・声・同意・主ボタンが初期表示に入る（声を選んだ後＝人の操作の後なので ops ではなく要素で見る）。
@@ -169,6 +195,16 @@ const STATES = [
   { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'], firstView: ['[data-list]'] },
   { name: 'S9 作った後', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], fakeShare: true, total: 6,
     texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
+    steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
+      { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
+  // 段8（§11・段5）: 共有を拒まれた（navigator.share が NotAllowedError）→ 結果の 1 行と「ファイルを保存する」（自動では保存しない）。実経路
+  { name: 'S9 共有を拒まれた', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], refuseShare: true, total: 7,
+    texts: ['共有できませんでした。下の「ファイルを保存する」で保存できます。', 'ファイルを保存する'], firstView: ['.dc-result'],
+    steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
+      { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
+  // §11「共有シート不可」: 共有できない端末（PC の Chrome＝headless）は保存に切り替え、ファイル名を出す（案内の枠は無し）
+  { name: 'S9 共有できない端末', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], noShare: true, total: 6,
+    texts: ['」を保存しました。LINE やメールに添付できます。'], firstView: ['.dc-result'],
     steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
       { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
   // S10（Ruling 83・87-2）: 選ぶ 1・確認 2（やめる・使う）・受け取った 1。ファイルは実経路（setInputFiles）。枠は 1 つ・中の操作は 1 つまで。
@@ -188,6 +224,20 @@ const STATES = [
     steps: [{ upload: ['input[type="file"]', TOO_LARGE] }, { wait: '[data-alert="too-large"]' }] },
   { name: 'S10 新しすぎ', hash: '#/receive', screen: 'S10', kind: 'focus', alert: true, total: 1, texts: ['新しいアプリで作られたファイルです。', '更新する'],
     steps: [{ upload: ['input[type="file"]', SHARE('too-new.txt')] }, { wait: '[data-alert="too-new"]' }] },
+  // 段8（§11・段5）: 声が 20（別の先生の声 20 本）→ 選ぶ画面の枠。ルーティン 199 本＋2 本 → 確認に「1 本は受け取れません」。確認の画面の保存失敗。どれも実経路でファイルを選ぶ
+  { name: 'S10 声が 20', hash: '#/receive', screen: 'S10', kind: 'focus', voiceSeed: V.received20, alert: true, total: 1,
+    texts: ['声はすでに 20 あるので、受け取れません。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-alert="voice-limit"]' }] },
+  { name: 'S10 ルーティン 200 超', hash: '#/receive', screen: 'S10', kind: 'focus', seed: manyRoutines(199), bulkSeed: true, total: 2,
+    texts: ['ルーティンは 200 本までなので、1 本は受け取れません。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
+  { name: 'S10 確認・保存できなかった', hash: '#/receive?ui-state=save-failed', screen: 'S10', kind: 'focus', alert: true, total: 2,
+    texts: ['保存できませんでした。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-alert="save-failed"]' }] },
+  // §11「一部のルーティンが不正」: 読めない 1 本は名前を出し、声と読めた 1 本は受け取る（確認の画面）
+  { name: 'S10 一部読めない', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2,
+    texts: ['ルーティン「こわれたルーティン」は読めませんでした。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
   { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', 'ホームで種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
@@ -219,6 +269,8 @@ const STATES = [
   { name: 'ホーム画面のアプリを S12 のアドレスで起動', hash: '#/help/install', screen: 'S1', kind: 'root', userAgent: IOS_SAFARI_UA, standalone: true, launchOnly: true, ops: 2, total: 2, teacherAndTiles: true }
 ];
 
+// U9・320 の周で全画面を回る前に入れるルーティン（S4・S5 が開けるように）。199 本の状態（bulkSeed）は入れない（S4 新規が上限で S3 へ置き換わる）
+const sharedSeed = () => [...new Map(STATES.filter(state => !state.bulkSeed).flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()];
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
 const CHECKED = ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES;
 
@@ -248,6 +300,10 @@ try {
       const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'], ...(state.userAgent ? { userAgent: state.userAgent } : {}) });
       // 共有シートの代わり（Ruling 87-2）: 共有できる端末として、すぐ「送った」で返す（headless の Chrome は共有シートを出せない）
       if (state.fakeShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.resolve(); });
+      // 段8: 共有シートの無い端末（PC の Chrome。headless の Chrome は canShare が真を返すことがあるので偽にする＝smoke:share の先生と同じ）
+      if (state.noShare) await context.addInitScript(() => { navigator.canShare = () => false; });
+      // 段8: 共有シートが拒む（Android の Chrome が種類で断る時と同じ NotAllowedError。§11「共有を拒まれた」）
+      if (state.refuseShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.reject(new DOMException('refused (ui:check)', 'NotAllowedError')); });
       // 段7: Android の Chrome の「ホーム画面に追加」の案内（beforeinstallprompt）を、アプリが読み終えた後に 1 回だけ出す偽物
       if (state.installPrompt) await context.addInitScript(() => addEventListener('load', () => {
         const event = new Event('beforeinstallprompt', { cancelable: true });
@@ -311,7 +367,7 @@ try {
   // S4・S5 は検査用のルーティンが要る（無いと S3 へ置き換わる）。先に入れて読み直してから全画面を回る。
   await page.goto(BASE);
   await page.waitForSelector('[data-screen]');
-  await page.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
+  await page.evaluate(seedRoutinesInPage, sharedSeed());
   await page.reload();
   await page.waitForSelector('[data-screen]');   // アプリがハッシュの変化を聞き始めてから次のハッシュへ
   // launchOnly: ホーム画面のアプリの起動の置き換えだけを見る状態（この周はホーム画面のアプリを偽らないので、同じハッシュで S12 が出る。S1 は他の状態で回る）
@@ -335,7 +391,7 @@ try {
   const narrowProblems = [];
   await narrowPage.goto(BASE);
   await narrowPage.waitForSelector('[data-screen]');
-  await narrowPage.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
+  await narrowPage.evaluate(seedRoutinesInPage, sharedSeed());
   await narrowPage.reload();
   await narrowPage.waitForSelector('[data-screen]');
   for (const state of CHECKED.filter(item => !item.launchOnly)) {

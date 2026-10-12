@@ -24,6 +24,8 @@ import { isCompletePack, listVoicePacks, packProgress, removeVoicePack, type Voi
 // タップすると開いて「続きを録音する」と「削除」（計画 Open question 1）。下に「自分の声を録音する」（→ S8）。
 // 段5（Ruling 86-1・D37）: 下に「ファイルから受け取る」（→ S10）。開いた録音の声に「配る」（→ S9 にこの声を選んだ状態で）。受け取った声は「削除」だけ。
 // 「ファイルに保存」は作らない（Ruling 82-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
+// 段8（Ruling 100-3）: 試聴で声が読めなかった（オフラインでまだ端末に入っていない）時は §11 の「この声はまだ端末に入っていません。…」の枠。
+// ui-state=voice-missing はその枠を見た目だけ出す（試聴を押すか、別の行を選ぶと消える）。
 export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();
@@ -32,6 +34,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<VoicePackRecord | null>(null);
   const [deleteFailed, setDeleteFailed] = useState(false);
+  const [forcedDismissed, setForcedDismissed] = useState(false);
   const { session, view } = usePracticeSession('S7');
   const previewing = view.playing || view.starting;
   const latestSettings = useRef(settings);
@@ -46,6 +49,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
 
   if (packs === null) return <main class="dc-screen" data-screen="S7" data-loading><BackButton screen="S7" /></main>;
 
+  const notice = deleteFailed ? 'save-failed' : (uiState === 'voice-missing' && !forcedDismissed) || view.notice === 'voice-missing' ? 'voice-missing' : 'none';
   const complete = packs.filter(isCompletePack);
   const partial = packs.filter(pack => !isCompletePack(pack));
   // 選んでいる声。録音の声が消えた・途中なら標準（英語）が選ばれて見える（設定は書き換えない。Ruling 61-2）。
@@ -53,6 +57,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const selected: VoiceSelection = standardSelection(settings.selectedVoiceId) ?? (chosenPack ? packSelection(chosenPack) : DEFAULT_VOICE);
 
   const choose = (voice: VoiceSelection) => {
+    setForcedDismissed(true);
     session.stop();
     if (voice.id === selected.id) {
       if (voice.kind === 'pack') setOpenId(openId === voice.id ? null : voice.id);
@@ -62,6 +67,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
     update(chooseVoice(voice));
   };
   const preview = () => {
+    setForcedDismissed(true);
     if (previewing) { session.stop(); return; }
     void session.play(voicePreviewOptions(selected, voiceOffsetFor(settings, selected), 1));
   };
@@ -107,8 +113,8 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
       <BackButton screen="S7" />
       <h1 class="dc-heading">{translator.t('voicesTitle')}</h1>
       {/* 枠は同時に 1 つ（Ruling 30）: 知らせが出ている間は更新の帯を引っ込め、閉じたら戻す（段7 最終レビュー m2） */}
-      {!deleteFailed && <UpdateBanner />}
-      <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
+      {notice === 'none' && <UpdateBanner />}
+      <NoticeBox notice={notice} onClose={() => setDeleteFailed(false)} />
       <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('voicesTitle')} data-group="voice">
         {STANDARD_VOICES.map(voice => radioRow({ kind: 'standard', id: voice.id, locale: voice.locale }, voiceDisplayName(translator, { kind: 'standard', id: voice.id, locale: voice.locale }, 'row')))}
         {complete.filter(pack => pack.origin === 'recorded').map(pack => radioRow(packSelection(pack), packDisplayName(translator, pack)))}

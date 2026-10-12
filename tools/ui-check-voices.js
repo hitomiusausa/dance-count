@@ -1,6 +1,8 @@
 // ui:check と smoke:voice が使う検査用の声（Ruling 63-1）。WAV はブラウザの中で合成する（dist でも動くよう import しない）。
 // 固定データ: completeEn（録音・12 語・英語）・partialJa（録音・7 語・日本語）・receivedJa（受け取り・12 語・山田さん）。
 const UPDATED = '2026-10-12T08:00:00.000Z';
+const RECEIVED_TEACHERS = ['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺', '中村', '小林', '加藤', '吉田',
+  '山口', '松本', '井上', '木村', '林', '清水', '山崎', '森', '池田', 'Smith'];
 const KEYS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 
 function voice(id, name, locale, recorded, extra = {}) {
@@ -11,7 +13,11 @@ export const UI_CHECK_VOICES = {
   completeEn: voice('user-recorded-v1', '自分の声（英語）', 'en', 12),
   partialJa: voice('user-recorded-ja-v1', '自分の声（日本語）', 'ja-JP', 7),
   // sourceId・locale・distributor が test/fixtures/share/bundle-voice-routine.dancecount.txt の声と同じ＝S10 で「置き換え」になる（Ruling 84-4）
-  receivedJa: voice('v-uicheck-recv', '山田の声', 'ja-JP', 12, { origin: 'received', distributor: { name: '山田' }, sourceId: 'user-recorded-ja-v1' })
+  receivedJa: voice('v-uicheck-recv', '山田の声', 'ja-JP', 12, { origin: 'received', distributor: { name: '山田' }, sourceId: 'user-recorded-ja-v1' }),
+  // 段8（Ruling 100・103-2）: 受け取った声 20 本（上限ちょうど）。山田さんとは別の先生＝S10 で同じ先生の置き換えにならず「声はすでに 20 あるので…」。
+  // S7 は 標準＋この 20 本＋自分の声 2 本で一覧の上限（data-choices-max）を見る
+  received20: RECEIVED_TEACHERS.map((name, index) => voice(`v-uicheck-r${String(index).padStart(2, '0')}`, `${name}の声`, index % 2 ? 'en' : 'ja-JP', 12,
+    { origin: 'received', distributor: { name }, sourceId: `src-uicheck-${String(index).padStart(2, '0')}` }))
 };
 
 // ブラウザの中で動く（page.evaluate に渡す。外の変数は使えない）。recorded 語ぶんの WAV（16bit・モノ・48kHz・0.745 秒・

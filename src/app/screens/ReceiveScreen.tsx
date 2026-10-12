@@ -8,6 +8,7 @@ import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
 import { makeId } from '../routines/ids.ts';
+import type { UiState } from '../router/routes.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { parseBundle } from '../share/bundle.ts';
 import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename.ts';
@@ -29,7 +30,8 @@ type Step = 'pick' | 'confirm' | 'done';
 type PickAlert = { kind: 'broken'; file: string } | { kind: 'too-large' | 'too-new' | 'voice-limit' } | null;
 const NAMES_SHOWN = 2;   // 確認の画面で名前を並べる本数（3 本目からは「ほか N 本」）
 
-export function ReceiveScreen() {
+// ui-state=save-failed: 確認の画面に「保存できませんでした」の枠を見た目だけ出す（段8 Ruling 100-2。ファイルは実経路で選ぶ）。
+export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { update } = useSettings();
   const routinesValue = useRoutines();
@@ -62,7 +64,7 @@ export function ReceiveScreen() {
       const next = planImport(parsed, packs, latestRoutines.current.routines, { now: new Date().toISOString(), newId: makeId });
       if (next.voiceBlocked) { setAlert({ kind: 'voice-limit' }); return; }
       setPlan(next);
-      setSaveFailed(false);
+      setSaveFailed(uiState === 'save-failed');
       setStep('confirm');
     } catch (error) {
       if (alive.current) setAlert(error instanceof BundleTooLargeError ? { kind: 'too-large' } : { kind: 'broken', file: fileName });

@@ -59,7 +59,7 @@ test('the name field never stays empty: cleared → the default name is shown an
 
 test('ui-state URLs never write voices; no-voice starts from a copy of the saved English voice when there is one (final review M5)', () => {
   assert.equal(savesVoices(undefined), true);
-  for (const state of ['no-voice', 'mic-denied', 'no-recorder']) assert.equal(savesVoices(state), false, state);
+  for (const state of ['no-voice', 'mic-denied', 'no-recorder', 'mic-failed', 'save-failed']) assert.equal(savesVoices(state), false, state);
   const fresh = packFixture('en', 0);
   const saved = packFixture('en', 12);
   assert.equal(uiStateStartPack(null, fresh), fresh);

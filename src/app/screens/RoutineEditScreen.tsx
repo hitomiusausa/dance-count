@@ -15,6 +15,7 @@ import { routineBaseBpm } from '../practice/routine-preferences.ts';
 import { BPM_MAX, BPM_MIN, clampBpm, type SpeedProfile } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
+import type { UiState } from '../router/routes.ts';
 import { beatsPerBar, offBarIndexes, routineEndsMidBar } from '../routines/bar-check.ts';
 import { RoutineEditor } from '../routines/editor.ts';
 import { useReorderDrag } from '../routines/useReorderDrag.ts';
@@ -34,7 +35,7 @@ const TEMPLATES = DANCE_PROFILES as Record<string, { templates: readonly string[
 
 // S4 ルーティン編集（仕様 §4・Ruling 36〜39）。新規はまず種目を選ぶ（Ruling 37）。
 // 変更は確定のたびに自動保存（保存ボタンなし）。最初の保存で ID を発行し、ハッシュを編集の形に置き換える。
-export function RoutineEditScreen({ routineId }: { routineId?: string }) {
+export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; uiState?: UiState }) {
   const { translator } = useI18n();
   const { routines, save } = useRoutines();
   const { settings, update } = useSettings();
@@ -42,7 +43,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   const editor = useRef<RoutineEditor | null>(null);
   const saved = useRef(false);   // 端末に1回でも保存したか（新規は最初の確定まで false）
-  const [saveFailed, setSaveFailed] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(uiState === 'save-failed');   // ui-state=save-failed は枠を見た目だけ（段8 Ruling 100-2）
   const [backupTip, setBackupTip] = useState(false);   // 最初の保存の後に 1 回だけの「配るで自分にも送れる」（Ruling 86-3）
   const [choosingDance, setChoosingDance] = useState(false);   // フィガー0件の時の「変える」
   // 画面のキーボードが開いている間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6 round 4。iOS 26 は帯をキーボードの上へ
@@ -251,7 +252,11 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
       data-keyboard={hidesDock(keyboardOpen, playing) ? 'true' : undefined}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
-      <NoticeBox notice={notice} onClose={() => (notice === 'backup-tip' ? setBackupTip(false) : session.dismissNotice())} />
+      <NoticeBox notice={notice} onClose={() => {
+        if (notice === 'backup-tip') setBackupTip(false);
+        else if (notice === 'save-failed') { setSaveFailed(false); playback.dismissSaveFailed(); }
+        else session.dismissNotice();
+      }} />
       <RoutineNameField name={routine.name} onText={text => { pendingName.current = text; }}
         onCommit={name => { pendingName.current = null; act(editor => editor.rename(name)); }} />
       <div class="dc-dance-line">

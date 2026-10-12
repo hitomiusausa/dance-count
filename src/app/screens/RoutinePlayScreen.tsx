@@ -142,7 +142,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             <h1 data-ellipsis title={routine.name} aria-label={routine.name}>{routine.name}</h1>
             <small data-ellipsis>{subtitle}</small>
           </header>
-          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); }} />
+          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); playback.dismissSaveFailed(); }} />
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat}>
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}

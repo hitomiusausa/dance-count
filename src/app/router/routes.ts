@@ -6,8 +6,11 @@ export type RouteParams = { danceId?: string; routineId?: string };
 // 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33。confirm-delete は S3・S7 の削除確認・Ruling 43・60-4。
 // mic-denied・no-voice・no-recorder は S8 の枠・Ruling 63-3。update-ready は S1・S3・S6・S7 の更新の帯・段7 Ruling 90-7）。
 // confirm-delete-all は S13 の「データを全て消す」の確認（段8・Ruling 99-3・100-2。見た目だけで、消さない）。
+// 段8（Ruling 100-2・§11 の全件）: save-failed（S2・S4・S5・S8・S10 確認の「保存できませんでした」）・stopped（S2・S5「再生が止まりました」）・
+// voice-missing（S2・S5・S7「この声はまだ端末に入っていません」）・mic-failed（S8「マイクを使えませんでした」）。
 // 設定・hints・再生状態・声・マイク・Service Worker には書かない。以後の追加は裁定が要る。
-export type UiState = 'no-sound' | 'wakelock-tip' | 'confirm-delete' | 'mic-denied' | 'no-voice' | 'no-recorder' | 'update-ready' | 'confirm-delete-all';
+export type UiState = 'no-sound' | 'wakelock-tip' | 'confirm-delete' | 'mic-denied' | 'no-voice' | 'no-recorder' | 'update-ready' | 'confirm-delete-all'
+  | 'save-failed' | 'stopped' | 'voice-missing' | 'mic-failed';
 export type RouteQuery = { uiState?: UiState };
 export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery }
 export type RouteTarget = Pick<Route, 'screen' | 'params'>;
@@ -35,7 +38,8 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
 const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'S4', path: '/routines/:routineId/edit' }];
 
 const ID_SEGMENT = /^[A-Za-z0-9_-]+$/;
-const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip', 'confirm-delete', 'mic-denied', 'no-voice', 'no-recorder', 'update-ready', 'confirm-delete-all'];
+const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip', 'confirm-delete', 'mic-denied', 'no-voice', 'no-recorder', 'update-ready', 'confirm-delete-all',
+  'save-failed', 'stopped', 'voice-missing', 'mic-failed'];
 
 const PATTERNS = [
   ...(Object.entries(SCREENS) as Array<[ScreenId, ScreenSpec]>).map(([screen, spec]) => ({ screen, path: spec.path })),

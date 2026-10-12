@@ -185,8 +185,10 @@ export function PlayDock({ playing, onToggle }: { playing: boolean; onToggle(): 
 // 375 幅で高さ 120px 以下に収めるため、文は補助文（16px）の1段落・アイコン列なし（左の太線＋太字で示す）。
 export type AlertNotice = SessionNotice | 'save-failed' | 'backup-tip';   // backup-tip は S4 の最初の保存の後に 1 回（Ruling 86-3）
 
-// ui-state は見た目だけを強制する（Ruling 33）。設定・hints・再生には書かない。S2・S5 で共通。
-export const FORCED_NOTICE: Partial<Record<UiState, SessionNotice>> = { 'no-sound': 'no-sound', 'wakelock-tip': 'wake-tip' };
+// ui-state は見た目だけを強制する（Ruling 33）。設定・hints・再生には書かない。S2・S5 で共通（段8 Ruling 100-2: §11 の 3 つを足した）。
+export const FORCED_NOTICE: Partial<Record<UiState, AlertNotice>> = {
+  'no-sound': 'no-sound', 'wakelock-tip': 'wake-tip', stopped: 'stopped', 'voice-missing': 'voice-missing', 'save-failed': 'save-failed'
+};
 
 export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose(): void }) {
   const { translator } = useI18n();
@@ -203,7 +205,13 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
       )}
       {notice === 'stopped' && <div class="dc-alert-text"><b>{phrased(translator, 'playbackStopped')}</b></div>}
       {notice === 'voice-missing' && <div class="dc-alert-text"><b>{phrased(translator, 'voiceMissing')}</b></div>}
-      {notice === 'save-failed' && <div class="dc-alert-text"><b>{phrased(translator, 'saveFailed')}</b></div>}
+      {/* 段8（Ruling 103-3・段4 Task 5）: 保存失敗の枠は「閉じる」で閉じ、元の案内に戻る（ほかの案内を隠したままにしない） */}
+      {notice === 'save-failed' && (
+        <>
+          <div class="dc-alert-text"><b>{phrased(translator, 'saveFailed')}</b></div>
+          <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
+        </>
+      )}
       {notice === 'backup-tip' && (
         <>
           <div class="dc-alert-text">{phrased(translator, 'backupTipRoutine')}</div>
