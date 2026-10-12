@@ -31,11 +31,18 @@ function openPlaceholder(text) {
   return text.lastIndexOf('{') > text.lastIndexOf('}');
 }
 
+// BudouX の切りが語を壊す所だけ、句を手で決める（鍵ごと。結ぶと元の文に戻ること＝下の join の検査が守る）。
+// 「プライバシー・アプリについて」は BudouX だと「プライバシー・アプリに｜ついて」（段8 Task 3 レビュー I1）
+export const OVERRIDES = {
+  settingsAbout: ['プライバシー・', 'アプリについて']
+};
+
 // { 鍵: 句の配列 }。1 句の文は載せない（画面はそのまま描く）
 export function buildPhrases(parser, entries) {
   const phrases = {};
   for (const [key, text] of entries) {
-    const chunks = segmentText(parser, text);
+    const chunks = OVERRIDES[key] ?? segmentText(parser, text);
+    if (chunks.join('') !== text) throw new Error(`override for ${key} does not rebuild the text`);
     if (chunks.length > 1) phrases[key] = chunks;
   }
   return phrases;

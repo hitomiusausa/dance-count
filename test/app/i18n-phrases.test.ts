@@ -107,3 +107,8 @@ test('one way of breaking: auto-phrase is gone, and keep-all sits only on the ph
   assert.doesNotMatch(css, /word-break:\s*auto-phrase/);
   assert.match(css, /\.dc-phrased \{ word-break: keep-all; overflow-wrap: anywhere; \}/);
 });
+
+test('the S6 about row breaks after the middle dot, not inside 「アプリについて」 (override, text unchanged)', () => {
+  assert.deepEqual(PHRASES.settingsAbout, ['プライバシー・', 'アプリについて']);
+  assert.equal(PHRASES.settingsAbout.join(''), JA.settingsAbout);
+});

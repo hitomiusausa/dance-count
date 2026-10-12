@@ -7,7 +7,7 @@ import { phraseParts } from './phrase-parts.ts';
 const PHRASES: Record<string, readonly string[] | undefined> = JA_PHRASES;
 
 // 段8（Ruling 97）: 本文の文を句の境で折る（日本語）。textContent は translator.t() と同じ（<wbr> は文字を足さない）。
-// 使うのは本文だけ（p.dc-body・ol.dc-steps li・.dc-hint・.dc-alert-text・.dc-result・S13 の段落 など）。見出し・ボタン・チップ・行の名前には使わない。
+// 使うのは本文だけ（p.dc-body・ol.dc-steps li・.dc-hint・.dc-alert-text・.dc-result・S13 の段落 など）。見出し・ボタン・チップには使わない（› の行の名前は使う＝S6。320 幅で 2 行になる名前を句で折る）。
 // 包みの .dc-phrased が word-break: keep-all（句の境だけで折る）・overflow-wrap: anywhere（入らない長い名前の安全弁）を持つ。
 export function PhrasedText({ template, phraseKey, locale, variables }: {
   template: string; phraseKey: string; locale: string; variables?: Record<string, string | number>;

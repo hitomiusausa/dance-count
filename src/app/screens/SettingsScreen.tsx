@@ -15,7 +15,7 @@ const LANGUAGES: Array<{ locale: AppLocale; label: string; lang: string }> = [
 ];
 
 // 見出しの下に並ぶ同じ種類の行（› で画面へ行く行）の束（Ruling 98-2）。束は S1 の種目タイルと同じく 1 つの判断（[data-group]）。
-// 見出しは必ず目に見える（aria-labelledby。見出しの無い束は禁止＝ui:check の R98）。行の名前は 320 幅で 2 行になるので句の境で折る（「プライバシー・／アプリについて」）。
+// 見出しは必ず目に見える（aria-labelledby。見出しの無い束は禁止＝ui:check の R98）。行の名前は 320 幅で 2 行になるので句の境で折る（「プライバシー・｜アプリについて」。tools/i18n/segment-ja.js の OVERRIDES）。
 const GROUPS: Array<{ group: string; heading: MessageKey; rows: Array<{ screen: ScreenId; icon: IconName; label: MessageKey }> }> = [
   { group: 'help', heading: 'settingsHelpHeading', rows: [
     { screen: 'S12', icon: 'plus-square', label: 'settingsInstall' },
