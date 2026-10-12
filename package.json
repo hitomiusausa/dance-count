@@ -33,6 +33,8 @@
     "smoke:practice": "node tools/smoke-practice.js",
     "smoke:routines": "node tools/smoke-routines.js",
     "smoke:voice": "node tools/smoke-voice.js",
+    "smoke:share": "node tools/smoke-share.js",
+    "fixtures:share": "node tools/make-share-fixtures.js",
     "timing:compare": "node tools/compare-timing-audit.js"
   },
   "dependencies": {
