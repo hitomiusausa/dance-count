@@ -3,7 +3,9 @@ import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
+import { showsInstallCard } from '../lib/install-card.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
+import { isStandalone, platformKind } from '../platform/pwa.ts';
 import { buildHash } from '../router/routes.ts';
 import { requestAutoplay } from '../state/autoplay.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -12,11 +14,13 @@ import { useSettings } from '../state/settings.ts';
 
 const DANCE_IDS = Object.keys(DANCE_PROFILES);
 
-// S1（仕様 §4・Ruling 16）。上から: アプリ名と言語 → 前回カード → 先生の声カード → 見出し → 種目タイル10個 → 更新の帯（段7。最下段＝375×548 の初期表示を崩さない。Ruling 90-3）。
+// S1（仕様 §4・Ruling 16）。上から: アプリ名と言語 → 前回カード → 先生の声カード → 見出し → 種目タイル10個 → 更新の帯 → ホーム画面に追加の案内カード（段7。最下段＝375×548 の初期表示を崩さない。Ruling 90-3・92-7）。
 export function HomeScreen() {
   const { translator, setLocale } = useI18n();
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const locale = translator.locale;
+  // 初めて鳴った後の 1 回だけのカード（段7・Ruling 92-7・D42）。× で閉じたら二度と出さない
+  const installCard = showsInstallCard({ hints: settings.hints, kind: platformKind(), standalone: isStandalone() });
   const lastDanceId = settings.lastDanceId;
 
   // 前回カード: このタップの中で音を解除し、一回限りの印を付けてから S2 へ（Ruling 32）。
@@ -64,6 +68,19 @@ export function HomeScreen() {
         ))}
       </div>
       <UpdateBanner />
+      {installCard && (
+        <div class="dc-install-card" data-install-card>
+          <a class="dc-link-row" href={buildHash({ screen: 'S12', params: {} })}>
+            <Icon name="plus-square" />
+            <span class="dc-link-label">{translator.t('installCard')}</span>
+            <Icon name="chev-r" />
+          </a>
+          <button type="button" class="dc-button dc-button--secondary dc-install-close"
+            onClick={() => update({ hints: { ...settings.hints, homeScreenCardDismissed: true } })}>
+            <Icon name="close" /><span>{translator.t('close')}</span>
+          </button>
+        </div>
+      )}
     </main>
   );
 }

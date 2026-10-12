@@ -37,7 +37,7 @@ test('unknown ids and the reserved word "new" go back to the list (Ruling 37)', 
 test('the practice screen needs a known dance; unbuilt screens show home', () => {
   assert.deepEqual(resolve('#/practice/waltz'), { screen: 'S2', redirect: null });
   assert.deepEqual(resolve('#/practice/hiphop'), { screen: 'S1', redirect: null });
-  for (const hash of ['#/help/install', '#/about']) assert.deepEqual(resolve(hash), { screen: 'S1', redirect: null }, hash);
+  assert.deepEqual(resolve('#/about'), { screen: 'S1', redirect: null }, '#/about');   // S13 は段8（S12 は段7で開く・下）
   assert.deepEqual(resolve('#/share'), { screen: 'S9', redirect: null }, 'S9 is built in stage 5');
   assert.deepEqual(resolve('#/receive'), { screen: 'S10', redirect: null }, 'S10 is built in stage 5');
   for (const hash of ['#/', '#/routines', '#/settings', '#/voices', '#/help/sound']) assert.equal(resolve(hash).redirect, null, hash);
@@ -49,4 +49,9 @@ test('a new routine is refused by hash too once the list is full (Ruling 37)', (
   assert.deepEqual(resolveScreen(parseHash('#/routines/new'), full), toRoutines);
   assert.deepEqual(resolveScreen(parseHash('#/routines/new'), full.slice(1)), { screen: 'S4', redirect: null });
   assert.deepEqual(resolveScreen(parseHash(`#/routines/${full[0]!.id}/edit`), full), { screen: 'S4', redirect: null });
+});
+
+test('S12 opens from stage 7; S13 is still the home screen until stage 8 (Ruling 92-9)', () => {
+  assert.deepEqual(resolve('#/help/install'), { screen: 'S12', redirect: null });
+  assert.deepEqual(resolve('#/about'), { screen: 'S1', redirect: null });
 });

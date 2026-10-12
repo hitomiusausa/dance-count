@@ -12,7 +12,8 @@ const LANGUAGES: Array<{ locale: AppLocale; label: string; lang: string }> = [
 ];
 
 // S6 設定（仕様 §4 S6・Ruling 60-8）。言語（切替は即保存。Ruling 26）・声（→ S7。今の声の名前を右に）・
-// 見出し「先生の方へ」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9・印なし。Ruling 86-5）。ほかの項目は段7・8で足す。
+// 「ホーム画面に追加する方法」（→ S12。段7・Ruling 92-8。主要操作 5＝上限）・
+// 見出し「先生の方へ」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9・印なし。Ruling 86-5）。S13 は段8（その時に並びを裁定し直す）。
 export function SettingsScreen() {
   const { translator, setLocale } = useI18n();
   const { voice } = usePlaybackVoice();
@@ -37,6 +38,11 @@ export function SettingsScreen() {
         <Icon name="voice" />
         <span class="dc-link-label">{translator.t('voicesTitle')}</span>
         <small class="dc-link-value">{voiceDisplayName(translator, voice ?? DEFAULT_VOICE, 'chip')}</small>
+        <Icon name="chev-r" />
+      </a>
+      <a class="dc-link-row" href={buildHash({ screen: 'S12', params: {} })}>
+        <Icon name="plus-square" />
+        <span class="dc-link-label">{translator.t('settingsInstall')}</span>
         <Icon name="chev-r" />
       </a>
       <h2 class="dc-field-label dc-settings-section">{translator.t('forTeachers')}</h2>

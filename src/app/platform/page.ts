@@ -11,6 +11,11 @@ export function reloadPage(): void {
   window.location.reload();
 }
 
+// 今の画面のアドレス（S12 の「アドレスをコピー」。Safari・スマホで開き直すと、そのまま同じ手順の画面が出る）。
+export function currentAddress(): string {
+  return window.location.href;
+}
+
 // LINE のアプリ内ブラウザ（UA に "Line/"）。Safari と保存領域が別なので、受け取る画面で一言出す（Ruling 83-1・F27。推測の上に立つ）。
 export function isLineInAppBrowser(): boolean {
   return /\bLine\//.test(navigator.userAgent);

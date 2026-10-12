@@ -36,6 +36,11 @@ const SEEDED = [R.waltz13, R.empty, R.longJa, R.longEn];
 const SHARE = name => path.resolve(import.meta.dirname, '../test/fixtures/share', name);
 const TOO_LARGE = { name: 'big.dancecount.txt', mimeType: 'text/plain', buffer: Buffer.alloc(20 * 1024 * 1024 + 1, 32) };
 const LINE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari Line/26.3.0';
+// 段7（Ruling 92・95-3）: S12 と S1 の案内カードは端末で中身が変わる。UA と、Android の追加の案内・ホーム画面から開いた状態の偽物
+const IOS_SAFARI_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3 Mobile/15E148 Safari/604.1';
+const IOS_CHROME_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0.7390.41 Mobile/15E148 Safari/604.1';
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36';
+const PLAYED = { lastDanceId: 'waltz', hints: { firstPlaybackDone: true } };   // 初めて鳴った後（S1 の案内カードの条件）
 const S4_13 = `#/routines/${R.waltz13.id}/edit`;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
@@ -44,6 +49,11 @@ const STATES = [
   // 段7（Ruling 90-3・90-7）: 更新の帯は S1 の最下段（種目タイルの下）。「更新する」は [data-alert-action]＝数えない。375×548 の初期表示（U12）は崩れない
   { name: 'S1 更新あり', hash: '#/?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 2, total: 2, teacherAndTiles: true, alert: true,
     texts: ['新しい版があります。', '更新する'], bannerAfter: '.dc-tiles' },
+  // 段7（Ruling 92-7・D42）: 初めて鳴った後の iPhone の Safari に、種目タイルの下の案内カード（行＋「閉じる」＝2）。PC には出さない。
+  // 初期表示は 375 幅では 3 のまま（カードは下）・1280×900 ではカードまで見えて 5（上限内）なので ops は固定しない
+  { name: 'S1 案内カード', hash: '#/', screen: 'S1', kind: 'root', settingsSeed: PLAYED, userAgent: IOS_SAFARI_UA, total: 5, teacherAndTiles: true,
+    texts: ['ホーム画面に追加すると、アプリのように使えます', '閉じる'], placed: [['[data-install-card]', '.dc-tiles']] },
+  { name: 'S1 案内カード（PC では出ない）', hash: '#/', screen: 'S1', kind: 'root', settingsSeed: PLAYED, ops: 3, total: 3, teacherAndTiles: true, absent: ['[data-install-card]'] },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
@@ -91,9 +101,13 @@ const STATES = [
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   // 段5（Ruling 86-5）: S6 に「ルーティンを配る」＝4
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 4, total: 4 },
+  // 段7（Ruling 92-8）: 「ホーム画面に追加する方法」で 5（上限ちょうど。段8の S13 で並びを裁定し直す）
+  // 375×548 では最後の「ルーティンを配る」が初期表示の下（先生向け・スクロールで届く。opsSmall）
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 5, opsSmall: 4, total: 5 },
   // 375×548 では帯（1 行・約 50px）のぶん最後の行が初期表示の下へ（スクロールで届く。Ruling 71-6 と同じ扱いの opsSmall）
-  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', ops: 4, opsSmall: 3, total: 4, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // Fable 答え 2: 生徒が使う 3 つ（言語・声・「ホーム画面に追加する方法」）は帯があっても 375×548 の初期表示に入る
+  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', ops: 5, opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
+    firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]'] },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
@@ -110,7 +124,12 @@ const STATES = [
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
-  { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en' },
+  { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en',
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first'] },
+  // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（16px・操作ではない）。375×548 でも言葉の 2 択と主ボタンは初期表示に入る
+  { name: 'S8 iPhone Safari（未録音）', hash: '#/voices/record', screen: 'S8', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 2, total: 2, recordLanguage: 'en',
+    steps: [{ wait: '.dc-record-add-first' }], texts: ['ホーム画面に追加してから録音するのがおすすめです。'],
+    firstView: ['[data-group="record-language"]', '.dc-dock .dc-primary'] },
   // Ruling 72: 説明の 1 行は「すぐ「Slow」と言って」・説明と枠は同じ 60px の箱（枠が出ても丸が動かない）
   { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true, recordHintWord: 'Slow', recordSlot: 60,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
@@ -161,7 +180,19 @@ const STATES = [
   { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', 'ホームで種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
-  { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' }
+  { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' },
+  // 段7 S12（Ruling 92・95-3）: 端末ごとに 1 通りだけ。iPhone の Safari は手順 4 行（iOS 26.3 の実物どおり）と「引き継がれません」の 1 行（D43）
+  { name: 'S12 iPhone Safari', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, ops: 0, total: 0,
+    texts: ['画面の下の「…」を押します。', '「共有」を押します。', '「もっと見る」を押し、「ホーム画面に追加」を押します。', '右上の「追加」を押します。',
+      '録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。'],
+    firstView: ['.dc-install-steps li:last-child', '.dc-install-note'] },
+  { name: 'S12 iPhone 他ブラウザ', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_CHROME_UA, ops: 1, total: 1,
+    texts: ['Safari で開くと、ホーム画面に追加できます。', 'アドレスをコピー'] },
+  { name: 'S12 Android', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, installPrompt: true, ops: 1, total: 1, firstView: ['.dc-install .dc-primary'] },
+  { name: 'S12 Android ボタンなし', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, ops: 0, total: 0, texts: ['右上の「⋮」を押します。', '「インストール」を押します。'] },
+  { name: 'S12 PC', hash: '#/help/install', screen: 'S12', kind: 'list', ops: 1, total: 1, texts: ['iPhone や Android で開くと、ホーム画面に追加できます。'] },
+  { name: 'S12 追加済み', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
+    texts: ['このアプリはホーム画面から開いています。追加は済んでいます。'], absent: ['.dc-install-steps'] }
 ];
 
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
@@ -193,19 +224,32 @@ try {
       const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'], ...(state.userAgent ? { userAgent: state.userAgent } : {}) });
       // 共有シートの代わり（Ruling 87-2）: 共有できる端末として、すぐ「送った」で返す（headless の Chrome は共有シートを出せない）
       if (state.fakeShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.resolve(); });
+      // 段7: Android の Chrome の「ホーム画面に追加」の案内（beforeinstallprompt）を、アプリが読み終えた後に 1 回だけ出す偽物
+      if (state.installPrompt) await context.addInitScript(() => addEventListener('load', () => {
+        const event = new Event('beforeinstallprompt', { cancelable: true });
+        event.prompt = () => Promise.resolve();
+        event.userChoice = Promise.resolve({ outcome: 'dismissed' });
+        dispatchEvent(event);
+      }));
+      // 段7: ホーム画面から開いた状態（display-mode: standalone だけを真に。ほかの問い合わせは本物のまま）
+      if (state.standalone) await context.addInitScript(() => {
+        const real = window.matchMedia.bind(window);
+        window.matchMedia = query => (query === '(display-mode: standalone)' ? { ...real(query), matches: true, media: query } : real(query));
+      });
       const page = await context.newPage();
       const consoleErrors = [];
       page.on('console', message => { if (message.type() === 'error') consoleErrors.push(`U15 console: ${message.text()}`); });
       page.on('pageerror', error => consoleErrors.push(`U15 pageerror: ${error.message}`));
-      if (state.prepare || state.seed || state.voiceSeed) {
+      if (state.prepare || state.seed || state.voiceSeed || state.settingsSeed) {
         await page.goto(BASE + (state.prepare ?? '#/'));
         await page.waitForSelector('[data-screen]');
       }
       if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
       if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
+      if (state.settingsSeed) await page.evaluate(seedSettingsInPage, state.settingsSeed);
       // via: 別の画面から実経路で入る状態（S7 の「配る」→ S9 など。一回限りの印は URL に無いので直接は開けない）
       // seed した時は新しく読み込む（動いているアプリにハッシュだけ渡すと、古い一覧で S4／S5 を S3 へ置き換える。段7 Task 1）
-      if (state.seed || state.voiceSeed) await openAfterSeed(page, BASE + (state.via?.hash ?? state.hash));
+      if (state.seed || state.voiceSeed || state.settingsSeed) await openAfterSeed(page, BASE + (state.via?.hash ?? state.hash));
       else await page.goto(BASE + (state.via?.hash ?? state.hash));
       await page.waitForSelector(`[data-screen="${state.via?.screen ?? state.screen}"]:not([data-loading])`);
       for (const step of state.steps ?? []) {
@@ -274,6 +318,22 @@ try {
 }
 
 process.exit(violations ? 1 : 0);
+
+// 段7: 設定（settings ストアの 'app'）を書く。ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB に書く
+async function seedSettingsInPage(settings) {
+  const db = await new Promise((resolve, reject) => {
+    const request = indexedDB.open('dance-count-v2', 2);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction('settings', 'readwrite');
+    transaction.objectStore('settings').put({ schemaVersion: 1, ...settings }, 'app');
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+  db.close();
+}
 
 // ---- ここから下はブラウザの中で動く（page.evaluate に関数ごと渡す。外の変数は使えない） ----
 function audit({ state, LIMITS, reducedMotion }) {
@@ -695,6 +755,13 @@ function audit({ state, LIMITS, reducedMotion }) {
     const labels = [...document.querySelectorAll(`[data-group="${state.actions.group}"] button`)].filter(visible).map(button => button.textContent.trim());
     if (JSON.stringify(labels) !== JSON.stringify(state.actions.labels)) issues.push(`R86 ${state.actions.group} ${JSON.stringify(labels)}, expected ${JSON.stringify(state.actions.labels)}`);
   }
+  // 段7（Ruling 92-7）: 要素のすぐ前の兄弟（置き場）・出てはいけない要素
+  for (const [selector, previous] of state.placed ?? []) {
+    const element = document.querySelector(selector);
+    if (!element) issues.push(`R92 ${selector} is not shown`);
+    else if (!element.previousElementSibling?.matches(previous)) issues.push(`R92 ${selector} is not right after ${previous}`);
+  }
+  for (const selector of state.absent ?? []) if (document.querySelector(selector)) issues.push(`R92 ${selector} must not be shown here`);
   // 段7（Ruling 90-3）: 更新の帯の置き場（S1 は種目タイルのすぐ下・S3/S6/S7 は見出しのすぐ下）
   if (state.bannerAfter) {
     const banner = document.querySelector('[data-alert="update"]');

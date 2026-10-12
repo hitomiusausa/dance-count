@@ -464,3 +464,22 @@ button { cursor: pointer; }
 .dc-update { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; padding: 0 12px; }
 .dc-update .dc-alert-text { font-size: 18px; }
 .dc-home .dc-update { margin-top: 16px; }
+/* 段7 S12（Ruling 92-2）: 手順の行頭に iOS の実物と同じ形のアイコン（番号は ol のまま）。最後の 1 行は 16px の補助（div.dc-hint） */
+.dc-install-step { display: inline-flex; align-items: flex-start; gap: 8px; vertical-align: top; }
+.dc-install-step .dc-ic { margin-top: 2px; }
+.dc-install-note { display: block; margin-top: 4px; line-height: 1.5; }
+.dc-install .dc-button + .dc-hint { margin-top: 8px; }
+.dc-install-address { width: 100%; margin-top: 8px; }
+/* S1 の案内カード（Ruling 92-7・D42）: 種目タイルと更新の帯の下。行（S12 へ）と「× 閉じる」（アイコンだけのボタンにしない＝仕様 §5） */
+.dc-install-card { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-top: 16px; padding-bottom: 8px; border-top: var(--bw) solid var(--line); }
+.dc-install-card .dc-link-row { margin-top: 0; }
+.dc-install-close { min-width: 96px; }
+/* D46: S8 の最初の画面の「先にホーム画面に追加」の 1 行（iPhone のブラウザ・未録音だけ）。説明 3 行の下・「数える言葉」の見出しの上。16px の補助 */
+.dc-record-add-first { display: block; margin: -4px 0 8px; line-height: 1.5; word-break: auto-phrase; }
+/* 600px 未満の高さ（375×548）: 1 行が出ている時だけ説明 3 行を詰め、言葉の 2 択を初期表示に入れたまま（D46。1 行が無い時は今のまま） */
+@media (max-height: 599px) and (max-width: 1023px) {
+  .dc-record-intro:has(+ .dc-record-add-first) { gap: 2px; margin-top: 8px; }
+  .dc-record-add-first { line-height: 1.4; }
+}
+/* S12 の文は語の途中で折らない（「ホーム画\n面」「押しま\nす」を避ける。ほかの画面と同じ auto-phrase。対応していないブラウザでは今のまま） */
+.dc-install .dc-body, .dc-install-steps, .dc-install .dc-hint { word-break: auto-phrase; }

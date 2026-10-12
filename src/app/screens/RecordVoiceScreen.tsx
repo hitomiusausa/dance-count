@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { showsRecordInstallHint } from '../lib/install-card.ts';
 import { playBuffer, unlockAudioInsideTap } from '../platform/audio-context.ts';
+import { isStandalone, platformKind } from '../platform/pwa.ts';
 import { RecorderError, TAKE_MS, recordTake, recorderSupported, requestMicrophone } from '../platform/recorder.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
@@ -237,6 +239,11 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
 
   if (step.kind === 'intro' || !pack) {
     const micProblem = blocked === 'denied' || blocked === 'failed';
+    // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（読み終えるまでは出さない）
+    const addFirst = saved !== null && showsRecordInstallHint({
+      kind: platformKind(), standalone: isStandalone(),
+      recorded: LANGUAGES.some(locale => packProgress(saved[locale]).recorded > 0)
+    });
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step={micProblem ? 'denied' : 'intro'}>
         {header}
@@ -260,6 +267,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             <div>{translator.t('recordIntro3')}</div>
           </div>
         )}
+        {!micProblem && addFirst && <div class="dc-hint dc-record-add-first">{translator.t('recordAddFirst')}</div>}
         <h2 class="dc-field-label" id="dc-s8-language">{translator.t('recordLanguage')}</h2>
         <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s8-language" data-group="record-language">
           {LANGUAGES.map(locale => {
