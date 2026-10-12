@@ -24,3 +24,24 @@ function hashPath(hash: string): string {
   const path = hash.split('?')[0] ?? '';
   return path === '' || path === '#' ? '#/' : path;
 }
+
+// 「‹ 表紙」（親が表紙の画面＝U1・U2・M0・S6）は 1 回で表紙に着く（Fable 答え §1-1・Task 1 修正 1）。
+// 見てきた列の中で一番近い表紙（'#/'）まで何個戻るか。末尾（今の画面）は数えない。無ければ null（表紙へ置き換える）。
+export function stepsBackTo(stack: readonly string[], hash: string): number | null {
+  const target = hashPath(hash);
+  for (let index = stack.length - 2; index >= 0; index -= 1) {
+    if (stack[index] === target) return stack.length - 1 - index;
+  }
+  return null;
+}
+
+// 履歴を n 個戻った後の列（戻った先が末尾。その後の hashchange では recordVisit が何も変えない）。
+export function dropLast(stack: readonly string[], steps: number): string[] {
+  return stack.slice(0, Math.max(1, stack.length - steps));
+}
+
+// 「出口」（S10 の受け取った → U1／U2 など）: 1 つ前が行き先と同じ画面なら、置き換えずに 1 つ戻る。
+// 置き換えると同じ画面が 2 つ続き、「‹」や戻るスワイプの 1 回目が何も起きないように見える（Task 1 修正 1・Repro A）。
+export function exitByBack(stack: readonly string[], hash: string): boolean {
+  return stack.length >= 2 && stack[stack.length - 2] === hashPath(hash);
+}

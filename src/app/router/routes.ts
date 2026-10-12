@@ -19,6 +19,8 @@ export type RouteQuery = { uiState?: UiState };
 // alias: 古い経路（#/routines）で来た。resolve.ts がハッシュを今の経路へ置き換える（Ruling 116-1）
 export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery; alias?: true }
 export type RouteTarget = Pick<Route, 'screen' | 'params'>;
+// 置き換えの行き先。query は古い経路（alias）の読み替えの時だけ持ち越す（ui-state を落とさない）
+export type RedirectTarget = RouteTarget & { query?: RouteQuery };
 
 // side は表紙の「使う／作る」のどちら側か（下タブは「使う」の root だけ＝showsTabs）。tab は下タブの「今の位置」（U1・U2 だけ）。
 // parent は履歴が無い時の「戻る」の行き先（Ruling 17・116-2。表紙が親の画面の「戻る」は「‹ 表紙」）。
@@ -100,6 +102,12 @@ export function buildHash(route: RouteTarget): string {
     return `#/${path}`;
   }
   throw new Error(`No hash for ${route.screen} with params ${JSON.stringify(route.params)}`);
+}
+
+// 置き換えの時だけ使う: 持ち越す ui-state があればハッシュに付ける（#/routines?ui-state=… → #/use/routines?ui-state=…）。
+export function buildHashWithQuery(route: RedirectTarget): string {
+  const uiState = route.query?.uiState;
+  return uiState ? `${buildHash(route)}?ui-state=${uiState}` : buildHash(route);
 }
 
 // 下タブは「使う」の 2 つの入口（U1・U2）だけ（Ruling 116-1）

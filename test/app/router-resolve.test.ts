@@ -37,6 +37,8 @@ test('unknown ids and the reserved word "new" go back to the list (Ruling 37)', 
 test('the old #/routines lands on U2 and the hash is replaced (D56・Ruling 116-1)', () => {
   assert.deepEqual(resolve('#/routines'), { screen: 'U2', redirect: { screen: 'U2', params: {} } });
   assert.deepEqual(resolve('#/use/routines'), { screen: 'U2', redirect: null });
+  // ui-state は置き換えた先へ持ち越す（Task 1 修正 1・M2）
+  assert.deepEqual(resolve('#/routines?ui-state=update-ready'), { screen: 'U2', redirect: { screen: 'U2', params: {}, query: { uiState: 'update-ready' } } });
   assert.deepEqual(resolve('#/'), { screen: 'S0', redirect: null });
   assert.deepEqual(resolve('#/nope'), { screen: 'S0', redirect: null });
 });

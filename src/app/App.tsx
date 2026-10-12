@@ -9,7 +9,7 @@ import { applyDocumentLanguage, removeBootShell } from './platform/page.ts';
 import { isStandalone } from './platform/pwa.ts';
 import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
 import { resolveScreen } from './router/resolve.ts';
-import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
+import { buildHashWithQuery, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { AboutScreen } from './screens/AboutScreen.tsx';
 import { CoverScreen } from './screens/CoverScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
@@ -135,7 +135,7 @@ export function App() {
     target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
   }, [settings !== null, resolved.screen]);
-  const redirectHash = settings && resolved.redirect ? buildHash(resolved.redirect) : null;
+  const redirectHash = settings && resolved.redirect ? buildHashWithQuery(resolved.redirect) : null;
   useEffect(() => { if (resolved.redirect && redirectHash) replaceRoute(resolved.redirect); }, [redirectHash]);
 
   if (!settings) return null;

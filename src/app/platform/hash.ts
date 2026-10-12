@@ -23,3 +23,8 @@ export function setHash(hash: string, { replace = false }: { replace?: boolean }
 export function historyBack(): void {
   window.history.back();
 }
+
+// 「‹ 表紙」で履歴を n 個まとめて戻る（戻り先があると分かっている時だけ呼ぶ。state/route.ts の goBack）。
+export function historyGo(delta: number): void {
+  window.history.go(delta);
+}

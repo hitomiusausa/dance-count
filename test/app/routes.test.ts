@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseHash, buildHash, SCREENS, showsTabs, parentScreen, tabOf, type ScreenId } from '../../src/app/router/routes.ts';
+import { parseHash, buildHash, buildHashWithQuery, SCREENS, showsTabs, parentScreen, tabOf, type ScreenId } from '../../src/app/router/routes.ts';
 
 test('every screen hash from spec §3 parses to its screen and params', () => {
   const cases: Array<[string, ScreenId, Record<string, string>]> = [
@@ -39,6 +39,8 @@ test('the old #/routines is read as U2 and marked as an alias; building U2 gives
   assert.deepEqual(parseHash('#/routines?ui-state=update-ready'), { screen: 'U2', params: {}, query: { uiState: 'update-ready' }, alias: true });
   assert.equal(buildHash({ screen: 'U2', params: {} }), '#/use/routines');
   assert.equal(parseHash('#/use/routines').alias, undefined);
+  assert.equal(buildHashWithQuery({ screen: 'U2', params: {}, query: { uiState: 'update-ready' } }), '#/use/routines?ui-state=update-ready');
+  assert.equal(buildHashWithQuery({ screen: 'U2', params: {} }), '#/use/routines');
 });
 
 test('trailing slash is ignored', () => {

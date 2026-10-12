@@ -16,7 +16,7 @@ import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename
 import { BUNDLE_ACCEPT } from '../share/limits.ts';
 import { commitImport, planImport, type ImportPlan } from '../share/plan-import.ts';
 import { useI18n } from '../state/i18n.ts';
-import { replaceRoute } from '../state/route.ts';
+import { exitTo } from '../state/route.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 import { useStorage } from '../state/storage.ts';
@@ -133,7 +133,7 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
         </p>
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
-            onClick={() => replaceRoute({ screen: voice ? 'S1' : 'U2', params: {} })}>
+            onClick={() => exitTo({ screen: voice ? 'S1' : 'U2', params: {} })}>
             <span>{translator.t(voice ? 'goHome' : 'seeRoutines')}</span><Icon name="chev-r" />
           </button>
         </div>

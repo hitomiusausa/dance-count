@@ -2,7 +2,7 @@
 // 段5の完了条件（全体地図・Ruling 87-4）を本物の Chrome と本物のファイルで確かめる。2 つのコンテキスト＝2 台の端末（IndexedDB が別）。
 // 先生: 録音の声とルーティンを入れた端末 → S7 で声を開いて「配る」→ S9（声が選ばれている）→ 名前・同意・ルーティン →「ファイルを作る」
 //       （共有できない端末として canShare を false に＝ダウンロード）→ ファイル名・結果の 1 行・「案内文をコピー」→ 名前が次回も入っている。
-// 生徒: 何も無い端末 → 表紙「使う」→ 下の「ルーティン」→「ファイルから受け取る」→ S10「ファイルを選ぶ」に先生のファイル → 確認 →「使う」→「種目を選ぶ」（U1）→
+// 生徒: 何も無い端末 → 表紙「使う」→ 下の「ルーティン」→「ファイルから受け取る」→ S10「ファイルを選ぶ」に先生のファイル → 確認 →「使う」→「種目を選ぶ」（U1）→「‹ 表紙」1 回で表紙（Task 1 修正 1。ルーティンだけの時の U2 からも）→
 //       ワルツ ▶ が受け取った声で鳴る（標準の声の音声を 1 本も取りに行かない）・チップ「声: 山田さんの声」→ U2「山田さんから」→ 行を押すと S5 で鳴る。
 //       同じファイルをもう一度 → 置き換えの 1 行 → 声もルーティンも増えない。旧画面の単体パック・読めない・新しすぎ・大きすぎ・1 本だけ読めない。
 //       Android の受け口（Cache の inbox）から確認で始まり、受け取ったら消える。受け取った声は「配る」が無く、消すと標準に戻る。
@@ -210,6 +210,9 @@ try {
   await s.waitForSelector('[data-screen="S1"]');
   if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
   await s.waitForTimeout(WRITE_SETTLE_MS);
+  // Task 1 修正 1（Fable 答え §1-1・Repro B）: 受け取った後の U1 から「‹ 表紙」1 回で表紙（S0 → U1 → U2 → S10 → U1 の列でも）
+  await s.locator('[data-back]').click();
+  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U1 after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 
   // ワルツ ▶ が受け取った声で鳴る: 読み直した S2 で ▶ の間、標準の声の音声は 1 本も要求されない（smoke-voice.js と同じ証明）
   await s.goto(`${BASE}#/practice/waltz`);
@@ -302,6 +305,25 @@ try {
   await s.waitForSelector('[data-alert="too-new"]', { timeout: 5000 }).catch(() => errors.push('m1: after 「更新する」 the shared file was lost (S10 did not read it again)'));
   if (await s.evaluate(async () => Boolean(await (await caches.open('dance-count-inbox')).match('./inbox/bundle')))) errors.push('m1: the too-new file is still in the inbox after S10 read it again');
 
+  // Task 1 修正 1（Repro A）: 表紙 → 使う → ルーティン（タブ）→ 受け取る → ルーティンだけ受け取った →「ルーティンを見る」（U2）→「‹ 表紙」1 回で表紙
+  await s.goto(`${BASE}#/`);
+  await s.reload();   // 見てきた列を表紙 1 つから始める
+  await s.waitForSelector('[data-screen="S0"]');
+  await s.locator('[data-door="use"]').click();
+  await s.waitForSelector('[data-screen="S1"]');
+  await s.locator('[data-nav] a').nth(1).click();
+  await s.waitForSelector('[data-screen="U2"]');
+  await s.locator('.dc-receive-link').click();
+  await pickFile(s, path.join(FIXTURES, 'bundle-routines-only.dancecount.txt'));
+  await s.waitForSelector('[data-step="confirm"]');
+  await s.locator('.dc-receive-dock .dc-primary').click();
+  await s.waitForSelector('[data-step="done"]');
+  await s.locator('.dc-dock .dc-primary').click();
+  await s.waitForSelector('[data-screen="U2"]');
+  if (!s.url().endsWith('#/use/routines')) errors.push(`S10 "See routines" should land on U2 (url ${s.url()})`);
+  await s.locator('[data-back]').click();
+  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
+
   // 受け取った声は配れない（D37）・消すと標準（英語）に戻る
   await s.goto(`${BASE}#/voices`);
   await s.waitForSelector('[data-screen="S7"]:not([data-loading])');
@@ -324,4 +346,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted');
+console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted; one "‹ Cover" tap reaches the cover after receiving');
