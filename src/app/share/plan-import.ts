@@ -103,6 +103,7 @@ function receivedRoutine(routine: Routine, distributor: string, now: string, new
 
 export interface ImportWriter {
   saveVoice(pack: VoicePackRecord): Promise<boolean>;
+  voiceSaved?(pack: VoicePackRecord): void;   // 書けたらすぐ選ぶ（古い声を消した後でルーティンが書けなくても、選択が消えた声を指さない。段5 Task 7 M2）
   deleteVoice(id: string): Promise<boolean>;
   saveRoutine(routine: Routine): Promise<boolean>;
   removeRoutine(id: string): Promise<boolean>;
@@ -113,6 +114,7 @@ export interface ImportWriter {
 export async function commitImport(plan: ImportPlan, writer: ImportWriter): Promise<boolean> {
   if (plan.voice) {
     if (!(await writer.saveVoice(plan.voice.pack))) return false;
+    writer.voiceSaved?.(plan.voice.pack);
     if (plan.voice.replaces) await writer.deleteVoice(plan.voice.replaces.id);
   }
   for (const { routine, replaces } of plan.routines) {

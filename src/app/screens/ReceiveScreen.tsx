@@ -79,21 +79,21 @@ export function ReceiveScreen() {
     if (file) void take(file);
   };
 
-  // 「使う」: 新しい物を書けてから古い物を消す。声はその場で選ぶ（S7 で選び直させない）。
+  // 「使う」: 新しい物を書けてから古い物を消す。声は書けたその場で選ぶ（S7 で選び直させない）。投げた時も「保存できませんでした」（M3）。
   const use = () => {
     if (!plan || busy) return;
     setBusy(true);
     const writer = {
       saveVoice: (pack: VoicePackRecord) => saveVoicePack(storage, pack),
+      voiceSaved: (pack: VoicePackRecord) => update(chooseVoice(packSelection(pack))),
       deleteVoice: (id: string) => deleteVoicePack(storage, id),
       saveRoutine: latestRoutines.current.save,
       removeRoutine: latestRoutines.current.remove
     };
-    void commitImport(plan, writer).then(ok => {
+    void commitImport(plan, writer).catch(() => false).then(ok => {
       if (!alive.current) return;
       setBusy(false);
       if (!ok) { setSaveFailed(true); return; }
-      if (plan.voice) update(chooseVoice(packSelection(plan.voice.pack)));
       setStep('done');
     });
   };

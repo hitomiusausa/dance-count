@@ -109,6 +109,22 @@ test('"Use" writes the new things first and removes the replaced ones only after
   assert.deepEqual(log, [`save ${plan.voice!.pack.id}`]);
 });
 
+test('the new voice is chosen as soon as it is saved, before a routine write can fail (stage-5 Task 7 review M2)', async () => {
+  const old = received(planImport(await parsedFor(), [], [], { now: NOW, newId: ids() }));
+  const plan = planImport(await parsedFor({ routines: [waltzRoutine('r-teacher-0001')] }), [old], [], { now: LATER, newId: ids() });
+  const log: string[] = [];
+  const writer = {
+    async saveVoice(pack: VoicePackRecord) { log.push(`save ${pack.id}`); return true; },
+    voiceSaved(pack: VoicePackRecord) { log.push(`choose ${pack.id}`); },
+    async deleteVoice(id: string) { log.push(`delete ${id}`); return true; },
+    async saveRoutine(routine: Routine) { log.push(`save ${routine.id}`); return false; },
+    async removeRoutine(id: string) { log.push(`remove ${id}`); return true; }
+  };
+  assert.equal(await commitImport(plan, writer), false);
+  assert.deepEqual(log, [`save ${plan.voice!.pack.id}`, `choose ${plan.voice!.pack.id}`, `delete ${old.id}`, `save ${plan.routines[0]!.routine.id}`],
+    'the old voice is gone, so the selection must already point at the new one');
+});
+
 test('only known fields of a received voice are kept; unknown keys in the file are not stored (stage-5 review)', async () => {
   const text = buildBundle({ distributorName: '山田', voice: await exportVoiceForBundle(packFixture('ja-JP', 12)), routines: [], now: NOW });
   const data = JSON.parse(text);
