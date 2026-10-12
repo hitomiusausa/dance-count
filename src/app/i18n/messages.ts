@@ -318,10 +318,10 @@ export const APP_MESSAGES = {
     routinesCount: '{count} 本（受け取った物も直せます）',
     routinesCountOne: '1 本（受け取った物も直せます）',
     routinesNone: 'まだありません',
-    editFromMake: 'ルーティンを直す・消す時は、表紙の「作る」から。',
+    editFromMake: 'ルーティンを直す・消す時は、表紙の「作る」\u2060から。',   // \u2060＝「」」の直後で折り返さない（375 幅で「から。」だけが残る）
     cannotPlayEmpty: 'フィガーがありません。「作る」で直せます。',
     cannotPlayFix: 'カウントに直す所があります。「作る」で直せます。',
-    recordFromMake: '自分の声の録音は、表紙の「作る」から。',
+    recordFromMake: '自分の声の録音は、表紙の「作る」\u2060から。',   // \u2060＝「」」の直後で折り返さない（320 幅で「から。」だけが次の行に残る）
     chooseDance: '種目を選んでください',
     danceGroup: '種目',
     lastTime: '前回',
