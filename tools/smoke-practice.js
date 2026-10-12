@@ -8,6 +8,7 @@ import { chromium } from 'playwright-core';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const SOUND_TIMEOUT_MS = 10000;   // はじめの合図（2小節。ワルツ♩=84で約4.3秒、D17）＋声の読み込みを待っても、この間にカウントが3種類変わること
+const STRIP_WATCH_MS = 9000;      // ジャイブ（はじめの合図 2 小節＋型 1 周以上）を見る長さ
 const errors = [];
 const browser = await chromium.launch({ channel: 'chrome' });
 
@@ -85,6 +86,31 @@ try {
   await page.locator('[data-back]').click();
   await page.waitForSelector('[data-screen="S0"]');
   if (!page.url().endsWith('#/')) errors.push(`"‹ Cover" without history should replace with #/ (url ${page.url()})`);
+
+  // D55（Ruling 114-9）: ジャイブを鳴らすと、帯の琥珀の丸（aria-current）が 1 2 3 a 4 5 a 6 の順に進み、大きな語と同じ文字。時間は実再生・判定は順序だけ
+  await page.goto(`${BASE}#/practice/jive`);
+  await page.waitForSelector('[data-screen="S2"]');
+  await page.locator('[data-play]').click();
+  const strip = [];
+  const stripEnd = Date.now() + STRIP_WATCH_MS;
+  while (Date.now() < stripEnd) {
+    strip.push(await page.evaluate(() => {
+      const cells = [...document.querySelectorAll('.dc-beats li')];
+      const lit = cells.findIndex(cell => cell.getAttribute('aria-current') === 'true');
+      return { lit, label: lit >= 0 ? cells[lit].textContent.trim() : null, now: document.querySelector('.dc-now')?.textContent.trim() ?? '', cells: cells.length };
+    }));
+    await page.waitForTimeout(40);
+  }
+  await page.locator('[data-play]').click();
+  const lit = strip.filter(sample => sample.lit >= 0);
+  if (strip.some(sample => sample.cells !== 8)) errors.push(`D55: the jive strip should have 8 cells (${[...new Set(strip.map(sample => sample.cells))].join(', ')})`);
+  const steps = lit.map(sample => sample.lit).filter((index, i, all) => i === 0 || index !== all[i - 1]);
+  const backwards = steps.filter((index, i) => i > 0 && index < steps[i - 1] && !(index === 0 && steps[i - 1] >= 6));
+  if (backwards.length) errors.push(`D55: the lit cell moved backwards ${JSON.stringify(steps)}`);
+  if (!['1', '2', '3', '4', '5', '6'].every(label => lit.some(sample => sample.label === label))) errors.push(`D55: the lit cell did not visit 1–6 (${[...new Set(lit.map(sample => sample.label))].join(' ')})`);
+  if (!steps.some((index, i) => i > 0 && index === 0 && steps[i - 1] >= 6)) errors.push(`D55: the strip did not wrap from 6 back to 1 (${JSON.stringify(steps)})`);
+  const disagree = lit.filter(sample => sample.now && sample.label !== sample.now).length;
+  if (disagree > lit.length * 0.1) errors.push(`D55: the lit cell and the big count disagree in ${disagree} of ${lit.length} samples`);
   await context.close();
 } finally {
   await browser.close();
@@ -94,4 +120,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('practice smoke OK: G1 (3 taps from the cover) and G2 (1 tap: the U1 card and the cover) play, tabs do not stack history, reload does not autoplay, back falls back to the parent');
+console.log('practice smoke OK: the jive strip lights 1 2 3 a 4 5 a 6 in order with the big count; G1 (3 taps from the cover) and G2 (1 tap: the U1 card and the cover) play, tabs do not stack history, reload does not autoplay, back falls back to the parent');

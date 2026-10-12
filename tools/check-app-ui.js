@@ -76,7 +76,10 @@ const STATES = [
   { name: 'S1 案内カード', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, userAgent: IOS_SAFARI_UA, total: 4, tilesInView: true,
     texts: ['ホーム画面に追加すると、アプリのように使えます', '閉じる'], placed: [['[data-install-card]', '.dc-tiles']] },
   { name: 'S1 案内カード（PC では出ない）', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, ops: 2, total: 2, tilesInView: true, absent: ['[data-install-card]'] },
-  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
+  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' } },
+  // D55（Ruling 114）: カウントの型の帯。ジャイブは 6 拍の型の 8 語（a も丸）・タンゴは S が Q の 2 倍の幅・320 でも 1 行
+  { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
+  { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
@@ -154,7 +157,10 @@ const STATES = [
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   // opsSmall: 375×548（Safari SE）では声チップが帯の下＝初期表示 4（Ruling 71-6）
-  { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
+  { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true, strip: { labels: '1 2 3' } },
+  // D55（Ruling 114-3）: 15 語のフィガーは 12 語ずつ（止まっている間は 1 頁目）
+  { name: 'S5 長いフィガーの帯', hash: `#/routines/${R.waltzLongFigure.id}/play`, screen: 'S5', kind: 'focus', seed: [R.waltzLongFigure], ops: 5, opsSmall: 4, speedAndPlay: true,
+    strip: { labels: '1 2 3 1 2 3 1 2 3 1 2 3' } },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
@@ -624,7 +630,8 @@ function audit({ state, LIMITS, reducedMotion }) {
     const fineprint = element.closest('[data-fineprint]');
     if (size < LIMITS.fineprintFont - 0.01) issues.push(`U1 font ${size}px < ${LIMITS.fineprintFont} ${describe(element)}`);
     else if (!fineprint && size < LIMITS.minFont - 0.01) issues.push(`U1 font ${size}px < ${LIMITS.minFont} ${describe(element)}`);
-    else if (element.closest('p, li, [data-body]') && size < LIMITS.bodyFont - 0.01) issues.push(`U1 body font ${size}px < ${LIMITS.bodyFont} ${describe(element)}`);
+    // D55: カウントの型の帯（ol.dc-beats の li）は本文ではなく丸の中の 1 字（aria-hidden。a・& と 9 個以上は 14・15px の data-fineprint）
+    else if (element.closest('p, li, [data-body]') && !element.closest('.dc-beats') && size < LIMITS.bodyFont - 0.01) issues.push(`U1 body font ${size}px < ${LIMITS.bodyFont} ${describe(element)}`);
   }
 
   // U2 主要ボタン
@@ -1008,6 +1015,22 @@ function audit({ state, LIMITS, reducedMotion }) {
       if (!symbols || !(symbols.compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('D52 the auto-counts line must come after the allowed-symbols line');
     }
     if (form?.querySelector('.dc-primary')?.disabled) issues.push('D52 "Add" is not pressable after the counts were filled in');
+  }
+  // D55（Ruling 114-2・114-3）: 帯は 1 行で枠からはみ出さない（320 でも）・丸は 12 まで・状態の期待（語の並び・S が Q の 2 倍）
+  for (const strip of document.querySelectorAll('.dc-beats')) {
+    if (!visible(strip)) continue;
+    const cells = [...strip.children];
+    if (strip.scrollWidth > strip.clientWidth + 1) issues.push(`R114 the count strip overflows ${strip.scrollWidth} > ${strip.clientWidth}`);
+    if (cells.length > 12) issues.push(`R114 the count strip has ${cells.length} cells > 12`);
+    if (new Set(cells.map(cell => Math.round(cell.getBoundingClientRect().top))).size > 1) issues.push('R114 the count strip wraps to a second line');
+    if (state.strip) {
+      const labels = cells.map(cell => cell.textContent.trim()).join(' ');
+      if (labels !== state.strip.labels) issues.push(`R114 the strip reads "${labels}", expected "${state.strip.labels}"`);
+      if (state.strip.wide) {
+        const [wide, narrow] = state.strip.wide.map(index => cells[index]?.getBoundingClientRect().width ?? 0);
+        if (!(wide > narrow * 1.6)) issues.push(`R114 a slow cell (${Math.round(wide)}px) is not about twice a quick cell (${Math.round(narrow)}px)`);
+      }
+    }
   }
   // D56（Ruling 115-1・115-3）: 表紙の扉の説明・M0 の行の状態の 1 行は 4 行まで（320 幅の日本語で 4 行。名前「使う」「作る」・行の名前は U10 の 2 行の規則のまま）
   for (const description of document.querySelectorAll('[data-description]')) {

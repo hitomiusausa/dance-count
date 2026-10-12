@@ -43,8 +43,15 @@ export const UI_CHECK_ROUTINES = {
   longJa: routine('r-uicheck-longja40', 'waltz', LONG_JA, 3, 2, LONG_FIGURE),
   longEn: routine('r-uicheck-longen40', 'jive', LONG_EN, 3, 3),
   waltzOffBar: offBarRoutine(),
-  waltzAuto: autoCountsRoutine()
+  waltzAuto: autoCountsRoutine(),
+  waltzLongFigure: longFigureRoutine()
 };
+
+// D55・Ruling 114-3: 13 語以上のフィガー（15 語）を持つワルツ。S5 の帯は 12 語ずつの頁（li は 12 まで）。名前は照合済みの語、カウントは型 123 の 5 回（打った値の見本・正しいカウントを名乗らない）
+function longFigureRoutine() {
+  const base = routine('r-uicheck-waltzlong', 'waltz', 'ワルツの長いフィガー', 0, 6);
+  return { ...base, figures: [{ id: 'f-uicheck-0000', name: 'ナチュラルターン', counts: '123123123123123' }, { id: 'f-uicheck-0001', name: 'リバースターン', counts: '123' }] };
+}
 
 // D52・Ruling 112-3: 「前に使ったカウント」の検査用の 2 本目のワルツ。waltz13 に無い一覧の 17 番目のフィガーを templates[1]（12&3）で持つ。
 // S4 の waltz13 の追加の行でこの名前をタップすると、欄に 12&3 が入り、形のチップが 1 つ押され、「前に使ったカウントです」の行が出る。

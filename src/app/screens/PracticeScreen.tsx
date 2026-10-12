@@ -4,7 +4,7 @@ import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
-import { beatIndexInBar } from '../practice/beat-indicator.ts';
+import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
@@ -19,13 +19,11 @@ import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
-type Profile = DanceProfileLike & { beatsPerBar: number };
-
 // S2 再生（仕様 §4・Ruling 13・18・19・21・23・28〜32・42）。部品は practice/controls.tsx（S5 と共通）。
 export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();
-  const profile = getDanceProfile(danceId) as Profile;
+  const profile = getDanceProfile(danceId) as DanceProfileLike;
   const choice = practiceChoice(profile, settings);
   const { session, view } = usePracticeSession(danceId);
   const playback = usePlaybackVoice();
@@ -87,7 +85,8 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   const current = () => latest.current.settings;
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
   const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
-  const beat = view.playing && !view.countIn ? beatIndexInBar(view.originalTick, profile.beatsPerBar) : null;
+  // D55: 帯は鳴っている型（セッションの program）。止まっている間は今の型を表示のためだけに語にする。はじめの合図の間は点けない
+  const strip = stripView(stripCells(view.program ?? idleProgram(danceId, choice.counts)), view.playing && !view.countIn ? view.originalTick : null);
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。
   const idleText = view.playing ? '' : formatCounts(danceId, choice.counts).split(' ')[0] ?? '';
@@ -103,7 +102,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
             <small>{formatCounts(danceId, choice.counts)}</small>
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat} />
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} />
         </div>
         <div>
           <SpeedChoices presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />

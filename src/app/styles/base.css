@@ -131,9 +131,14 @@ button { cursor: pointer; }
 .dc-now { min-height: 96px; font-size: 96px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; color: var(--count-ink); font-variant-numeric: tabular-nums; }
 .dc-now--idle { color: var(--ink2); }
 .dc-now--lead { display: flex; align-items: center; font-size: 32px; letter-spacing: var(--track); color: var(--ink2); }
-.dc-beats { display: flex; gap: 10px; margin: 8px 0 0; padding: 0; list-style: none; }
-.dc-beats li { display: grid; place-items: center; width: 52px; height: 40px; font-size: 18px; font-weight: 700; color: var(--ink2);
-  border-bottom: 3px solid var(--line); }
+/* カウントの型の帯（D55・Ruling 114-2・114-6）: 1 語 1 丸。幅は語の長さ（--beats＝拍数）に比例し、1 拍あたり --beat-w まで。
+   a・&（sub）は 20〜24px に留まり 14px。丸が 9 個以上（data-dense）は 15px。320 幅でも 1 行（overflow を出さない）。高さと色は D8 のまま */
+.dc-beats { --beat-w: 56px; display: flex; justify-content: center; gap: 6px; width: 100%; margin: 8px 0 0; padding: 0; list-style: none; overflow: hidden; }
+.dc-beats li { display: grid; place-items: center; flex: var(--beats, 1) 1 0; min-width: 20px; max-width: calc(var(--beats, 1) * var(--beat-w)); height: 40px;
+  font-size: 18px; font-weight: 700; color: var(--ink2); border-bottom: 3px solid var(--line); }
+.dc-beats li[data-cell="sub"] { font-size: 14px; }
+.dc-beats[data-dense] li:not([data-cell="sub"]) { font-size: 15px; }
+@media (max-width: 359px) { .dc-beats { gap: 4px; } }
 .dc-beats li[aria-current="true"] { color: var(--beat-on); border-bottom: 6px solid var(--beat-on); font-weight: 800; }
 .dc-field-label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -402,7 +407,8 @@ button { cursor: pointer; }
   .dc-now { min-height: 200px; font-size: 200px; }
   .dc-now--idle { color: var(--ink2); }
 .dc-now--lead { font-size: 32px; }
-  .dc-beats li { width: 72px; height: 56px; font-size: 24px; }
+  .dc-beats { --beat-w: 72px; }
+  .dc-beats li { height: 56px; font-size: 24px; }
   .dc-dock { padding: 12px 16px; }
   .dc-play { max-width: 928px; min-height: 80px; }
   .dc-dock-button { max-width: 608px; }
