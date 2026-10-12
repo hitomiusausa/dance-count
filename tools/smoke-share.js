@@ -6,6 +6,8 @@
 //       ワルツ ▶ が受け取った声で鳴る（標準の声の音声を 1 本も取りに行かない）・チップ「声: 山田さんの声」→ S3「山田さんから」→ S5 で鳴る。
 //       同じファイルをもう一度 → 置き換えの 1 行 → 声もルーティンも増えない。旧画面の単体パック・読めない・新しすぎ・大きすぎ・1 本だけ読めない。
 //       Android の受け口（Cache の inbox）から確認で始まり、受け取ったら消える。受け取った声は「配る」が無く、消すと標準に戻る。
+// ほかの入口（段5 Task 10b）: S8 完成「配る ›」→ S9 はその声が選ばれ 声 → ルーティン の並び。S3 の行の「配る」→ S9 はそのルーティンが選ばれ
+//       声は「入れない」・ルーティン → 声 の並び（S8 は偽のマイク＝起動引数。録音の声が完成している端末で「録音をはじめる」→ 完成の画面）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。固定ファイルは `node tools/make-share-fixtures.js` で作って commit 済み。
 import fs from 'node:fs';
 import os from 'node:os';
@@ -28,8 +30,9 @@ function today() {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-async function openPage(browser, { canShare = true } = {}) {
-  const context = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP', acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] });
+async function openPage(browser, { canShare = true, microphone = false } = {}) {
+  const permissions = ['clipboard-read', 'clipboard-write', ...(microphone ? ['microphone'] : [])];
+  const context = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP', acceptDownloads: true, permissions });
   await context.addInitScript(({ canShare }) => {
     if (!canShare) navigator.canShare = () => false;   // 共有できない端末（PC など）＝ダウンロードに切り替わる（§11）
     // 声の語を鳴らす BufferSource の中身の指紋（smoke-voice.js と同じ）
@@ -97,6 +100,15 @@ async function pickFile(page, file) {
   await page.locator('input[type="file"]').setInputFiles(file);
 }
 
+// S9 の見出しの並び（'voice' / 'routines'）と、選ばれている声・ルーティン
+async function shareState(page) {
+  return page.evaluate(() => ({
+    order: [...document.querySelectorAll('.dc-share-heading')].map(heading => heading.id.replace('dc-s9-', '')),
+    voice: document.querySelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]')?.textContent?.trim() ?? null,
+    routines: [...document.querySelectorAll('.dc-share-list [role="checkbox"][aria-checked="true"] b')].map(name => name.textContent.trim())
+  }));
+}
+
 async function openReceive(page) {
   await page.goto(`${BASE}#/voices`);
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
@@ -104,7 +116,7 @@ async function openReceive(page) {
   await page.waitForSelector('[data-screen="S10"][data-step="pick"]');
 }
 
-const browser = await chromium.launch({ channel: 'chrome' });
+const browser = await chromium.launch({ channel: 'chrome', args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
 const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dc-smoke-share-'));
 try {
   // ---- 先生 ----
@@ -150,6 +162,33 @@ try {
   if (bundle.type !== 'dance-count-bundle' || bundle.distributor?.name !== '山田' || !bundle.consent?.voiceDistribution || bundle.routines?.length !== 1) {
     errors.push(`teacher file: ${JSON.stringify({ type: bundle.type, distributor: bundle.distributor, consent: bundle.consent, routines: bundle.routines?.length })}`);
   }
+
+  // ---- 先生: ほかの入口から S9 へ（段5 Task 9 I1・Task 10b） ----
+  const entry = await openPage(browser, { canShare: false, microphone: true });
+  const e = entry.page;
+  await e.goto(BASE);
+  await e.waitForSelector('[data-screen]');
+  await e.evaluate(seedRoutinesInPage, [R.waltz13]);
+  await e.evaluate(seedVoicePacksInPage, [V.completeEn]);
+  await e.goto(`${BASE}#/voices/record`);
+  await e.reload();
+  await e.waitForSelector('[data-screen="S8"][data-step="intro"]');
+  await e.locator('[data-group="record-language"] [role="radio"] >> nth=0').click();
+  await e.locator('.dc-dock .dc-primary').click();
+  await e.waitForSelector('[data-screen="S8"][data-step="done"]');
+  await e.locator('.dc-record-dock .dc-primary', { hasText: '配る' }).click();
+  await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
+  await e.waitForSelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]');
+  const fromS8 = await shareState(e);
+  if (fromS8.voice !== '自分の声（英語）' || fromS8.routines.length !== 0 || JSON.stringify(fromS8.order) !== '["voice","routines"]') errors.push(`S9 from S8 "Share": ${JSON.stringify(fromS8)}`);
+  await e.goto(`${BASE}#/routines`);
+  await e.waitForSelector('[data-screen="S3"]');
+  await e.locator('.dc-row-head', { hasText: 'ワルツの練習' }).click();
+  await e.locator('[data-group="routine-actions"] button', { hasText: '配る' }).click();
+  await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
+  const fromS3 = await shareState(e);
+  if (fromS3.voice !== '入れない' || JSON.stringify(fromS3.routines) !== '["ワルツの練習"]' || JSON.stringify(fromS3.order) !== '["routines","voice"]') errors.push(`S9 from the S3 row "Share": ${JSON.stringify(fromS3)}`);
+  await entry.context.close();
 
   // ---- 生徒（別の端末） ----
   const student = await openPage(browser);
@@ -270,4 +309,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('share smoke OK: teacher file made (download) → student received it → S2 played the received voice, S3/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, received voice not shareable and deleted');
+console.log('share smoke OK: S8 "Share" and the S3 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, S3/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, received voice not shareable and deleted');

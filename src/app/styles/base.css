@@ -443,6 +443,13 @@ button { cursor: pointer; }
 /* S7 の下の 2 ボタン（Ruling 86-1）: 「ファイルから受け取る」（上・白）→「自分の声を録音する」（下・紺） */
 .dc-receive-link { margin-top: 24px; }
 .dc-receive-link + .dc-record-link { margin-top: 12px; }
+/* 見える高さ 600px 未満（375×548）では 2 つを横 1 行に並べ、声が 3 本でも両方が初期表示に入る（段5 Task 10b）。
+   文言は語の途中で折らない（nowrap・16px・アイコンなし）。入らない幅（320）では折り返して縦に積む（flex-wrap） */
+@media (max-height: 599px) and (max-width: 1023px) {
+  .dc-voice-entry { display: flex; flex-wrap: wrap; gap: 12px 8px; margin-top: 24px; }
+  .dc-voice-entry .dc-button { flex: 1 1 auto; width: auto; margin-top: 0; padding: 0 6px; font-size: 16px; white-space: nowrap; }
+  .dc-voice-entry .dc-button .dc-ic { display: none; }
+}
 /* S8 完成のバックアップの 1 行（Ruling 86-2。操作ではない・16px） */
 .dc-backup-tip { margin-top: 12px; }
 /* 段5の文は句の切れ目で折る（auto-phrase は Chrome だけ。.dc-receive-help と同じ型）。text-wrap の pretty・balance は

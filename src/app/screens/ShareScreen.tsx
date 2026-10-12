@@ -1,3 +1,4 @@
+import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { PUBLIC_APP_URL } from '../app-url.ts';
 import { BackButton } from '../components/BackButton.tsx';
@@ -7,6 +8,7 @@ import { canShareFile, copyText, downloadFile, shareFile } from '../platform/fil
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
 import { bundleFileName } from '../share/filename.ts';
+import { shareSectionOrder, showChooseNote } from '../share/layout.ts';
 import { studentInstructions } from '../share/instructions.ts';
 import { BUNDLE_MIME, BUNDLE_ROUTINES_MAX, DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -18,6 +20,7 @@ import { packDisplayName } from '../voices/selection.ts';
 import { isCompletePack, listVoicePacks, type VoicePackRecord } from '../voices/store.ts';
 
 // S9 配る（仕様 §4 S9・Ruling 82）。集中画面。上から 名前 → 声（入れない／録音した完成の声）→ 同意（声を選んだ時だけ）→ ルーティン → 下固定「ファイルを作る」。
+// 声の指定なしで来た時（S6・S3 から）は 名前 → ルーティン → 声 → 同意（段5 Task 10b・share/layout.ts）。
 // 押せない理由はボタンの近くに 1 行（依頼形にしない）。ファイルはタップの前に作っておき、タップでは共有を同期に呼ぶ（F22・Ruling 81-2）。
 // 作った後は上に結果の 1 行と「生徒への案内文をコピー」（初期表示の 5 を超えないため・「ファイル → 案内」の順。Ruling 82-4・82-5）。
 // 受け取った声は配れない（D37）。鳴らさない（Ruling 82-8）。
@@ -36,6 +39,7 @@ export function ShareScreen() {
   const [consent, setConsent] = useState(false);
   const [chosen, setChosen] = useState<string[]>(() => (intent?.routineId ? [intent.routineId] : []));
   const [exported, setExported] = useState<{ id: string; voice: ExportedVoice } | null>(null);
+  const [prepFailed, setPrepFailed] = useState(false);   // 声をファイルの形にできなかった（声の 2 択の下に 1 行。段5 Task 10b）
   const [result, setResult] = useState<Result | null>(null);
   const [copy, setCopy] = useState<'idle' | 'copied' | 'manual'>('idle');
   const resultRef = useRef<HTMLDivElement>(null);
@@ -57,7 +61,12 @@ export function ShareScreen() {
     let alive = true;
     const pack = voiceId ? voices?.find(item => item.id === voiceId) : undefined;
     if (!pack) { setExported(null); return; }
-    void exportVoiceForBundle(pack).then(voice => { if (alive) setExported({ id: pack.id, voice }); }, () => { if (alive) setVoiceId(null); });
+    void exportVoiceForBundle(pack).then(voice => { if (alive) setExported({ id: pack.id, voice }); }, () => {
+      if (!alive) return;
+      setVoiceId(null);
+      setConsent(false);
+      setPrepFailed(true);
+    });
     return () => { alive = false; };
   }, [voiceId, voices]);
 
@@ -127,6 +136,69 @@ export function ShareScreen() {
   if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><BackButton screen="S9" /></main>;
 
   const atLimit = chosenRoutines.length >= BUNDLE_ROUTINES_MAX;
+  const voiceSection = (
+    <>
+      <h2 class="dc-field-label dc-share-heading" id="dc-s9-voice">{translator.t('shareVoiceHeading')}</h2>
+      {voices.length === 0
+        ? <p class="dc-share-empty">{translator.t('shareNoRecordedVoice')}</p>
+        : (
+          <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s9-voice" data-group="share-voice">
+            {[null, ...voices].map(pack => {
+              const checked = (pack?.id ?? null) === voiceId;
+              return (
+                <button key={pack?.id ?? 'none'} type="button" class="dc-radio-row" role="radio" aria-checked={checked ? 'true' : 'false'}
+                  onClick={() => { setPrepFailed(false); setVoiceId(pack?.id ?? null); if (!pack) setConsent(false); }}>
+                  {checked ? <Icon name="check" /> : <span class="dc-ic" aria-hidden="true" />}
+                  <span class="dc-voice-name">{pack ? packDisplayName(translator, pack) : translator.t('shareVoiceNone')}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      {prepFailed && <div class="dc-hint" role="status">{translator.t('shareVoicePrepFailed')}</div>}
+      {voiceId !== null && (
+        // 同意の文は 2 文と長いので、ボタン（四角）の外に置き、文を押しても切り替わる（ボタン文言は 2 行まで・U10）。
+        <div class="dc-consent" data-group="consent">
+          <div class="dc-consent-row">
+            <button type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
+              onClick={() => setConsent(!consent)}>
+              <span class="dc-checkbox" aria-hidden="true">{consent && <Icon name="check" />}</span>
+            </button>
+            <div class="dc-consent-text" id="dc-s9-consent" onClick={() => setConsent(!consent)}>{translator.t('shareConsent')}</div>
+          </div>
+          {needsConsent && <div class="dc-hint">{translator.t('shareConsentNeeded')}</div>}
+        </div>
+      )}
+    </>
+  );
+  const routineSection = (
+    <>
+      <h2 class="dc-field-label dc-share-heading" id="dc-s9-routines">{translator.t('shareRoutinesHeading')}</h2>
+      {shareable.length === 0
+        ? <p class="dc-share-empty">{translator.t('shareNoRoutines')}</p>
+        : (
+          <div class="dc-share-list" role="list" aria-labelledby="dc-s9-routines" data-list>
+            {shareable.map(routine => {
+              const checked = chosen.includes(routine.id);
+              const dance = danceName(routine.danceId, locale);
+              const count = routine.figures.length;
+              return (
+                <div key={routine.id} role="listitem">
+                  <button type="button" class="dc-check-row dc-share-routine" role="checkbox" aria-checked={checked ? 'true' : 'false'}
+                    disabled={!checked && atLimit} onClick={() => toggleRoutine(routine)}>
+                    <span class="dc-checkbox" aria-hidden="true">{checked && <Icon name="check" />}</span>
+                    <span class="dc-row-text">
+                      <b>{routine.name}</b>
+                      <small>{count === 1 ? translator.t('routineSummaryOne', { dance }) : translator.t('routineSummary', { dance, count })}</small>
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+    </>
+  );
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-share" data-screen="S9" data-result={result ? result.kind : undefined}>
       <header class="dc-focus-head"><BackButton screen="S9" /><span class="dc-focus-title">{translator.t('shareTitle')}</span></header>
@@ -162,62 +234,9 @@ export function ShareScreen() {
           onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
         {needsName && <div class="dc-hint">{translator.t('shareNameNeeded')}</div>}
       </div>
-      <h2 class="dc-field-label dc-share-heading" id="dc-s9-voice">{translator.t('shareVoiceHeading')}</h2>
-      {voices.length === 0
-        ? <p class="dc-share-empty">{translator.t('shareNoRecordedVoice')}</p>
-        : (
-          <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s9-voice" data-group="share-voice">
-            {[null, ...voices].map(pack => {
-              const checked = (pack?.id ?? null) === voiceId;
-              return (
-                <button key={pack?.id ?? 'none'} type="button" class="dc-radio-row" role="radio" aria-checked={checked ? 'true' : 'false'}
-                  onClick={() => { setVoiceId(pack?.id ?? null); if (!pack) setConsent(false); }}>
-                  {checked ? <Icon name="check" /> : <span class="dc-ic" aria-hidden="true" />}
-                  <span class="dc-voice-name">{pack ? packDisplayName(translator, pack) : translator.t('shareVoiceNone')}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      {voiceId !== null && (
-        // 同意の文は 2 文と長いので、ボタン（四角）の外に置き、文を押しても切り替わる（ボタン文言は 2 行まで・U10）。
-        <div class="dc-consent" data-group="consent">
-          <div class="dc-consent-row">
-            <button type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
-              onClick={() => setConsent(!consent)}>
-              <span class="dc-checkbox" aria-hidden="true">{consent && <Icon name="check" />}</span>
-            </button>
-            <div class="dc-consent-text" id="dc-s9-consent" onClick={() => setConsent(!consent)}>{translator.t('shareConsent')}</div>
-          </div>
-          {needsConsent && <div class="dc-hint">{translator.t('shareConsentNeeded')}</div>}
-        </div>
-      )}
-      <h2 class="dc-field-label dc-share-heading" id="dc-s9-routines">{translator.t('shareRoutinesHeading')}</h2>
-      {shareable.length === 0
-        ? <p class="dc-share-empty">{translator.t('shareNoRoutines')}</p>
-        : (
-          <div class="dc-share-list" role="list" aria-labelledby="dc-s9-routines" data-list>
-            {shareable.map(routine => {
-              const checked = chosen.includes(routine.id);
-              const dance = danceName(routine.danceId, locale);
-              const count = routine.figures.length;
-              return (
-                <div key={routine.id} role="listitem">
-                  <button type="button" class="dc-check-row dc-share-routine" role="checkbox" aria-checked={checked ? 'true' : 'false'}
-                    disabled={!checked && atLimit} onClick={() => toggleRoutine(routine)}>
-                    <span class="dc-checkbox" aria-hidden="true">{checked && <Icon name="check" />}</span>
-                    <span class="dc-row-text">
-                      <b>{routine.name}</b>
-                      <small>{count === 1 ? translator.t('routineSummaryOne', { dance }) : translator.t('routineSummary', { dance, count })}</small>
-                    </span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {shareSectionOrder(intent).map(section => <Fragment key={section}>{section === 'voice' ? voiceSection : routineSection}</Fragment>)}
       <div class="dc-dock dc-share-dock">
-        {needsSomething && <div class="dc-dock-note">{translator.t('shareChooseSomething')}</div>}
+        {showChooseNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length }) && <div class="dc-dock-note">{translator.t('shareChooseSomething')}</div>}
         <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>
           <Icon name="share" /><span>{translator.t('createFile')}</span>
         </button>

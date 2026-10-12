@@ -128,12 +128,15 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
           );
         })}
       </div>
-      <a class="dc-button dc-button--secondary dc-wide dc-receive-link" href={buildHash({ screen: 'S10', params: {} })}>
-        <span>{translator.t('receiveFromFile')}</span>
-      </a>
-      <a class="dc-button dc-primary dc-wide dc-record-link" href={buildHash({ screen: 'S8', params: {} })}>
-        <Icon name="mic" /><span>{translator.t('recordVoice')}</span>
-      </a>
+      {/* 600px 未満の高さでは 2 つを横 1 行に並べる（段5 Task 10b・CSS の .dc-voice-entry）。600px 以上は縦のまま */}
+      <div class="dc-voice-entry">
+        <a class="dc-button dc-button--secondary dc-wide dc-receive-link" href={buildHash({ screen: 'S10', params: {} })}>
+          <span>{translator.t('receiveFromFile')}</span>
+        </a>
+        <a class="dc-button dc-primary dc-wide dc-record-link" href={buildHash({ screen: 'S8', params: {} })}>
+          <Icon name="mic" /><span>{translator.t('recordVoice')}</span>
+        </a>
+      </div>
       {deleting && (
         <ConfirmDialog title={translator.t('confirmDeleteVoiceTitle')} detail={packDisplayName(translator, deleting)} confirmLabel={translator.t('confirmDelete')}
           onCancel={() => setDeleting(null)} onConfirm={() => confirmDelete(deleting)} />
