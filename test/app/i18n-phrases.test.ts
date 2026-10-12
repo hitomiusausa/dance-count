@@ -8,7 +8,7 @@ import { APP_MESSAGES } from '../../src/app/i18n/messages.ts';
 import { createAppTranslator } from '../../src/app/i18n/index.ts';
 import { phraseParts } from '../../src/app/i18n/phrase-parts.ts';
 import JA_PHRASES from '../../src/app/i18n/ja-phrases.json' with { type: 'json' };
-import { PHRASES_PATH, renderPhrases, segmentText } from '../../tools/i18n/segment-ja.js';
+import { PHRASES_PATH, jaEntries, renderPhrases, segmentText } from '../../tools/i18n/segment-ja.js';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const PHRASES = JA_PHRASES as Record<string, string[]>;
@@ -19,9 +19,11 @@ test('the committed ja-phrases.json is not stale (run npm run i18n:phrases after
   assert.equal(await renderPhrases(root), fs.readFileSync(path.join(root, PHRASES_PATH), 'utf8'));
 });
 
-test('every phrase list rebuilds its Japanese text exactly and never cuts a {placeholder}', () => {
+test('every phrase list rebuilds its Japanese text exactly and never cuts a {placeholder}', async () => {
+  const sources = new Map(await jaEntries(root));
   for (const [key, chunks] of Object.entries(PHRASES)) {
-    if (key in JA) assert.equal(chunks.join(''), JA[key], key);
+    assert.ok(sources.has(key), `${key} is not a Japanese text the tool reads (orphan key)`);
+    assert.equal(chunks.join(''), sources.get(key), key);
     for (const chunk of chunks) assert.equal((chunk.match(/\{/g) ?? []).length, (chunk.match(/\}/g) ?? []).length, `${key}: "${chunk}"`);
     assert.ok(chunks.length > 1, `${key} has one phrase (one-phrase texts are left out)`);
   }
@@ -59,6 +61,36 @@ test('parts break only at phrase boundaries, keep 「…」 and 押します。 
 test('variables are filled inside a phrase, so a name is one unbreakable piece of the text', () => {
   const parts = phraseParts('{name}さんの声で鳴ります。', ['{name}さんの', '声で', '鳴ります。'], { name: '山田 花子' });
   assert.deepEqual(parts.map(part => [part.text, part.breakBefore]), [['山田 花子さんの', false], ['声で', true], ['鳴ります。', true]]);
+});
+
+test('a 「…」“…” that holds a {placeholder} is not a no-wrap piece, so a long name or file name can still wrap (fix 1・I1／M1)', () => {
+  const ja = createAppTranslator('ja-JP');
+  const en = createAppTranslator('en');
+  const name = '山田花子先生のワルツとタンゴとフォックストロットのルーティン練習用'.padEnd(40, '花');
+  const file = '声-山田花子先生-2026-10-12.dancecount.txt';
+  const cases = [
+    ['shareSaved', { file }], ['routineUnreadable', { name }], ['replaceVoiceNamed', { name }], ['receivedVoiceNamed', { name }]
+  ] as const;
+  for (const [key, variables] of cases) {
+    const value = Object.values(variables)[0];
+    for (const [locale, translator, chunks] of [['ja-JP', ja, PHRASES[key]], ['en', en, undefined]] as const) {
+      const template = (APP_MESSAGES[locale] as Record<string, string>)[key];
+      const parts = phraseParts(template, chunks, variables);
+      assert.equal(joined(parts), translator.t(key, variables), `${locale} ${key} reads the same`);
+      assert.ok(parts.some(part => part.text.includes(value)), `${locale} ${key} contains the value`);
+      assert.ok(parts.filter(part => part.label).every(part => !part.text.includes(value)), `${locale} ${key}: the value is inside a no-wrap piece`);
+    }
+  }
+  // 固定の画面の語は塊のまま（同じ文の「使う」）
+  assert.ok(phraseParts(JA.replaceVoiceNamed, PHRASES.replaceVoiceNamed, { name }).some(part => part.label && part.text === '「使う」'));
+  // 利用者の値の中の「」・“” は塊にならない（M1）
+  const odd = phraseParts('{name}さんの声', ['{name}さんの', '声'], { name: 'A「B」C“D”押します。' });
+  assert.ok(odd.every(part => !part.label));
+  // 置き換えを含む括弧の中では句の境でも折らない
+  const inner = phraseParts('「{name}の声」です', ['「{name}の', '声」です'], { name: 'X' });
+  assert.deepEqual(inner.map(part => [part.text, part.label, part.breakBefore, part.free ?? false]), [['「Xの声」', false, false, true], ['です', false, false, false]]);
+  const css = fs.readFileSync(path.join(root, 'src/app/styles/base.css'), 'utf8');
+  assert.match(css, /\.dc-phrased \.dc-free \{ word-break: normal; \}/, 'the free piece breaks like plain Japanese');
 });
 
 test('English and stale phrase lists give no break points (the browser breaks at spaces)', () => {

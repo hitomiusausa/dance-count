@@ -482,6 +482,8 @@ button { cursor: pointer; }
 .dc-phrased { word-break: keep-all; overflow-wrap: anywhere; }
 /* 段7 fix 1（レビュー I1）: 文の中の「…」“…”（画面の語）と「押します。」は折らない塊（phrase-parts.ts） */
 .dc-nowrap { white-space: nowrap; }
+/* 置き換えを含む「{name}」“{file}”（段8 Task 2 fix 1）: 利用者の名前は句の表に無いので、普通の日本語の折り方で行を埋める */
+.dc-phrased .dc-free { word-break: normal; }
 /* 600px 未満の高さ（375×548）: S12 の見出しの上と手順の間を詰め、D43 の 1 行まで初期表示に入れる（WebKit・英語でも。667 以上は今のまま） */
 @media (max-height: 599px) and (max-width: 1023px) {
   .dc-install .dc-heading { margin-top: 8px; }

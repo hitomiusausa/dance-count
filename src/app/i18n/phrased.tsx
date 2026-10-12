@@ -18,7 +18,7 @@ export function PhrasedText({ template, phraseKey, locale, variables }: {
       {parts.map((part, index) => (
         <Fragment key={index}>
           {part.breakBefore && <wbr />}
-          {part.label ? <span class="dc-nowrap">{part.text}</span> : part.text}
+          {part.label ? <span class="dc-nowrap">{part.text}</span> : part.free ? <span class="dc-free">{part.text}</span> : part.text}
         </Fragment>
       ))}
     </span>
