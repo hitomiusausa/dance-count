@@ -12,6 +12,7 @@ import { resolveScreen } from './router/resolve.ts';
 import { buildHashWithQuery, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { AboutScreen } from './screens/AboutScreen.tsx';
 import { CoverScreen } from './screens/CoverScreen.tsx';
+import { FigureListScreen } from './screens/FigureListScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { InstallHelpScreen } from './screens/InstallHelpScreen.tsx';
 import { MakeScreen } from './screens/MakeScreen.tsx';
@@ -49,7 +50,7 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2・S4・S5・U2・M1・S7・S8・S10・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る F1・S2・S4・S5・U2・M1・S7・S8・S10・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S0: CoverScreen,
   S1: HomeScreen,
@@ -149,7 +150,8 @@ export function App() {
           <StorageContext.Provider value={storage.current}>
             <div class="dc-shell" lang={locale} ref={shell} data-tabs={tabs ? '' : undefined}>
               <IconSprite />
-              {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
+              {screen === 'S2' ? <PracticeScreen key={`${route.params.danceId}/${route.params.figureSlug ?? ''}`} danceId={route.params.danceId!} figureSlug={route.params.figureSlug} uiState={route.query.uiState} />
+                : screen === 'F1' ? <FigureListScreen key={route.params.danceId} danceId={route.params.danceId!} />
                 : screen === 'U2' ? <RoutinesScreen key="use" mode="use" uiState={route.query.uiState} />
                 : screen === 'M1' ? <RoutinesScreen key="make" mode="make" uiState={route.query.uiState} />
                 : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} uiState={route.query.uiState} />

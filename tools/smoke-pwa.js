@@ -106,8 +106,11 @@ try {
   await page.locator('[data-door="use"]').click();
   await page.waitForSelector('[data-screen="S1"]');
   await page.locator('[data-group="dance"] a').first().click();
+  // D57: ワルツに監修済みのフィガーがあれば F1 を通る（網なしでも一覧が描け、「基本のカウント」を押すとすぐ鳴る）
+  await page.waitForSelector('[data-screen="S2"], [data-screen="F1"]');
+  const viaFigures = await page.locator('[data-screen="F1"]').count() > 0;
+  await page.locator(viaFigures ? '[data-basic]' : '[data-play]').click();
   await page.waitForSelector('[data-screen="S2"]');
-  await page.locator('[data-play]').click();
   await expectSounding(page, 'offline waltz');
   await page.locator('[data-play]').click();   // 止める
   if (!audio.some(item => /six\.wav\?v=/.test(item.url) && item.sw)) errors.push('six.wav?v=… was not answered by the service worker (ignoreURLParametersMatching)');

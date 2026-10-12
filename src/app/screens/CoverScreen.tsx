@@ -1,10 +1,10 @@
 import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
-import { DanceName } from '../i18n/DanceName.tsx';
+import { LastPracticeName } from '../i18n/LastPracticeName.tsx';
 import { phrased } from '../i18n/phrased.tsx';
 import { buildHash } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
-import { resumePractice } from '../state/resume.ts';
+import { lastPractice, resumePractice } from '../state/resume.ts';
 import { useSettings } from '../state/settings.ts';
 
 // S0 表紙（D56・Ruling 115-1・117）。起動のたびに出る（側は覚えない）。上から: アプリ名と言語 → 扉「使う」（主・紺）＋その下にくっついた
@@ -14,7 +14,7 @@ export function CoverScreen() {
   const { translator, setLocale } = useI18n();
   const { settings } = useSettings();
   const locale = translator.locale;
-  const lastDanceId = settings.hints.firstPlaybackDone ? settings.lastDanceId : null;
+  const last = settings.hints.firstPlaybackDone ? lastPractice(settings) : null;
   return (
     <main class="dc-screen dc-cover" data-screen="S0">
       <header class="dc-appbar">
@@ -34,11 +34,11 @@ export function CoverScreen() {
           <span class="dc-door-text"><b>{translator.t('coverUse')}</b><small data-description>{phrased(translator, 'coverUseSub')}</small></span>
           <Icon name="chev-r" />
         </a>
-        {lastDanceId && (
-          <button type="button" class="dc-door-resume" data-resume onClick={() => resumePractice(lastDanceId)}>
+        {last && (
+          <button type="button" class="dc-door-resume" data-resume onClick={() => resumePractice(last)}>
             <span class="dc-resume-text">
               <small>{translator.t('continueLast')}</small>
-              <b><DanceName danceId={lastDanceId} locale={locale} /></b>
+              <b data-ellipsis><LastPracticeName last={last} locale={locale} /></b>
             </span>
             <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
           </button>

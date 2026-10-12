@@ -8,7 +8,11 @@ import { AxeBuilder } from '@axe-core/playwright';
 import { chromium } from 'playwright-core';
 import { ABOUT_TEXT } from '../src/app/i18n/about.ts';
 import { APP_MESSAGES } from '../src/app/i18n/messages.ts';
-import { SCREENS, showsTabs } from '../src/app/router/routes.ts';
+import { SCREENS, buildHash, showsTabs } from '../src/app/router/routes.ts';
+import { reviewedFigures } from '../src/app/routines/reviewed-counts.ts';
+import { figureDisplayName } from '../src/app/routines/figure-names.ts';
+import { formatCounts } from '../src/app/lib/count-display.ts';
+import { DANCE_PROFILES } from '../src/engine/dance-profiles.js';
 import { UI_CHECK_ROUTINES as R, manyRoutines, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
@@ -55,6 +59,18 @@ const IOS_CHROME_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_3 like Mac OS X) Ap
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36';
 const PLAYED = { lastDanceId: 'waltz', hints: { firstPlaybackDone: true } };   // 初めて鳴った後（S1 の案内カードの条件）
 const S4_13 = `#/routines/${R.waltz13.id}/edit`;
+// D57（Ruling 119-2）: U1 のタイルの行き先（監修済みのフィガーが 1 件以上なら F1、0 件なら S2）。表が空なら全部 S2＝今までと同じ
+const figureNameJa = (danceId, englishName) => figureDisplayName(danceId, englishName, 'ja-JP');
+const spaced = counts => formatCounts('waltz', counts);
+const TILE_HREFS = Object.keys(DANCE_PROFILES).map(danceId => buildHash({ screen: reviewedFigures(danceId).length > 0 ? 'F1' : 'S2', params: { danceId } }));
+// D57（Ruling 122-3）: requires: 'reviewed' の状態はワルツに監修済みのフィガーがある時だけ走る（無ければ「スキップ」と 1 行出して飛ばす）。
+// 期待値はワルツの表から作る（1 行目＝基本・2 行目＝表の 1 件目）
+const WALTZ_FIGURES = reviewedFigures('waltz');
+const REVIEWED = WALTZ_FIGURES.length > 0;
+const W1 = WALTZ_FIGURES[0];
+const W_TWO_BARS = WALTZ_FIGURES.find(figure => figure.counts.length > 4) ?? W1;
+// 一番長い日本語名（「フォーラウェイリバース＆スリップピボット」）: 前回の名前は 2 行で「…」（[data-ellipsis]・U10）
+const W_LONGEST = REVIEWED ? WALTZ_FIGURES.reduce((longest, figure) => (figureNameJa('waltz', figure.englishName).length > figureNameJa('waltz', longest.englishName).length ? figure : longest)) : undefined;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
   // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
@@ -63,11 +79,21 @@ const STATES = [
   { name: 'S0 前回あり', hash: '#/', screen: 'S0', kind: 'cover', settingsSeed: PLAYED, ops: 4, total: 4, firstView: ['[data-door="use"]', '[data-resume]', '[data-door="make"]', '.dc-cover-settings'],
     placed: [['[data-resume]', '[data-door="use"]']], textKeys: ['continueLast'] },
   // S2 を開いただけ（まだ鳴らしていない）では「続きから」は出さない（hints.firstPlaybackDone が立ってから。Ruling 115-1）
+  { name: 'S0 前回あり・フィガー', hash: '#/', screen: 'S0', kind: 'cover', requires: 'reviewed', ops: 4, total: 4,
+    settingsSeed: REVIEWED ? { lastDanceId: 'waltz', lastFigure: W1.slug, hints: { firstPlaybackDone: true } } : undefined, resumeName: REVIEWED ? `ワルツ · ${figureNameJa('waltz', W1.englishName)}` : undefined },
   { name: 'S0 開いただけ', hash: '#/', screen: 'S0', kind: 'cover', prepare: '#/practice/waltz', ops: 3, total: 3, absent: ['[data-resume]'] },
   { name: 'S0 更新あり', hash: '#/?ui-state=update-ready', screen: 'S0', kind: 'cover', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: '.dc-cover-settings' },
   // U1（S1 の ID のまま #/use。D56 Ruling 115-2）: 「先生の声で練習」カードを外した。主要操作は 種目群 1（前回カードがあれば 2）。左上「‹ 表紙」・下タブ 2 つ
-  { name: 'S1 初回', hash: '#/use', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, absent: ['[data-teacher-card]'], textKeys: ['backToCover', 'tabFigures'] },
+  { name: 'S1 初回', hash: '#/use', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, absent: ['[data-teacher-card]'], textKeys: ['backToCover', 'tabFigures'], tileHrefs: TILE_HREFS },
   { name: 'S1 前回あり', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, prepare: '#/practice/waltz' },
+  // D57（Ruling 121-2・121-4）: 前回がフィガーなら「ワルツ · ウィスク」。表に無い slug（訂正で外れた）は種目名だけ
+  // 320 幅の英語では「Waltz · Closed Changes」が 2 行になり、最後の 2 タイルが下へ（320 は「横スクロール無し」の幅＝段8 発見 20。375×548 では入る）
+  { name: 'S1 前回あり・フィガー', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, tilesMayScrollAt320: true, requires: 'reviewed', prepare: REVIEWED ? `#/practice/waltz/${W1.slug}` : undefined,
+    resumeName: REVIEWED ? `ワルツ · ${figureNameJa('waltz', W1.englishName)}` : undefined },
+  // 長い名前でも前回の名前は 2 行まで（3 行目以降は「…」。U10 は [data-ellipsis] を数えない・行数は R121 が見る）。全文は textContent に残る
+  { name: 'S1 前回あり・長いフィガー', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, tilesMayScrollAt320: true, requires: 'reviewed',
+    settingsSeed: REVIEWED ? { lastDanceId: 'waltz', lastFigure: W_LONGEST.slug } : undefined, resumeName: REVIEWED ? `ワルツ · ${figureNameJa('waltz', W_LONGEST.englishName)}` : undefined, resumeLines: 2 },
+  { name: 'S1 前回のフィガーが表に無い', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, settingsSeed: { lastDanceId: 'waltz', lastFigure: 'no-such-figure' }, resumeName: 'ワルツ' },
   // 段7（Ruling 90-3・90-7）: 更新の帯は S1 の最下段（種目タイルの下）。「更新する」は [data-alert-action]＝数えない。375×548 の初期表示（U12）は崩れない
   { name: 'S1 更新あり', hash: '#/use?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, alert: true,
     texts: ['新しい版があります。', '更新する'], bannerAfter: '.dc-tiles' },
@@ -76,6 +102,23 @@ const STATES = [
   { name: 'S1 案内カード', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, userAgent: IOS_SAFARI_UA, total: 4, tilesInView: true,
     texts: ['ホーム画面に追加すると、アプリのように使えます', '閉じる'], placed: [['[data-install-card]', '.dc-tiles']] },
   { name: 'S1 案内カード（PC では出ない）', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, ops: 2, total: 2, tilesInView: true, absent: ['[data-install-card]'] },
+  // D57（Ruling 119・120）: F1 ワルツ（監修済みが 1 件以上の時だけ）。基本の行 1・一覧 1＝2。見出しは種目名、基本の行は初期表示、行は表の件数
+  { name: 'F1 ワルツ', hash: '#/figures/waltz', screen: 'F1', kind: 'focus', requires: 'reviewed', ops: 2, total: 2, textKeys: ['basicCount', 'tabFigures'],
+    firstView: ['[data-basic]', '[data-list] [data-figure]'], figureRows: WALTZ_FIGURES.length, heading: 'ワルツ' },
+  // U1 のタイルから（実経路）: 画面が替わると見出し h1 にフォーカス
+  { name: 'F1（タイルから）', hash: '#/figures/waltz', via: { hash: '#/use', screen: 'S1' }, screen: 'F1', kind: 'focus', requires: 'reviewed', ops: 2, total: 2, focusHeading: true,
+    steps: [{ click: '[data-group="dance"] a >> nth=0' }, { wait: '[data-screen="F1"]' }] },
+  // S2 のフィガーの形: 見出しの下に「名前 · 型」・帯はフィガーの語・くわしくの「カウントの型」は無い（開くと 8＝ワルツは 1 減る）
+  { name: 'S2 フィガー', hash: REVIEWED ? `#/practice/waltz/${W1.slug}` : '#/practice/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', ops: 5, speedAndPlay: true,
+    texts: REVIEWED ? [`${figureNameJa('waltz', W1.englishName)} · ${spaced(W1.counts)}`] : [], strip: REVIEWED ? { labels: spaced(W1.counts) } : undefined },
+  { name: 'S2 フィガー・くわしく開', hash: REVIEWED ? `#/practice/waltz/${W1.slug}` : '#/practice/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', openMore: true, total: 8,
+    absent: ['[data-group="pattern"]'] },
+  // 長い名前（「ヘジテーションチェンジ · 1 2 3 1 2 3」）は見出しの下で 1 行増え、375 幅では声チップが ▶ の帯の下に入る（スクロールで届く。S5 と同じ扱い＝Ruling 71-6）。
+  // 速さと ▶ は初期表示のまま（speedAndPlay）なので ops は固定しない
+  { name: 'S2 2 小節のフィガー', hash: REVIEWED ? `#/practice/waltz/${W_TWO_BARS.slug}` : '#/practice/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', speedAndPlay: true,
+    strip: REVIEWED ? { labels: spaced(W_TWO_BARS.counts) } : undefined },
+  // 表に無い slug は S2 の基本へ置き換え（Ruling 120-4）
+  { name: 'S2 表に無いフィガー', hash: '#/practice/waltz/no-such-figure', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, landsOn: '#/practice/waltz', strip: { labels: '1 2 3' } },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' } },
   // D55（Ruling 114）: カウントの型の帯。ジャイブは 6 拍の型の 8 語（a も丸）・タンゴは S が Q の 2 倍の幅・320 でも 1 行
   { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
@@ -143,6 +186,11 @@ const STATES = [
   { name: 'S4 追加の行・名前を選んだ後', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, patterns: 8, pressed: 1,
     autoFilled: { from: 'reviewed', counts: '12&3', name: 'フォーラウェイリバース＆スリップピボット' }, textKeys: ['countsFromReviewed'],
     steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
+  // D52（3d2f51e で監修表が 20 件になった後も「自動入力なし」を 1 つ持つ）: 0 件のタンゴの追加の行で、監修していない照合済みのフィガー（一覧の 5 番目
+  // 「ナチュラルツイストターン」）を選ぶ → 欄は空・形は押されない・自動入力の行なし・「追加する」は押せない
+  { name: 'S4 追加の行・監修していない名前', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, total: 4, patterns: 8, pressed: 0,
+    nameChosen: 'ナチュラルツイストターン', absent: ['[data-auto-counts]'],
+    steps: [{ click: '.dc-dock-button' }, { click: '[data-group="figure-names"] .dc-chip >> nth=4' }] },
   // D52・Ruling 107・108: 2 本目のワルツ（waltzAuto）がこの名前を 12&3 で持つ → タップで欄に 12&3・形が 1 つ押され・「前に使ったカウントです」・
   // 「追加する」が押せる（名前をタップ → 追加するの 2 タップ）。操作の数は不変（6）。印の行は欄の aria-describedby に入る
   { name: 'S4 追加の行・前に使ったカウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzAuto], total: 6, patterns: 8, pressed: 1,
@@ -341,7 +389,8 @@ const sharedSeed = () => [...new Map(STATES.filter(state => !state.bulkSeed).fla
 const JAPANESE_ONLY_CHECKS = { voiceRows: undefined, actions: undefined, nameChoices: undefined, nameChosen: undefined, sameNameCopy: undefined,
   doneName: undefined, linkGroups: undefined, barNote: undefined };
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
-const CHECKED = ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES;
+const SKIPPED = STATES.filter(state => state.requires === 'reviewed' && !REVIEWED);
+const CHECKED = (ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES).filter(state => !SKIPPED.includes(state));
 
 // 偽マイク（ファイル指定なし＝既定のビープ。S8 に「録音をはじめる」で入るため。既存の状態には無害。Ruling 63-4）
 const browser = await chromium.launch({ channel: 'chrome', args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] }).catch(error => {
@@ -351,6 +400,7 @@ const browser = await chromium.launch({ channel: 'chrome', args: ['--use-fake-de
 });
 
 let violations = 0;
+for (const state of SKIPPED) console.log(`\n== ${state.name} : スキップ（監修表にワルツが無い。Ruling 122-3）`);
 const report = (label, problems) => {
   console.log(`\n== ${label} : ${problems.length ? `${problems.length} 件の違反` : 'PASS'}`);
   for (const problem of problems) console.log(`  ${problem}`);
@@ -872,7 +922,7 @@ function audit({ state, LIMITS, reducedMotion }) {
   }
 
   // U12 S1（U1）: 10種目が初期表示に入る（Ruling 16・D56 Ruling 118-3 の tilesInView）
-  if (state.tilesInView) {
+  if (state.tilesInView && !(state.narrow && state.tilesMayScrollAt320)) {
     const tiles = [...document.querySelectorAll('[data-group="dance"] > *')];
     if (tiles.length !== 10) issues.push(`U12 expected 10 dance tiles, found ${tiles.length}`);
     tiles.forEach((tile, index) => { if (!fullyInView(tile)) issues.push(`U12 dance tile ${index + 1} is not fully in the first view (bottom ${Math.round(tile.getBoundingClientRect().bottom)} > ${Math.round(usableBottom)})`); });
@@ -1015,6 +1065,28 @@ function audit({ state, LIMITS, reducedMotion }) {
       if (!symbols || !(symbols.compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('D52 the auto-counts line must come after the allowed-symbols line');
     }
     if (form?.querySelector('.dc-primary')?.disabled) issues.push('D52 "Add" is not pressable after the counts were filled in');
+  }
+  // D57（Ruling 119-2）: U1 のタイルの行き先
+  if (state.tileHrefs) {
+    const hrefs = [...document.querySelectorAll('[data-group="dance"] a')].map(tile => tile.getAttribute('href'));
+    if (JSON.stringify(hrefs) !== JSON.stringify(state.tileHrefs)) issues.push(`R119 tile links ${JSON.stringify(hrefs)}, expected ${JSON.stringify(state.tileHrefs)}`);
+  }
+  // D57（Ruling 119-3・121-2）: F1 の行の数・見出し、前回の名前
+  if (state.figureRows !== undefined) {
+    const rows = [...document.querySelectorAll('[data-list] [data-figure]')].filter(visible);
+    if (rows.length !== state.figureRows) issues.push(`R119 ${rows.length} figure rows, expected ${state.figureRows}`);
+    const basic = document.querySelector('[data-basic]');
+    if (basic?.parentElement?.closest('[data-list]')) issues.push('R119 the basic count row is inside the list');
+  }
+  if (state.heading && !state.english && document.querySelector('main h1')?.textContent.trim() !== state.heading) issues.push(`R119 the heading reads "${document.querySelector('main h1')?.textContent.trim()}", expected "${state.heading}"`);
+  if (state.resumeLines) {
+    const name = document.querySelector('[data-resume] .dc-resume-text b');
+    const lines = name ? Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)) : 0;
+    if (lines > state.resumeLines) issues.push(`R121 the last practice takes ${lines} lines > ${state.resumeLines}`);
+  }
+  if (state.resumeName && !state.english) {
+    const name = document.querySelector('[data-resume] .dc-resume-text b')?.textContent.trim();
+    if (name !== state.resumeName) issues.push(`R121 the last practice reads "${name}", expected "${state.resumeName}"`);
   }
   // D55（Ruling 114-2・114-3）: 帯は 1 行で枠からはみ出さない（320 でも）・丸は 12 まで・状態の期待（語の並び・S が Q の 2 倍）
   for (const strip of document.querySelectorAll('.dc-beats')) {

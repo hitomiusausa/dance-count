@@ -31,6 +31,7 @@ export const APP_MESSAGES = {
     cannotPlayEmpty: 'No figures yet. You can fix this in “Make”.',
     cannotPlayFix: 'Some counts need fixing. You can fix this in “Make”.',
     recordFromMake: 'To record your own voice, go to “Make” on the cover.',
+    basicCount: 'Basic count',
     chooseDance: 'Choose a dance',
     danceGroup: 'Dances',
     lastTime: 'Last time',
@@ -322,6 +323,7 @@ export const APP_MESSAGES = {
     cannotPlayEmpty: 'フィガーがありません。「作る」で直せます。',
     cannotPlayFix: 'カウントに直す所があります。「作る」で直せます。',
     recordFromMake: '自分の声の録音は、表紙の「作る」\u2060から。',   // \u2060＝「」」の直後で折り返さない（320 幅で「から。」だけが次の行に残る）
+    basicCount: '基本のカウント',
     chooseDance: '種目を選んでください',
     danceGroup: '種目',
     lastTime: '前回',

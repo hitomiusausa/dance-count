@@ -3,12 +3,14 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { DanceName } from '../i18n/DanceName.tsx';
+import { LastPracticeName } from '../i18n/LastPracticeName.tsx';
 import { formatCounts } from '../lib/count-display.ts';
 import { showsInstallCard } from '../lib/install-card.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
 import { buildHash } from '../router/routes.ts';
+import { reviewedFigures } from '../routines/reviewed-counts.ts';
 import { useI18n } from '../state/i18n.ts';
-import { resumePractice } from '../state/resume.ts';
+import { lastPractice, resumePractice } from '../state/resume.ts';
 import { useSettings } from '../state/settings.ts';
 
 const DANCE_IDS = Object.keys(DANCE_PROFILES);
@@ -21,7 +23,7 @@ export function HomeScreen() {
   const locale = translator.locale;
   // 初めて鳴った後の 1 回だけのカード（段7・Ruling 92-7・D42）。× で閉じたら二度と出さない
   const installCard = showsInstallCard({ hints: settings.hints, kind: platformKind(), standalone: isStandalone() });
-  const lastDanceId = settings.lastDanceId;
+  const last = lastPractice(settings);
 
   return (
     <main class="dc-screen dc-home" data-screen="S1">
@@ -33,11 +35,11 @@ export function HomeScreen() {
           <span>{translator.t('switchLanguage')}</span>
         </button>
       </header>
-      {lastDanceId && (
-        <button type="button" class="dc-resume" data-resume onClick={() => resumePractice(lastDanceId)}>
+      {last && (
+        <button type="button" class="dc-resume" data-resume onClick={() => resumePractice(last)}>
           <span class="dc-resume-text">
             <small>{translator.t('lastTime')}</small>
-            <b><DanceName danceId={lastDanceId} locale={locale} /></b>
+            <b data-ellipsis><LastPracticeName last={last} locale={locale} /></b>
           </span>
           <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
         </button>
@@ -45,7 +47,8 @@ export function HomeScreen() {
       <h1 class="dc-heading">{translator.t('chooseDance')}</h1>
       <div class="dc-tiles" role="group" aria-label={translator.t('danceGroup')} data-group="dance">
         {DANCE_IDS.map(danceId => (
-          <a key={danceId} class="dc-tile" href={buildHash({ screen: 'S2', params: { danceId } })}>
+          // D57（Ruling 119-2）: 監修済みのフィガーが 1 件以上の種目は F1（一覧）、0 件は今までどおり S2
+          <a key={danceId} class="dc-tile" href={buildHash({ screen: reviewedFigures(danceId).length > 0 ? 'F1' : 'S2', params: { danceId } })}>
             <b><DanceName danceId={danceId} locale={locale} /></b>
             <small>{formatCounts(danceId, (DANCE_PROFILES as Record<string, { templates: readonly string[] }>)[danceId]!.templates[0]!)}</small>
           </a>

@@ -111,6 +111,13 @@ button { cursor: pointer; }
 .dc-row-text .dc-row-warn { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--warn-ink); }
 .dc-row-warn .dc-ic { width: 20px; height: 20px; }
 .dc-edit-in-make { margin-top: 12px; }
+
+/* F1 種目のフィガー（D57・Ruling 119-3）: 一番上の「基本のカウント」は主（紺塗り・56px 以上）。一覧の行は U2 の「押すとすぐ鳴る」行と同じ型 */
+.dc-row-head.dc-basic-row { min-height: 64px; padding: 8px 12px; border-radius: var(--r); background: var(--primary); color: var(--on-primary); }
+.dc-row-head.dc-basic-row .dc-row-text small { color: #E4E7EE; }
+.dc-basic-row .dc-play-tag { background: var(--on-primary); color: var(--primary); }
+.dc-figures-heading { margin-top: 20px; }
+.dc-figures .dc-list { margin-top: 4px; }
 .dc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
 .dc-tile { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 6px 2px; text-decoration: none;
   border-bottom: var(--bw) solid var(--line); }
@@ -565,3 +572,7 @@ button { cursor: pointer; }
 }
 /* 段8 Task 12（final-review I1）: 種目名は語の境（<wbr>・空白）でだけ折る。1 語が入らない時も語の途中では折らない（overflow-wrap: normal） */
 .dc-dance-name { word-break: keep-all; overflow-wrap: normal; }
+/* D57: 前回の「ワルツ · ウィスク」のフィガー名も語の途中で折らない（375×548 で「ウィス／ク」になった）。1 行に入らない長い名前だけ最後に折る */
+.dc-figure-name { word-break: keep-all; overflow-wrap: anywhere; }
+/* D57: 前回の名前は 2 行まで（U10）。「ワルツ · フォーラウェイリバース＆スリップピボット」のような長い名前は 2 行目で「…」（[data-ellipsis]・Ruling 47） */
+.dc-resume-text b[data-ellipsis] { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
