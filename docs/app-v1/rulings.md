@@ -2295,6 +2295,11 @@ iOS の実物のメニュー名「"ファイル"に保存」と字面を揃え�
 ## 代理決定の台帳（D39 の続き）
 
 - **D40（代理決定・ひとみうさ確認待ち）同じ先生の声の鍵は 配る人の名前＋`sourceId`＋`locale`**（束。旧単体パックは名前なし同士の `sourceId`＋`locale`）。Ruling 84-4 の本文を読み替える。— 代案: `distributor.id`（設定に 1 回だけ作る UUID）を束に足して鍵にする（段7以降。Ruling 80-6 で版は上げずに足せる）。— 代償: 同じ姓の別の先生（「山田」が 2 人）の同じ言葉の声は「使う」で置き換わる（確認の画面に 1 行出る）。先生が名前を変えて送り直すと 2 つ残る（新しい方がその場で選ばれる。古い方は S7 で消せる）。
+- **D41（代理決定・確認待ち）S12 の手順の文は iOS 26.3 の Simulator で辿った実物どおり**（「…」→「共有」→「もっと見る」→「ホーム画面に追加」→「追加」。Ruling 92-2）。— 代案: 手順を 3 行に縮める（「もっと見る」を省く。大きい iPhone では要らない可能性）。実機 1 で決める。
+- **D42（代理決定・確認待ち）S1 の初回案内カードは「初めて鳴らした後」に iPhone・Android のブラウザだけで出し、× で二度と出さない**（Ruling 92-7）。— 代案: 常に出す（追加するまで）／PC にも出す。
+- **D43（代理決定・確認待ち）S12（iOS Safari）の最後に「録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。追加したアプリで、もう一度録音・受け取りをしてください。」の 1 行を出す**（F34。Ruling 92-2）。— 代案: 出さない（S7 や S8 の説明に移す／生徒には関係が薄いので先生向けの S6「先生の方へ」に置く）。
+- **D44（代理決定・確認待ち）アイコンは仮: 紺 `#1B2A4A` の角丸四角に白の太字「DC」（Inter 800）**（Ruling 93-2。iOS の自動の「D」と同系で違和感が無い）。— 代案: (a) 白の ▶（再生）(b) 白のメトロノームの線画 (c) ひとみうさの描き下ろし。**審美判断はひとみうさ**（CLAUDE.md）。PNG 4 枚の差し替えだけなので段7を止めない。
+- **D45（代理決定・確認待ち）更新の帯は「新しい版があります。」＋「更新する」だけ・閉じるボタン無し・集中画面には出さない・押さなくても次に完全に閉じて開けば新しくなる**（Ruling 90）。— 代案: 自動で更新（`autoUpdate`。練習中に再読み込みが起きうる）／帯を全画面に出す。
 
 ## 計画者の発見 1〜18（要約）
 
@@ -2337,3 +2342,253 @@ iOS の実物のメニュー名「"ファイル"に保存」と字面を揃え�
 - **「最近の項目」→「最近使った項目」**（Task 4〜5 のレビュー I1）: iOS 26.3 の SE シミュレーターの Files のタブ名が「最近使った項目」。案内文の 3 行目（`instructionsStep3`）と S10 の説明（`receiveHelpRecents`）を直した（Task 7 の追加 `2f4fe24`）。Ruling 82-6・83-1・87-6 の本文の「最近の項目」はこの読み替え（各 Ruling の注記）。
 - **受け取りの保存の途中の失敗**（Task 7 M2・M3）: 声は書けたらすぐ選ぶ（`ImportWriter.voiceSaved`）・`commitImport` が投げても「保存できませんでした」（`e089f2c`）。
 - **通し確認の Open question 1〜6**（`docs/app-v1/stage5-usability-walk.md` §5。既定が明快で危険が小さいので Fable に回さずコントローラーが採った。Task 10b `555056c`）: (1) 600px 未満の S7 は 2 つのボタンを横 1 行（Ruling 86-1 の注記）(2) 声の指定なしの S9 は 名前 → ルーティン → 声（Ruling 82-2 の注記）(3) iOS Safari の「す。」だけの行・句の中の改行は**据え置き**（CSS で直せない。文言を短くするかはひとみうさ）(4) 録音もルーティンも無い S9 は「声かルーティンを選ぶと…」を出さない (5) S10「受け取りました」の出口 2 つ（戻る・ホームへ）は**このまま** (6) 声をファイルにできなかった時の 1 行「この声はファイルにできませんでした。」。あわせて Task 9 のレビュー I1: `smoke:share` に S8 完成「配る ›」と S3 の行「配る」から S9 が選ばれた状態で開く場面を足した。
+
+---
+
+# 段7（PWA）計画前の裁定 — Fable（2026-10-12・代理決定を含む）
+
+作成: 2026-10-12 朝 / ブランチ `agent/app-v1`（HEAD `555056c`） / 書き手: Fable（設計と裁定だけ。コードと `docs/app-v1/rulings.md` には触れていない。採用が決まったら計画者がこの文書の Ruling 88〜95 と D41〜D45 を `rulings.md` 末尾へ転記する）。
+
+前提:
+- 段5（配る・受け取る）は実装・レビュー済み。段7は仕様 §10「Service Worker」「Capacitor 前提」・§4 S12・§7「保存先」・§8 技術（share_target）・§11「オフラインで音声未キャッシュ」・§14 G7、全体地図の段7行・持ち越し表（`?v=`・`visibilitychange`・`persist()`・D33）・Ruling 79-2（受け口の契約）を前提にする。
+- ひとみうさの常設要件: 60〜70代の初めての人が止まらない・迷わない（S12 の手順は **iPhone SE の本物の Safari** でそのまま辿れること）・iPhone SE（375×548）が基準・320 幅で横スクロールなし。
+- **push・デプロイ・DNS・配信基盤の設定・課金は禁止のまま**。段7の実機確認は https が要る（F39）ので、その手段だけはひとみうさに決めてもらう（§3）。
+- 6b（日本語の標準の声）は決定カード待ち。**段7は英語の声だけで完成し、日本語が `public/audio/default-ja-female-v1/` に入った日にコードを 1 行も変えずに precache に乗る**作りにする（Ruling 89-2）。
+
+---
+
+## 0. コード・環境・外部で確かめた事実（裁定の根拠。推測は明記）
+
+### 0-1. アプリと公開ビルド（`npm run build` の現物。2026-10-12 09:50 の `dist/`）
+
+- `dist/` は **29MB・1,055 ファイル**。内訳: `index.html` 471B・`assets/index-*.js` 200KB・`assets/index-*.css` 443KB・`audio/default-en-female-v1/` 744KB（manifest＋12 WAV）・**書体 1,048 ファイル＝woff2 12MB＋woff 16MB**（Noto Sans JP 992・Inter 56。`fonts.css` が 4 太さ × `@fontsource` の unicode-range 分割を import するので、Vite が全サブセットを写す）。**書体を丸ごと precache すると 28MB**＝不可。
+- **アプリの文字が実際に要るサブセット**（スクラッチの `font-subsets.mjs` で実測。対象: `messages.ts`・`ui-messages.js`（種目名）・`figure-terminology.js`（フィガー名）・`count-vocabularies.js`・`dance-profiles.js` の全文字 494 種 ↔ `@fontsource/noto-sans-jp/400.css`・`inter/400.css` の `unicode-range`）: **Noto Sans JP は 124 サブセット中 39**（`[59][60][63][65][80][81][84][86][90]〜[119]`＋`latin`。400 で 416KB・**4 太さで約 1.66MB**）、**Inter は `latin` だけ**（4 太さで約 95KB）。サブセットの番号と unicode-range は太さをまたいで同じ（`[59]` の 400 と 700 を diff で確認）。dist のファイル名は `noto-sans-jp-59-400-normal-<hash>.woff2`（角括弧は無い）。
+- `public/` は `audio/` だけ。`index.html` は `<link rel="icon" href="data:,">`＝**アイコン・manifest・SW は無い**。`vite-plugin-pwa` も未導入。`theme-color` は `#1B2A4A`。
+- `platform/files.ts:80-100` 受け口の契約（Ruling 79-2・段5 答え 8）: `INBOX_CACHE='dance-count-inbox'`・`INBOX_KEY='./inbox/bundle'`・`X-File-Name`（`encodeURIComponent`）・読んだら消す。`ReceiveScreen.tsx:69-70` はマウント時に `takeInboxFile()`。`smoke-share.js` は `caches` に直接 put して inbox を検査済み。
+- `platform/page.ts` に `reloadPage()`（§11「更新する」。「段7で SW の更新に差し替える」のコメントつき）・`isLineInAppBrowser()`・`externalBrowserUrl()`。`display-mode`・UA の判定・`beforeinstallprompt` の捕まえ方は無い。
+- `platform/storage.ts:118-128` `requestPersistentStorage()`（`persisted()` が真なら呼ばない）。呼び元は段4の「最初の語の保存」だけ（Ruling 56-6）。
+- `settings.ts` の `hints` は `wakeLockTipShown`・`backupTipShownForRecording`・`backupTipShownForRoutine` の 3 つ。仕様 §7 の `homeScreenCardDismissed` は**未実装**（S1 の初回案内カードも無い）。`lastDanceId` は S2 のマウントで書く（`PracticeScreen.tsx:48`）＝「再生に成功した」の印ではない。
+- `router/routes.ts` に S12（`#/help/install`・list・親 S6）・S13 は登録済みだが `App.tsx` の `SIMPLE_SCREENS` に無い（S1 へ落ちる）。`UiState` は 6 値（「以後の追加は裁定」）。`SoundHelpScreen.tsx`（S11）が「見出し＋`ol.dc-steps`＋`p.dc-body`」の型＝S12 の雛形。
+- `voice-pack-loader.js:19` は manifest の語に `revision` があれば音声 URL に `?v=<revision>` を付ける。英パックで `revision` を持つのは **`six.wav` だけ**（`brighter-2st-20260712`）。
+- `practice/session.ts:160-162` 標準の声の読み込みが投げたら `notice:'voice-missing'`（§11「この声はまだ端末に入っていません」）。受け取った・録った声は IndexedDB から decode するので網には出ない。
+- `RoutineEditScreen.tsx:66-76` 開いている行は「戻る・ハッシュの切り替え」の時だけ `close()` → `persist({replace:false})`。`visibilitychange` は `viewport.ts`・`wake-lock.ts`（platform）だけが使う。境界テストは `'visibilitychange'` の文字列・`matchMedia`・裸の `navigator`・`caches` を `platform/` 以外で禁止。
+- `tools/check-dist.js`: `REQUIRED`＝`index.html`＋`standard-voices.json` の各 `audio/<id>/manifest.json`、`FORBIDDEN_PATHS` に `/\.html$/`（`index.html` 以外）、音声以外の全ファイルを文字列走査（`sw.js`・`manifest.webmanifest` も走査対象になる）。`checkDistAudio` が JSON に無いパックを落とす。
+- `tools/check-app-ui.js`: 状態ごとに `userAgent`（`LINE_UA`）・`addInitScript`（`fakeShare`）で端末の違いを作れる。375×548 の `opsSmall`・`firstView`。段5の終わりで **262 項目**。`tsconfig.json` の `include` は `src/app`・`test/app`・`vite.config.ts`、`lib` は DOM（SW の TS を同じプログラムに入れると `WebWorker` と衝突する）。
+
+### 0-2. 外部事実（確認済み／推測を分ける。F28 の続き）
+
+| # | 事実 | 状態 | 出典 |
+|---|---|---|---|
+| F29 | **`vite-plugin-pwa` 2.0.0（2026-10-03 公開）の peerDependencies は `vite: ^3.1.0 … \|\| ^8.0.0`・`workbox-build ^7.4.1`・`workbox-window ^7.4.1`**（`@vite-pwa/assets-generator` は optional）。Vite 8.3.4 で使える | **確認済み（npm registry `npm view`）** | https://www.npmjs.com/package/vite-plugin-pwa |
+| F30 | `workbox-build` 最新は 7.4.1（`workbox-precaching`・`workbox-routing`・`workbox-strategies`・`workbox-expiration` も同じ版） | 確認済み（npm） | 同上 |
+| F31 | `vite-plugin-pwa` の `virtual:pwa-register/preact` は `useRegisterSW({ onNeedRefresh, onOfflineReady, onRegisteredSW })` → `{ needRefresh, offlineReady, updateServiceWorker(reload?) }`。`strategies:'injectManifest'` は自前の SW（`srcDir`＋`filename`）に `self.__WB_MANIFEST` を注入し `precacheAndRoute` で使う。`devOptions.enabled` が無い限り dev では SW を登録しない。既定で `cleanupOutdatedCaches:true`・`navigateFallback:'index.html'`・`scope` は Vite の `base` | **確認済み（Context7: vite-pwa/vite-plugin-pwa docs・options.ts）** | https://vite-pwa-org.netlify.app/guide/inject-manifest ・ /frameworks/preact |
+| F32 | Workbox precache の照合は既定で **`utm_` で始まるクエリと `fbclid` だけを無視**（`ignoreURLParametersMatching`）。`?v=…` は無視されない＝precache に `six.wav` があっても `six.wav?v=brighter…` は**当たらず網に出る**（オフラインで失敗） | 既定の文は確認済み（developer.chrome.com）。`?v=` が外れるのはその規則からの**推論** | https://developer.chrome.com/docs/workbox/modules/workbox-precaching |
+| F33 | **iOS 26.3 の Safari（Simulator・iPhone SE 第3世代）の下のバー**: 「‹」「ページメニュー」「アドレス」「更新」「**…（さらに表示）**」。「…」を押すと「**共有**」が最上段。共有シートの最初の列は「コピー」「ブックマークに追加」「リーディングリストに追加」「**もっと見る**」で、**「ホーム画面に追加」は「もっと見る」を押した後の一覧の 4 番目**（SE の高さでは最初は見えない）。追加の画面は「名前（`document.title`＝『Dance Count — for Ballroom』）」「URL」「**Web アプリとして開く**（既定オン）」「追加」。`apple-touch-icon` が無いと **theme-color の紺に白い「D」の自動アイコン**になり、ホームの名前は「DanceCount…」に切れる | **確認済み（Simulator で実際に辿った。撮影 `scratchpad/sim-safari-{s1,more}.png`・`sim-share-{sheet,more}.png`・`sim-a2hs-dialog2.png`・`sim-home2.png`）** | — |
+| F34 | **ホーム画面から起動したアプリは Safari と保存領域が別**: Safari のタブで「前回: ワルツ」カードが出ていた状態で追加 → ホーム画面から起動すると**カードが無い**（settings の IndexedDB が引き継がれない）。起動は全画面（Safari の枠なし・見える高さ 667＝D33 の詰めた配置は当たらない・声チップは初期表示）。WebKit は 2022 年に「by design」と答えている | **確認済み（Simulator・iOS 26.3。撮影 `sim-standalone2.png`）**。WebKit の立場は Bugzilla の本文 | https://bugs.webkit.org/show_bug.cgi?id=181849 |
+| F35 | WebKit の保存ポリシー（Safari 17・iOS 17 以降）: 既定は best-effort で消えうる。**`navigator.storage.persist()` は「ホーム画面の Web アプリとして開いているか」などのヒューリスティックで許可**し、persistent な origin は eviction から除外。ホーム画面アプリの容量は Safari と同じ | **確認済み（webkit.org の本文）** | https://webkit.org/blog/14403/updates-to-storage-policy/ |
+| F36 | Safari の「7 日未使用で消す」規則はホーム画面アプリでは**使用日のカウンタが別**（2020 年の WebKit の追記）。7 日ちょうどで消えた報告（cookie）も残る | 推測混じり（追記は二次情報。F5 と同じ） | https://developer.apple.com/forums/thread/710157 |
+| F37 | `share_target` はインストール済み PWA だけ・ファイルは `POST`＋`multipart/form-data`＋`params.files[{name, accept}]`・SW の `fetch` で受けて **303** で画面へ。MDN は「Limited availability」。**iOS Safari は非対応**（F6） | 書式は確認済み（MDN）。iOS 非対応は一般知識（**推測**。F6 のまま） | https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/share_target |
+| F38 | `beforeinstallprompt` は MDN で「Limited availability」。Chromium 系（Chrome・Edge・Samsung）だけで、Safari・Firefox には無い | 「Limited」は確認済み。対応ブラウザの内訳は**推測**（MDN の表は取得できず） | https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeinstallprompt_event |
+| F39 | Service Worker・`caches`・`navigator.share({files})` は **secure context だけ**。`http://<Mac の IP>:5199`（段2〜5の実機確認の経路）では SW が登録されない＝**段7の実機確認（G7・更新・share_target）は https の置き場が要る**。`http://localhost` は WebKit でも secure 扱い（Simulator は Mac の localhost を見る）の見込み | 規則は確認済み（一般・MDN）。**localhost の扱いは推測**（Simulator で最初に確かめる） | https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API |
+| F40 | `persist()` は Firefox では**許可ダイアログが出る**（Chrome・Safari は出ない） | **推測**（一般知識。MDN 本文には無かった） | https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist |
+| F41 | iOS 26 は Safari から追加した**すべてのサイトを既定で Web アプリとして開く**（「Web アプリとして開く」を切れば従来のブックマーク） | 確認済み（F33 の実物のトグル）＋ WebKit／MacRumors の記事 | https://www.macrumors.com/ ・ https://webkit.org/ |
+
+Simulator の後始末: **iPhone SE（`0E53FFB2…`）のホーム画面 2 ページ目に「Dance Count — for Ballroom」（`http://localhost:5199/?r=…`）の Web クリップが残っている**。段7の確認で使い回してよい（起動は AXe で座標タップ。`scratchpad` の AXe はセッションで消えるので GitHub releases から入れ直す。HANDOVER §8 のとおり）。
+
+---
+
+## 1. 計画者が止まる問い（この文書で全部答える）
+
+| # | 問い | 答えの場所 |
+|---|---|---|
+| Q1 | plugin（`vite-plugin-pwa`）か手書き SW か。generateSW か injectManifest か。版・登録の置き場・dev での扱い | Ruling 88 |
+| Q2 | precache の一覧（殻・書体・英パック・日本語は後で）・書体 28MB の扱い・runtime caching・`?v=`・上限と番人 | Ruling 89 |
+| Q3 | 更新の流れ（prompt／auto）・帯の置き場と文言・確認の頻度・「新しすぎるファイル」の「更新する」 | Ruling 90 |
+| Q4 | オフラインの印をどこに出すか | Ruling 91 |
+| Q5 | S12 の中身（iOS Safari／iOS 他ブラウザ／Android Chrome／PC／追加済み）・S1 の初回案内カード・インストールのボタン・**Safari と保存領域が別**（F34）をどう伝えるか | Ruling 92・D41〜D43 |
+| Q6 | manifest・アイコン・`share_target` と SW の POST 受け（段5の契約） | Ruling 93・D44 |
+| Q7 | `persist()` の方針（段4の前倒し＋ルーティン＋受け取り＋起動時）・`visibilitychange: hidden` で開いている行を確定 | Ruling 94 |
+| Q8 | 検査: 単体・`smoke:pwa`（オフライン・更新・share_target）・`ui:check` の状態・iOS Simulator・実機確認表・完了条件 | Ruling 95 |
+
+---
+
+## 2. 裁定
+
+## Ruling 88（Q1）道具 — `vite-plugin-pwa` 2.0.0 ＋ `injectManifest`（自前の `src/sw.ts`）＋ Workbox 7.4.1。登録は `platform/pwa.ts` だけ。dev では SW を動かさない
+
+**決定**:
+1. **`vite-plugin-pwa@2.0.0`** を devDependencies に固定（F29。Vite 8 対応の正式版。`workbox-window` は peer なので明示して入れる）。SW は **`strategies:'injectManifest'`・`srcDir:'src'`・`filename:'sw.ts'`**（`src/app/` の外。境界テストの対象外。`/// <reference lib="webworker" />` を頭に置き、`tsconfig.sw.json`（`lib:["ES2022","WebWorker"]`・`include:["src/sw.ts"]`）を `npm run typecheck` に足す＝`tsc -p tsconfig.json && tsc -p tsconfig.sw.json`）。devDependencies に `workbox-precaching`・`workbox-routing`・`workbox-strategies`・`workbox-expiration`（すべて 7.4.1）。
+2. **generateSW にしない理由**: share_target の POST（`formData` を読んで Cache に置き 303）は `runtimeCaching` の文字列ハンドラでは書けない（Ruling 93-3）。`?v=` の無視・書体の runtime caching・POST の 3 つを 1 つの SW に書く方が、generateSW の設定を曲げるより読める。
+3. **手書き SW にしない理由**: precache の一覧（ハッシュ付きファイル名）と revision を人手で管理すると更新の事故（古い JS が残る・manifest の revision 漏れ）が起きる。plugin が注入する `self.__WB_MANIFEST` と `cleanupOutdatedCaches()` に任せる。
+4. **登録と更新の面は `src/app/platform/pwa.ts` だけ**（`virtual:pwa-register/preact` の `useRegisterSW` をここで包む。`navigator.serviceWorker` は plugin の仮想モジュールの中にあり、アプリの `.ts` には現れない）。公開する口: `usePwaUpdate(): { updateReady: boolean; applyUpdate(): Promise<void> }`・`checkForUpdateThenReload(): Promise<void>`（Ruling 90-5）・`isStandalone(): boolean`（`matchMedia('(display-mode: standalone)')` ‖ `navigator.standalone`）・`platformKind(): 'ios-safari'|'ios-other'|'android'|'desktop'`（UA。iPadOS の Mac 風 UA は `desktop` でよい）・`captureInstallPrompt()`／`showInstallPrompt(): Promise<boolean>`（`beforeinstallprompt`。`main.tsx` の最初で捕まえる。無ければ `null`）。
+5. **`devOptions.enabled` は付けない**（dev の `npm run dev` に SW を持ち込まない。`ui:check`・`smoke:*` の dev 経路は今のまま）。SW の検査は **公開ビルドを静的に配る**経路だけで行う（Ruling 95-2）。`npm run preview`（4174）も SW つきになるので、`ui:check` の preview 実行はそのまま SW 込みで通ることを完了条件に入れる。
+6. Vite の `base:'./'` のまま。plugin の `scope`・`start_url` は `'./'`（manifest URL からの相対。仕様 §10「相対」）。**計画者はスクラッチで `base:'./'` のまま `sw.js` が dist 直下に出て `./sw.js` で登録されることを先に確かめる**（§4 の実証 (a)）。
+
+**理由**: 段7の中身は「precache・更新・share_target」の 3 つで、plugin はその 1 つ目と 2 つ目の面倒な所（ハッシュ・revision・古いキャッシュの掃除・`needRefresh`）を正式な Vite 8 対応で引き受ける。残りの 2 つは自前の SW に 30 行で書ける。
+
+**外れた時の代償**: devDependencies が 6 つ増える。plugin の版上げは Vite の版上げと同時に見る（peer の範囲）。dev に SW が無いので「dev で見えて preview で違う」事故はスモークで拾う。
+
+## Ruling 89（Q2）precache — 殻＋manifest＋アイコン＋**`standard-voices.json` の全パック**＋**アプリの文字が要る書体サブセットだけ（woff2・4 太さ・約 1.8MB）**。残りの書体は runtime CacheFirst。`?v=` は `ignoreURLParametersMatching`。上限 6MB と番人
+
+**決定**:
+1. **precache に入れる物（`injectManifest.globPatterns`）**: `index.html`・`assets/index-*.js`・`assets/index-*.css`・`manifest.webmanifest`・`icons/*`（Ruling 93）・**`audio/**/*`**（`public/audio/` の全部。0-1 のとおり `check-dist` が「JSON に無いパック」を落とすので、`public/audio/` にあるのは正本のパックだけ）・**書体はアプリの文字が要るサブセットの woff2 だけ**（下の 3.）。`.woff` は入れない（woff2 の無い端末は想定しない。iOS 10 以降・Chrome は woff2）。見込み: 殻 0.65MB＋英パック 0.74MB＋書体 1.76MB＋アイコン ≒ **3.3MB**。日本語パックが入っても ≒ 4MB。
+2. **日本語の声は「JSON に行を足し `public/audio/` に置く」（6c）だけで precache に乗る**。段7のコードに ID を書かない（`audio/**/*` の glob と `check-dist` の JSON 照合で足りる）。`check-dist` に足す番人: **`standard-voices.json` の各パックの manifest と 12 語の WAV が `dist/sw.js` の precache 一覧に全部ある**（無ければ「ja が入ったのに precache されない」事故）。
+3. **書体の決め方（新規 `tools/fonts/needed-subsets.js`。純粋・Node）**: `src/app/i18n/messages.ts`・`src/engine/ui-messages.js`・`src/engine/figure-terminology.js`・`src/engine/count-vocabularies.js`・`src/engine/dance-profiles.js` の全文字を集め、`node_modules/@fontsource/noto-sans-jp/400.css`・`inter/400.css` の `unicode-range` と照合し、**要るサブセット名の一覧**（例 `noto-sans-jp-59`・`inter-latin`）を返す。太さは `fonts.css` の import と同じ **`[400,600,700,800]`**（テストで `fonts.css` の import の太さと一致を固定）。`vite.config.ts` はこの関数で `globPatterns` を作る: `assets/{noto-sans-jp-59,…,inter-latin}-{400,600,700,800}-normal-*.woff2`。0-1 の実測で **Noto 39＋Inter 1＝40 サブセット × 4 太さ＝160 ファイル・約 1.76MB**。
+   - 文字を足したら（段8の S13 の長文など）自動で一覧が変わる。**ユーザーが打つ名前**（ルーティン名・先生の名前・フィガー名の自由入力）の字は一覧に無いことがある → 4.
+   - 番人（`check-dist`）: 一覧のサブセット × 4 太さの woff2 が precache に**全部ある**・`.woff` が 1 つも無い・一覧に無い Noto サブセットが precache に無い（膨らみの検出）・**precache の合計 ≤ `PRECACHE_MAX_BYTES = 6 * 1024 * 1024`**（定数はコード先頭。日本語パック込みでも余る）。
+4. **runtime caching（SW の `registerRoute`）**: `assets/*.woff2` を **CacheFirst**（`cacheName:'dance-count-fonts'`・`ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 365日 })`）。一度表示した字のサブセットはオフラインでも残る。まだ見たことの無い字は `font-display: swap` で**端末の書体に落ちる**（止まらない。見た目だけ）。ほかに網に出る物は無い（外部送信なし。§12）。
+5. **`?v=`（持ち越し）**: `precacheAndRoute(self.__WB_MANIFEST, { ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/] })`（既定の 2 つを残して `v` を足す。F32）。エンジン（`voice-pack-loader.js`）は触らない。差し替え時のキャッシュ対策は precache の revision（ファイルのハッシュ）が引き受ける。
+6. **ナビゲーション**: `registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))`（ハッシュルーターなので `#/…` はすべて `index.html`。`allowlist` は要らない）。`cleanupOutdatedCaches()`。
+7. **`dist/` の 29MB はそのまま**（`.woff` と要らないサブセットは配信サーバーに置かれるだけで、端末は読まない）。削るのは段8以降の任意（`build.rollupOptions` で `.woff` を落とす等）。段7では触らない。
+
+**理由**: 「28MB の書体を全部」は iPhone の最初の起動で数分の待ちと容量の無駄、「書体を一切 precache しない」は機内モードで日本語が端末の書体に化ける。「アプリの文字が要る分だけ」は 1.8MB で、しかも文字を足せば一覧が追従し、番人が漏れを止める。英パック 0.74MB は precache に入れるのが仕様（§10）。
+
+**外れた時の代償**: ユーザーが打った珍しい字（旧字体など）はオフラインで端末の書体になる（許容。4.）。`needed-subsets.js` が `@fontsource` の CSS の形（コメント行＋`unicode-range`）に依存する＝`@fontsource` を上げた日にテストが落ちて気づく。precache が 3〜4MB なので、初回は網で数秒かかる（S1 は先に描ける。SW は後から入る）。
+
+## Ruling 90（Q3）更新 — `registerType:'prompt'`。帯は「新しい版があります。」＋「更新する」の 1 行・**ルート画面（S1 の最下段・S3・S6 の最上段）だけ**・自動で再読み込みしない。確認は起動時＋1 時間ごと。新しすぎるファイルの「更新する」は SW の更新に繋ぐ
+
+**決定**:
+1. **`registerType:'prompt'`**（`skipWaiting` しない）。新しい SW は待機し、ユーザーが「更新する」を押すか、**アプリを完全に閉じて次に開いた時**に新しい版になる（SW の標準の寿命。帯を押さなくてもいずれ更新される＝60〜70代が帯を理解しなくても困らない）。`autoUpdate` にしない理由: 仮想モジュールが制御の切り替わりで `location.reload()` を呼び、練習中の再生を止める（仕様 §10「自動で再読み込みしない」）。
+2. **帯（`.dc-update`・`role="status"`・`[data-alert]` と同じ枠の型・Ruling 30 の「枠は 1 つ」に数える）**: 文「新しい版があります。 / A new version is ready.」（18px・`<b>`）＋ `[data-alert-action]`「更新する / Update」（48px 以上）。閉じるボタンは**作らない**（放置しても害が無く、次に開けば消える）。押すと `updateServiceWorker(true)`（再読み込み）。再生中の画面には出ないので再生は切れない。
+3. **置き場**: **集中画面（S2・S4・S5・S8〜S11）には出さない**。ルート・一覧画面のうち **S3・S6・S7 は見出しの下（最上段）**、**S1 は最下段**（種目タイルの下＝仕様 §3 の「初回案内カード」と同じ場所・その上）。S1 で最上段にしない理由: 375×548 の U12（カード＋10 種目が初期表示に入る。余裕 4px）が崩れる。S1 では帯が初期表示に入らないことを**許す**（S1 で見えなくても S3・S6・次回起動で拾う）。`ui:check` の S1 の期待値は変えない。
+4. **確認の頻度（`platform/pwa.ts`）**: 登録時（起動のたび。plugin の既定）＋ **`UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000`** ごとに `registration.update()`（画面が見えている時だけ・`visibilitychange` で見えた時に前回から 1 時間以上なら即）。ホーム画面アプリは何日も生きるので起動時だけでは足りない。
+5. **「新しすぎるファイル」（§11・S10）の「更新する」**: `page.ts` の `reloadPage()` をそのまま呼ぶのをやめ、`pwa.ts` の `checkForUpdateThenReload()` に替える: `updateReady` なら `updateServiceWorker(true)`；そうでなければ `registration.update()` → **最大 `UPDATE_WAIT_MS = 5000`** 待って `needRefresh` になれば `updateServiceWorker(true)`、ならなければ `reloadPage()`（網が無い・最新のまま）。ボタンの文字は変えない。
+6. `offlineReady`（最初の precache 完了）は**何も出さない**（仕様 §10 に無い。60〜70代に「オフラインで使えます」の通知は意味が伝わらない。S12 の 1 行で言う）。
+7. **`UiState` に `update-ready` を足す**（見た目だけ。`pwa.ts` の `usePwaUpdate` が `uiState==='update-ready'` の時 `updateReady:true` を返す）。`ui:check` の状態: `S1 更新あり`（total 4・初期表示は 3 のまま・帯は最下段）・`S3 更新あり`（0 件・ops 2・帯は見出しの下・`[data-alert-action]` 1 つ）・`S6 更新あり`（ops 4 のまま・total 4）。
+
+**理由**: 帯は「見た人が押せば速い」だけの物で、押さなくても次の起動で新しくなる作りなら、60〜70代に理解を求めない。集中画面に出さないのは再生・録音・編集を帯で乱さないため。
+
+**外れた時の代償**: 更新が届くまで最長「次にアプリを完全に閉じて開くまで」（iOS のホーム画面アプリは数日生きることがある）。緊急の修正は S3・S6 の帯か、ひとみうさからの LINE で「一度閉じて開き直して」の一言。S1 の帯は 548 では見えない（許容）。
+
+## Ruling 91（Q4）オフラインの印 — 常設の印は作らない。網が要る場面は「標準の声の読み込み失敗」だけなので §11 の 1 文（`voice-missing`）で足りる
+
+**決定**:
+1. **オフラインのバッジ・帯・「オフラインで使えます」の通知は作らない**。precache 後に網が要る操作は無い（録った・受け取った声は IndexedDB、配る・受け取るはファイル）。
+2. §11「この声はまだ端末に入っていません。インターネットにつないで一度再生してください。」（`voiceMissing`。`session.ts:162` で既に出る）を**そのまま**使う。出るのは「precache が終わる前にオフラインになった」「ブラウザがキャッシュを消した」時だけ。
+3. `loadStandardVoice` の失敗を覚えない作り（`assets.ts`「失敗は覚えない」）はそのまま。SW が入った後は precache から当たるので失敗しない。
+4. `manifest.json` の fetch は `fetch(input)` のまま（SW が precache から返す）。`cache:'no-store'` を**戻さない**（段1で外した理由のとおり。§10）。
+
+**理由**: 印を増やすほど 60〜70代の画面が騒がしくなる。網が要る瞬間が 1 つなら、その瞬間の文 1 つで足りる。
+
+**外れた時の代償**: 「今オフラインか」をユーザーが知る手段が無い（知る必要が無い作りにしている）。
+
+## Ruling 92（Q5）S12「ホーム画面に追加する方法」— 端末ごとに 1 通りだけ出す・手順は本物の iOS 26 Safari で辿った文・S1 の初回案内カードは「初めて鳴らした後」・**Safari と追加したアプリは保存領域が別**（F34）を 1 行で言う
+
+**決定**:
+1. **端末の判定は `platform/pwa.ts`**（`platformKind()`・`isStandalone()`）。S12 はマウント時に 1 回読み、**該当する 1 通りだけ**を描く（4 通りを並べない。60〜70代は自分の端末がどれか分からない）。見出しは全部共通「ホーム画面に追加する / Add to Home Screen」。導入の 1 行（`p.dc-body`）「ホーム画面に追加すると、アプリのように開けて、電波が無くても使えます。 / Added to your Home Screen, it opens like an app and works without a signal.」。
+2. **iOS Safari（`ios-safari` ∧ 追加前）— 手順は F33 で辿ったとおり（`ol.dc-steps`・各行 18px・アイコン（線画 24px）を行頭に）**:
+   1. 「画面の下の「…」を押します。 / Tap “…” at the bottom of the screen.」（`more` のアイコン＝点 3 つ。線画で足す）
+   2. 「「共有」を押します。 / Tap “Share”.」（`share` のアイコン。段5で足し済み）
+   3. 「「もっと見る」を押し、「ホーム画面に追加」を押します。 / Tap “See More”, then “Add to Home Screen”.」（`plus-square` のアイコン＝iOS の ⊞。線画で足す）
+   4. 「右上の「追加」を押します。 / Tap “Add” at the top right.」
+   - 図解の SVG（仕様「図は SVG」）は**別に描かない**。行頭のアイコンが iOS の実物のアイコンと同じ形（…・共有・⊞）なら図の役目を果たす。絵が要るかは実機で 60〜70代の目で見てから（§3）。
+   - **最後の 1 行（`p.dc-hint`・16px・操作ではない。D43）**: 「録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。追加したアプリで、もう一度録音・受け取りをしてください。 / Recorded voices, received voices and routines don't carry over to the added app. Record or receive them again in the added app.」。F34 の実測が根拠。出す条件は iOS Safari ∧ 追加前（Android は Chrome と PWA で保存領域が同じ。**推測**＝実機確認表へ）。
+3. **iOS の他のブラウザ（`ios-other`）**: 手順を出さず 2 行「Safari で開くと、ホーム画面に追加できます。 / Open this page in Safari to add it to your Home Screen.」＋ `.dc-button--secondary`「アドレスをコピー / Copy the address」（`copyText(location.href)`＝`platform/files.ts` の既存。主要操作 1）。コピーできない時は読み取り専用の欄（S9 と同じ型）。
+4. **Android（`android`）**: `beforeinstallprompt` を捕まえていれば `.dc-primary`「ホーム画面に追加する / Add to Home Screen」（`showInstallPrompt()`。主要操作 1。押した後の結果は出さない＝OS の画面が続く）。捕まえていない（既に追加済み・対応外のブラウザ）時は手順 3 行「1. 右上の「⋮」を押します。 2. 「ホーム画面に追加」（または「アプリをインストール」）を押します。 3. 「インストール」を押します。」。**文言は推測**（Android の実機が無い。§3）。
+5. **PC（`desktop`）**: 1 行「iPhone や Android で開くと、ホーム画面に追加できます。 / Open this page on your phone to add it to the Home Screen.」＋ `.dc-button--secondary`「アドレスをコピー」。PC の「アドレスバーのインストール」は書かない（PC で練習する人は少ない・ブラウザごとに絵が違う）。
+6. **追加済み（`isStandalone()`）**: 1 行「このアプリはホーム画面から開いています。追加は済んでいます。 / You're using the app from your Home Screen. Nothing more to do.」。手順もボタンも無し（主要操作 0）。
+7. **S1 の初回案内カード（仕様 §3-3。D42）**: `settings.hints.firstPlaybackDone`（新規。**S2／S5 で初めて `playing` になった時**に `session.ts` の hints の口から `true`。`lastDanceId` は S2 を開いただけで立つので使わない）∧ `!hints.homeScreenCardDismissed`（新規）∧ `platformKind() ∈ {ios-safari, ios-other, android}` ∧ `!isStandalone()` の時、**S1 の最下段**（種目タイルの下・更新の帯の下）に `<a data-install-card href="#/help/install">`「ホーム画面に追加すると、アプリのように使えます › / Add to your Home Screen to use it like an app ›」（56px 以上・`.dc-link-row` の型）＋ 右端に 48px の「×」（`aria-label`「閉じる」・押すと `homeScreenCardDismissed:true`・二度と出ない）。主要操作: 初期表示 3 のまま（カードは下）、画面全体 3＋2＝5。追加済みなら出さない。PC には出さない（5. のとおり PC では意味が薄い）。
+8. **S6 の行**: 「ホーム画面に追加する方法 ›」（`.dc-link-row`。「音が鳴らない時」の上。主要操作 4 → **5**＝上限ちょうど。以後 S6 に足すなら「プライバシー・アプリについて」（段8・S13）と合わせて裁定が要る＝**段8の S13 の行で 6 になるので、段8で S6 の並びを裁定し直す**。先に書いておく: 候補は「先生の方へ」の 2 行を 1 行「先生の方へ ›」（小画面 S6b）にまとめる）。
+9. **`App.tsx` に S12 を登録**（`SIMPLE_SCREENS`）。S12 は一覧画面（下タブあり・`BackButton`・親 S6）。
+10. 文言は禁止語を避ける（「キャッシュ」「ストレージ」「同期」を使わない。「電波が無くても」「引き継がれません」で言う）。
+
+**理由**: 手順は Simulator で実際に辿った物しか書かない（F33）。「もっと見る」は SE の高さでは必須で、ここを書き落とすと 60〜70代は「ホーム画面に追加」を見つけられない。保存領域が別（F34）は黙っていると「録音した声が消えた」になる＝止まらないための 1 行。
+
+**外れた時の代償**: 大きい iPhone（Pro Max 等）では共有シートの一覧が最初から見えて「もっと見る」が無いかもしれない（手順 3 の前半が空振り。害は無い。§3 で実機を見る）。Android の文言は実機で直す。`hints` が 2 つ増える（テスト 2 件）。S6 が上限ちょうどになり、段8の S13 で並びを変える。
+
+## Ruling 93（Q6）manifest・アイコン・`share_target` — `name`/`short_name`「Dance Count」・`display:'standalone'`・相対 `start_url`/`scope`・アイコン 4 枚（仮の絵＝D44）・`apple-touch-icon`・`apple-mobile-web-app-title`。SW は段5の契約どおり POST を `dance-count-inbox` に置いて 303
+
+**決定**:
+1. **manifest（plugin の `manifest`）**: `name:'Dance Count'`・`short_name:'Dance Count'`（D2。副題は入れない）・`description`（日英は manifest に 1 つしか書けないので英語 `Count practice for ballroom dancing`）・`lang:'ja'`・`start_url:'./'`・`scope:'./'`・`display:'standalone'`・`theme_color:'#1B2A4A'`・`background_color:'#FFFFFF'`・`icons`（下）・`share_target`（3.）。`orientation` は書かない。
+2. **アイコン（`public/icons/`）**: `icon-192.png`・`icon-512.png`・`icon-512-maskable.png`（`purpose:'maskable'`・安全域 80%）・`apple-touch-icon.png`（180×180・角丸なし・透明なし）。**元は `public/icons/icon.svg` 1 枚**で、`@vite-pwa/assets-generator`（F29 の optional peer）か `tools/make-icons.js`（sharp）で生成し **PNG を commit**（ビルドで生成しない。再現手順は `tools/` に）。`index.html` に `<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">`・`<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">`（`data:,` を置き換え）・`<meta name="apple-mobile-web-app-title" content="Dance Count">`（F33: 無いと `document.title` の長い名前が切れる）。`apple-mobile-web-app-status-bar-style` は書かない（既定＝白地に黒の時計。F34 の実物のとおり見やすい）。
+3. **`share_target`（Ruling 79-2 の契約をそのまま）**: `{ action:'./receive', method:'POST', enctype:'multipart/form-data', params:{ files:[{ name:'bundle', accept:['text/plain','.txt','application/json','.json'] }] } }`。**SW（`src/sw.ts`）**: `registerRoute(({ request, url }) => request.method === 'POST' && url.pathname.endsWith('/receive'), async ({ request }) => { … }, 'POST')`。中身: `const file = (await request.formData()).get('bundle')`；`File` なら `caches.open(INBOX_CACHE)` → `cache.put(INBOX_KEY, new Response(file, { headers: { 'Content-Type': file.type || 'text/plain', 'X-File-Name': encodeURIComponent(file.name) } }))`；最後に **`Response.redirect('./#/receive', 303)`**（ファイルが無くても同じ所へ＝S10 の「選ぶ」から）。`INBOX_CACHE`・`INBOX_KEY` は `platform/files.ts` から import しない（SW は `src/app` の外・別ビルド）。**同じ文字列を `src/share-inbox-contract.ts`（`src/` 直下・2 定数だけ）に置き、`files.ts` と `sw.ts` の両方がそこから import**（正本 1 つ）。`cleanupOutdatedCaches()` は workbox の precache だけを消し `dance-count-inbox` には触れない。
+4. **`./inbox/bundle` の相対の鍵**: SW は dist 直下（`./sw.js`）、`index.html` も直下なので、SW の `cache.put('./inbox/bundle')` と画面の `caches.match('./inbox/bundle')` は同じ URL に解ける。**SW を別フォルダに置かない**（Ruling 79 の注記のとおり。番人: `check-dist` で `dist/sw.js` と `dist/manifest.webmanifest` が直下にある）。
+5. iOS は `share_target` を無視する（F37）。害は無い。
+6. `check-dist` に足す番人: `manifest.webmanifest` が JSON として読め、`share_target.action==='./receive'`・`params.files[0].name==='bundle'`・`icons` の `src` が全部 dist にある・`display==='standalone'`・`short_name==='Dance Count'`。`index.html` に `apple-touch-icon` と `manifest` の link がある。
+
+**理由**: 段5が決めた受け口の契約（Cache の鍵とヘッダー）に SW を合わせるだけで Android の「LINE → 共有 → Dance Count」が繋がる（`smoke-share.js` の inbox の場面が既にこの形を検査している）。アイコンと名前の meta は F33 の実物（自動の「D」・切れた名前）を見て要ると分かった。
+
+**外れた時の代償**: アイコンの絵は仮（D44。差し替えは PNG 4 枚と SVG 1 枚の置き換えだけ）。`share_target` は Android の実機が来るまで Playwright の POST（Ruling 95-2）でしか確かめられない。
+
+## Ruling 94（Q7）`persist()` と `visibilitychange` — `persist()` は「最初の語」「最初のルーティンの保存」「受け取りの『使う』」の後と、**ホーム画面から開いた起動時**に。開いている行は `onPageHidden` で確定する
+
+**決定**:
+1. **`requestPersistentStorage()` を呼ぶ時機**（`persisted()` が真なら何もしないので重ねて呼んでよい）:
+   - 段4のまま: 最初の語の保存の後（Ruling 56-6）。
+   - **段7で足す**: (a) S4 の最初の保存（`persist()` の `first` が真で `ok` の時）(b) S10「使う」で保存が全部通った後 (c) **起動時に `isStandalone()` の時だけ**（`App.tsx` のマウント後 1 回。F35: WebKit はホーム画面アプリなら許可する＝一番効く所。ブラウザのタブでは起動時に呼ばない＝Firefox の許可ダイアログ（F40・推測）を初回に出さないため）。
+   - 結果は画面に出さない（Ruling 11）。
+2. **`platform/page.ts` に `onPageHidden(listener): () => void`**（`document.visibilitychange` で `hidden` と `pagehide` の両方。境界テストのとおり `platform/` だけ）。**S4 はマウント中これを購読し、hidden で「開いている行を閉じて保存」**（既存の `act(current => current.close())` と `pendingName` の確定と同じ経路。ハッシュは置き換えない＝`persist({ replace:false })`）。戻った時は行が閉じているが中身は残る（60〜70代の「書いたのに消えた」を防ぐ。段3計画の発見 #8）。S8 は語ごとに保存済み・S9 の名前は blur で保存＝同じ hook で `pendingName` 相当を確定してよい（任意）。
+3. 書き込みは `IDBTransaction` の完了で `true`（`storage.ts`）。hidden の後に OS が固めると完了しないことがある＝**それでも「戻る時だけ」より失う機会は減る**。保証はしない（Ruling 11 のバックアップの 1 行が最後の守り）。
+
+**理由**: F35 で「ホーム画面アプリ」が persist の許可条件そのものと分かったので、起動時の 1 回が最も確実。タブでは今までどおり「保存した直後」に寄せ、Firefox の初見ダイアログを避ける。
+
+**外れた時の代償**: Android の Firefox で PWA として開いた時に許可ダイアログが 1 回出うる（F40 推測。稀・許容）。`onPageHidden` の保存が OS に間に合わないことがある（上の 3.）。
+
+## Ruling 95（Q8）検査 — `smoke:pwa`（静的に配った公開ビルドで オフライン・`?v=`・書体・更新・share_target）・`ui:check` の新しい状態・iOS Simulator（localhost の https 相当・サーバーを止めてオフライン）・実機確認表・完了条件
+
+**決定**:
+1. **単体（`node --test`）**: `test/tools/fonts.test.js`（`needed-subsets`: 「ワルツ」の字が入るサブセットが出る・無い字は出ない・太さが `fonts.css` と一致・`@fontsource` の CSS が読めない時は投げる）・`test/app/platform-pwa.test.ts`（`platformKind` の UA 6 例・`isStandalone`・`checkForUpdateThenReload` の 3 分岐を偽の registration で・1 時間の確認の間隔）・`test/app/settings/*`（`hints` 2 つの既定と正規化）・`test/app/share/inbox-contract.test.ts`（`files.ts` と `sw` の定数が同じ正本から来る＝`src/share-inbox-contract.ts` を両方が import していることをソースの文字列で固定）・`test/app/i18n.test.ts` は新キーを自動で検査（禁止語）。
+2. **`tools/smoke-pwa.js`（`npm run smoke:pwa`。`npm run build` の後。dev に依存しない）**: 小さな静的サーバー `tools/serve-dist.js <dir> <port>`（Node の `http`。`dist` を配る。**4176**）を子プロセスで起動 → Chromium（`playwright-core`・`serviceWorkers:'allow'` 既定）で開く → `navigator.serviceWorker.ready` と precache 完了（`caches.keys()` に workbox の precache・`cache.keys()` の件数が `sw.js` の一覧と一致）→ **`context.setOffline(true)`** → 再読み込み → S1 が描ける → ワルツ ▶ → `smoke-practice` と同じ指紋で鳴る・音声の応答が全部 `response.fromServiceWorker()`（網の要求 0）→ **パソドブレ**（`six.wav?v=…` を使う）も鳴る（F32 の対策の証拠）→ `document.fonts.check('18px "Noto Sans JP"', 'ワルツ')` が真（書体がオフラインで出る）→ `setOffline(false)`。
+   - **更新**: 別の `dist`（`DC_BUILD_TAG=b npm run build -- --outDir dist-b`。`vite.config.ts` が `__BUILD_TAG__` を `define` し、`index.html` の `<meta name="dc-build">` に写す）を 4176 で配り直す（子プロセスを入れ替える）→ `page.evaluate(() => navigator.serviceWorker.getRegistration().then(r => r.update()))` → S6 に「新しい版があります。」→「更新する」→ 再読み込みの後 `meta[name=dc-build]` が `b`。
+   - **share_target**: `page.evaluate` で `fetch('receive', { method:'POST', body: FormData(bundle=固定ファイル) })`（SW が受けて 303 → `index.html`）→ `#/receive` を開く → 確認から始まる（`smoke-share.js` の inbox の場面と同じ検査。`caches` から消えている）。
+   - 終わったらサーバーを止める。`dist-b` は `.gitignore`（`dist*/`）。
+3. **`ui:check` の状態（既存の周り方のまま）**: **新** `S12 iPhone Safari`（`userAgent` iOS Safari・ops 0・total 0・`texts` に手順 4 行と D43 の 1 行）／`S12 iPhone 他ブラウザ`（UA に `CriOS/`・ops 1「アドレスをコピー」）／`S12 Android`（UA Android Chrome・`addInitScript` で `beforeinstallprompt` を発火 → ops 1 `.dc-primary`）／`S12 Android ボタンなし`（発火なし・手順 3 行）／`S12 PC`（既定 UA・ops 1）／`S12 追加済み`（`addInitScript` で `matchMedia` を `standalone` 真に・ops 0・1 行）／**新** `S1 案内カード`（seed `hints.firstPlaybackDone:true`・iOS UA・ops 3・total 5・カードが最下段）／`S1 更新あり`・`S3 更新あり`・`S6 更新あり`（`?ui-state=update-ready`。Ruling 90-7）／`S6`（ops **5**）。375×548 と 320 も既存の規則で回る。件数は計画者が数え台帳に（見込み 262 → 300 前後）。**preview（4174・SW つき）でも全部 PASS** を完了条件に。
+4. **iOS Simulator（SE 第3世代・iOS 26.3。HANDOVER §8 の手順。AXe は入れ直す）**: (a) `npm run build && npm run preview -- --host`（4174）→ Safari で `http://localhost:4174/` → **SW が登録される**（F39 の推測の検証。探りのページで `navigator.serviceWorker` と `caches` の有無を読む。駄目なら §4 の代替）(b) S12 の手順どおり「…」→「共有」→「もっと見る」→「ホーム画面に追加」→「追加」でアイコンの絵と名前「Dance Count」(c) ホーム画面から起動 → 全画面・667 の配置 (d) **preview を止めて**（＝機内モードの代わり）起動し直す → S1 → ワルツ ▶ が鳴る・パソドブレも鳴る・日本語の字が Noto のまま（G7 相当）(e) preview を戻し、`dist-b` を配って起動し直す → S6 の帯 →「更新する」→ 新しい版 (f) 375×548（Safari）で S12 の 4 行と 1 行が入る・320 で横スクロール無し (g) D33 の詰めた配置がホーム画面アプリで当たっていない（声チップが初期表示）。**確かめられない**: 機内モードそのもの・マナーモード・share_target（Android）・LINE。
+5. **実機確認表 `docs/app-v1/stage7-device-check.md`**（ひとみうさの iPhone。**https の置き場が要る＝§3 の判断の後**。できれば家族の Android）:
+   1. Safari で S12 を開き、**書いてある手順だけで**ホーム画面に追加できる（「もっと見る」が本当に要るか。大きい iPhone なら「ホーム画面に追加」が最初から見えるか → 文を直す）
+   2. ホーム画面のアイコンの絵・名前「Dance Count」（D44）
+   3. 起動 → Safari の枠が無い全画面・声チップが初期表示（667）
+   4. **機内モード** → 起動 → ワルツ ▶ が鳴る（G7）・パソドブレ（six）・日本語の字が同じ書体
+   5. マナーモードで鳴る・WakeLock・ロック復帰（段2の「https で再確認」）・前回カードの 1 タップ即再生（段2持ち越し）
+   6. 追加したアプリで 12 語を録る → 機内モード → 自分の声で鳴る
+   7. 追加したアプリで「配る」→ 共有シートに LINE が出る・S10「ファイルを選ぶ」のピッカーが開く（F3／F25 の最終確認。開かなければ Ruling 79-3 の裁定へ）
+   8. Safari で録った声が追加したアプリに**無い**（F34）＝S12 の 1 行（D43）のとおりか・文が伝わるか
+   9. 更新の帯: く！ちゃんが新しい版を置いた後、アプリを開き直す → 設定に「新しい版があります。」→「更新する」→ 1 分以内に新しい版。帯を押さずに完全に閉じて開き直しても新しくなる
+   10. 新しすぎるファイル →「更新する」→ 最新になる（S10）
+   11. S1 の案内カード: 初めて鳴らした後に出る・× で消える・追加したアプリでは出ない
+   12. 1 週間後: 追加したアプリの声・ルーティンが残っている（persist）。Safari のタブの方も見る
+   13. iPhone の Chrome で開いた時の S12（Safari へ誘導の文・アドレスのコピー）
+   14. 548 の Safari で S12 が入る・320 で横スクロール無し
+   15. Android（あれば）: Chrome で S12 の「ホーム画面に追加する」ボタン → 追加 → LINE の添付 → 共有 → **Dance Count** → S10 が確認から始まる（share_target・G6 の 2 経路目）。Chrome と追加したアプリで声が共有されるか（Ruling 92-2 の推測）
+6. **完了条件（段の終わり・別エージェントが再実行）**: `npm test`（件数。新規 ≒ 25）・`npm run typecheck`（`tsconfig.sw.json` 込み）・`npm run build`（check-dist の新しい番人: precache の合計 ≤ 6MB・英パック 13 ファイル全部・書体 160 ファイル・`.woff` 0・manifest・アイコン・`sw.js` 直下）・`timing:audit && timing:compare` 一致・**`src/engine` diff ゼロ**・`ui:check` dev と preview で全 PASS（件数）・`smoke:pwa`・既存の `smoke:practice/routines/voice/share`・iOS Simulator (a)〜(g)・375/1280 のスクロール領域ごとの撮影（S12 6 状態・S1 案内カード・S3/S6 更新あり）。実機（5.）は https の置き場が決まってから。
+
+**理由**: SW は dev に無いので、検査は「静的に配った公開ビルド」を正とし、オフライン・更新・POST の 3 つを本物の SW で通す。Simulator は localhost が secure なら実機の大半を代替できる（段5と同じ好条件）。
+
+**外れた時の代償**: `smoke:pwa` が 2 回のビルド（A/B）を要し 1〜2 分かかる。静的サーバーが `tools/` に 1 つ増える。Simulator で localhost の SW が動かなければ実機まで G7 を確かめられない（§4 の代替）。
+
+---
+
+## ひとみうさの決定（代理）— 起きたら見直してもらう
+
+- **D41（代理決定・確認待ち）S12 の手順の文は iOS 26.3 の Simulator で辿った実物どおり**（「…」→「共有」→「もっと見る」→「ホーム画面に追加」→「追加」。Ruling 92-2）。— 代案: 手順を 3 行に縮める（「もっと見る」を省く。大きい iPhone では要らない可能性）。実機 1 で決める。
+- **D42（代理決定・確認待ち）S1 の初回案内カードは「初めて鳴らした後」に iPhone・Android のブラウザだけで出し、× で二度と出さない**（Ruling 92-7）。— 代案: 常に出す（追加するまで）／PC にも出す。
+- **D43（代理決定・確認待ち）S12（iOS Safari）の最後に「録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。追加したアプリで、もう一度録音・受け取りをしてください。」の 1 行を出す**（F34。Ruling 92-2）。— 代案: 出さない（S7 や S8 の説明に移す／生徒には関係が薄いので先生向けの S6「先生の方へ」に置く）。
+- **D44（代理決定・確認待ち）アイコンは仮: 紺 `#1B2A4A` の角丸四角に白の太字「DC」（Inter 800）**（Ruling 93-2。iOS の自動の「D」と同系で違和感が無い）。— 代案: (a) 白の ▶（再生）(b) 白のメトロノームの線画 (c) ひとみうさの描き下ろし。**審美判断はひとみうさ**（CLAUDE.md）。PNG 4 枚の差し替えだけなので段7を止めない。
+- **D45（代理決定・確認待ち）更新の帯は「新しい版があります。」＋「更新する」だけ・閉じるボタン無し・集中画面には出さない・押さなくても次に完全に閉じて開けば新しくなる**（Ruling 90）。— 代案: 自動で更新（`autoUpdate`。練習中に再読み込みが起きうる）／帯を全画面に出す。
+
+---
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認）
+
+**判断（段7の実機確認に要る）**
+1. **実機確認のための https の置き場**（F39。`http://<Mac の IP>` では SW が動かない）。選択肢: (a) **Cloudflare Pages の `*.pages.dev`（無料・DNS 不要・公開 URL だが検索に出ない）に検証用として置く**（D4「配信基盤は公開直前に許可」に当たるので許可が要る。本番の count.dancemap.jp と同じ基盤なら後で流用できる＝おすすめ）(b) `cloudflared` の一時トンネル（確認の日だけ・アカウント不要・URL は毎回変わる）(c) Mac で自己署名の証明書＋iPhone にプロファイルを入れる（手順が多い・勧めない）。Simulator の確認は localhost で先に済ませる。
+2. D41〜D45（上）。特に D44（アイコンの絵）と D43（1 行の文）。
+3. S12 の文言全体（60〜70代の目で。「…」「共有」「もっと見る」「ホーム画面に追加」「追加」は iOS の実物の語）。
+4. S6 が主要操作 5（上限）になること。段8の S13 で 6 になるので、その時「先生の方へ」をまとめるか決める（Ruling 92-8）。
+5. Android の端末が家にあるか（share_target と S12 Android の文の確認。無ければ推測のまま公開し、最初の Android の生徒で直す）。
+
+**確認（実機確認表 Ruling 95-5）**
+6. 1（手順どおりに追加できる・「もっと見る」の要不要）・4（機内モードで鳴る＝G7）・8（Safari の声が追加したアプリに無い）・9（更新の帯）・12（1 週間後に残る）。
+7. 大きい iPhone の共有シートで「ホーム画面に追加」が最初から見えるか（D41 の代案の判断材料）。
+
+---
+
+## 4. 計画への反映（計画者）
+
+- **順序**: 段7の詳細計画は今書いてよい。実装は `agent/app-v1` で逐次（worktree なし）。6b・6c は段7の途中でも差し込める（`public/audio/` と JSON の 1 行。precache は自動で追従＝Ruling 89-2）。実機確認は §3-1 の判断の後。
+- **先にスクラッチで実証する 5 点**: (a) `vite-plugin-pwa@2.0.0`＋`base:'./'`＋`injectManifest` で `dist/sw.js`・`manifest.webmanifest` が直下に出て、`index.html` が `./sw.js` を `scope './'` で登録する（Ruling 88-6）(b) `ignoreURLParametersMatching:[/^v$/]` で `six.wav?v=…` が precache から返る（Playwright で `fromServiceWorker()`）(c) `globPatterns` に `assets/{a,b}-{400,600,700,800}-normal-*.woff2` の形を渡して 160 ファイルだけが一覧に入る（`sw.js` を読む）(d) `registerRoute(…, 'POST')` で `fetch('receive', {method:'POST', body: FormData})` が SW に届き 303 → `caches` に入る（e）**iOS Simulator の Safari で `http://localhost:4174/` の SW が登録される**（F39。駄目なら Simulator の確認は「見た目と手順」だけにし、G7 は実機）。
+- **新規ファイル**: `src/sw.ts`・`src/share-inbox-contract.ts`・`tsconfig.sw.json`・`src/app/platform/pwa.ts`・`src/app/screens/InstallHelpScreen.tsx`（S12）・`public/icons/{icon.svg,icon-192.png,icon-512.png,icon-512-maskable.png,apple-touch-icon.png}`・`tools/fonts/needed-subsets.js`・`tools/make-icons.js`（または assets-generator の設定）・`tools/serve-dist.js`・`tools/smoke-pwa.js`・`test/tools/fonts.test.js`・`test/app/platform-pwa.test.ts`・`test/app/share/inbox-contract.test.ts`・`docs/app-v1/stage7-device-check.md`。
+- **変更するファイル**: `package.json`（devDependencies 6 つ・`typecheck`・`smoke:pwa`・`build` はそのまま）・`vite.config.ts`（`VitePWA({...})`・`__BUILD_TAG__`）・`index.html`（manifest は plugin が注入。`apple-touch-icon`・`apple-mobile-web-app-title`・`icon`・`<meta name="dc-build">`）・`main.tsx`（`captureInstallPrompt()`）・`App.tsx`（S12 登録・更新の帯・起動時の `persist()`）・`platform/page.ts`（`onPageHidden`。`reloadPage` は残す）・`platform/files.ts`（定数を `share-inbox-contract.ts` から import）・`settings/settings.ts`（`hints.firstPlaybackDone`・`hints.homeScreenCardDismissed`）・`practice/session.ts`（hints の口に `markFirstPlayback`）・`screens/HomeScreen.tsx`（案内カード・帯）・`screens/RoutinesScreen.tsx`／`SettingsScreen.tsx`／`VoicesScreen.tsx`（帯）・`screens/ReceiveScreen.tsx`（「更新する」→ `checkForUpdateThenReload`・「使う」の後の `persist()`）・`screens/RoutineEditScreen.tsx`（`onPageHidden`・最初の保存の後の `persist()`）・`router/routes.ts`（`UiState` に `update-ready`）・`components/icons.svg`（`more`・`plus-square`・`close` の線画）・`i18n/messages.ts`（Ruling 90・92 の文言。禁止語テスト）・`styles/base.css`（`.dc-update`・`.dc-install-card`）・`tools/check-dist.js`（Ruling 89-3・93-6 の番人）・`tools/check-app-ui.js`（Ruling 95-3 の状態）・`.gitignore`（`dist*/`）・全体地図（段7行・持ち越し表の `?v=`・`visibilitychange`・`persist()`・D33 を「済」に・人の確認点の段7に https の置き場）・仕様 §4 S12（端末ごとに 1 通り・D43 の 1 行・S1 カードの条件）・§7「保存先」（persist の時機）・§10「Service Worker」（injectManifest・書体の方針・`?v=`）・§11（オフラインの行はそのまま）・§14（G7 の確かめ方に Simulator と https）・HANDOVER §3・§5・§9（Simulator の Web クリップ・AXe）・`rulings.md`（Ruling 88〜95・D41〜D45・F29〜F41 を転記）。
+- **触らない**: `src/engine/*`（diff ゼロ。`?v=` は SW 側で吸収）・ゴールデン・`output/timing-audit-before.json`・`legacy/*`・`public/audio/*`・`fonts.css` の import（太さを変えない）。
+- **6c との関係**: 6c の便は `standard-voices.json` 1 行＋`public/audio/default-ja-female-v1/`＋`messages.ts` 2 鍵（段4で足し済み）で、段7の番人（Ruling 89-2）が「precache に 13 ファイル」を自動で要求する。段7の計画書に「6c が入ったら `smoke:pwa` のオフラインの場面を日本語でも 1 本」と書いておく。
+- **完了条件**: Ruling 95-6 をそのまま「段の終わり」に。実機（95-5）は §3-1 の後。
