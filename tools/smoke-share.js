@@ -211,9 +211,12 @@ try {
   await s.waitForSelector('[data-screen="S1"]');
   if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
   await s.waitForTimeout(WRITE_SETTLE_MS);
-  // Task 1 修正 1（Fable 答え §1-1・Repro B）: 受け取った後の U1 から「‹ 表紙」1 回で表紙（S0 → U1 → U2 → S10 → U1 の列でも）
+  // 最終レビュー I1: S10 の文のとおり下の「ルーティン」へ（U2）。その後も「‹ 表紙」1 回で表紙
+  // （Task 1 修正 1・Repro B の S0 → U1 → U2 → S10 → U1 の列に、タブ U2 を足した形。U1 からの 1 回は router-back のテスト）
+  await s.locator('[data-nav] a').nth(1).click();
+  await s.waitForSelector('[data-screen="U2"]');
   await s.locator('[data-back]').click();
-  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U1 after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
+  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 (tab) after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 
   // ワルツ ▶ が受け取った声で鳴る: 読み直した S2 で ▶ の間、標準の声の音声は 1 本も要求されない（smoke-voice.js と同じ証明）
   await s.goto(`${BASE}#/practice/waltz`);

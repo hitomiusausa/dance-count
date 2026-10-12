@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { historyBack, historyGo, onHashChange, readHash, setHash } from '../platform/hash.ts';
-import { canGoBackInHistory, dropLast, wentBack, exitByBack, recordVisit, replaceTop, stepsBackTo } from '../router/back-stack.ts';
+import { canGoBackInHistory, dropLast, wentBack, planReplace, recordVisit, stepsBackTo } from '../router/back-stack.ts';
 import { buildHash, buildHashWithQuery, parentScreen, parseHash, type RedirectTarget, type Route, type RouteTarget, type ScreenId } from '../router/routes.ts';
 
 // このタブで見てきた画面の列（「戻る」の判断用。仕様 §3・Ruling 17）。起動時の画面から始まる。
@@ -27,22 +27,24 @@ export function navigate(target: RouteTarget): void {
   setHash(buildHash(target));
 }
 
-// 履歴を積まずに画面を替える（新規ルーティンの ID 発行・見つからないルーティンから一覧へ・下タブの切替。Ruling 37・40・116）。
-// 見てきた列の末尾も置き換えて、幻の履歴を残さない。
-// 古い経路の読み替え（resolveScreen の redirect）は ui-state を持ち越す（query）。ほかの呼び出しは query を渡さない。
+// 履歴を積まずに画面を替える（新規ルーティンの ID 発行・見つからないルーティンから一覧へ・下タブの切替・S8 の完成 → S7・出口。Ruling 37・40・116）。
+// 1 つ前が行き先と同じなら置き換えずに 1 つ戻る（同じ画面を 2 つ並べない。見てきた列を本当の履歴とそろえる。最終レビュー I1・T1・Task 1 修正 1）。
+// そうでなければ見てきた列の末尾も置き換えて、幻の履歴を残さない。
+// 古い経路の読み替え（resolveScreen の redirect）は ui-state を持ち越す（query。戻る時は 1 つ前の項目のまま）。ほかの呼び出しは query を渡さない。
 export function replaceRoute(target: RedirectTarget): void {
   const hash = buildHashWithQuery(target);
-  visited = replaceTop(visited, hash);
+  const plan = planReplace(visited, hash);
+  if (plan.kind === 'back') {
+    historyBack();
+    return;
+  }
+  visited = plan.stack;
   lastMoveWasBack = false;
   setHash(hash, { replace: true });
 }
 
-// 出口（S10 の受け取った → U1／U2）。1 つ前が行き先と同じなら 1 つ戻り、違えば置き換える（同じ画面を 2 つ並べない。Task 1 修正 1）。
+// 出口（S10 の受け取った → U1／U2）。replaceRoute と同じ（1 つ前が行き先なら戻る、違えば置き換え）。
 export function exitTo(target: RouteTarget): void {
-  if (exitByBack(visited, buildHash(target))) {
-    historyBack();
-    return;
-  }
   replaceRoute(target);
 }
 

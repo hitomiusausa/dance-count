@@ -51,3 +51,14 @@ export function dropLast(stack: readonly string[], steps: number): string[] {
 export function exitByBack(stack: readonly string[], hash: string): boolean {
   return stack.length >= 2 && stack[stack.length - 2] === hashPath(hash);
 }
+
+// 履歴を積まない画面替え（replaceRoute）の段取り（最終レビュー I1・T1）。
+// 1 つ前が行き先と同じなら 'back'（1 つ戻る。後の hashchange で recordVisit が末尾を落とし、見てきた列＝本当の履歴のまま）。
+// 違えば 'replace'（末尾を置き換えた列。直後の合成 hashchange では recordVisit が何も変えない＝二重に落とさない）。
+// 置き換えで [.., X, X] を作ると、本当の履歴は 2 つ並ぶのに列は 1 つ落ちて、次の「‹」の 1 回目が同じ画面へ戻るだけになる。
+export type ReplacePlan = { kind: 'back' } | { kind: 'replace'; stack: string[] };
+
+export function planReplace(stack: readonly string[], hash: string): ReplacePlan {
+  if (exitByBack(stack, hash)) return { kind: 'back' };
+  return { kind: 'replace', stack: replaceTop(stack, hash) };
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canGoBackInHistory, dropLast, exitByBack, recordVisit, replaceTop, stepsBackTo, wentBack } from '../../src/app/router/back-stack.ts';
+import { canGoBackInHistory, dropLast, exitByBack, planReplace, recordVisit, replaceTop, stepsBackTo, wentBack } from '../../src/app/router/back-stack.ts';
 
 const walk = (hashes: string[]) => hashes.reduce<string[]>((stack, hash) => recordVisit(stack, hash), []);
 
@@ -94,4 +94,91 @@ test('wentBack: returning to the previous screen (history back) is a back move',
 test('wentBack: a replacement (same length) counts as forward', () => {
   const before = walk(['#/', '#/use']);
   assert.equal(wentBack(before, replaceTop(before, '#/use/routines')), false);
+});
+
+// 最終レビュー I1・T1: 置き換え（replaceRoute）でも見てきた列を本当の履歴とそろえる。
+// 小さな模型: 本当の履歴（entries・index）と見てきた列（visited）を、state/route.ts と同じ手順で動かす。
+type Model = { entries: string[]; index: number; visited: string[] };
+const open = (hash: string): Model => ({ entries: [hash], index: 0, visited: recordVisit([], hash) });
+const push = (m: Model, hash: string): Model => {
+  const entries = [...m.entries.slice(0, m.index + 1), hash];
+  return { entries, index: entries.length - 1, visited: recordVisit(m.visited, hash) };
+};
+const back = (m: Model, steps = 1): Model => {
+  const index = Math.max(0, m.index - steps);
+  const moved = index !== m.index && m.entries[index] !== m.entries[m.index];   // 同じハッシュなら hashchange は起きない
+  return { ...m, index, visited: moved ? recordVisit(m.visited, m.entries[index]!) : m.visited };
+};
+const replace = (m: Model, hash: string): Model => {
+  const plan = planReplace(m.visited, hash);
+  if (plan.kind === 'back') return back(m);
+  const entries = [...m.entries];
+  entries[m.index] = hash;
+  return { entries, index: m.index, visited: recordVisit(plan.stack, hash) };   // 合成 hashchange も通す
+};
+// goBack の「‹ 表紙」（state/route.ts と同じ）
+const backToCover = (m: Model): Model => {
+  const steps = stepsBackTo(m.visited, '#/');
+  if (steps === null) return replace(m, '#/');
+  return back({ ...m, visited: dropLast(m.visited, steps) }, steps);
+};
+const realStack = (m: Model) => m.entries.slice(0, m.index + 1);
+
+test('I1: S0 → U2 → S10 → "Choose a dance" (U1) → tab U2 → "‹ Cover" reaches the cover in one tap', () => {
+  let m = open('#/');
+  m = push(m, '#/use');
+  m = replace(m, '#/use/routines');          // タブ
+  m = push(m, '#/receive');
+  m = replace(m, '#/use');                   // 「種目を選ぶ」（出口）
+  assert.deepEqual(realStack(m), ['#/', '#/use/routines', '#/use']);
+  m = replace(m, '#/use/routines');          // タブ: 1 つ前が U2 → 戻る（同じ画面を 2 つ並べない）
+  assert.deepEqual(realStack(m), ['#/', '#/use/routines']);
+  assert.deepEqual(m.visited, realStack(m));
+  m = backToCover(m);
+  assert.equal(m.entries[m.index], '#/');
+});
+
+test('T1: S7 "Record more" → S8 → finish (replace S7) leaves no dead back tap', () => {
+  let m = open('#/');
+  m = push(m, '#/settings');
+  m = push(m, '#/voices');
+  m = push(m, '#/voices/record');
+  m = replace(m, '#/voices');                // 完成 → S7
+  assert.deepEqual(realStack(m), ['#/', '#/settings', '#/voices']);
+  assert.deepEqual(m.visited, realStack(m));
+  m = back(m);                               // 「‹」1 回で S6
+  assert.equal(m.entries[m.index], '#/settings');
+});
+
+test('T1: an invalid S5 opened from U2 redirects to U2 without a duplicate entry', () => {
+  let m = open('#/');
+  m = push(m, '#/use');
+  m = replace(m, '#/use/routines');
+  m = push(m, '#/routines/missing/play');
+  m = replace(m, '#/use/routines');          // 見つからないルーティン → U2
+  assert.deepEqual(realStack(m), ['#/', '#/use/routines']);
+  assert.deepEqual(m.visited, realStack(m));
+  m = backToCover(m);
+  assert.equal(m.entries[m.index], '#/');
+});
+
+test('planReplace: a different target replaces the top and the synthetic hashchange does not pop again', () => {
+  const plan = planReplace(['#/', '#/use'], '#/use/routines');
+  assert.deepEqual(plan, { kind: 'replace', stack: ['#/', '#/use/routines'] });
+  if (plan.kind === 'replace') assert.deepEqual(recordVisit(plan.stack, '#/use/routines'), ['#/', '#/use/routines']);
+  // 直接開いた S5 の読み替え（列 1 件）は置き換え
+  assert.equal(planReplace(['#/routines/missing/play'], '#/use/routines').kind, 'replace');
+  // ui-state 付きでも画面が同じなら戻る
+  assert.equal(planReplace(['#/', '#/use/routines', '#/use'], '#/use/routines?ui-state=no-sound').kind, 'back');
+});
+
+test('tabs still replace (no history growth) and "‹ Cover" stays one tap from U1/U2', () => {
+  let m = open('#/');
+  m = push(m, '#/use');
+  m = replace(m, '#/use/routines');
+  m = replace(m, '#/use');
+  m = replace(m, '#/use/routines');
+  assert.deepEqual(realStack(m), ['#/', '#/use/routines']);
+  m = backToCover(m);
+  assert.equal(m.entries[m.index], '#/');
 });

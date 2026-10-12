@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
@@ -25,7 +25,6 @@ import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
-type Profile = SpeedProfile;
 interface Range { startIndex: number; endIndex: number }
 
 // S5 ルーティン再生（仕様 §4・Ruling 40・42・46〜48・D10）。S2 と同じ骨格（主要操作も同じ5つ）を practice/controls.tsx で組む。
@@ -42,7 +41,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const { translator } = useI18n();
   const { settings, update } = useSettings();
   const locale = translator.locale;
-  const profile = getDanceProfile(routine.danceId) as Profile;
+  const profile = getDanceProfile(routine.danceId) as SpeedProfile;
   const choice = routinePracticeChoice(profile, routine, settings);
   const { session, view } = usePracticeSession(routine.id);
   const last = routine.figures.length - 1;
@@ -122,16 +121,18 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
 
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
   const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
-
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   const sounding = view.playing && !view.countIn && view.figureIndex !== null ? view.figureIndex : null;
   const shownIndex = sounding ?? range.startIndex;
   const shownFigure = routine.figures[shownIndex]!;
-  const idleText = view.playing ? '' : formatCounts(routine.danceId, routine.figures[range.startIndex]!.counts).split(' ')[0] ?? '';
+  const startCounts = routine.figures[range.startIndex]!.counts;
+  const idleText = view.playing ? '' : formatCounts(routine.danceId, startCounts).split(' ')[0] ?? '';
   // D55: 帯は鳴っているフィガーの型（figureIndex で絞り、ルーティン全体の tick で点ける）。止まっている間・はじめの合図の間は始めのフィガーの型を表示だけ
+  // 止まっている間の帯は種目と始めのフィガーのカウントが替わった時だけ作る（はじめの合図の間に毎コマ compileRhythm しない。最終レビュー m1）
+  const idleStrip = useMemo(() => stripView(stripCells(idleProgram(routine.danceId, startCounts)), null), [routine.danceId, startCounts]);
   const strip = view.program && sounding !== null
     ? stripView(stripCells(view.program, sounding), view.originalTick)
-    : stripView(stripCells(idleProgram(routine.danceId, routine.figures[range.startIndex]!.counts)), null);
+    : idleStrip;
   const playing = view.playing || view.starting;
   const dance = danceName(routine.danceId, locale);
   const subtitle = routine.receivedFrom

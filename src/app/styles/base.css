@@ -103,7 +103,7 @@ button { cursor: pointer; }
 
 /* U2 使う › ルーティン（D56・Ruling 115-2）: 行を押すとすぐ鳴る。右端の「▶ 再生」は札（装飾。行全体が 1 つのボタン）。鳴らせない行はボタンにしない */
 .dc-routines-use .dc-receive-link { margin-top: 0; }
-/* 長いルーティン名（40 字）は 2 行で「…」（S5 の見出しと同じ扱い。Ruling 47。札「▶ 再生」の幅を残す） */
+/* 長いルーティン名（40 字）は 2 行で「…」（S5 の見出しと同じ扱い。Ruling 47。札「▶ 再生」の幅を残す）。F1 のフィガー名は切らない（下の F1 の節） */
 .dc-row--play .dc-row-text b, .dc-row--off .dc-row-text b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .dc-play-tag { display: inline-flex; align-items: center; gap: 4px; flex: none; min-height: 48px; padding: 0 10px 0 8px; border-radius: var(--r-s);
   background: var(--primary); color: var(--on-primary); font-size: 16px; font-weight: 800; white-space: nowrap; }
@@ -121,6 +121,8 @@ button { cursor: pointer; }
 /* 使いやすさの通し確認（Task 7）: フィガー名は「・」「＆」・空白の所で折る（.dc-figure-name）。札との間を 6px にして、320 幅で
    「ヘジテーションチェンジ」（198px）・「クローズド・テレマーク」が 1 行に入る（10px だと字の欄が 196px で「チェン／ジ」） */
 [data-screen="F1"] .dc-row-head { gap: 6px; }
+/* F1 のフィガー名は切らない（Fable §1-3。U2 の行の 2 行の「…」を受け継がない。最終レビュー m3） */
+[data-screen="F1"] .dc-row-text b { display: block; -webkit-line-clamp: unset; overflow: visible; }
 .dc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
 .dc-tile { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 6px 2px; text-decoration: none;
   border-bottom: var(--bw) solid var(--line); }
@@ -142,8 +144,9 @@ button { cursor: pointer; }
 .dc-now--idle { color: var(--ink2); }
 .dc-now--lead { display: flex; align-items: center; font-size: 32px; letter-spacing: var(--track); color: var(--ink2); }
 /* カウントの型の帯（D55・Ruling 114-2・114-6）: 1 語 1 丸。幅は語の長さ（--beats＝拍数）に比例し、1 拍あたり --beat-w まで。
-   a・&（sub）は 20〜24px に留まり 14px。丸が 9 個以上（data-dense）は 15px。320 幅でも 1 行（overflow を出さない）。高さと色は D8 のまま */
-.dc-beats { --beat-w: 56px; display: flex; justify-content: center; gap: 6px; width: 100%; margin: 8px 0 0; padding: 0; list-style: none; overflow: hidden; }
+   a・&（sub）は 20〜24px に留まり 14px。丸が 9 個以上（data-dense）は 15px。320 幅でも 1 行。高さと色は D8 のまま。
+   はみ出しを隠さない（overflow: hidden を置かない。はみ出せば ui:check の横スクロールの検査で見える。最終レビュー m2） */
+.dc-beats { --beat-w: 56px; display: flex; justify-content: center; gap: 6px; width: 100%; margin: 8px 0 0; padding: 0; list-style: none; }
 .dc-beats li { display: grid; place-items: center; flex: var(--beats, 1) 1 0; min-width: 20px; max-width: calc(var(--beats, 1) * var(--beat-w)); height: 40px;
   font-size: 18px; font-weight: 700; color: var(--ink2); border-bottom: 3px solid var(--line); }
 .dc-beats li[data-cell="sub"] { font-size: 14px; }
@@ -584,7 +587,6 @@ button { cursor: pointer; }
   .dc-utility { flex: 0 0 auto; padding: 0 10px; }
   .dc-seg { gap: 4px; grid-template-columns: repeat(var(--seg-cols, 3), minmax(max-content, 1fr)); }   /* 列は字の幅から（「ゆっく／り」にしない） */
   .dc-opt { padding-left: 2px; padding-right: 2px; }
-  .dc-opt-label { font-size: 16px; }
   .dc-opt small { font-size: 14px; }
   /* 英語は詰めても「Slower／Standard ♩=84／Faster」が 250px に入らない（280px）ので縦 1 列（日本語は詰めるだけで入る） */
   .dc-shell:lang(en) .dc-seg { grid-template-columns: 1fr; }

@@ -19,11 +19,11 @@ import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
 const ZOOM_VIEWPORT = { width: 640, height: 450 }; // 1280×900 の 200% 拡大相当（U9）
-const NARROW_VIEWPORT = { width: 320, height: 568 };
+const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
 // Fable 答え 2026-10-13 §2-4: iPhone SE の Safari 150%（「ぁあ」の 3 段目）相当。300px 未満は「ページが横に動かない・文字が切れない・主要ボタンが押せる」の 3 つだけ
 const PHONE_ZOOM_VIEWPORT = { width: 250, height: 445 };
 // 250 で「文字が切れない」（U10 の clipped text）も見る状態（48px・2 行・初期表示の数は問わない）
-const ZOOM_TEXT_STATES = ['S0 初回', 'S0 前回あり', 'S1 前回あり', 'S1 前回あり・長いフィガー', 'S2 くわしく閉', 'S2 くわしく開']; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
+const ZOOM_TEXT_STATES = ['S0 初回', 'S0 前回あり', 'S1 前回あり', 'S1 前回あり・長いフィガー', 'S2 くわしく閉', 'S2 くわしく開'];
 // iOS Safari のツールバー表示時の iPhone SE の見える高さ（Task 9 の実測）。主要操作が初期表示に入る（Ruling 71）。
 // 全状態を reduced-motion 無しの 1 周だけ。期待値は opsSmall があればそれ（S5 の声チップはスクロールを許す。Ruling 71-6）、R47 は当てない
 const SE_SAFARI_VIEWPORT = { width: 375, height: 548 };
@@ -632,7 +632,6 @@ async function landOn(page, hash) {
   return page.waitForFunction(expected => location.hash.startsWith(expected), hash, { timeout: 5000 }).then(() => true, () => false);
 }
 
-// 段7: 設定（settings ストアの 'app'）を書く。ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB に書く
 // 250 幅の「文字が切れない」（audit の U10 clipped text と同じ判定だけ。ブラウザの中で動く）
 function zoomTextAudit() {
   const issues = [];
@@ -653,6 +652,7 @@ function zoomTextAudit() {
   return issues;
 }
 
+// 段7: 設定（settings ストアの 'app'）を書く。ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB に書く
 async function seedSettingsInPage(settings) {
   const db = await new Promise((resolve, reject) => {
     const request = indexedDB.open('dance-count-v2', 2);

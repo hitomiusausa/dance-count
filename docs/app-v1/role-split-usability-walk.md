@@ -109,7 +109,7 @@ iPhone SE 第3世代（iOS 26.3・日本語・UDID `0E53FFB2-…`）・公開ビ
 | 3 S9 の途中の声（§2-3） | 途中の自分の声がある時は「日本語の声は 7 / 12 語まで録音ずみです。12 語そろうと配れます。」（鍵 `shareVoiceInProgress`。録れた語が一番多い 1 本） | ui:check「S9 録音が途中」（ops 3 のまま） |
 | 白い画面（§2-5） | コードは触らず、`device-check-master.md` 2-26 に Simulator の事情と「3 秒を超えたら po-checklist 10」を書いた | — |
 
-ゲート（直し便）: `npm test` 678 / 678・typecheck・build（precache 172 entries 2.95 MB）・`ui:check` dev 5185 **869 PASS・違反 0**（新しい状態 4 つ＋250×445 の日英 2 周）・`smoke:practice`／`routines`／`voice`／`share`／`pwa`（`DC_PWA_PORT=4185`）5 本 OK。320・375・1280 の配置は変わっていない（300px 未満の段だけ）。
+ゲート（直し便）: `npm test` 678 / 678・typecheck・build（precache 172 entries 2.95 MB）・`ui:check` dev 5185 **869 PASS・違反 0**（新しい状態 3 つ＋250×445 の日英 2 周）・`smoke:practice`／`routines`／`voice`／`share`／`pwa`（`DC_PWA_PORT=4185`）5 本 OK。320・375・1280 の配置は変わっていない（300px 未満の段だけ）。
 
 文言 2 つ（S10・S9）はひとみうさ確認（`rulings.md` §3）。`ja-phrases.json`・`stage8-copy-review.md` を回し直した。
 
