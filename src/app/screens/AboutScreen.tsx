@@ -47,6 +47,7 @@ export function AboutScreen({ uiState }: { uiState?: UiState }) {
       <h2 class="dc-field-label dc-settings-section">{ABOUT_TEXT[locale].aboutCreditsHeading}</h2>
       <p class="dc-body" data-body>{text('aboutCreditFonts')}</p>
       <p class="dc-body" data-body>{text('aboutCreditCode')}</p>
+      <p class="dc-body" data-body>{text('aboutCreditIcons')}</p>
       {failed && (
         <div class="dc-alert" role="status" data-alert="clear-failed">
           <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'clearAllFailed')}</b></div>

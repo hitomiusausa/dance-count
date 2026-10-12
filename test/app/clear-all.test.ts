@@ -28,3 +28,11 @@ test('a failed clear throws and leaves the inbox and the old key alone (the scre
 test('without an open storage there is nothing to delete with, so it throws', async () => {
   await assert.rejects(clearAllAppData(null, { clearInbox: async () => {}, forgetLegacy: () => {} }));
 });
+
+test('a synchronous throw after the transaction was created aborts it (nothing is half-cleared)', async () => {
+  const { wrapDatabaseForTest } = await import('../../src/app/platform/storage.ts');
+  let aborted = false;
+  const db = { transaction: () => ({ objectStore: () => { throw new Error('boom'); }, abort: () => { aborted = true; } }) } as unknown as IDBDatabase;
+  await assert.rejects(wrapDatabaseForTest(db).clear(['routines', 'settings']));
+  assert.equal(aborted, true);
+});

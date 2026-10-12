@@ -28,3 +28,10 @@ test('the text sources are a glob over src/app/i18n, so about.ts and any new mes
   assert.ok(files.includes('src/app/i18n/about.ts'));
   assert.ok(files.includes('src/engine/figure-terminology.js'));
 });
+
+test('comments do not decide which subsets are precached, but strings (even with "//") do', async () => {
+  const { stripComments } = await import('../../tools/fonts/needed-subsets.js');
+  const out = stripComments("const a = 'https://x.y/弧'; // 塊の説明\n/* 粋\n償 */ const b = '賠';\n");
+  assert.ok(out.includes('https://x.y/弧') && out.includes('賠'));
+  assert.ok(!/[塊粋償]/.test(out));
+});

@@ -65,6 +65,7 @@ function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
+export { wrap as wrapDatabaseForTest };   // test/app/clear-all.test.ts だけが使う（IDBDatabase の代わりを渡す）
 function wrap(db: IDBDatabase): AppStorage {
   return {
     get<T>(store: StoreName, key: string) {
@@ -81,13 +82,17 @@ function wrap(db: IDBDatabase): AppStorage {
     },
     clear(stores: readonly StoreName[]) {
       return new Promise<void>((resolve, reject) => {
+        let transaction: IDBTransaction | undefined;
         try {
-          const transaction = db.transaction([...stores], 'readwrite');
-          for (const store of stores) transaction.objectStore(store).clear();
-          transaction.oncomplete = () => resolve();
-          transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB clear was aborted'));
-          transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB clear failed'));
+          const created = db.transaction([...stores], 'readwrite');
+          transaction = created;
+          for (const store of stores) created.objectStore(store).clear();
+          created.oncomplete = () => resolve();
+          created.onabort = () => reject(created.error ?? new Error('IndexedDB clear was aborted'));
+          created.onerror = () => reject(created.error ?? new Error('IndexedDB clear failed'));
         } catch (error) {
+          // 途中で同期的に投げた: 予約済みの clear を commit させない（全部消えるか、何も消えないか）
+          try { transaction?.abort(); } catch { /* もう終わっている */ }
           reject(error);
         }
       });

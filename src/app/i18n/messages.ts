@@ -62,7 +62,7 @@ export const APP_MESSAGES = {
     // 段8（Ruling 99）: S13 の「データを全て消す」（文は about.ts）
     deleteAllData: 'Delete all data',
     confirmDeleteAllTitle: 'Delete all data in this app?',
-    confirmDeleteAllDetail: 'Recorded voices, received voices, routines and settings will be deleted.',
+    confirmDeleteAllDetail: "Recorded voices, received voices, routines and settings will be deleted. This can't be undone.",
     confirmDeleteAll: 'Delete',
     clearAllFailed: "Couldn't delete. You can also delete the site data in your browser settings.",
     installTitle: 'Add to Home Screen',
@@ -328,7 +328,7 @@ export const APP_MESSAGES = {
     versionLabel: '版 {version}',
     deleteAllData: 'データを全て消す',
     confirmDeleteAllTitle: 'このアプリのデータを全て消しますか？',
-    confirmDeleteAllDetail: '録音した声・受け取った声・ルーティン・設定が消えます。',
+    confirmDeleteAllDetail: '録音した声・受け取った声・ルーティン・設定が消えます。元に戻せません。',
     confirmDeleteAll: '消す',
     clearAllFailed: '消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。',
     installTitle: 'ホーム画面に追加する',

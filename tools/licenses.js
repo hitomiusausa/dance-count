@@ -5,5 +5,7 @@ export const LICENSE_FILES = Object.freeze({
   'licenses/Inter-OFL.txt': 'node_modules/@fontsource/inter/LICENSE',
   'licenses/NotoSansJP-OFL.txt': 'node_modules/@fontsource/noto-sans-jp/LICENSE',
   'licenses/Preact-MIT.txt': 'node_modules/preact/LICENSE',
-  'licenses/Workbox-MIT.txt': 'node_modules/workbox-precaching/LICENSE'
+  'licenses/Workbox-MIT.txt': 'node_modules/workbox-precaching/LICENSE',
+  // アイコン（icons.svg の repeat・chevron-down は Lucide のパスと一致、gear ほかも Lucide 系の疑い）。lucide は依存ではないので、LICENSE（ISC＋Feather の MIT）を third_party に置く
+  'licenses/Lucide-ISC.txt': 'third_party/lucide/LICENSE'
 });

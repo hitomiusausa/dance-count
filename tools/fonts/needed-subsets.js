@@ -55,8 +55,13 @@ export function textSourceFiles(root = ROOT) {
   });
 }
 
+// コメント（// と /* */）の字は画面に出ない: サブセット（precache の量）を決めない。'https://' の「//」は文字列なので消さない（直前が空白か行頭の時だけ行コメント）
+export function stripComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');
+}
+
 export function readAppText(root = ROOT) {
-  return textSourceFiles(root).map(file => fs.readFileSync(path.join(root, file), 'utf8')).join('');
+  return textSourceFiles(root).map(file => stripComments(fs.readFileSync(path.join(root, file), 'utf8'))).join('');
 }
 
 // アプリの文字が要るサブセット名（Noto → Inter の順）。サブセットの番号と範囲は太さをまたいで同じなので 400 の CSS で決める。
