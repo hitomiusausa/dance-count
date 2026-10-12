@@ -267,3 +267,51 @@
 **残した指摘**: m3・m5〜m11 は記録のまま（公開後・監修シート・製品判断）。Fable／ひとみうさへの 1・2・3・5 は `po-checklist.md` A-6・A-12〜A-14 に、D51 は A-11 に足した。
 
 **修正便で気づいた 1 点 → 同じ修正便で直した（コントローラーの追加裁定）**: S1 の前回カードのボタン「続きから」が 360 幅で「続きか／ら」、320 で「続き／から」と語の途中で折れていた。ボタンの文字を折らない 1 塊（`white-space: nowrap`・英語 “Resume” も）にし、320 幅（`max-width: 359px`）だけカードの左右とボタンの余白を詰めて、名前の「ヴィエニーズ」とボタンがカードの内側に並ぶようにした（ボタンの高さ 48 は変えない）。番人: ui:check「種目名の折れ」を、前回カード（ヴィエニーズワルツを前回にした状態）の名前と「続きから」にも広げ、ボタンがカードからはみ出さない・名前がボタンの下に潜らないことも見る（直す前は 360 ja・320 ja で各 1 件、余白を詰める前は 320 ja で「はみ出し 313 > 292」で落ちることを確かめた）。ゲート: `npm test` 628 / fail 0・typecheck OK・ui:check dev 5199 **664 PASS**／公開ビルド 5198 **664 PASS**（状態の数は同じ・番人の中身が増えた）・`smoke:practice` OK。
+
+---
+
+## 差分の再レビュー（段8 Task 13・Ruling 104-5・2026-10-12）
+
+- 対象: 修正便の diff だけ（`a0d89ec..628ecf5`。`68ca979` I1・`cb7b5b7` I2・`83c114c` m1・`b975cf9` m2／D51・`71443f2` m4・`d6acec0` 記録・`628ecf5` 「続きから」の追加裁定）。レビュー役は Task 11 と同じ。コードは直していない。
+- 別の木: `git archive 628ecf5` → `/private/tmp/dc-final-review-628ecf52cb1bd892a057b202b9ca3f34b48e11ec`（`node_modules` を複写）。dev 5195・公開ビルド 5194・`smoke:pwa` 4195。終わりにサーバーとブラウザを止めた。
+- **判定: 指摘 6 件はすべて Addressed。修正便が作った傷（回帰）は無い。新しい Critical は無い。** 新しく見つけた物は下の N1〜N3（Minor・記録だけ＝仕様 §13 の「1 回」を守り、再修正便は作らない）。
+
+### ゲート（新しい REV で再実行）
+
+| 検査 | 期待 | 実測 |
+|---|---|---|
+| `npm test` | 628 / 0 | **tests 628 / fail 0** |
+| `typecheck` | OK | **OK** |
+| `npm run build` の最後の行 | — | `dist OK: 1078 files, no legacy pages or unreviewed data, voices: default-en-female-v1, precache 172 entries 2.92 MB, app url: (none — student instructions omit the app line)` |
+| `timing:audit` → `compare` | identical | **identical** |
+| `git diff --stat 955462e 628ecf5 -- src/engine` | 空 | **空** |
+| `ui:check` dev 5195／公開ビルド 5194 | 664／664 | **664 PASS・FAIL 0／664 PASS・FAIL 0** |
+| `smoke:practice`・`routines`・`voice`・`share`（5195）・`pwa`（4195） | OK×5 | **OK×5**（pwa は precache 172） |
+| `du -sh dist`・ファイル数・ライセンス | 29M・1078・5 | **29M・1078・5** |
+| `RELEASE=1 node tools/check-dist.js`（URL なし） | 失敗 | **exit 1**（「RELEASE=1 needs PUBLIC_APP_URL …」） |
+| `RELEASE=1 PUBLIC_APP_URL=https://example.invalid/ node tools/check-dist.js` | 通る | **exit 0**・最後の行に `app url: https://example.invalid/` |
+
+### 指摘ごとの判定
+
+| 指摘 | 判定 | 確かめたこと・回帰の有無 |
+|---|---|---|
+| I1 種目名の語の途中の折れ | **Addressed** | `DanceName.tsx`＋`dance-name-words.ts`（表は 1 か所・`words.join('') === name` の時だけ使う＝名前が変わっても文字は変えない・英語は 1 塊で空白で折れる）。`.dc-dance-name { word-break: keep-all; overflow-wrap: normal }` は種目名の `span` にだけ当たり、ほかの本文の折れ（`.dc-phrased`）に触らない。`<wbr>` は読み上げの名前を変えない（textContent は同じ・単体テストで固定）。使う所は S1 のタイル・前回カード・S4 の種目選びだけ（S2 見出し・S5 副題・S3 の行は今までどおり。どれも 1 行に収まる長さ）。番人は文字ごとの行を測る形で、`<wbr>` か空白の所以外の改行を落とす（修正前の木で落ちることを実装者が確認済み）。撮影 `scratchpad/t12/s1-320-ja-JP.png` で「ヴィエニーズ／ワルツ」「スロー／フォックス」「クイック／ステップ」。**回帰なし** |
+| I2 公開 URL の番人 | **Addressed** | `tools/release/app-url.js`（純粋・テスト 3）。`RELEASE` は `'1'`／`'true'` の時だけ＝普段の `npm run build`・`npm test`・ui:check・スモークは空の URL のまま通る（上のゲートで確認）。https でない・URL でない値も落とす。check-dist の最後の行に `app url: …`。**回帰なし**（ただし N2） |
+| m1 起動の殻のまま | **Addressed** | `settings/boot-load.ts`: 開けない→`null`・設定→`DEFAULT_SETTINGS`・ルーティン→`[]`、どれも reject しない。**本物の保存を上書きしないか**: 起動の読み込み自体は何も書かない。以後の書きは `saveSettings` の read-merge-write（`settings/store.ts:31-37`）なので、既定値のまま動いても変えた項目だけが保存へ混ざる（保存済みの他の項目は残り、次の起動で戻る）。例外は 1 つ（N3）。今の連鎖では reject に届かないので、普段の起動の振る舞いは変わらない（ゲートで確認）。**回帰なし** |
+| m2 S9 の行き止まり → D51 | **Addressed（代理決定 D51・ひとみうさの確認待ち）** | `share/layout.ts` の `shareDockNote`: 録音した声もルーティンも無い時だけ `'nothing'`。文「先に声を録音するか、ルーティンを作ると配れます。」は**依頼の形（〜してください）ではない**＝1 画面 1 依頼の規則に当たらない。`phrased()`＝句で折れる・禁止語なし（i18n テスト）。操作は増えない（ui:check「S9 何も無い」ops 2）。撮影 `t12/s9-ja-JP-375.png`。名前の欄の下の「名前を入れると、ファイルを作れます。」と同時に出る時は、押せない理由が 2 つ並ぶ（どちらも事実で、矛盾はしない）。**回帰なし** |
+| m4 殻のコメント | **Addressed** | `index.html:12-13` と `App.tsx` のコメントが事実（render は置き換えない→`removeBootShell()`）に。殻の CSS は変わらず（check-pwa の 600B 以下）。**回帰なし** |
+| 追加裁定「続きから」 | **Addressed** | `.dc-resume-go > span { white-space: nowrap }`（日英）と、`max-width: 359px` の中だけ前回カードの左右とボタンの余白を詰める（ボタンの高さ 48 はそのまま＝U3 は ui:check で PASS）。375 以上の見た目は変わらない（下の N1 の測定で 375 の前回カードの高さは修正前と同じ）。番人はボタンのはみ出し・名前との重なりも見る。**回帰なし** |
+
+### 新しく見つけた物（Minor・記録だけ）
+
+- **N1（既存・修正便の前から）375×667 で、前回カードの種目名が 2 行になる種目だと、10 枚目のタイルが下タブの下に入る（U12）**。再現: S2 でヴィエニーズワルツを開いてから `#/` に戻る（375×667・日本語）。前回カードの高さ 60 → **89**、最後のタイルの下端 **615 > 599**。日本語はヴィエニーズワルツ・スローフォックス・クイックステップ、英語は Viennese Waltz で同じ（他の 6 種目と英語の残りは 60 のまま）。375×548 も同様（505 > 480）。**修正前の木（`e1b0d7d`）でも数値が完全に同じ**＝I1 の直しが作った物ではない（前は語の途中で 2 行・今は語の境で 2 行）。ui:check の S1 の前回カードはワルツで seed しているので見えていなかった。止まりはしない（スクロールで届く・最後の行は半分見えている）。直すなら前回カードの名前を 1 行に保つ形（文字を小さくする／「…」で省く／カードの高さを固定）＝見た目の判断 → **Fable／ひとみうさへ**（下の 1）。仕様 §4 S1 の「前回カード 60px」と U12 の両方に関わる。
+- **N2（I2 の番人の細部）** check-dist は**実行した時の**環境変数 `PUBLIC_APP_URL` を見ていて、`dist` の JS に URL が本当に入ったかは見ない。`npm run build` は vite と check-dist が同じ環境で続けて動くので普段は一致するが、`vite build` と `node tools/check-dist.js` を別々に打つと食い違いうる。公開の手順を `RELEASE=1 PUBLIC_APP_URL=… npm run build` の 1 行に固定していれば問題は無い（`po-checklist.md` A-6 にそう書いてある）。公開後に、check-dist が `dist/assets/index-*.js` の中の URL の文字列を確かめれば根本で塞がる。
+- **N3（m1 の細部・理屈の上だけ）** 設定の読み込みだけが失敗して既定値で動いたセッションでルーティンを削除すると、`forgetRoutineSettings`（`settings/settings.ts`）が既定値の空の `speedPresetByRoutine`／`customBpmByRoutine` を差分として書き、保存済みのルーティンごとの速さの記憶が空になる。今の連鎖では設定の読み込みは reject しない（`loadSettings` の中で受けている）ので届かない。記録だけ。
+
+### Fable／ひとみうさへ（再レビューで足す物）
+
+1. **N1**: 長い種目名（ヴィエニーズワルツ・スローフォックス・クイックステップ・Viennese Waltz）が前回の時、前回カードを 2 行のままにする（今。10 枚目のタイルがスクロールの下）か、1 行に保つ（文字を小さく／「…」）か。直すなら ui:check の S1 の前回カードの seed に長い名前の状態を 1 つ足す。
+
+### 結論
+
+v1 は「公開前にひとみうさが決めること・実機で見ることだけ」の状態。残りは `po-checklist.md`（A 決めること・B 実機・C 文言と好み）の 1 枚に集めた。Critical は 0 で、ひとみうさへの例外の上げは無い。
