@@ -601,7 +601,7 @@ Dance Count で、私の声のカウントを使えます。          （ルー�
 
 ---
 
-- **段8の読み替え（Ruling 100・Task 5）**: 全件表は `docs/app-v1/stage8-error-matrix.md`（仕様のこの表は **18 行**・全件表は「データを消せなかった」を足した 19 行）。`voiceLimitReached` の ja を直した・保存失敗の枠に「閉じる」（元の案内に戻る）・S7 の試聴の失敗で §11 の枠。`ui-state` は 4 値＋S13 の 1。
+- **段8の読み替え（Ruling 100・Task 5）**: 全件表は `docs/app-v1/stage8-error-matrix.md`（仕様のこの表は段8の時点で **18 行**・全件表は「データを消せなかった」を足した 19 行。**D53 で http の行を足して仕様の表は 19 行**＝全件表は段8の記録のまま 19 行で D53 の行は入れていない）。`voiceLimitReached` の ja を直した・保存失敗の枠に「閉じる」（元の案内に戻る）・S7 の試聴の失敗で §11 の枠。`ui-state` は 4 値＋S13 の 1。
 - **D52・D53 の読み替え**: S4 の自動入力の印（エラーではない・`.dc-hint`）の文言 2 つ＝`countsFromHistory`「前に使ったカウントです」／"Count you used before"、`countsFromReviewed`「目安のカウントです」／"Typical count"（「正しい」「監修済み」とは言わない）。S8 に「安全でない接続（http）で開いた」の行（D53。`ui-state=no-https`）。
 
 ## 12. 法務（Ruling 8・D5）

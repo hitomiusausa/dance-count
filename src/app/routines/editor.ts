@@ -137,9 +137,11 @@ export class RoutineEditor {
     let { auto, autoFrom } = previous;
     const renamed = patch.name !== undefined && this.identity(draft.name) !== this.identity(previous.draft.name);
     const untouched = draft.counts.trim() === '' || (auto !== null && draft.counts === auto);
-    // 同じルーティンに同じフィガーがあれば D19 の「複製して追加」が受け持つ（カウントは触らない）。
-    if (renamed && untouched && this.lookupAutoCounts && !(draft.name.trim() !== '' && this.sameName(draft.name, null))) {
-      const found = draft.name.trim() === '' ? null : this.lookupAutoCounts(draft.name);
+    // 同じルーティンに同じフィガーがあれば D19 の「複製して追加」が受け持つ（自動では引かない）。前の自動値は別のフィガーの値なので
+    // 隠れた欄にも残さない（レビュー M-1。打った値は untouched が false なのでそのまま＝D19 の「打っていたカウントは残る」）。
+    if (renamed && untouched && this.lookupAutoCounts) {
+      const copying = draft.name.trim() !== '' && !!this.sameName(draft.name, null);
+      const found = draft.name.trim() === '' || copying ? null : this.lookupAutoCounts(draft.name);
       if (found) {
         draft.counts = found.counts;
         auto = found.counts;

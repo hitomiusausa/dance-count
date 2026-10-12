@@ -669,6 +669,24 @@ test('auto counts: a figure already in this routine is left to "Duplicate and ad
   assert.equal(e.autoNote(), null);
 });
 
+test('auto counts: switching from an auto-filled name into the copy form clears the hidden auto value (review M-1)', () => {
+  const { e, calls } = autoEditor([['ナチュラルターン', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  e.setDraft({ name: 'ナチュラルターン' });
+  assert.equal(e.check().action, 'addCopy');
+  assert.equal(e.open?.draft.counts, '');
+  assert.equal(autoOf(e), null);
+  assert.equal(e.autoNote(), null);
+  assert.deepEqual(calls, ['ウィスク']);
+  // 打った値は複製の形でも残る（D19）
+  e.setDraft({ name: '' });
+  e.setDraft({ counts: '1&23' });
+  e.setDraft({ name: 'ナチュラルターン' });
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '1&23');
+});
+
 test('auto counts: edit rows never auto-fill (Ruling 107-1)', () => {
   const { e, calls } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '123']]);
   e.openRow(1);
