@@ -159,3 +159,15 @@ Spec + Ruling 79–87, D36–D39 (and all prior rulings). PO delegated (asleep).
 - Task 10b: implemented 555056c (525 tests, ui:check 262). Notes for PO list: compact S7 record button 16px no icon; with ≥4 voices at 548 (or ≥3 at 320) the record button can still slip under the tab bar — longer-term option: S7 actions in a fixed dock (PO/Fable decision later).
 - Task 10b: complete (review clean 0C/0I/4M; parked: landscape compact, reloaded #/share w/o intent puts routines first, prep-failure path not auto-tested, compact S7 taste).
 ```
+
+## 最終レビューの直し（2026-10-12・`439eed8`）
+
+最終レビュー（4771d0f..ba785c5）の判定は「直せば可」（0 Critical / 1 Important / 5 Minor）。直した物:
+
+- **I1**: 受け取った声の語の `gainDb` はファイルの値を捨てて 0（`gainDb: 120` のファイルで耳元に爆音、`"loud"` で再生が壊れる、を防ぐ）。`mimeType` は文字列で、録音が作る音声の形（`audio/wav`・`x-wav`・`wave`・`webm`・`mp4`・`ogg`、`;codecs=…` 可・64 字以内）だけ。それ以外は「読めない」。`onsetMs`・`sourceOnsetMs` は 0〜10000ms、`durationMs` は 0 より大きく 10000ms 以下で、外れたら「読めない」（旧画面の未整形の語は後の 2 つが無くてよい）。語ごとのずれ（`wordOffsetsMs`）は ±300ms に収める。上限は `src/app/share/limits.ts`。エンジンは触っていない。
+- **M1**: 1 ファイルの中の同じルーティン ID は 1 度だけ読む。
+- **M2**: 保存した声の配る人の名前を文字（コードポイント）で切る（受け取る時と同じ。絵文字の名前でも同じ先生の声が置き換わる）。
+- **M4**: `consentedAt`・`sourceUpdatedAt`・`adjustedAt` は 40 字以内の ISO 時刻だけ保存する。
+- 直さなかった物: **M3**（置き換えると生徒が合わせた「−40ms」が 0 に戻る）は PO／Fable の判断（PO の一覧へ）。**M5**（ルーティンの置き換えの鍵に配る人を含めない）は段7の `distributor.id` の作業で声と同じ鍵にする（覚え書き）。
+
+検査: `npm test` 532 pass・typecheck OK・build OK（1064 files）・`ui:check`（dev 5199）PASS・違反 0・`smoke:share`／`voice`／`routines`／`practice`（5199）OK。
