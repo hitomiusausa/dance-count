@@ -3634,3 +3634,66 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 - **順**: D52 の残り（監修シートの転記待ちを除く）→ D56 の 4 便（Ruling 118「外れた時」）→ D55（Ruling 114。S2・S5 の帯）→ **D57**（D56 の経路表と D55 の「S2 の counts 1 本」の両方に乗るので最後）。D57 は 2 便: ① データと経路（`figureSlug`・`reviewedFigures`・`routes`・`resolve`・`settings.lastFigure`・`practiceCounts`・テスト）② 画面（`FigureListScreen.tsx`（F1）・`HomeScreen` の振り分け・`PracticeScreen` の `<small>`／チップ／counts・前回カード・表紙 C・`messages.ts`・`base.css`・ui:check・smoke・仕様）。
 - **触るファイルの見込み（D57）**: `router/routes.ts`・`router/resolve.ts`・`routines/figure-names.ts`・`routines/reviewed-counts.ts`・`practice/preferences.ts`・`settings/settings.ts`・新 `screens/FigureListScreen.tsx`・`screens/HomeScreen.tsx`・`screens/PracticeScreen.tsx`・新 `screens/CoverScreen.tsx`（D56 の物に「続きから」の文字を足す）・`App.tsx`・`i18n/messages.ts`・`styles/base.css`（F1 の行は D56 の `.dc-row--play` を使い回す）・`tools/check-app-ui.js`・`tools/smoke-practice.js`・`test/app/routes.test.ts`・`test/app/router-resolve.test.ts`・`test/app/settings/*`・`test/app/practice/preferences.test.ts`・`test/app/routines/*`・`design-skeleton.md`・`device-check-master.md`。
 - **触らない**: `src/engine/*`・`practice/session.ts`・`practice/beat-indicator.ts`（D55 の物のまま）・S4・S5・S7〜S13・声のパック・IndexedDB。
+
+---
+
+# 役割分け計画（2026-10-13）の質問への答え（Fable）
+
+作成: 2026-10-13 / 対象: `docs/superpowers/plans/2026-10-13-app-v1-role-split.md`（`2131d48`）の「Open questions for Fable」1〜6 と「計画者の発見」1〜24 のうち裁定を読み替えた物 / 書き手: Fable（裁定だけ。コードには触れていない）。
+判断の軸: **60〜70代の初めての人が迷わない**こと。好みの物は「ひとみうさ確認」に回し、推奨の既定を付けた。「計画の変更」が「無し」の物は、計画者の既定のまま実装してよい。
+
+## 1. Open questions 1〜6 の答え
+
+| # | 問い | 決定 | 理由（1 行） | 計画の変更 |
+|---|---|---|---|---|
+| 1 | 下タブの切替は履歴の置き換え（`replaceRoute`） | **採用**（既定） | 「‹ 表紙」と iPhone の戻るスワイプが**どのタブからでも表紙**に着くのが、初めての人に一番予測しやすい。タブは画面に見えているので、ブラウザの戻るで戻せなくても失う物が無い（Ruling 118-4 (5) が成り立つ） | **無し**。Ruling 116-2 に注記: 「下タブの切替は履歴を積まない（置き換え）。『‹ 表紙』＝`goBack` は『積んだ履歴があれば戻る』のままで、タブの往復は履歴に入らない」 |
+| 2 | 扉の説明・M0 の状態の 1 行を U10（2 行）から外し `[data-description]`＝4 行まで | **採用**（既定） | 扉の説明は「名前」ではなく「何ができるか」の文で、2 行に削ると英語の中身が落ちる。4 行・16px・`--ink2` なら 375×548 の初期表示に 3 つとも入っている（撮影で確認）。例外は **この 2 か所だけ**（`[data-description]` を他の画面に広げない。広げたい時は裁定） | **無し**。U10 の読み替えとして記録（320 で 4 行・375 で 3 行が上限の目安。5 行になったら短くする） |
+| 3 | 長いフィガー名（「ヘジテーションチェンジ · 1 2 3 1 2 3」）で S2 の声チップが 375×667 の ▶ の帯の下へ | **採用**（既定・S5 の Ruling 71-6 と同じ扱い） | 速さと ▶ が初期表示に残れば、初めての人の 1 本道（種目 → 行 → ▶）は壊れない。名前は**切らない**（「…」にしない。見出し下の `<small>` はフィガーを名指しする唯一の場所。折り返しはよい） | **無し**。ops を固定しないのもそのまま。実機確認表 1e (2) で「見出し下の名前」を見る時に長い名前（ヘジテーションチェンジ）も 1 つ押してもらう（Task 8 Step 2 の 1e (2) に括弧で足す） |
+| 4 | S10 の「ホームへ」「ホームで種目を選んで ▶ を押すと…」 | **変更**（計画者の代案を採る） | 表紙ができて「ホーム」という場所は無くなった上に、60〜70代には「ホーム」＝ **iPhone のホーム画面**（S12「ホーム画面に追加」で同じ語を使っている）に読める。受け取った直後に「ホームへ」を押して iPhone のホームへ戻ろうとする人を作らない | **あり**（下の §2-1） |
+| 5 | M0 の 1 行「指導者の方へ。」（裁定は「先生の方へ。」） | **採用**（既定・**ひとみうさ確認**） | 表紙の扉で（指導者の方）と呼びかけた同じ流れの画面なので、呼び方を揃える。約束: **アプリが読み手に呼びかける時は「指導者」、生徒の側から見た人は「先生」**（「先生のルーティンを鳴らす」「○○先生の声」はそのまま） | **無し**。Ruling 115-3 の「先生の方へ。」→「指導者の方へ。」に読み替え |
+| 6 | F1 の「基本のカウント」の行に出る型は S2 のくわしくで最後に選んだ型（`lastTemplateByDance`） | **採用**（既定） | 行の小さな文字は「押すと鳴る物」と一致していなければならず、S2 の基本が鳴らすのはその型（Ruling 119-3-3 の `practiceChoice` どおり）。2 小節以上のフィガーで型を記憶しないのも Ruling 120-6 のまま | **無し** |
+
+## 2. 計画の変更（実装者が裁定の上書きとして当てる物）
+
+1. **Task 1（S10 の出口・`messages.ts`）— Open question 4**:
+   - `goHome`: 「ホームへ」→ **「種目を選ぶ」**／“Go to Home” → **“Choose a dance”**（鍵の名前は `goHome` のままでよい。改名は任意）。
+   - `receivedVoiceFrom`: 「ホームで種目を選んで ▶ を押すと、{name}の声で鳴ります。」→ **「「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。」**／“Choose a dance on the Home screen and press ▶ to hear {name}'s voice.” → **“Choose a dance in “Use” and press ▶ to hear {name}'s voice.”**
+   - `receivedVoiceNamed`: 同じく「ホームで」→ **「「使う」で」**／“on the Home screen” → **“in “Use””**。
+   - 行き先は Ruling 115-6 のまま（声あり → U1 `#/use`・ルーティンだけ → U2）。「▶ を押す」は F1 の行の ▶ の札・S2 の「▶ 再生」のどちらにも当たるので残す。
+   - 同じ便で直す物: `tools/check-app-ui.js` の「S10 受け取った」の `texts`（274 行）・`tools/smoke-share.js` の `expectText`（205 行）と先頭のコメント・`test/app/lib/honorific.test.ts`（30 行）・`src/app/screens/ReceiveScreen.tsx` 26 行のコメント。`messages.ts` を変えたので `npm run i18n:phrases && npm run copy:sheet` を回し生成物 2 つも同じコミットに（監修シートの S10 の行が新しい文になる）。
+2. **Task 8 Step 3（po-checklist の行 15）**: 「「ホームへ」の文言は今のまま」→ **「S10 の出口は「種目を選ぶ」・案内は「「使う」で種目を選んで ▶ を押すと…」」** に書き替える（Fable の答えの転記）。
+3. **Task 8 Step 2（実機確認表 1e (2)）**: 「行を押すとすぐ鳴り、見出しの下に「ウィスク · 1 2 3」」の後に **「（長い名前＝ヘジテーションチェンジも 1 つ。名前が切れず、▶ が見えること）」** を足す。
+
+ほかの Task（2〜7）は変更無し。
+
+## 3. 計画者の発見のうち裁定を読み替えた物 — 受け入れ／修正
+
+すべて**受け入れ**（修正は無し）。Task 8 Step 5 で各 Ruling の頭に注記する時の文を下に書く。
+
+| 発見 | 読み替えた裁定 | 判断 | 注記の文 |
+|---|---|---|---|
+| 1 | Ruling 116-2（‹ 表紙＝`goBack`） | 受け入れ（§1-1） | 下タブの切替は `replaceRoute`（履歴を積まない）。‹ 表紙と戻るスワイプはどのタブからでも表紙 |
+| 2 | Ruling 116-1（`parseHash` が `#/routines` を redirect） | 受け入れ | `Route.alias: true` で読み替え、`resolveScreen` がハッシュを `#/use/routines` に置き換える。見える動きは同じ（U2 に着く・ハッシュが新しい形）。ui:check の `landsOn` も可 |
+| 3 | U16（h1 は 1 つ）・Ruling 102-2 | 受け入れ | U1 の h1 は「種目を選んでください」（アプリ名は表紙の h1）。フォーカス先もここ |
+| 4 | U10・Ruling 115-1・115-3 | 受け入れ（§1-2） | `[data-description]`（扉の説明・M0 の状態の 1 行だけ）は 4 行まで |
+| 5 | Ruling 47 の流用（U2 の名前） | 受け入れ | U2 の行の名前は 2 行で「…」（`[data-ellipsis]`）。M1 は全部見える。S5 の見出しと同じ扱い |
+| 7 | Ruling 114-6（丸の文字の大きさ） | 受け入れ | 帯の `li` は `data-fineprint`（a・& は 14px・9 個以上は 15px）。`aria-hidden` の 1 字なので U1 の本文の規則から外す |
+| 8 | Ruling 114-9（点灯のスモークの置き場） | 受け入れ | `smoke:app-shell` ではなく **`smoke:practice`**（5 本のゲートの中に入る方がよい） |
+| 9 | Ruling 114-6（`stripCells` の引数） | 受け入れ | `stripCells(program, figureIndex?)`。中身は同じ |
+| 10 | Ruling 122-1・122-3（表が空の前提） | 受け入れ | 3d2f51e で表は 20 件。`requires: 'reviewed'` の状態は本当に走る（スキップの作りは残す）。122-1 の「この便はマージしてよい」は**表が空だった時の文**で、今のマージの条件は Ruling 112-4（ひとみうさの実機確認 1b〜1e の後）。122-4 の約束はそのまま |
+| 11 | Ruling 119-7（G1 3 タップ） | 受け入れ | F1 を通っても「基本のカウント」で鳴るので 3 のまま |
+| 12 | D52 の「自動入力なし」の検査 | 受け入れ | タンゴの未監修の照合済みフィガーで状態を戻した |
+| 14 | Ruling 121「外れた時」 | 受け入れ | 320 の英語で前回カードが 2 行・最後の 2 タイルが下タブの下。320 は横スクロール無しの幅なので U12 は 375 で守る |
+| 17 | Ruling 115-3（2 言語の録音の状態） | 受け入れ | 「英語 · 12 / 12 語 · 日本語 · 7 / 12 語」（鍵 1 つを ` · ` で並べる）。各組が「語」で終わるので読み分けられる。見づらければひとみうさ確認で区切りを「、」に |
+| 18 | Ruling 122-2（`figuresHeading`） | 受け入れ | F1 の見出しはタブの鍵 `tabFigures` を共用（同じ語・1 か所） |
+| 20 | 鍵の整理 | 受け入れ | `tabPractice` → `tabFigures`・`tabSettings`／`teacherVoice`／`forTeachers` 廃止・英語 `routinesCount` を “{count} routines (received ones too)” に |
+| 24 | Ruling 121-1・121-4 | 受け入れ | `lastFigure` は `lastDanceId` が正しい時だけ。表から消えた slug は表示の時点で種目だけ |
+
+（発見 6・13・15・16・19・21〜23 は裁定の範囲内か §1 で答えた物。発見 13＝§1-3・15＝§1-4・16＝§1-5）
+
+## 4. ひとみうさに後で見てもらうこと（判断と確認。po-checklist 15 に対応）
+
+1. **M0 の 1 行「指導者の方へ。」**（§1-5・推奨）／「先生の方へ。」。呼び方の約束（呼びかけは「指導者」・生徒から見た人は「先生」）も含めて。
+2. **S10 の出口「種目を選ぶ」と案内「「使う」で種目を選んで ▶ を押すと…」**（§1-4・変更）。言い方の好み。
+3. **表紙の扉の説明が 3〜4 行**（§1-2・推奨）。英語（320 で 4 行）が読みにくければ英語だけ短くする。
+4. **長いフィガー名で声チップが ▶ の下へ**（§1-3・推奨）。「S2 ヘジテーションチェンジ」を 375×667 で見て、声を替えたい時にスクロールが要るのを許せるか。
