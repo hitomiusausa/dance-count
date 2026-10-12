@@ -3697,3 +3697,85 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 2. **S10 の出口「種目を選ぶ」と案内「「使う」で種目を選んで ▶ を押すと…」**（§1-4・変更）。言い方の好み。
 3. **表紙の扉の説明が 3〜4 行**（§1-2・推奨）。英語（320 で 4 行）が読みにくければ英語だけ短くする。
 4. **長いフィガー名で声チップが ▶ の下へ**（§1-3・推奨）。「S2 ヘジテーションチェンジ」を 375×667 で見て、声を替えたい時にスクロールが要るのを許せるか。
+
+---
+
+# 役割分け 使いやすさの通し確認の質問への答え（Fable・2026-10-13）
+
+作成: 2026-10-13 / 対象: `docs/app-v1/role-split-usability-walk.md`（`63b2bc5`）§5 の Open question 1〜4 と §3-d の「初回起動の白い画面」/ 書き手: Fable（裁定だけ。コードには触れていない）。
+判断の軸: **60〜70代の初めての人が迷わない**こと。依頼（「〜してください」）は各画面 1 つのまま（Ruling 7）・出口のボタンは 1 つのまま（S10）・文言は `messages.ts` だけを正本にして「ひとみうさ確認」に回す。
+
+## 0. 読んで確かめた事実（裁定の根拠）
+
+- 画面替えの処理は `src/app/App.tsx` の `useLayoutEffect`（Ruling 102-2: h1 へ `focus({ preventScroll: true })`）1 か所。スクロールを 0 に戻す処理はアプリのどこにも無い（`platform/viewport.ts` は `scrollBy`・`scrollY` の読みだけ）。進む／戻るの向きは `src/app/state/route.ts` の `hashchange` で `recordVisit`（`router/back-stack.ts`）が列を伸ばすか縮めるかで分かる（A→B→A の進みを「戻った」と誤読する性質は back-stack.ts の注記どおり＝上端に戻らないだけで害は無い）。
+- S10「受け取った」（`ReceiveScreen.tsx` `step === 'done'`）: 文は `voice ? voiceNext() : receivedRoutines` の 1 つ。`plan.routines.length` で「ルーティンも入っていた」は分かる。`ui:check` の「S10 受け取った」はもともと声＋ルーティンのファイル（`bundle-voice-routine.dancecount.txt`）で通している。
+- S9（`ShareScreen.tsx`）: `voices` は `origin === 'recorded' && isCompletePack()` だけ。途中の声は `listVoicePacks()` の結果に入っているが捨てている。`packProgress(pack)` が `{ recorded, total }` を返す。M0 の状態の 1 行は `voiceStatusPack`（`{language} · {count} / {total} 語`）。
+- 250px 相当: `ui:check` の拡大の検査は `ZOOM_VIEWPORT` 640×450（1280 の 200%）と `NARROW_VIEWPORT` 320×568 の横スクロールだけ。250 は見ていない。表紙の前回の行は `.dc-door-resume`（U1 は `.dc-resume`）・言語ボタンは `.dc-utility`・速さは `.dc-seg`（3 列・`gap: 8px`・列数は `controls.tsx` のインライン `gridTemplateColumns`）。320 向けの `@media (max-width: 359px)` が base.css 560 行にある。
+- 起動の白: Ruling 101 と Task 9b で測定済み（Simulator の再起動 0.6〜1.1 秒・大半はページ要求の前）。今回の 5〜10 秒は **5184 から新しく追加した 3 つ目のアイコンの最初の起動**＝新しい保存領域・SW も precache（172 entries・2.94 MB）も書体も全部初回。実機確認表 2-26 が「追加直後の最初の起動と再起動を 2 回」をすでに求めている。
+
+## 1. 答え（4 問＋白い画面）
+
+| # | 問い | 決定 | 理由（1 行） |
+|---|---|---|---|
+| 1 | 前の画面のスクロールを持ち越す（F1 の下の行 → S2 が 96〜116px 下から） | **採用**（進む時だけ上端。戻る時はブラウザの復元のまま） | 押したフィガーの名前と「‹ 戻る」が見えない画面は、初めての人に「違う所に来た」と見える。戻った時に F1 の同じ行に戻るのは今の良い所なので残す |
+| 2 | S10 受け取った後、文と出口がルーティンを指さない | **採用**（ルーティンも入っていた時だけ 1 文足す。ボタンは 1 つのまま） | 生徒が欲しいのは先生のルーティンのことが多く、下タブに気づかない人には「どこへ行った？」になる。出口を 2 つにすると判断が増える（Ruling 7）ので文で案内する |
+| 3 | S9「録音した声はまだありません。」が途中（7 / 12 語）でも出る | **採用**（途中の声がある時は進み具合と「そろうと配れる」の文に替える。操作は増やさない） | 「録ったのに無いと言われた」は先生の信頼を削る。何語まで録れていて何をすれば配れるかを書けば、戻る先（M0「続きから」）は 1 つ前にある |
+| 4 | Safari 150%（250px 相当）で表紙と英語の S2 が崩れる | **採用**（300px 未満の段を足す。検査は 250 幅の「横スクロール無し」を日英で足す。U12 の 320 の約束は変えない） | 「ぁあ」の拡大はまさに 60〜70代が使う機能。Ruling 7 は「拡大で横スクロールが出ない」を約束しているのに、電話の拡大は検査していなかった |
+| 白 | ホーム画面の初回起動で 5〜10 秒白い（Simulator） | **直さない。実機で測る**（Simulator の初回の性質と見る） | 新しい領域の初回は SW と precache 2.94 MB と書体を全部取りに行く最悪の場合で、Ruling 101・Task 9b の再起動 0.6〜1.1 秒と矛盾しない。実機確認表 2-26 のとおり SE で「追加直後の最初の起動」と「再起動」を 2 回ずつ測り、最初の起動が 3 秒を超えたら po-checklist 10（最初に要る CSS をインライン化）を「任意」から「やる」に上げる。今の便では何もしない |
+
+## 2. 実装の指示（直し便の実装者へ。番号は §1 と同じ）
+
+### 2-1. 進む時だけ新しい画面を上端に（Ruling 102-2 の読み替え）
+
+1. `src/app/router/back-stack.ts` に純粋関数を 1 つ: `export function wentBack(before: readonly string[], after: readonly string[]): boolean { return after.length < before.length; }`（列が縮んだ＝戻った。置き換え `replaceTop` は同じ長さ＝進む扱い）。
+2. `src/app/state/route.ts`: モジュール変数 `let lastMoveWasBack = false;`。`useRoute` の `onHashChange` で `const next = recordVisit(visited, hash); lastMoveWasBack = wentBack(visited, next); visited = next;`。`replaceRoute` の中でも `lastMoveWasBack = false`（`setHash(…, { replace: true })` が `hashchange` を出すかは `platform/hash.ts` を読んで確かめ、出すならそちらに任せてよい）。`export function lastNavigationWasBack(): boolean { return lastMoveWasBack; }`。
+3. `src/app/platform/viewport.ts` に `export function scrollPageToTop(): void { window.scrollTo(0, 0); }`（引数の形で即時。`behavior: 'smooth'` は使わない＝reduced-motion と Ruling 7「遷移 300ms 以下」）。
+4. `src/app/App.tsx` の画面替えの `useLayoutEffect`（`shownScreen` を使っている物）: `previous === null || previous === resolved.screen` で抜けた**後**・`focus()` の**前**に `if (!lastNavigationWasBack()) scrollPageToTop();`。最初の表示（`previous === null`）では動かさない（再読み込みの復元はブラウザに任せる）。コメントに「進む時だけ上端。戻る時はブラウザの復元（F1 の同じ行に戻る）を残す。Fable 答え 2026-10-13 §2-1」。
+5. テスト: `test/app/router-back.test.ts` に `wentBack` の 3 件（進む＝false・`historyBack` 相当で縮む＝true・`replaceTop` 相当の同じ長さ＝false）。
+6. `tools/check-app-ui.js`: 状態を 1 つ足す — `{ name: 'S2 F1 の下の行から', hash: '#/figures/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', steps: [{ click: '[data-screen="F1"] [data-figure-row] >> nth=-1' /* 一番下の行。実際の行のセレクタは FigureListScreen を見て合わせる */ }, { wait: '[data-screen="S2"]' }], atTop: true, speedAndPlay: true }`。`audit` に `atTop` の判定を 1 行足す: `if (state.atTop && window.scrollY > 0) issues.push(\`scroll carried over: scrollY ${window.scrollY}\`)`。Playwright の `click` は行を見える所まで自動でスクロールするので、F1 を下へ送った状態が自然に再現される（別の scroll ステップは要らない）。S5（U2 の長い一覧から）・S4（M1 から）は同じ 1 か所の直しなので状態は足さない。
+7. `docs/app-v1/device-check-master.md` の 1e (2) に括弧で足す: 「（F1 の一番下の行を押した時も「‹ 戻る」と名前が上に見える・‹ 戻る で F1 の同じ行に戻る）」。
+
+### 2-2. S10 受け取った — ルーティンも入っていた時の 1 文（文言＝ひとみうさ確認 §3-1）
+
+1. `src/app/i18n/messages.ts` に鍵 `receivedRoutinesToo` を日英に: ja **「ルーティンは、下の「ルーティン」にあります。」**／en **“The routines are under “Routines” at the bottom.”**（「先生の」は付けない＝S10 の文は配る人を {name} で呼ぶ約束で、名前の無い束もある。「タブ」は使わない）。
+2. `src/app/screens/ReceiveScreen.tsx` `step === 'done'`: 今の `<p class="dc-body">` の**後**に `{voice && plan.routines.length > 0 && <p class="dc-body">{phrased(translator, 'receivedRoutinesToo')}</p>}`。出口のボタン・行き先（声あり → U1 `#/use`）は変えない。ルーティンだけの束は今のまま（`receivedRoutines`・U2 へ）。
+3. `tools/check-app-ui.js` 351 行「S10 受け取った」（声＋ルーティンの束）の `texts` に `'ルーティンは、下の「ルーティン」にあります。'` を足し、`firstView: ['.dc-dock .dc-primary']` を付ける（375×548 で 1 文増えても出口が初期表示に入ること）。声だけの束の fixture（`test/fixtures/share/` に無ければ `tools/make-share-fixtures.js` で 1 本作る）で `absent` に新しい文を入れた状態を 1 つ足す（「S10 受け取った・声だけ」）。
+4. `tools/smoke-share.js` 208 行の後に `expectText(s, 'ルーティンは、下の「ルーティン」にあります。', 'S10 done routines')`。`test/app/lib/honorific.test.ts` は触らない（文が増えただけで {name} の形は同じ）。
+5. `npm run i18n:phrases && npm run copy:sheet` を回し、`ja-phrases.json` と監修シートの差分を同じコミットに。
+
+### 2-3. S9 — 途中の声がある時の文（文言＝ひとみうさ確認 §3-2）
+
+1. `messages.ts` に鍵 `shareVoiceInProgress`: ja **「{language}の声は {count} / {total} 語まで録音ずみです。{total} 語そろうと配れます。」**／en **“Your {language} voice has {count} / {total} words. It can be shared once all {total} are recorded.”**（`{language}` は M0 の `voiceStatusPack` と同じ `languageJapanese`／`languageEnglish` の訳。依頼の形にしない＝S9 の依頼は「あなたの名前」の 1 つのまま）。
+2. `src/app/screens/ShareScreen.tsx`: `listVoicePacks` の `then` で `const partial = list.filter(pack => pack.origin === 'recorded' && !isCompletePack(pack) && packProgress(pack).recorded > 0)` を取り、**録れている語が一番多い 1 本**（同数なら `updatedAt` の新しい方。フィールド名は `VoicePackRecord` を見て合わせる）を state `inProgress` に持つ。146 行の `voices.length === 0` の枝で `inProgress ? phrased(translator, 'shareVoiceInProgress', { language, count: progress.recorded, total: progress.total }) : phrased(translator, 'shareNoRecordedVoice')`。class・位置・`shareDockNote` は変えない（操作は増えない。ops 3 のまま）。
+3. `tools/check-app-ui.js`: 302 行の隣に `{ name: 'S9 録音が途中', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.partialJa], ops: 3, total: 3, primaryDisabled: true, texts: ['日本語の声は 7 / 12 語まで録音ずみです。'], firstView: ['[data-list]'] }`（`V.partialJa` の語数が 7 でなければ数を合わせる）。「S9 録音なし」はそのまま（声の seed が無い＝今の文）。
+4. 320 幅の折れ: 「録音ずみです。」が語の途中で折れたら `segment-ja.js` の `OVERRIDES` で句を決める（Task 7 直し 2 と同じやり方）。
+5. `i18n:phrases`／`copy:sheet` は 2-2 と同じ便で 1 回。
+
+### 2-4. 300px 未満の段（Safari 150%）と 250 幅の検査
+
+**約束の読み替え**: 320（U12）が設計の幅で Ruling 7 の数値は 320 以上で守る。**300px 未満では「ページが横に動かない・文字が切れない・主要ボタンが押せる」の 3 つだけ**を守る（48px・2 行・初期表示の数は問わない）。
+
+1. `src/app/styles/base.css` に `@media (max-width: 299px) { … }` を 320 の段（560 行）の**後**に足す。中身:
+   - 表紙・U1 の前回の行を 2 段に: `.dc-door-resume, .dc-resume { flex-wrap: wrap; } .dc-door-resume .dc-resume-text, .dc-resume .dc-resume-text { flex: 1 1 100%; } .dc-door-resume .dc-resume-go, .dc-resume .dc-resume-go { margin-left: auto; }`（名前の下・右寄せに「▶ 続きから」）。
+   - 「前回の練習」の折れ: `.dc-resume-text small { white-space: nowrap; }`（この 1 行は media の外に置いてよい。日英とも 2 語以内）。
+   - 言語ボタン: `.dc-appbar { flex-wrap: wrap; } .dc-brand { min-width: 0; } .dc-utility { flex: 0 0 auto; padding: 0 10px; }`（ボタンは自分の幅を保ち、名前の側が縮む。入らなければ次の行へ）。
+   - 速さ: まず**詰める** `.dc-seg { gap: 4px; } .dc-opt { padding-left: 2px; padding-right: 2px; } .dc-opt-label { font-size: 16px; } .dc-opt small { font-size: 14px; }`（16／14 は Ruling 7 の下限）。250×445 の英語で `.dc-opt-label` の `scrollWidth > clientWidth` が残るなら、`controls.tsx` のインライン `gridTemplateColumns` を CSS 変数（`style={{ '--seg-cols': shown.length }}`・`.dc-seg { grid-template-columns: repeat(var(--seg-cols, 3), 1fr); }`）に替え、**英語だけ** `.dc-shell:lang(en) .dc-seg { grid-template-columns: 1fr; }` で縦 1 列に（日本語の「ゆっくり／標準／速め」は詰めるだけで入る見込み）。どちらにしたかを報告に書く。
+2. `tools/check-app-ui.js`: `const PHONE_ZOOM_VIEWPORT = { width: 250, height: 445 }; // iPhone SE の Safari 150%（「ぁあ」の 3 段目）相当` を足し、322〜541 行の 320 の周（`narrow`）と同じ形で **250×445 を日英 2 周**（ページの `scrollWidth > clientWidth` だけ。`report('横スクロール 250x445 …')`）。`CHECKED` の全状態を回す。ページが横に動く状態が表紙・S2 以外に出たら、その要素に `overflow-x: auto`（要素の中だけ横に動かす。ページは動かさない）か折り返しで直し、安く直せない物は**状態名と理由を報告に書いて Fable へ**（勝手に除外しない）。
+3. 加えて表紙（初回・前回あり・長いフィガー）・U1 前回あり・S2 ワルツの 5 状態だけ、250×445 の日英で `audit` の U10「clipped text」（812 行の判定）も通す（`firstView` と ops は問わない。`narrowOnly`／`zoomOnly` のような印で 48px・初期表示の数の判定を外す）。
+4. 直した後、250×445 の日英で表紙（前回あり）・S2 ワルツ（英語）のスクリーンショットを `~/.playwright-mcp/role-fix-250-*.png` に残す。320・375×548・1280 の `ui:check` 全部が変わらず PASS であること（320 の配置が動いたら戻す）。
+5. `docs/app-v1/device-check-master.md` 2 節の「拡大 150%」の行に「表紙の「▶ 続きから」が名前の下に 1 段で見える・English が枠に入る・英語の S2 で横に動かない」を足す。
+
+### 2-5. 白い画面 — 作業なし
+
+コードは触らない。`docs/app-v1/device-check-master.md` 2-26 の「やること」に 1 文足す: 「Simulator では 5184 から新しく追加したアプリの最初の起動が 5〜10 秒（新しい保存領域・SW と precache と書体が全部初回）。実機では Safari で一度開いてから追加するので SW は入っている＝実機の値だけで判断。最初の起動が 3 秒を超えたら po-checklist 10 を「やる」に上げる」。
+
+### 2-6. 便のまとめ方
+
+1 つの便で 2-1 → 2-4 → 2-2 → 2-3 の順（文言の 2 つは最後。生成物の回し直しを 1 回にする）。ゲートは Task 7 と同じ 5 本（`npm test`・typecheck・build・`ui:check` 全部・smoke 5 本）＋ 新しい 250 の周。コミットは「feat(app): 進む時は上端・S10 のルーティンの 1 文・S9 の途中の声・300px 未満の段（Fable 答え 2026-10-13）」の 1 つでよい。`messages.ts` を変えたので `stage8-copy-review.md`（監修シート）の差分も同じコミットに。
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認。po-checklist 15 の続き＝16 として Task 8 の書き手が足す）
+
+1. **S10 の 1 文「ルーティンは、下の「ルーティン」にあります。」**（§2-2・推奨）。— 代案: (a) 足さない（下タブで 1 タップ） (b) 「{name}のルーティンは…」と名前を付ける（名前の無い束には出せないので鍵が 2 つになる）。
+2. **S9 の途中の声の文「日本語の声は 7 / 12 語まで録音ずみです。12 語そろうと配れます。」**（§2-3・推奨）。— 代案: (a) 今の「録音した声はまだありません。」のまま (b) 「録音が途中の声は、12 語そろうと配れます。」（語数を出さない。短い）。
+3. **300px 未満の約束は 3 つだけ**（§2-4・横スクロール無し・文字が切れない・主要ボタンが押せる。48px と初期表示の数は問わない）。実機の Safari 150% で表紙と S2 を見て、「▶ 続きから」が名前の下に来る形でよいか。
+4. **起動の白は実機の値で決める**（§2-5）。SE で「追加直後の最初の起動」が 3 秒を超えていたら po-checklist 10（最初に要る CSS をインライン化）を「やる」に。
