@@ -121,6 +121,7 @@
 1. UI 言語は端末言語から `resolveUiLocale` で決定（日本語以外は英語）。S1 右上の言語ボタン（`[data-utility]`）で即切替、S6 にも同じ項目。
 2. チュートリアルは出さない。S1 見出し「種目を選んでください」が説明を兼ねる。
 3. 初めて再生に成功した後、S1 の最下段に1回だけ「ホーム画面に追加すると、アプリのように使えます →」カード（× で閉じたら二度と出さない。S12 はいつでも S6 から読める）。ホーム画面アプリとして起動中（`display-mode: standalone`）なら出さない。
+   - **段7の読み替え（Ruling 92-7・D42・段7計画の発見 10・15）**: カードは初めて**鳴った**後（`hints.firstPlaybackDone`。S2・S5・S4 の試聴のどれでも。声が読めず鳴らなかった時は立たない）・**iPhone と Android のブラウザだけ**（PC には出さない）・閉じるは「× 閉じる」（文字つき。リンクの外に置く）→ `hints.homeScreenCardDismissed`。
 4. マイク・保存の許可は起動時に求めない（録音・保存の直前だけ）。
 
 ---
@@ -140,6 +141,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 縦の寸法（モックで実測、余裕は 3px しかないので変えない）: 上余白 12・アプリ名の行 48＋下 8・前回カード 60・先生カード 56（上 4）・見出し 22px（上 8／下 4）・タイル 64×5 行（行間 8）→ 最終タイルの下端 596px ≤ 上限 599px（667 − タブ 68）。
 - 載せない: ルーティン、声の選択、速さ、注意書き、録音ボタンそのもの。
 - 文言: 種目を選んでください / Choose a dance。前回 / Last time。続きから / Resume。先生の声で練習 / Practice with your teacher's voice。ホーム画面に追加すると、アプリのように使えます / Add to Home Screen to use it like an app。
+- **段7の読み替え（Ruling 90-3・92-7）**: 最下段は 種目タイル → 更新の帯（「新しい版があります。」＋「更新する」）→ 案内カード（「ホーム画面に追加すると、アプリのように使えます ›」＋「× 閉じる」）。帯の「更新する」は `[data-alert-action]` で数えない（S1 更新あり 2／2・案内カードあり 全体 5、375 の初期は 3 のまま）。
 
 ### S2 再生（集中）
 - 初期表示（上から）: 「‹ 戻る」→ 種目名見出し 28px ＋副題 16px（選択中のカウントの型を同じ整形で表示。Ruling 22）→ 現在カウント（鳴っている語をそのまま表示。スマホ 96px／PC 200px、琥珀色）と小節内の拍インジケータ（操作ではない。現在拍だけ琥珀色の下線 6px＋太字、他は灰の下線 3px）→ 速さ3択（`[data-group="speed"]`）→ トグル2つ（メトロノーム・はじめの合図、Ruling 19）→ 声チップ「声: 標準（英語）」→「くわしく」（`summary[data-more]`）。画面下固定に ▶ 再生／■ 停止（72px 以上・幅は画面の60%以上）。
@@ -192,6 +194,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 ### S6 設定（ルート）
 - 項目（上から）: 言語（日本語 / English）、声（→ S7）、ホーム画面に追加する方法（→ S12）、音が鳴らない時（→ S11）、見出し「先生の方へ / For teachers」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9。**段5で足した**。期待値 4。Ruling 86-5）、プライバシー・アプリについて（→ S13、版番号を併記）。
 - 載せない: 開発者向け項目、キャッシュ操作。「データを全て消す」は S13 の最下部。
+- **段7の読み替え（Ruling 92-8・90-3）**: 「ホーム画面に追加する方法」（→ S12）を「音が鳴らない時」の上に足した。主要操作 **5**（上限ちょうど。375×548 は 4＝「ルーティンを配る」が下）。見出しの下に更新の帯（帯があっても言語・声・「ホーム画面に追加する方法」は 548 の初期表示に入る）。**段8で S13 の行が入ると 6 になるので、段8で S6 の並びを裁定し直す**（候補: 「先生の方へ」の 2 行を 1 行に）。
 
 ### S7 声（一覧）
 - 大きなラジオ形のリスト（`[data-group="voice"]`）: 「標準の声（英語）」「標準の声（日本語）」（Ruling 5 のゲート通過後のみ＝段6c）「○○さんの声」（受け取った）「自分の声」（録音途中なら「7/12」）。選択中の行に ▶ 試聴（ワルツ1小節）。並びは 標準 → 自分 → 受け取った → 途中（Ruling 60-1）。
@@ -223,12 +226,14 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 選んだ後: 中身の確認（「○○さんの声・日本語・12/12」「ルーティン 2本」）→「使う / Use」。同名の声があれば「置き換える／両方残す」。
 - Android の share_target から来た時は、確認画面から始まる。
 - **段5の読み替え（Ruling 83・79・D38）**: 3 つの状態。**選ぶ**（主要操作 1）: 「ファイルを選ぶ」（`<button>` が隠した `<input type=file accept=".txt,.json,text/plain,application/json">` を同じタップで `click()`）＋説明は**文字の 2 行**「LINE で届いたファイルは、先に「"ファイル"に保存」しておくと、ここで選べます。」「選ぶ画面では「最近使った項目」にあります。」（図解 SVG は作らない。「最近の項目」は iOS 26.3 の実物に合わせて「最近使った項目」）。**「Safari で開いて受け取る」リンク（F3）は作らない**（F25。段7の実機確認表で見る）。LINE のアプリ内ブラウザで開いた時だけ枠「LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。」＋「Safari で開く」（`?openExternalBrowser=1`）。エラーは同じ画面の枠（§11）。**確認**（主要操作 2）: 中身の一覧（「{name}さんの声（英語）· 12 語」・「ルーティン 2 本: …」・読めなかった本）＋同じ先生の声・同じルーティンは「「使う」で新しい方に置き換わります。」の 1 行。**「両方残す」は作らない**（D38。同じ先生の見分けは D40）。帯「やめる」「使う」。**受け取った**（主要操作 1）: 受け取った声は**その場で選ばれ**、「ホームへ」（声があれば）／「ルーティンを見る」。保存に失敗したら確認の画面に留まり「保存できませんでした。…」。Android の share_target は段7（段5は受け口 `takeInboxFile` の契約だけで、Cache に置かれたファイルがあれば確認から始まる）。
+- **段7の読み替え（Ruling 90-5・93-3）**: 新しすぎるファイルの枠の「更新する」は SW の更新（`checkForUpdateThenReload`: 待っている新しい版があれば切り替え・無ければ確かめて最大 5 秒待つ・それでも無ければ再読み込み）。Android の share_target（POST `./receive`）は段7で実装し、S10 は確認から始まる。「使う」の後に `persist()`。補助 2 行の iOS の語は折らない塊（Task 12）。
 
 ### S11 音が鳴らない時（集中）
 - 3項目以内: 本体横のスイッチ（マナーモード）を確認／音量を上げる／イヤホン・Bluetooth の接続を確認 → 最後に「もう一度 ▶ を押してください」。技術用語なし。
 
 ### S12 ホーム画面に追加する方法（一覧）
 - iPhone（Safari の共有 → ホーム画面に追加）、Android（Chrome のメニュー → アプリをインストール。`beforeinstallprompt` が取れればボタンを出す）、PC（アドレスバーのインストール）。図は SVG。
+- **段7の読み替え（Ruling 92・D41・D43・Fable の答え 5）**: **端末ごとに 1 通りだけ**出す（`platformKind()`・`isStandalone()`）。iPhone の Safari＝手順 4 行（「…」→「共有」→「もっと見る」→「ホーム画面に追加」→「追加」。iOS 26.3 の Simulator で辿った実物）と D43 の 1 行「録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。…」・iPhone の他のブラウザ（Chrome・LINE など）＝「Safari で開くと…」＋「アドレスをコピー」・Android＝`beforeinstallprompt` があれば「ホーム画面に追加する」ボタン、無ければ手順 3 行・PC＝「iPhone や Android で開くと…」＋「アドレスをコピー」（PC のアドレスバーのインストールは書かない）・追加済み＝1 行だけ。**図は作らない**（行頭の線画のアイコン「…」・共有・⊞ が iOS の実物と同じ形）。主要操作 0／1／1（ボタンあり）・0（なし）／1／0。
 
 ### S13 プライバシー・アプリについて（一覧）
 - §12 の内容、運営者 くうが株式会社、版番号、「公式・監修済みのものではありません」の明記、最下部に「データを全て消す」（確認ダイアログ）。
@@ -331,6 +336,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
    - **段4で足した期待値**: S2・S5 くわしく開＝9、S4 くわしく開＝8（声のタイミング）。S6＝3。S7＝2（標準だけ）・2（3 本）・3（行を開）。S8＝2（説明）・2（1 語目）・4（録れた語・前の語あり）・4（完成）・2（マイク拒否。D30）・2（声が入っていない）・0（非対応）。
    - **段5で変えた・足した期待値**（Ruling 82・83・86・87-2）: S3 1 本開＝3（「配る」は `routine-actions` の中）。S4 最初の保存の案内＝3。S6＝**4**。S7＝**3**（標準だけ）・**3**（3 本）・**4**（録音の声を開。「配る」「削除」）・**4**（受け取った声を開。「削除」だけ）。S8 完成＝**5**（上限ちょうど）。S9＝5（声あり）・3（録音なし・ルーティン 1 本）・6（作った後）。S10＝1（選ぶ）・2（確認）・1（受け取った）。`ui:check` は段5の終わりで **262 項目**（dev と公開ビルドの両方）。
 7. **画面の大きさ（段4）**: 375×667・1280×900 に加えて、(a) **320×568 で全状態に横スクロールが出ない**、(b) **375×548（iPhone SE の Safari）でも各画面の主要操作が初期表示に入る**（全状態を同じ規則で検査。例外は S5 の声チップ＝スクロールの下（S5 くわしく閉の 3 状態は期待値 4）と、警告の枠つきの S2/S5＝速さと ▶ だけ。Ruling 71・23）。`ui:check` は段4の終わりで 192 項目。
+   - **段7で足した期待値**（Ruling 90-7・92-7・92-8・95-3・Fable の答え 1・2）: S1 更新あり 2／2・S1 案内カード 全体 5（375 の初期は 3）・S3 更新あり 1／1・S6 **5**（375×548 は 4）・S6 更新あり 5（548 は 3）・S7 更新あり 3／3・S12 は上の S12 のとおり・S8 iPhone Safari（未録音。D46）は段4のまま。更新の帯の「更新する」は `[data-alert-action]`（数えない）。`ui:check` は段7の終わりで **332 項目**（dev と公開ビルド＝SW つきの両方）。
 
 ### 手動レビュー項目（チェックリスト）
 - 状態を色だけで示していない（色＋形＋文字）。
@@ -357,6 +363,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - IndexedDB `dance-count-v2` を version 1 → 2 に上げる。既存 `voice-packs` ストアを維持し、`routines`・`settings` を追加。
 - 移行: localStorage の `dance-count-v2-ui-locale` は初回起動時に読み取って IndexedDB へ移し、移せたら消す（段2で済）。`dance-count-v2-routine-draft:*` は旧画面（別オリジン）の旧ルーティン（`legacy-import`）の下書きなので移行しない（Ruling 41）。
 - 初回の保存成功時に `navigator.storage.persist()` を要求（結果は画面に出さない）。**段4で前倒し**: 録音の最初の語を保存した後（Ruling 56）。段7はルーティン側も含めて見直す。
+  - **段7の読み替え（Ruling 94）**: `persist()` は 最初の語の保存の後（段4）・**S4 の最初の保存の後・S10 の「使う」の後・ホーム画面のアプリとして起動した時**（ブラウザのタブでは起動時に呼ばない）。画面が隠れたら（`visibilitychange: hidden`・`pagehide`）S4 の開いている行を閉じて保存する（ハッシュは置き換えない。未完成の行は捨てる＝「戻る」と同じ）。
 - 消失対策: 先生の録音完成時（**段5**）とルーティンの初回保存時（**段5**。Ruling 41・55-3）に「ファイルに保存（バックアップ）」を勧める1行を各1回だけ出す。「ファイルに保存」は配布ファイルと同じ形式（§7 配布ファイル）で、同意欄は付けない。
   - **段5の読み替え（Ruling 86・82-3・D37）**: 「ファイルに保存」のボタンは作らない。1 行は**「配る」で作ったファイルを自分にも送る**ことを言う（S8 完成・S4 の最初の保存）。
 - Service Worker のキャッシュにユーザーデータは入れない。
@@ -393,6 +400,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 録音・受け取った声の「声のタイミング」はそのパックの `wordOffsetsMs` に12語同じ値で保存（既存の範囲検査 ±1000ms の内側、UI は ±200ms）。**[仕様差] 段4**: `timingAdjustments.globalOffsetMs` に 1 つの値で持つ（Ruling 62-3。`wordOffsetsMs` は使わない。受け取った声の `wordOffsetsMs` の扱いは段5）。
 - **段4**: `selectedVoiceId` は録音・受け取った声の ID も残す（`normalizeSettings` は標準へ戻さない。パックが無い・途中なら再生時に黙って標準（英語）。Ruling 61）。`voiceLocale` は選んだ声から導いて同時に書く（Ruling 60-3）。
 - **段5**: `distributorName`（S9 の名前・既定 `''`・40 字）と `hints.backupTipShownForRecording`・`hints.backupTipShownForRoutine` が入った（Ruling 86-6）。
+- **段7**: `hints.firstPlaybackDone`（初めて鳴った印。S1 の案内カードの条件）と `hints.homeScreenCardDismissed`（「× 閉じる」）が入った（Ruling 92-7）。保存されていた語の `gainDb` は −24〜0 dB に収める（Fable の答え 7）。
 
 ### 配布ファイル（Ruling 4）
 ```
@@ -463,12 +471,15 @@ Dance Count で、私の声のカウントを使えます。          （ルー�
 （スマホで受け取るのが便利です）
 アプリ: <PUBLIC_APP_URL>?openExternalBrowser=1      （PUBLIC_APP_URL が空なら行ごと出さない）
 ```
-英語は 1 行目 `You can practice with my voice in Dance Count.`（`practise` でなく）、Android は `[Android] Save this file, then follow the same steps and “Choose a file”`。`?openExternalBrowser=1` は LINE のトークから開く時に Safari／Chrome で開くため（F26・推測。実機確認表 A-4）。
+英語は 1 行目 `You can practice with my voice in Dance Count.`（`practise` でなく）、Android は `[Android] Save this file, then follow the same steps and “Choose a file”`。
+
+**段7の読み替え（Fable の答え 4）**: share_target が入ったので【Android】の行は「【Android】このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」）」／英「[Android] Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”)」。Android の手順は実機未確認（実機確認表 A-15）。`?openExternalBrowser=1` は LINE のトークから開く時に Safari／Chrome で開くため（F26・推測。実機確認表 A-4）。
 
 ### 技術
 - 書き出し: `navigator.canShare({files:[file]})` が真なら `navigator.share`、偽なら `<a download>`。
 - Android の受け取り: manifest に `share_target`（`method:'POST'`, `enctype:'multipart/form-data'`, `params.files:[{name:'bundle', accept:['application/json','.json']}]`）。Service Worker が POST を受けてファイルを一時保存し `#/receive` へリダイレクト。
   - **段5の読み替え（Ruling 79-2）**: share_target・SW は**段7**。段5は受け口の契約だけ: Cache `dance-count-inbox` の `./inbox/bundle`（相対。SW はアプリの根に置く）にファイルを `put`・ファイル名はヘッダー `X-File-Name`（`encodeURIComponent`）・`Response.redirect('./#/receive', 303)`。S10 はマウント時に `takeInboxFile()` で読んで消す。`accept` は `['text/plain','.txt','application/json','.json']`（D36）。
+  - **段7の読み替え（Ruling 93-3）**: share_target と SW の POST 受けは段7で実装した。契約の値（Cache 名・鍵・ヘッダー名・欄の名前・上限 20MB）は **`src/share-inbox-contract.ts` 1 か所**で、画面と SW が同じ値を import する。上限を超えるファイルは受け口に書かない。ファイルの無い POST も 303 で S10 の「選ぶ」へ。
   - 書き出しの細部（段5・Ruling 81）: ファイルはタップの前に作り、`share()` はタップの最初の文で `await` を挟まずに呼ぶ。取り消しは何もしない。拒否（`NotAllowedError` 等）は保存せず「ファイルを保存する」ボタンを出す（次のタップで `<a download>`）。受け取りの `accept` は `.txt,.json,text/plain,application/json`。
 - iOS は share_target 不可（F6）。ファイル選択が全端末共通の正。
 
@@ -526,12 +537,14 @@ Dance Count で、私の声のカウントを使えます。          （ルー�
 ### `?v=` と `no-store` の撤去
 - `audio-engine.js` の `import ... from './voice-pack-loader.js?v=…'` を含め、`src/engine` 内の `?v=` を全て除去（Vite がハッシュ名を付ける。二重インスタンス化の防止）。
 - `voice-pack-loader.js` の `fetch(..., { cache:'no-store' })` を外し、既存の `fetchImpl` 注入口で呼び出し側がキャッシュ方針を決める。
+- **段7の読み替え（Ruling 89-5）**: 標準の声の URL の `?v=<revision>`（`voice-pack-loader.js`）は**エンジンを触らず SW で吸収**した（`precacheAndRoute` の `ignoreURLParametersMatching` に `/^v$/`）。`src/engine` は段7で 0 行。
 
 ### Service Worker
 - アプリ本体（HTML・JS・CSS・アイコン・Inter）と標準音声の wav・manifest を precache（合計が数MBを超える場合、音声は初回再生時に runtime cache・CacheFirst）。
 - 新しい版を検出したら「新しい版があります」バナー＋「再読み込み」ボタン（自動で再読み込みしない）。
 - share_target の POST を処理（§8）。
 - ユーザーデータは対象外（IndexedDB）。
+- **段7の読み替え（Ruling 88〜90）**: `vite-plugin-pwa` 2.0.0 の **injectManifest**（自前の `src/sw.ts`・`tsconfig.sw.json`）＋ Workbox 7.4.1。precache は 殻・manifest・アイコン・`standard-voices.json` の全パック・**アプリの文字が要る書体サブセットの woff2 だけ**（`tools/fonts/needed-subsets.js` が文言から決める 40 サブセット × 4 太さ）で 183 件・**3.0MB**（上限 6MB は `check-dist` の番人）。ほかの書体は runtime の CacheFirst。更新は **prompt**（`registerType:'prompt'`）: 帯の文言は「新しい版があります。」＋「更新する」（D45。仕様の「再読み込み」ボタンの読み替え）・帯は S1 の最下段・S3・S6・S7 の見出しの下だけ（集中画面には出さない）・押さなくても次に完全に閉じて開けば新しい版。確かめは起動時＋1 時間ごと（見えた時）。**dev（`npm run dev`）では SW を動かさない**。登録は `src/app/platform/pwa-register.ts` だけ。
 
 ### Capacitor 前提
 - `base:'./'`（相対パス）、ハッシュルーティング、サーバー API ゼロ、端末依存は `platform/` のみ。manifest: `name:"Dance Count"`、`short_name:"Dance Count"`、副題「for Ballroom」は画面の見出しのみ（D2）、`display:"standalone"`、`share_target`。
@@ -635,6 +648,8 @@ Dance Count で、私の声のカウントを使えます。          （ルー�
 - [ ] LINE で受け取ったファイル →「"ファイル"に保存」→ S10「ファイルを選ぶ」が開き、取り込める
 - [ ] 375px 相当で文字の切れ・はみ出しがない、拡大しても横スクロールが出ない
 - Android 実機（入手できれば）: share_target で LINE から直接 S10 に届く。
+
+**段7の読み替え（Ruling 95）**: G7 の確かめ方は 3 つ。(1) `npm run smoke:pwa`（公開ビルドを静的に配り、本物の SW で precache・オフラインのワルツとパソドブレ（`six.wav?v=…`）・書体・share_target の POST・新しい版の帯 →「更新する」を通す）(2) iOS 26.3 の Simulator（localhost の Safari で SW が入る・S12 の文で追加・サーバーを止めてオフライン・新しい版）(3) 実機（`docs/app-v1/stage7-device-check.md`）。**実機は https の置き場が要る**（`http://<Mac の IP>` では SW が動かない＝F39）。置き場（Cloudflare Pages の検証用・cloudflared の一時トンネル・自己署名）はひとみうさが決める。
 
 ---
 
