@@ -18,6 +18,8 @@ const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPh
 // iOS Safari のツールバー表示時の iPhone SE の見える高さ（Task 9 の実測）。主要操作が初期表示に入る（Ruling 71）。
 // 全状態を reduced-motion 無しの 1 周だけ。期待値は opsSmall があればそれ（S5 の声チップはスクロールを許す。Ruling 71-6）、R47 は当てない
 const SE_SAFARI_VIEWPORT = { width: 375, height: 548 };
+// 段8 Task 12（final-review I1）: 種目タイルの名前の折れを見る幅（360＝Android の標準・320＝iPhone の拡大表示）
+const TILE_VIEWPORTS = [{ width: 360, height: 640 }, NARROW_VIEWPORT];
 // 段8（Ruling 102-1）: axe（@axe-core/playwright 4.13.0）で見る WCAG のタグ。375×667・no-preference・日本語の周だけ（ほかの周は同じ DOM の重複）。
 // best-practice は入れない（U1〜U16 と重なる）。誤検出で止める規則は理由を書いてここに足す（裁定が要る）。今は空
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
@@ -441,6 +443,24 @@ try {
   }
   report(`横スクロール ${NARROW_VIEWPORT.width}x${NARROW_VIEWPORT.height}`, narrowProblems);
   await narrow.close();
+
+  // 段8 Task 12（final-review I1）: 種目タイルの名前（S1・S4 の種目選び）が語の途中で折れない（2 行になる時は空白か <wbr> の所だけ）・はみ出さない。
+  // 360（Android の標準）と 320（iPhone の拡大表示）× 日英。1 画面に 1 回の読み込みだけ（数秒）
+  for (const viewport of TILE_VIEWPORTS) {
+    for (const locale of ['ja-JP', ENGLISH]) {
+      const tileContext = await browser.newContext({ viewport, locale });
+      const tilePage = await tileContext.newPage();
+      const tileProblems = [];
+      for (const hash of ['#/', '#/routines/new']) {
+        await tilePage.goto(BASE + hash);
+        await tilePage.waitForSelector('[data-screen]:not([data-loading]) .dc-tile b');
+        await tilePage.evaluate(() => document.fonts.ready);
+        tileProblems.push(...(await tilePage.evaluate(tileNameBreaks)).map(problem => `I1 ${hash} ${problem}`));
+      }
+      report(`種目名の折れ ${viewport.width}x${viewport.height} ${locale}`, tileProblems);
+      await tileContext.close();
+    }
+  }
 } finally {
   await browser.close();
 }
@@ -464,6 +484,36 @@ async function seedSettingsInPage(settings) {
 }
 
 // ---- ここから下はブラウザの中で動く（page.evaluate に関数ごと渡す。外の変数は使えない） ----
+// 段8 Task 12（final-review I1）: .dc-tile b の文字ごとの行を測り、行が変わる所の前が空白か、間に <wbr> がある時だけ許す
+function tileNameBreaks() {
+  const issues = [];
+  for (const name of document.querySelectorAll('.dc-tile b')) {
+    if (name.scrollWidth > name.clientWidth + 1) issues.push(`"${name.textContent}" overflows its tile`);
+    const chars = [];
+    let wbrBefore = false;
+    const walker = document.createTreeWalker(name, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.nodeType === Node.ELEMENT_NODE) { if (node.localName === 'wbr') wbrBefore = true; continue; }
+      for (let offset = 0; offset < node.data.length; offset += 1) {
+        const range = document.createRange();
+        range.setStart(node, offset);
+        range.setEnd(node, offset + 1);
+        const rect = range.getBoundingClientRect();
+        chars.push({ char: node.data[offset], top: rect.top, height: rect.height, wbrBefore });
+        wbrBefore = false;
+      }
+    }
+    for (let index = 1; index < chars.length; index += 1) {
+      const previous = chars[index - 1];
+      const current = chars[index];
+      if (current.top - previous.top < previous.height / 2) continue;   // 同じ行
+      if (/\s/.test(previous.char) || /\s/.test(current.char) || current.wbrBefore) continue;
+      issues.push(`"${name.textContent}" breaks mid-word before "${chars.slice(index).map(item => item.char).join('')}"`);
+    }
+  }
+  return issues;
+}
+
 function audit({ state, LIMITS, reducedMotion }) {
   const issues = [];
   const TARGETS = 'button, a[href], select, summary, input:not([type="hidden"]), label[for], [role=button], [role=switch], [role=radio]';

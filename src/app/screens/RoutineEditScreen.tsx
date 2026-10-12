@@ -3,6 +3,7 @@ import { DANCE_PROFILES, getDanceProfile } from '../../engine/dance-profiles.js'
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { DanceName } from '../i18n/DanceName.tsx';
 import { danceName } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
 import { formatCounts } from '../lib/count-display.ts';
@@ -191,7 +192,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
         <div class="dc-tiles" role="group" aria-label={translator.t('danceGroup')} data-group="dance">
           {DANCE_IDS.map(danceId => (
             <button key={danceId} type="button" class="dc-tile" onClick={() => pickDance(danceId)}>
-              <b>{danceName(danceId, locale)}</b>
+              <b><DanceName danceId={danceId} locale={locale} /></b>
               <small>{formatCounts(danceId, TEMPLATES[danceId]!.templates[0]!)}</small>
             </button>
           ))}

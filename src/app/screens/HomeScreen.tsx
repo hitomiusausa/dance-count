@@ -1,7 +1,7 @@
 import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
 import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
-import { danceName } from '../i18n/index.ts';
+import { DanceName } from '../i18n/DanceName.tsx';
 import { formatCounts } from '../lib/count-display.ts';
 import { showsInstallCard } from '../lib/install-card.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
@@ -48,7 +48,7 @@ export function HomeScreen() {
         <button type="button" class="dc-resume" data-resume onClick={resume}>
           <span class="dc-resume-text">
             <small>{translator.t('lastTime')}</small>
-            <b>{danceName(lastDanceId, locale)}</b>
+            <b><DanceName danceId={lastDanceId} locale={locale} /></b>
           </span>
           <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
         </button>
@@ -62,7 +62,7 @@ export function HomeScreen() {
       <div class="dc-tiles" role="group" aria-label={translator.t('danceGroup')} data-group="dance">
         {DANCE_IDS.map(danceId => (
           <a key={danceId} class="dc-tile" href={buildHash({ screen: 'S2', params: { danceId } })}>
-            <b>{danceName(danceId, locale)}</b>
+            <b><DanceName danceId={danceId} locale={locale} /></b>
             <small>{formatCounts(danceId, (DANCE_PROFILES as Record<string, { templates: readonly string[] }>)[danceId]!.templates[0]!)}</small>
           </a>
         ))}
