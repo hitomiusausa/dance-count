@@ -91,7 +91,8 @@ function run<T>(db: IDBDatabase, store: StoreName, mode: IDBTransactionMode, act
   });
 }
 
-// 端末が勝手に消さないように頼む（Ruling 11・56-6。段7から前倒し）。最初の語の保存が成功した直後に 1 回だけ呼ぶ。
+// 端末が勝手に消さないように頼む（Ruling 11・56-6・94-1）。呼ぶ時機: 最初の語の保存の後（段4）・最初のルーティンの保存の後・
+// 受け取りの「使う」の後・ホーム画面から開いた起動時（段7）。許されていれば何もしないので重ねて呼んでよい。
 // 無い端末・断られた時は黙って続ける（結果は画面に出さない）。
 export async function requestPersistentStorage(): Promise<void> {
   try {

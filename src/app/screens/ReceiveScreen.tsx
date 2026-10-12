@@ -5,6 +5,7 @@ import type { AppTranslator } from '../i18n/index.ts';
 import { BundleTooLargeError, readBundleText, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
+import { requestPersistentStorage } from '../platform/storage.ts';
 import { makeId } from '../routines/ids.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { parseBundle } from '../share/bundle.ts';
@@ -95,6 +96,7 @@ export function ReceiveScreen() {
       if (!alive.current) return;
       setBusy(false);
       if (!ok) { setSaveFailed(true); return; }
+      void requestPersistentStorage();   // 受け取った声・ルーティンを端末が勝手に消さないよう頼む（段7・Ruling 94-1）
       setStep('done');
     });
   };

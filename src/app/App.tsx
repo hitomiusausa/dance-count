@@ -6,7 +6,8 @@ import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/in
 import { forgetLegacyUiLocale, readLegacyUiLocale } from './platform/legacy-locale.ts';
 import { deviceLanguages } from './platform/locale.ts';
 import { applyDocumentLanguage } from './platform/page.ts';
-import { openAppStorage, type AppStorage } from './platform/storage.ts';
+import { isStandalone } from './platform/pwa.ts';
+import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
 import { resolveScreen } from './router/resolve.ts';
 import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { HomeScreen } from './screens/HomeScreen.tsx';
@@ -76,6 +77,8 @@ export function App() {
         currentRoutines.current = savedRoutines;
         setRoutines(savedRoutines);
         setSettings(loaded);
+        // ホーム画面から開いた時は起動のたびに頼む（WebKit はホーム画面のアプリなら許す＝F35。ブラウザのタブでは起動時に頼まない＝F40）
+        if (storage.current && isStandalone()) void requestPersistentStorage();
       });
     return () => { alive = false; };
   }, []);

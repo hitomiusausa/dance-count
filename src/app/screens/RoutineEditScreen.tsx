@@ -6,6 +6,8 @@ import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { hidesDock, isKeyboardOpen } from '../lib/keyboard.ts';
+import { onPageHidden } from '../platform/page.ts';
+import { requestPersistentStorage } from '../platform/storage.ts';
 import { onVisibleViewportChange, viewportHeights } from '../platform/viewport.ts';
 import { MoreOptions, NoticeBox, VoiceOffsetRow, type AlertNotice } from '../practice/controls.tsx';
 import { routineBaseBpm } from '../practice/routine-preferences.ts';
@@ -96,6 +98,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     const first = !saved.current;
     void save(routine).then(ok => {
       setSaveFailed(!ok);
+      if (ok && first) void requestPersistentStorage();   // 最初のルーティンが書けた後に、端末が勝手に消さないよう頼む（段7・Ruling 94-1）
       // 最初の保存が書けた時だけ（失敗の枠が出ている時は出さず、次の機会に回す。枠は 1 つ）。出したら hints に書く（閉じなくても次回は出さない）。
       const hints = latestSettings.current.hints;
       if (ok && first && mounted.current && !hints.backupTipShownForRoutine) {
@@ -146,6 +149,18 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     const closed = current.close();
     if (renamed || closed) persist({ replace: false });
   }, []);
+
+  // 画面が隠れた（ホーム画面へ・アプリの切り替え・ロック・閉じる）: 戻る時と同じく、名前欄の打ちかけと開いている行を原則どおり確定して
+  // 保存する（段7・Ruling 94-2。段3計画の発見 #8）。ハッシュは置き換えない。戻ると行は閉じているが、書いた中身は残っている。
+  useEffect(() => onPageHidden(() => {
+    const current = editor.current;
+    if (!current) return;
+    const renamed = pendingName.current !== null && current.rename(pendingName.current);
+    pendingName.current = null;
+    const closed = current.close();
+    if (renamed || closed) persist({ replace: false });
+    rerender(0);
+  }), []);
 
   // 種目を選ぶ（新規）・選び直す（フィガー0件の「変える」）。選び直しで、名前が前の種目の既定のままなら新しい種目の既定に。
   // 種目を選んだだけでは保存しない（Ruling 37: 最初の確定は名前・フィガー・くわしくの値）。保存済みなら保存し直す。

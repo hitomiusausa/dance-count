@@ -407,6 +407,39 @@ try {
   }
   await fakeKeyboard(kbPage, 0);
   await kbContext.close();
+
+  // 段7（Ruling 94）: 最初の保存の後に persist() を頼む・書きかけの行は画面が隠れた（ホームへ・アプリの切り替え）時に確定して保存される
+  const hideContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
+  await hideContext.addInitScript(() => {
+    window.__persistCalls = 0;
+    if (!navigator.storage) return;
+    navigator.storage.persisted = () => Promise.resolve(false);
+    navigator.storage.persist = () => { window.__persistCalls += 1; return Promise.resolve(false); };
+  });
+  const hidePage = await hideContext.newPage();
+  hidePage.on('pageerror', error => errors.push(`pageerror (hidden): ${error.message}`));
+  await hidePage.goto(`${BASE}#/routines/new`);
+  await hidePage.locator('[data-group="dance"] button').first().click();
+  await hidePage.locator('[aria-labelledby="dc-s4-name-label"]').fill('隠す前のワルツ');
+  await hidePage.locator('[aria-labelledby="dc-s4-name-label"]').press('Enter');
+  await hidePage.waitForFunction(() => /\/routines\/r-[\w-]+\/edit$/.test(location.hash));
+  await hidePage.waitForTimeout(WRITE_SETTLE_MS);
+  if (!(await hidePage.evaluate(() => window.__persistCalls))) errors.push('Ruling 94-1: persist() was not requested after the first routine was saved');
+  const editUrl = hidePage.url();
+  await hidePage.locator('.dc-add-tail, .dc-dock-button').first().click();
+  const hiddenForm = hidePage.locator('.dc-figure-form').last();
+  await hiddenForm.locator('input').nth(0).fill('ナチュラルターン');
+  await hiddenForm.locator('input').nth(1).fill('123123');
+  await hidePage.evaluate(() => {   // 画面が隠れた（iPhone でホームへ戻った）ことにする
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await hidePage.waitForTimeout(WRITE_SETTLE_MS);
+  await openAfterSeed(hidePage, editUrl);
+  await hidePage.waitForSelector('[data-screen="S4"]');
+  const keptRows = await hidePage.locator('.dc-figure-head').allTextContents();
+  if (keptRows.length !== 1 || !keptRows[0]?.includes('ナチュラルターン')) errors.push(`Ruling 94-2: the open row was not saved when the page was hidden (${JSON.stringify(keptRows)})`);
+  await hideContext.close();
 } finally {
   await browser.close();
 }
@@ -452,4 +485,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data and an open row is saved when the page is hidden; ${webkitNote}`);
