@@ -16,6 +16,8 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
   const voices: VoiceSelection[] = [];
   const packsSet: unknown[] = [];
   let tip = tipShown;
+  let firstPlayback = false;
+  let firstPlaybackMarks = 0;
   let releases = 0;
   const session = new PracticeSession({
     unlock() { calls.push('unlock'); return audio; },
@@ -28,12 +30,17 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
     keepScreenOn() { calls.push('keepScreenOn'); if (lockHangs) return new Promise<null>(() => {}); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
     onStateChange(_audio, listener) { stateListener = listener; return () => { stateListener = null; }; },
     setTimer(run, ms) { const timer = { at: now + ms, run, cancelled: false }; timers.push(timer); return () => { timer.cancelled = true; }; }
-  }, { wakeTipAlreadyShown: () => tip, markWakeTipShown: () => { tip = true; } });
+  }, {
+    wakeTipAlreadyShown: () => tip, markWakeTipShown: () => { tip = true; },
+    firstPlaybackDone: () => firstPlayback, markFirstPlayback: () => { firstPlayback = true; firstPlaybackMarks += 1; }
+  });
   const views: SessionView[] = [];
   session.subscribe(view => views.push(view));
   return {
     session, audio, calls, starts, views, voices, packsSet,
     get tip() { return tip; },
+    get firstPlayback() { return firstPlayback; },
+    get firstPlaybackMarks() { return firstPlaybackMarks; },
     get releases() { return releases; },
     frame: (frame: EngineFrame) => onFrame?.(frame),
     setState(state: string) { audio.state = state; stateListener?.(state); },
@@ -339,4 +346,17 @@ test('▶ before the voice resolves: a failed resolve falls back to the standard
   assert.equal(g.voices.length, 0);
   assert.equal(g.starts.length, 0);
   assert.equal(g.session.current.playing, false);
+});
+
+test('the first successful start marks the first playback once; a voice that fails to load does not (Ruling 92-7)', async () => {
+  const failing = harness({ voiceFails: true });
+  await failing.session.play(WALTZ);
+  assert.equal(failing.firstPlayback, false);
+  const h = harness();
+  assert.equal(h.firstPlayback, false);
+  await h.session.play(WALTZ);
+  assert.equal(h.firstPlayback, true);
+  h.session.stop();
+  await h.session.play(WALTZ);
+  assert.equal(h.firstPlaybackMarks, 1);
 });

@@ -19,7 +19,7 @@ test('valid saved values survive a round trip', () => {
     customBpmByDance: { waltz: 100 }, metronome: false, countInBars: 0, loop: false,
     speedPresetByRoutine: { 'r-aaaaaaaa': 'fast' }, customBpmByRoutine: { 'r-bbbbbbbb': 120 },
     distributorName: '山田',
-    hints: { wakeLockTipShown: true, backupTipShownForRecording: true, backupTipShownForRoutine: false }
+    hints: { wakeLockTipShown: true, backupTipShownForRecording: true, backupTipShownForRoutine: false, firstPlaybackDone: true, homeScreenCardDismissed: false }
   };
   assert.deepEqual(normalizeSettings(JSON.parse(JSON.stringify(saved))), saved);
 });
@@ -43,7 +43,7 @@ test('broken or foreign values fall back field by field', () => {
   assert.equal(settings.metronome, true);
   assert.equal(settings.countInBars, 1);
   assert.equal(settings.loop, true);
-  assert.deepEqual(settings.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false });
+  assert.deepEqual(settings.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false });
   assert.deepEqual(settings.speedPresetByRoutine, { 'r-aaaaaaaa': 'slow' });
   assert.deepEqual(settings.customBpmByRoutine, { 'r-aaaaaaaa': 220 });
 });
@@ -79,7 +79,7 @@ test('the sharer name is kept trimmed to 40 characters; anything else is empty (
 });
 
 test('the backup hints start unshown and stay shown once true (Ruling 86-2・86-3・86-6)', () => {
-  assert.deepEqual(DEFAULT_SETTINGS.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false });
+  assert.deepEqual(DEFAULT_SETTINGS.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false });
   const shown = normalizeSettings({ hints: { backupTipShownForRecording: true, backupTipShownForRoutine: true } });
   assert.equal(shown.hints.backupTipShownForRecording, true);
   assert.equal(shown.hints.backupTipShownForRoutine, true);
@@ -90,4 +90,15 @@ test('broken hint values read as not shown yet', () => {
   const settings = normalizeSettings({ hints: { backupTipShownForRecording: 'yes', backupTipShownForRoutine: 1 } });
   assert.equal(settings.hints.backupTipShownForRecording, false);
   assert.equal(settings.hints.backupTipShownForRoutine, false);
+});
+
+test('the first-playback and Home Screen card hints start false and only true counts (Ruling 92-7・D42)', () => {
+  assert.equal(DEFAULT_SETTINGS.hints.firstPlaybackDone, false);
+  assert.equal(DEFAULT_SETTINGS.hints.homeScreenCardDismissed, false);
+  const shown = normalizeSettings({ hints: { firstPlaybackDone: true, homeScreenCardDismissed: true } });
+  assert.equal(shown.hints.firstPlaybackDone, true);
+  assert.equal(shown.hints.homeScreenCardDismissed, true);
+  const broken = normalizeSettings({ hints: { firstPlaybackDone: 'yes', homeScreenCardDismissed: 1 } });
+  assert.equal(broken.hints.firstPlaybackDone, false);
+  assert.equal(broken.hints.homeScreenCardDismissed, false);
 });

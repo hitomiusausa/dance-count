@@ -79,6 +79,9 @@ export interface SessionDeps<A extends AudioLike, V> {
 export interface SessionHints {
   wakeTipAlreadyShown(): boolean;
   markWakeTipShown(): void;
+  // 初めて鳴った印（S1 の「ホーム画面に追加」カードの条件。段7・Ruling 92-7。lastDanceId は S2 を開いただけで立つので使わない）
+  firstPlaybackDone(): boolean;
+  markFirstPlayback(): void;
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
@@ -185,6 +188,7 @@ export class PracticeSession<A extends AudioLike, V> {
       return;
     }
     this.update({ ...IDLE_VIEW, playing: true, countIn: options.countInBars > 0 });
+    if (!this.hints.firstPlaybackDone()) this.hints.markFirstPlayback();
     let lockOutcome: 'pending' | 'held' | 'unavailable' = 'pending';
     this.cancelSoundCheck = this.deps.setTimer(() => this.checkSound(generation, audio, startedAt, lockOutcome === 'unavailable'), SOUND_CHECK_DELAY_MS);
     const lock = await lockPromise;

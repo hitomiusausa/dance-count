@@ -10,6 +10,7 @@ import { isVoiceId } from '../voices/ids.ts';
 // selectedVoiceId は録音・受け取った声の ID も残す（段4・Ruling 61-1）。voiceOffsetMsByVoiceId は標準の声のタイミング（Ruling 62-3。
 // 録音の声は声そのものの timingAdjustments に持つ）。distributorName は S9 の「あなたの名前」（次回から入っている。Ruling 82-2）。
 // hints.backupTip* はバックアップの 1 行を出したか（S8 完成・S4 の最初の保存で各 1 回。Ruling 86-2・86-3）。
+// hints.firstPlaybackDone は初めて鳴った印・homeScreenCardDismissed は S1 の「ホーム画面に追加」カードを × で閉じた印（段7・Ruling 92-7・D42）。
 export const SETTINGS_KEY = 'app';
 export const STANDARD_VOICE_ID = 'default-en-female-v1';
 
@@ -28,7 +29,10 @@ export interface AppSettings {
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
-  hints: { wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean };
+  hints: {
+    wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean;
+    firstPlaybackDone: boolean; homeScreenCardDismissed: boolean;
+  };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
@@ -46,7 +50,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   countInBars: 1,
   loop: true,
   distributorName: '',
-  hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false }
+  hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false }
 }) as AppSettings;
 
 const SPEED_CHOICES: readonly SpeedChoice[] = ['slow', 'standard', 'fast', 'custom'];
@@ -76,7 +80,9 @@ export function normalizeSettings(raw: unknown): AppSettings {
     hints: {
       wakeLockTipShown: hints.wakeLockTipShown === true,
       backupTipShownForRecording: hints.backupTipShownForRecording === true,
-      backupTipShownForRoutine: hints.backupTipShownForRoutine === true
+      backupTipShownForRoutine: hints.backupTipShownForRoutine === true,
+      firstPlaybackDone: hints.firstPlaybackDone === true,
+      homeScreenCardDismissed: hints.homeScreenCardDismissed === true
     }
   };
 }
