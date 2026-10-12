@@ -10,6 +10,28 @@ import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.
 const BUILD_TAG = process.env.DC_BUILD_TAG ?? pkg.version;
 const buildTag: Plugin = { name: 'dc-build-tag', transformIndexHtml: html => html.replace('%DC_BUILD%', BUILD_TAG) };
 
+// 段8 Task 9b（Ruling 101）: 書体の @font-face（524 個・約 415KB）は描画を止めない別の CSS に分ける。
+// main.tsx から import すると index-*.css に入り、それを読み終えるまで起動の殻すら描かれない（Slow 3G で白 8.4 秒）。
+// ビルドでは fonts.css を別の入口（rolldownOptions.input）にして assets/fonts-*.css を作り、index.html に
+// media="print"＋onload で差す＝読み込み中も描画は止まらず、届いたら全部の画面に効く（font-display: swap なので書体が後から替わるだけ）。
+// 開発（vite）では同じ link を元の fonts.css に向ける。precache は globPatterns の assets/*.css で入る（check-pwa が確かめる）。
+const FONTS_CSS = 'src/app/styles/fonts.css';
+const fontsStylesheet: Plugin = {
+  name: 'dc-fonts-stylesheet',
+  transformIndexHtml: {
+    order: 'post',
+    handler(_html, ctx) {
+      let href = `/${FONTS_CSS}`;
+      if (ctx.bundle) {
+        const asset = Object.values(ctx.bundle).find(file => file.type === 'asset' && file.fileName.endsWith('.css') && file.originalFileNames.includes(FONTS_CSS));
+        if (!asset) throw new Error(`the build has no stylesheet for ${FONTS_CSS}`);
+        href = `./${asset.fileName}`;
+      }
+      return [{ tag: 'link', attrs: { rel: 'stylesheet', href, media: 'print', onload: "this.media='all'" }, injectTo: 'head' }];
+    }
+  }
+};
+
 // base:'./' は Capacitor とサブドメイン配信の両方で同じ成果物を使うため（仕様 §10）。
 // optimizeDeps.entries を index.html に限定し、legacy/ や旧 HTML（1MB超）を依存スキャンに巻き込まない。
 export default defineConfig({
@@ -17,6 +39,7 @@ export default defineConfig({
   plugins: [
     preact(),
     buildTag,
+    fontsStylesheet,
     // Service Worker（Ruling 88〜93）。自前の src/sw.ts に precache の一覧を注入する。dev では動かさない（devOptions を付けない）。
     // 登録は src/app/platform/pwa-register.ts（virtual:pwa-register）だけ。更新は「更新する」を押した時（registerType: 'prompt'）。
     VitePWA({
@@ -62,5 +85,5 @@ export default defineConfig({
   optimizeDeps: { entries: ['index.html'], include: ['preact', 'preact/hooks', 'preact/jsx-runtime'] },
   server: { port: 5173, strictPort: true },
   preview: { port: 4174, strictPort: true },
-  build: { outDir: 'dist', emptyOutDir: true }
+  build: { outDir: 'dist', emptyOutDir: true, rolldownOptions: { input: { index: 'index.html', fonts: FONTS_CSS } } }
 });

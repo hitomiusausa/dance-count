@@ -4,8 +4,7 @@ import { App } from './App.tsx';
 import { configureAudioSession } from './platform/audio-context.ts';
 import { captureInstallPrompt } from './platform/pwa.ts';
 import { registerServiceWorker } from './platform/pwa-register.ts';
-import './styles/fonts.css';
-import './styles/base.css';
+import './styles/base.css';   // 書体（fonts.css）はここで import しない＝描画を止めない別の CSS（vite.config.ts の dc-fonts-stylesheet・段8 Task 9b）
 
 captureInstallPrompt();   // Android の「ホーム画面に追加」を S12 のボタンから出せるように（段7・Ruling 88-4。最初に捕まえる）
 configureAudioSession(); // マナーモードでも鳴らす（仕様 §9-1。起動時に1回）

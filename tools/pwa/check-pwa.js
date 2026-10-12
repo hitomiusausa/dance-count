@@ -38,6 +38,17 @@ async function exists(file) {
 // 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限
 export const BOOT_STYLE_MAX_BYTES = 600;
 
+// 段8 Task 9b（Ruling 101）: 描画を止める CSS（index.html の media の無い stylesheet）の合計の上限。今は約 29KB（base.css）。
+// 書体の @font-face（約 415KB）は assets/fonts-*.css に分けて media="print"＋onload で読む＝ここに入れると起動の殻が描かれない。
+export const RENDER_BLOCKING_CSS_MAX_BYTES = 60 * 1024;
+
+// index.html の <link rel="stylesheet"> を { href, media, onload } に（属性の順は問わない）。
+export function stylesheetLinks(html) {
+  return [...html.matchAll(/<link\b[^>]*>/g)]
+    .map(match => Object.fromEntries([...match[0].matchAll(/([\w-]+)="([^"]*)"/g)].map(([, name, value]) => [name, value.replace(/&#39;/g, "'").replace(/&quot;/g, '"')])))
+    .filter(attrs => attrs.rel === 'stylesheet').map(attrs => ({ href: attrs.href ?? '', media: attrs.media, onload: attrs.onload }));
+}
+
 // dist: dist の絶対パス・files: dist の中の全ファイル（/ 区切り）・standardVoices: standard-voices.json・fontSubsets: neededFontSubsets()
 export async function checkPwaDist({ dist, files, standardVoices, fontSubsets }) {
   const problems = [];
@@ -57,6 +68,26 @@ export async function checkPwaDist({ dist, files, standardVoices, fontSubsets })
   if (!/<div id="app"><div class="dc-boot" aria-hidden="true">/.test(html)) problems.push('index.html has no boot shell inside #app');
   const style = html.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
   if (Buffer.byteLength(style) > BOOT_STYLE_MAX_BYTES) problems.push(`index.html boot style is ${Buffer.byteLength(style)} bytes > ${BOOT_STYLE_MAX_BYTES}`);
+  // 1c. 描画を止める CSS は小さく・書体を含まない（段8 Task 9b）。書体は描画を止めない読み方（media="print"＋onload で all に）の別の CSS 1 本
+  if (/@font-face/.test(style)) problems.push('index.html inline style must not contain @font-face');
+  const links = stylesheetLinks(html);
+  const isDeferred = link => link.media === 'print' && /this\.media\s*=\s*['"]all['"]/.test(link.onload ?? '');
+  let blockingBytes = 0;
+  for (const link of links.filter(link => !isDeferred(link))) {
+    const file = link.href.replace(/^\.\//, '');
+    if (!files.includes(file)) { problems.push(`index.html links the stylesheet ${link.href} but dist has no such file`); continue; }
+    const css = await fs.readFile(path.join(dist, file), 'utf8');
+    blockingBytes += Buffer.byteLength(css);
+    if (/@font-face/.test(css)) problems.push(`the render-blocking stylesheet ${file} contains @font-face (move fonts to the deferred fonts stylesheet)`);
+  }
+  if (blockingBytes > RENDER_BLOCKING_CSS_MAX_BYTES) problems.push(`render-blocking CSS is ${blockingBytes} bytes > ${RENDER_BLOCKING_CSS_MAX_BYTES}`);
+  const fontLinks = links.filter(link => isDeferred(link) && /^\.\/assets\/fonts-[\w-]+\.css$/.test(link.href));
+  if (fontLinks.length !== 1) problems.push(`index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found ${fontLinks.length}`);
+  for (const link of fontLinks) {
+    const file = link.href.slice(2);
+    if (!files.includes(file)) problems.push(`index.html links the fonts stylesheet ${link.href} but dist has no such file`);
+    else if (!/@font-face/.test(await fs.readFile(path.join(dist, file), 'utf8'))) problems.push(`the fonts stylesheet ${file} has no @font-face`);
+  }
 
   // 2. manifest（Ruling 93-1・93-3・93-6）
   let manifest = null;

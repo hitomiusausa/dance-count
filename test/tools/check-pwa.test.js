@@ -4,13 +4,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { BOOT_STYLE_MAX_BYTES, PRECACHE_MAX_BYTES, checkPwaDist, readPrecacheList } from '../../tools/pwa/check-pwa.js';
+import { BOOT_STYLE_MAX_BYTES, PRECACHE_MAX_BYTES, RENDER_BLOCKING_CSS_MAX_BYTES, checkPwaDist, readPrecacheList, stylesheetLinks } from '../../tools/pwa/check-pwa.js';
 
 const VOICES = [{ id: 'default-en-female-v1', locale: 'en' }];
 const SUBSETS = ['noto-sans-jp-59', 'inter-latin'];
 const WORDS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 const HTML = '<head><meta name="apple-mobile-web-app-title" content="Dance Count"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">'
-  + '<link rel="manifest" href="./manifest.webmanifest"><style>.dc-boot{color:#1B2A4A}</style></head>'
+  + '<link rel="manifest" href="./manifest.webmanifest"><style>.dc-boot{color:#1B2A4A}</style>'
+  + '<link rel="stylesheet" crossorigin href="./assets/index-AbC.css">'
+  + '<link rel="stylesheet" href="./assets/fonts-F0.css" media="print" onload="this.media=&#39;all&#39;"></head>'
   + '<body><div id="app"><div class="dc-boot" aria-hidden="true"><b>Dance Count</b></div></div></body>';
 const MANIFEST = {
   name: 'Dance Count', short_name: 'Dance Count', start_url: './', scope: './', display: 'standalone',
@@ -22,7 +24,7 @@ function goodFiles() {
   const files = {
     'index.html': HTML,
     'manifest.webmanifest': JSON.stringify(MANIFEST),
-    'assets/index-AbC.js': 'js', 'assets/index-AbC.css': 'css',
+    'assets/index-AbC.js': 'js', 'assets/index-AbC.css': '.dc-screen{color:#000}', 'assets/fonts-F0.css': '@font-face{font-family:Inter}',
     'icons/icon-192.png': 'png', 'icons/icon-512-maskable.png': 'png', 'icons/apple-touch-icon.png': 'png',
     'audio/default-en-female-v1/manifest.json': '{}',
     'assets/noto-sans-jp-1-400-normal-X.woff2': 'unused subset (not precached)',
@@ -82,12 +84,36 @@ test('index.html links the manifest and the iPhone icon and names the app', asyn
   const files = { ...goodFiles(), 'index.html': '<head></head>' };
   const problems = await check({ files, precache: precached(files) });
   assert.deepEqual(problems, ['index.html has no manifest link', 'index.html has no apple-touch-icon link', 'index.html has no apple-mobile-web-app-title',
-    'index.html has no boot shell inside #app']);
+    'index.html has no boot shell inside #app', 'index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found 0']);
 });
 
 test('the boot shell sits inside #app and its inline style stays small (段8 Ruling 101)', async () => {
   const big = { ...goodFiles(), 'index.html': HTML.replace('.dc-boot{color:#1B2A4A}', `.dc-boot{color:#1B2A4A}${'.x{}'.repeat(BOOT_STYLE_MAX_BYTES)}`) };
   assert.deepEqual(await check({ files: big, precache: precached(big) }), [`index.html boot style is ${'.dc-boot{color:#1B2A4A}'.length + 4 * BOOT_STYLE_MAX_BYTES} bytes > ${BOOT_STYLE_MAX_BYTES}`]);
+});
+
+test('stylesheet links are read with their media and onload, in any attribute order', () => {
+  assert.deepEqual(stylesheetLinks('<link rel="icon" href="a.svg"><link media="print" onload="this.media=&#39;all&#39;" href="./f.css" rel="stylesheet"><link rel="stylesheet" crossorigin href="./i.css">'),
+    [{ href: './f.css', media: 'print', onload: "this.media='all'" }, { href: './i.css', media: undefined, onload: undefined }]);
+});
+
+test('the render-blocking CSS stays small and has no @font-face; fonts load from one deferred stylesheet (段8 Task 9b)', async () => {
+  const fontsInApp = { ...goodFiles(), 'assets/index-AbC.css': '@font-face{font-family:Inter}.dc-screen{}' };
+  assert.deepEqual(await check({ files: fontsInApp, precache: precached(fontsInApp) }),
+    ['the render-blocking stylesheet assets/index-AbC.css contains @font-face (move fonts to the deferred fonts stylesheet)']);
+  const big = { ...goodFiles(), 'assets/index-AbC.css': 'x'.repeat(RENDER_BLOCKING_CSS_MAX_BYTES + 1) };
+  assert.deepEqual(await check({ files: big, precache: precached(big) }), [`render-blocking CSS is ${RENDER_BLOCKING_CSS_MAX_BYTES + 1} bytes > ${RENDER_BLOCKING_CSS_MAX_BYTES}`]);
+  const blockingFonts = { ...goodFiles(), 'index.html': HTML.replace(' media="print" onload="this.media=&#39;all&#39;"', '') };
+  assert.deepEqual(await check({ files: blockingFonts, precache: precached(blockingFonts) }), [
+    'the render-blocking stylesheet assets/fonts-F0.css contains @font-face (move fonts to the deferred fonts stylesheet)',
+    'index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found 0']);
+  const inlineFonts = { ...goodFiles(), 'index.html': HTML.replace('.dc-boot{color:#1B2A4A}', '@font-face{font-family:X}') };
+  assert.deepEqual(await check({ files: inlineFonts, precache: precached(inlineFonts) }), ['index.html inline style must not contain @font-face']);
+  const noFile = goodFiles();
+  delete noFile['assets/fonts-F0.css'];
+  assert.deepEqual(await check({ files: noFile, precache: precached(noFile) }), ['index.html links the fonts stylesheet ./assets/fonts-F0.css but dist has no such file']);
+  const notPrecached = goodFiles();
+  assert.deepEqual(await check({ files: notPrecached, precache: precached(notPrecached).filter(file => file !== 'assets/fonts-F0.css') }), ['precache is missing assets/fonts-F0.css']);
 });
 
 test('every standard voice is precached with its manifest and 12 words (Ruling 89-2: a Japanese pack is required the day it ships)', async () => {

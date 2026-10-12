@@ -1,5 +1,7 @@
 /* 書体はアプリに同梱（仕様 §5・§12: 外部送信なし。Ruling 34）。使う太さだけ。unicode-range 分割なので
-   ブラウザは表示に要る範囲のファイルだけを読む。font-display: swap は @fontsource の CSS に含まれる。 */
+   ブラウザは表示に要る範囲のファイルだけを読む。font-display: swap は @fontsource の CSS に含まれる。
+   段8 Task 9b: main.tsx からは import しない（描画を止める index-*.css に 524 個の @font-face が入り、起動の殻が描かれなかった）。
+   vite.config.ts の dc-fonts-stylesheet が別の assets/fonts-*.css にし、index.html に描画を止めない link（media="print"＋onload）で差す。 */
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
