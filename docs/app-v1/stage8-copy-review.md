@@ -72,267 +72,267 @@
 | 27 | `routinesCount` | {count} 本（受け取った物も直せます） | {count} routines (received ones too) | 英語の初版 |  |  |
 | 28 | `routinesCountOne` | 1 本（受け取った物も直せます） | 1 routine (received ones too) | 英語の初版 |  |  |
 | 29 | `routinesNone` | まだありません | None yet | 英語の初版 |  |  |
+| 30 | `recordVoice` | 自分の声を録音する | Record your voice | 英語の初版 | OK |  |
 
 ## S4 ルーティン編集
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 30 | `newRoutineTitle` | 新しいルーティン | New routine | 英語の初版 | OK |  |
-| 31 | `editRoutineTitle` | ルーティンの編集 | Edit routine | 英語の初版 | OK |  |
-| 32 | `defaultRoutineName` | {dance}のルーティン | {dance} routine | 英語の初版 | OK |  |
-| 33 | `routineName` | 名前 | Name | 英語の初版 | OK |  |
-| 34 | `danceLine` | 種目: {dance} | Dance: {dance} | 英語の初版 | OK |  |
-| 35 | `changeDance` | 変える | Change | 英語の初版 | OK |  |
-| 36 | `noFigures` | フィガーはまだありません。 | No figures yet. | 英語の初版 | OK |  |
-| 37 | `addFigure` | フィガーを追加 | Add a figure | 英語の初版 | OK |  |
-| 38 | `newFigure` | 新しいフィガー | New figure | 英語の初版 | OK |  |
-| 39 | `figureName` | フィガーの名前 | Figure name | 英語の初版 | OK |  |
-| 40 | `figureSuggestions` | 名前の候補 | Suggested names | 英語の初版 | OK |  |
-| 41 | `figureChoices` | {dance}のフィガー（{count}） | {dance} figures ({count}) | 英語の初版 | OK |  |
-| 42 | `commonCounts` | カウントの形 | Count patterns | 英語の初版 | OK |  |
-| 43 | `allowedSymbols` | 使える文字：{symbols} | Allowed: {symbols} | 英語の初版 | You can use: {symbols} |  |
-| 44 | `countsFromHistory` | 前に使ったカウントです | Count you used before | 英語の初版 |  |  |
-| 45 | `countsFromReviewed` | 目安のカウントです | Typical count | 英語の初版 |  |  |
-| 46 | `sameNameExists` | 同じ名前があります（{counts}） | Same name exists ({counts}) | 英語の初版 | This name is already used ({counts}) |  |
-| 47 | `sameNameCopy` | 同じ名前があります：{name}（{counts}） | Same name exists: {name} ({counts}) | 英語の初版 | {name} ({counts}) already exists |  |
-| 48 | `renameForOtherCount` | 名前を変えると、違うカウントにできます | Use another name for a different count | 英語の初版 | Use a different name for a different count |  |
-| 49 | `offBarFigure` | {beats}拍のカウントではありません | Not a {beats}-beat count | 英語の初版 | OK |  |
-| 50 | `offBarFigureEdit` | {beats}拍のカウントではありません。必要なら編集してください。 | Not a {beats}-beat count. Edit it if needed. | 依頼・英語の初版 | OK |  |
-| 51 | `routineEndsMidBar` | 小節の途中で終わっています。繰り返すと頭がずれます。 | The routine ends mid-bar, so repeats start off the beat. | 英語の初版 | The routine ends mid-bar, so repeats won't start on beat 1. |  |
-| 52 | `startWithBeat` | 最初は数字か S・Q から | Start with a number, S or Q | 英語の初版 | OK |  |
-| 53 | `countsInvalid` | この並びでは数えられません | This count can't be played | 英語の初版 | OK |  |
-| 54 | `nameNeeded` | 名前を入れると決定できます | Add a name to finish | 英語の初版 | Enter a name to finish |  |
-| 55 | `previewFigure` | このフィガーを試聴 | Play this figure | 英語の初版 | OK |  |
-| 56 | `moveUp` | 上へ | Up | 英語の初版 | OK |  |
-| 57 | `moveDown` | 下へ | Down | 英語の初版 | OK |  |
-| 58 | `duplicate` | 複製 | Duplicate | 英語の初版 | OK |  |
-| 59 | `moveFigureLabel` | {name}を動かす | Move {name} | 英語の初版 | OK |  |
-| 60 | `previewAll` | 全体を試聴 | Play all | 英語の初版 | OK |  |
-| 61 | `leadInLength` | はじめの合図の長さ | Lead-in length | 英語の初版 | OK（製品判断: leadIn の “Count-in” 案と一緒に決める） |  |
-| 62 | `oneBar` | 1小節 | 1 bar | 英語の初版 | OK |  |
-| 63 | `twoBars` | 2小節 | 2 bars | 英語の初版 | OK |  |
-| 64 | `routineSpeed` | 速さ | Speed | 英語の初版 | OK |  |
-| 65 | `danceStandardSpeed` | 種目の標準（♩={tempo}） | Dance standard (♩={tempo}) | 英語の初版 | Standard for this dance (♩={tempo}) |  |
+| 31 | `newRoutineTitle` | 新しいルーティン | New routine | 英語の初版 | OK |  |
+| 32 | `editRoutineTitle` | ルーティンの編集 | Edit routine | 英語の初版 | OK |  |
+| 33 | `defaultRoutineName` | {dance}のルーティン | {dance} routine | 英語の初版 | OK |  |
+| 34 | `routineName` | 名前 | Name | 英語の初版 | OK |  |
+| 35 | `danceLine` | 種目: {dance} | Dance: {dance} | 英語の初版 | OK |  |
+| 36 | `changeDance` | 変える | Change | 英語の初版 | OK |  |
+| 37 | `noFigures` | フィガーはまだありません。 | No figures yet. | 英語の初版 | OK |  |
+| 38 | `addFigure` | フィガーを追加 | Add a figure | 英語の初版 | OK |  |
+| 39 | `newFigure` | 新しいフィガー | New figure | 英語の初版 | OK |  |
+| 40 | `figureName` | フィガーの名前 | Figure name | 英語の初版 | OK |  |
+| 41 | `figureSuggestions` | 名前の候補 | Suggested names | 英語の初版 | OK |  |
+| 42 | `figureChoices` | {dance}のフィガー（{count}） | {dance} figures ({count}) | 英語の初版 | OK |  |
+| 43 | `commonCounts` | カウントの形 | Count patterns | 英語の初版 | OK |  |
+| 44 | `allowedSymbols` | 使える文字：{symbols} | Allowed: {symbols} | 英語の初版 | You can use: {symbols} |  |
+| 45 | `countsFromHistory` | 前に使ったカウントです | Count you used before | 英語の初版 |  |  |
+| 46 | `countsFromReviewed` | 目安のカウントです | Typical count | 英語の初版 |  |  |
+| 47 | `sameNameExists` | 同じ名前があります（{counts}） | Same name exists ({counts}) | 英語の初版 | This name is already used ({counts}) |  |
+| 48 | `sameNameCopy` | 同じ名前があります：{name}（{counts}） | Same name exists: {name} ({counts}) | 英語の初版 | {name} ({counts}) already exists |  |
+| 49 | `renameForOtherCount` | 名前を変えると、違うカウントにできます | Use another name for a different count | 英語の初版 | Use a different name for a different count |  |
+| 50 | `offBarFigure` | {beats}拍のカウントではありません | Not a {beats}-beat count | 英語の初版 | OK |  |
+| 51 | `offBarFigureEdit` | {beats}拍のカウントではありません。必要なら編集してください。 | Not a {beats}-beat count. Edit it if needed. | 依頼・英語の初版 | OK |  |
+| 52 | `routineEndsMidBar` | 小節の途中で終わっています。繰り返すと頭がずれます。 | The routine ends mid-bar, so repeats start off the beat. | 英語の初版 | The routine ends mid-bar, so repeats won't start on beat 1. |  |
+| 53 | `startWithBeat` | 最初は数字か S・Q から | Start with a number, S or Q | 英語の初版 | OK |  |
+| 54 | `countsInvalid` | この並びでは数えられません | This count can't be played | 英語の初版 | OK |  |
+| 55 | `nameNeeded` | 名前を入れると決定できます | Add a name to finish | 英語の初版 | Enter a name to finish |  |
+| 56 | `previewFigure` | このフィガーを試聴 | Play this figure | 英語の初版 | OK |  |
+| 57 | `moveUp` | 上へ | Up | 英語の初版 | OK |  |
+| 58 | `moveDown` | 下へ | Down | 英語の初版 | OK |  |
+| 59 | `duplicate` | 複製 | Duplicate | 英語の初版 | OK |  |
+| 60 | `moveFigureLabel` | {name}を動かす | Move {name} | 英語の初版 | OK |  |
+| 61 | `previewAll` | 全体を試聴 | Play all | 英語の初版 | OK |  |
+| 62 | `leadInLength` | はじめの合図の長さ | Lead-in length | 英語の初版 | OK（製品判断: leadIn の “Count-in” 案と一緒に決める） |  |
+| 63 | `oneBar` | 1小節 | 1 bar | 英語の初版 | OK |  |
+| 64 | `twoBars` | 2小節 | 2 bars | 英語の初版 | OK |  |
+| 65 | `routineSpeed` | 速さ | Speed | 英語の初版 | OK |  |
+| 66 | `danceStandardSpeed` | 種目の標準（♩={tempo}） | Dance standard (♩={tempo}) | 英語の初版 | Standard for this dance (♩={tempo}) |  |
 
 ## S5 ルーティン再生
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 66 | `madeByYou` | {dance} · あなたが作成 | {dance} · made by you | 英語の初版 | OK |  |
-| 67 | `madeBy` | {dance} · {name}が作成 | {dance} · made by {name} | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 68 | `figuresHeading` | フィガー | Figures | 英語の初版 | OK |  |
-| 69 | `practiceRange` | 練習する範囲 | Practice range | 英語の初版 | OK |  |
-| 70 | `rangeStart` | はじめ | From | 英語の初版 | OK |  |
-| 71 | `rangeEnd` | おわり | To | 英語の初版 | OK |  |
-| 72 | `previous` | 前 | Prev | 英語の初版 | Previous（幅が許せば。略語 “Prev” は年配の方に読みにくい） |  |
-| 73 | `next` | 次 | Next | 英語の初版 | OK |  |
+| 67 | `madeByYou` | {dance} · あなたが作成 | {dance} · made by you | 英語の初版 | OK |  |
+| 68 | `madeBy` | {dance} · {name}が作成 | {dance} · made by {name} | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 69 | `figuresHeading` | フィガー | Figures | 英語の初版 | OK |  |
+| 70 | `practiceRange` | 練習する範囲 | Practice range | 英語の初版 | OK |  |
+| 71 | `rangeStart` | はじめ | From | 英語の初版 | OK |  |
+| 72 | `rangeEnd` | おわり | To | 英語の初版 | OK |  |
+| 73 | `previous` | 前 | Prev | 英語の初版 | Previous（幅が許せば。略語 “Prev” は年配の方に読みにくい） |  |
+| 74 | `next` | 次 | Next | 英語の初版 | OK |  |
 
 ## S6 設定
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 74 | `settingsInstall` | ホーム画面に追加する方法 | How to add to the Home Screen | 英語の初版 | OK |  |
-| 75 | `settingsHelpHeading` | 困った時は | If something's wrong | 英語の初版 | If something goes wrong |  |
-| 76 | `settingsAbout` | プライバシー・アプリについて | Privacy & about this app | 英語の初版 | OK。製品判断（Fable OQ7）: 短い語（例 “About & privacy”）にすれば 320px 幅の特別扱いが要らなくなる |  |
-| 77 | `versionLabel` | 版 {version} | Version {version} | 技術語の疑い（版・version）・英語の初版 | OK |  |
-| 78 | `settingsLanguage` | 言語 | Language | 英語の初版 | OK |  |
-| 79 | `forTeachers` | 先生の方へ | For teachers | 英語の初版 | OK |  |
-| 80 | `shareRoutines` | ルーティンを配る | Share routines | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
+| 75 | `settingsInstall` | ホーム画面に追加する方法 | How to add to the Home Screen | 英語の初版 | OK |  |
+| 76 | `settingsHelpHeading` | 困った時は | If something's wrong | 英語の初版 | If something goes wrong |  |
+| 77 | `settingsAbout` | プライバシー・アプリについて | Privacy & about this app | 英語の初版 | OK。製品判断（Fable OQ7）: 短い語（例 “About & privacy”）にすれば 320px 幅の特別扱いが要らなくなる |  |
+| 78 | `versionLabel` | 版 {version} | Version {version} | 技術語の疑い（版・version）・英語の初版 | OK |  |
+| 79 | `settingsLanguage` | 言語 | Language | 英語の初版 | OK |  |
 
 ## S7 声
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 81 | `voiceInProgressCount` | ·⍽{count}⍽/⍽12⍽語 | ·⍽{count}⍽/⍽12⍽words | 英語の初版 | OK |  |
-| 82 | `confirmDeleteVoiceTitle` | この声を削除しますか？ | Delete this voice? | 英語の初版 | OK |  |
-| 83 | `continueRecording` | 続きを録音する | Continue recording | 英語の初版 | OK |  |
+| 80 | `recordFromMake` | 自分の声の録音は、表紙の「作る」から。 | To record your own voice, go to “Make” on the cover. | 英語の初版 |  |  |
+| 81 | `voicesTitle` | 声 | Voice | 英語の初版 | Voices |  |
+| 82 | `voiceInProgressCount` | ·⍽{count}⍽/⍽12⍽語 | ·⍽{count}⍽/⍽12⍽words | 英語の初版 | OK |  |
+| 83 | `confirmDeleteVoiceTitle` | この声を削除しますか？ | Delete this voice? | 英語の初版 | OK |  |
+| 84 | `continueRecording` | 続きを録音する | Continue recording | 英語の初版 | OK |  |
 
 ## S8 自分の声を録音
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 84 | `recordAddFirst` | ホーム画面に追加してから録音するのがおすすめです。このブラウザで録音した声は、追加したアプリには引き継がれません。（追加の方法は、設定の「ホーム画面に追加する方法」） | We recommend adding to the Home Screen before recording. A voice recorded in this browser won't carry over to the added app. (See Settings → “How to add to the Home Screen”.) | 技術語の疑い（ブラウザ・browser）・長さ・英語の初版 | Before recording, we recommend adding this to your Home Screen. Voices recorded in this browser don't carry over to the Home Screen app. (Settings → “How to add to the Home Screen”) |  |
-| 85 | `recordTitle` | 自分の声を録音 | Record your voice | 英語の初版 | OK |  |
-| 86 | `recordIntro1` | 12 語を、1 語ずつ録音します。 | You will record 12 words, one at a time. | 英語の初版 | OK |  |
-| 87 | `recordIntro2` | 録音は、この端末の中にだけ残ります。 | Recordings stay on this device only. | 英語の初版 | OK |  |
-| 88 | `recordIntro3` | いつでも消せます。 | You can delete them at any time. | 英語の初版 | OK |  |
-| 89 | `recordLanguage` | 数える言葉 | Count in | 英語の初版 | Counting language |  |
-| 90 | `countInEnglish` | 英語で数える（One, Two, Slow…） | Count in English (One, Two, Slow…) | 英語の初版 | OK |  |
-| 91 | `countInJapanese` | 日本語で数える（いち、に、スロー…） | Count in Japanese (いち, に, スロー…) | 英語の初版 | OK |  |
-| 92 | `recordedUpTo` | {count}⍽/⍽12⍽語まで録音済み | {count}⍽/⍽12⍽words recorded | 英語の初版 | OK |  |
-| 93 | `recordedAll` | 録音済み（12 語） | Recorded (12 words) | 英語の初版 | OK |  |
-| 94 | `startRecording` | 録音をはじめる | Start recording | 英語の初版 | OK |  |
-| 95 | `wordProgress` | {index} / 12 語 | {index} / 12 words | 英語の初版 | OK |  |
-| 96 | `recordHint` | ボタンを押したら、すぐ「{word}」と言ってください。 | Tap the button, then say “{word}” right away. | 英語の初版 | OK |  |
-| 97 | `recordWord` | 録音する | Record | 英語の初版 | OK |  |
-| 98 | `recordAgain` | 録り直す | Record again | 英語の初版 | OK |  |
-| 99 | `reviewFromFirst` | 1⍽語目から見直す | Review from word 1 | 英語の初版 | OK |  |
-| 100 | `recordingNow` | 録音中… | Recording… | 英語の初版 | OK |  |
-| 101 | `listenTake` | 聞く | Play | 英語の初版 | OK |  |
-| 102 | `previousWord` | 前の語 | Previous | 英語の初版 | OK |  |
-| 103 | `nextWord` | 次へ | Next | 英語の初版 | OK |  |
-| 104 | `finishRecording` | 完成へ | Finish | 英語の初版 | OK |  |
-| 105 | `micHowTo` | 設定の開き方 | How to allow it | 英語の初版 | OK |  |
-| 106 | `micHowToIphone` | iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前） | iPhone: Settings → Apps → Safari → Microphone (if you opened it from the Home Screen, this app's name instead of Safari) | 技術語の疑い（マイク・microphone）・長さ・英語の初版 | iPhone: Settings → Apps → Safari → Microphone (if you opened it from your Home Screen, choose this app's name instead of Safari) |  |
-| 107 | `micHowToOther` | Android・PC：アドレスバーの左のマーク → マイク | Android / PC: the icon at the left of the address bar → Microphone | 技術語の疑い（アドレスバー・アドレス・マイク・address bar・address・microphone）・英語の初版 | Android / PC: the icon at the left end of the address bar → Microphone |  |
-| 108 | `micHowToThen` | 許可したら、もう一度「録音をはじめる」を押してください。 | Then tap “Start recording” again. | 依頼・英語の初版 | After allowing it, tap “Start recording” again. |  |
-| 109 | `recordNeedsHttps` | 安全な接続（https）で開くと録音できます。 | Recording works only over a secure (https) connection. | 英語の初版 |  |  |
-| 110 | `voiceReadyTitle` | 録音できました | Your voice is ready | 英語の初版 | OK |  |
-| 111 | `voiceName` | 名前 | Name | 英語の初版 | OK |  |
-| 112 | `compareTitle` | ワルツで聞き比べる | Compare with the waltz | 英語の初版 | Compare using a waltz |  |
-| 113 | `yourVoice` | 自分の声 | Your voice | 英語の初版 | OK |  |
-| 114 | `standardVoice` | 標準の声 | Standard voice | 英語の初版 | OK |  |
-| 115 | `finishDone` | 完了 | Done | 英語の初版 | OK |  |
-| 116 | `backupTipRecording` | 「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。 | Send yourself the file made with “Share” and you can use this voice on another phone. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | Send yourself the file from “Share” to keep this voice if you change phones. |  |
+| 85 | `recordAddFirst` | ホーム画面に追加してから録音するのがおすすめです。このブラウザで録音した声は、追加したアプリには引き継がれません。（追加の方法は、設定の「ホーム画面に追加する方法」） | We recommend adding to the Home Screen before recording. A voice recorded in this browser won't carry over to the added app. (See Settings → “How to add to the Home Screen”.) | 技術語の疑い（ブラウザ・browser）・長さ・英語の初版 | Before recording, we recommend adding this to your Home Screen. Voices recorded in this browser don't carry over to the Home Screen app. (Settings → “How to add to the Home Screen”) |  |
+| 86 | `recordTitle` | 自分の声を録音 | Record your voice | 英語の初版 | OK |  |
+| 87 | `recordIntro1` | 12 語を、1 語ずつ録音します。 | You will record 12 words, one at a time. | 英語の初版 | OK |  |
+| 88 | `recordIntro2` | 録音は、この端末の中にだけ残ります。 | Recordings stay on this device only. | 英語の初版 | OK |  |
+| 89 | `recordIntro3` | いつでも消せます。 | You can delete them at any time. | 英語の初版 | OK |  |
+| 90 | `recordLanguage` | 数える言葉 | Count in | 英語の初版 | Counting language |  |
+| 91 | `countInEnglish` | 英語で数える（One, Two, Slow…） | Count in English (One, Two, Slow…) | 英語の初版 | OK |  |
+| 92 | `countInJapanese` | 日本語で数える（いち、に、スロー…） | Count in Japanese (いち, に, スロー…) | 英語の初版 | OK |  |
+| 93 | `recordedUpTo` | {count}⍽/⍽12⍽語まで録音済み | {count}⍽/⍽12⍽words recorded | 英語の初版 | OK |  |
+| 94 | `recordedAll` | 録音済み（12 語） | Recorded (12 words) | 英語の初版 | OK |  |
+| 95 | `startRecording` | 録音をはじめる | Start recording | 英語の初版 | OK |  |
+| 96 | `wordProgress` | {index} / 12 語 | {index} / 12 words | 英語の初版 | OK |  |
+| 97 | `recordHint` | ボタンを押したら、すぐ「{word}」と言ってください。 | Tap the button, then say “{word}” right away. | 英語の初版 | OK |  |
+| 98 | `recordWord` | 録音する | Record | 英語の初版 | OK |  |
+| 99 | `recordAgain` | 録り直す | Record again | 英語の初版 | OK |  |
+| 100 | `reviewFromFirst` | 1⍽語目から見直す | Review from word 1 | 英語の初版 | OK |  |
+| 101 | `recordingNow` | 録音中… | Recording… | 英語の初版 | OK |  |
+| 102 | `listenTake` | 聞く | Play | 英語の初版 | OK |  |
+| 103 | `previousWord` | 前の語 | Previous | 英語の初版 | OK |  |
+| 104 | `nextWord` | 次へ | Next | 英語の初版 | OK |  |
+| 105 | `finishRecording` | 完成へ | Finish | 英語の初版 | OK |  |
+| 106 | `micHowTo` | 設定の開き方 | How to allow it | 英語の初版 | OK |  |
+| 107 | `micHowToIphone` | iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前） | iPhone: Settings → Apps → Safari → Microphone (if you opened it from the Home Screen, this app's name instead of Safari) | 技術語の疑い（マイク・microphone）・長さ・英語の初版 | iPhone: Settings → Apps → Safari → Microphone (if you opened it from your Home Screen, choose this app's name instead of Safari) |  |
+| 108 | `micHowToOther` | Android・PC：アドレスバーの左のマーク → マイク | Android / PC: the icon at the left of the address bar → Microphone | 技術語の疑い（アドレスバー・アドレス・マイク・address bar・address・microphone）・英語の初版 | Android / PC: the icon at the left end of the address bar → Microphone |  |
+| 109 | `micHowToThen` | 許可したら、もう一度「録音をはじめる」を押してください。 | Then tap “Start recording” again. | 依頼・英語の初版 | After allowing it, tap “Start recording” again. |  |
+| 110 | `recordNeedsHttps` | 安全な接続（https）で開くと録音できます。 | Recording works only over a secure (https) connection. | 英語の初版 |  |  |
+| 111 | `voiceReadyTitle` | 録音できました | Your voice is ready | 英語の初版 | OK |  |
+| 112 | `voiceName` | 名前 | Name | 英語の初版 | OK |  |
+| 113 | `compareTitle` | ワルツで聞き比べる | Compare with the waltz | 英語の初版 | Compare using a waltz |  |
+| 114 | `yourVoice` | 自分の声 | Your voice | 英語の初版 | OK |  |
+| 115 | `standardVoice` | 標準の声 | Standard voice | 英語の初版 | OK |  |
+| 116 | `finishDone` | 完了 | Done | 英語の初版 | OK |  |
+| 117 | `backupTipRecording` | 「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。 | Send yourself the file made with “Share” and you can use this voice on another phone. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | Send yourself the file from “Share” to keep this voice if you change phones. |  |
 
 ## S9 配る
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 117 | `shareTitle` | 配る | Share | 英語の初版 | OK |  |
-| 118 | `shareYourName` | あなたの名前 | Your name | 英語の初版 | OK |  |
-| 119 | `shareNameNeeded` | 名前を入れると、ファイルを作れます。 | Enter your name to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 120 | `shareVoiceHeading` | 声 | Voice | 英語の初版 | OK |  |
-| 121 | `shareVoiceNone` | 入れない | None | 英語の初版 | OK |  |
-| 122 | `shareNoRecordedVoice` | 録音した声はまだありません。 | You haven't recorded a voice yet. | 英語の初版 | OK |  |
-| 123 | `shareVoicePrepFailed` | この声はファイルにできませんでした。 | This voice couldn't be put in a file. | 技術語の疑い（ファイル・file）・英語の初版 | This voice couldn't be added to the file. |  |
-| 124 | `shareConsent` | 自分の声をこのファイルに入れて配ることに同意します。配り先は自分で管理します。 | I agree to put my voice in this file and share it. I will manage who receives it. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | I agree to share my voice in this file. I'll decide who receives it. |  |
-| 125 | `shareConsentNeeded` | 同意すると、ファイルを作れます。 | Tick the box to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | Check the box to create the file. |  |
-| 126 | `shareRoutinesHeading` | ルーティン | Routines | 英語の初版 | OK |  |
-| 127 | `shareNoRoutines` | 配れるルーティンはまだありません。 | No routines to share yet. | 英語の初版 | OK |  |
-| 128 | `shareChooseSomething` | 声かルーティンを選ぶと、ファイルを作れます。 | Choose a voice or a routine to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 129 | `shareNothingYet` | 先に声を録音するか、ルーティンを作ると配れます。 | Record a voice or make a routine first, and then you can share it. | 英語の初版 | OK（D51・代理決定。S9 を録音もルーティンも無いまま開いた時の帯の 1 行。final-review m2） |  |
-| 130 | `createFile` | ファイルを作る | Create file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 131 | `shareAfterSend` | ファイルを送ったら、下の案内文も送ってください。 | After sending the file, send the instructions below too. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 132 | `shareSaved` | 「{file}」を保存しました。LINE やメールに添付できます。 | “{file}” has been saved. You can attach it to LINE or email. | 英語の初版 | Saved “{file}”. You can attach it in LINE or to an email. |  |
-| 133 | `saveFileAgain` | ファイルを保存する | Save the file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 134 | `copyInstructions` | 生徒への案内文をコピー | Copy instructions for students | 英語の初版 | OK |  |
-| 135 | `instructionsCopied` | 案内文をコピーしました。LINE やメールに貼れます。 | Copied. You can paste it into LINE or email. | 英語の初版 | OK |  |
-| 136 | `instructionsLabel` | 生徒への案内文 | Instructions for students | 英語の初版 | OK |  |
+| 118 | `shareTitle` | 配る | Share | 英語の初版 | OK |  |
+| 119 | `shareYourName` | あなたの名前 | Your name | 英語の初版 | OK |  |
+| 120 | `shareNameNeeded` | 名前を入れると、ファイルを作れます。 | Enter your name to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 121 | `shareVoiceHeading` | 声 | Voice | 英語の初版 | OK |  |
+| 122 | `shareVoiceNone` | 入れない | None | 英語の初版 | OK |  |
+| 123 | `shareNoRecordedVoice` | 録音した声はまだありません。 | You haven't recorded a voice yet. | 英語の初版 | OK |  |
+| 124 | `shareVoicePrepFailed` | この声はファイルにできませんでした。 | This voice couldn't be put in a file. | 技術語の疑い（ファイル・file）・英語の初版 | This voice couldn't be added to the file. |  |
+| 125 | `shareConsent` | 自分の声をこのファイルに入れて配ることに同意します。配り先は自分で管理します。 | I agree to put my voice in this file and share it. I will manage who receives it. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | I agree to share my voice in this file. I'll decide who receives it. |  |
+| 126 | `shareConsentNeeded` | 同意すると、ファイルを作れます。 | Tick the box to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | Check the box to create the file. |  |
+| 127 | `shareRoutinesHeading` | ルーティン | Routines | 英語の初版 | OK |  |
+| 128 | `shareNoRoutines` | 配れるルーティンはまだありません。 | No routines to share yet. | 英語の初版 | OK |  |
+| 129 | `shareChooseSomething` | 声かルーティンを選ぶと、ファイルを作れます。 | Choose a voice or a routine to create the file. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 130 | `shareNothingYet` | 先に声を録音するか、ルーティンを作ると配れます。 | Record a voice or make a routine first, and then you can share it. | 英語の初版 | OK（D51・代理決定。S9 を録音もルーティンも無いまま開いた時の帯の 1 行。final-review m2） |  |
+| 131 | `createFile` | ファイルを作る | Create file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 132 | `shareAfterSend` | ファイルを送ったら、下の案内文も送ってください。 | After sending the file, send the instructions below too. | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 133 | `shareSaved` | 「{file}」を保存しました。LINE やメールに添付できます。 | “{file}” has been saved. You can attach it to LINE or email. | 英語の初版 | Saved “{file}”. You can attach it in LINE or to an email. |  |
+| 134 | `saveFileAgain` | ファイルを保存する | Save the file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 135 | `copyInstructions` | 生徒への案内文をコピー | Copy instructions for students | 英語の初版 | OK |  |
+| 136 | `instructionsCopied` | 案内文をコピーしました。LINE やメールに貼れます。 | Copied. You can paste it into LINE or email. | 英語の初版 | OK |  |
+| 137 | `instructionsLabel` | 生徒への案内文 | Instructions for students | 英語の初版 | OK |  |
 
 ## S10 受け取る
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 137 | `receiveTitle` | 受け取る | Receive | 英語の初版 | OK |  |
-| 138 | `chooseFile` | ファイルを選ぶ | Choose a file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 139 | `readingFile` | 読んでいます… | Reading… | 英語の初版 | OK |  |
-| 140 | `receiveHelpLine` | LINE で届いたファイルは、先に「"ファイル"に保存」しておくと、ここで選べます。 | If the file came by LINE, save it with “Save to Files” first. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | OK |  |
-| 141 | `receiveHelpRecents` | 選ぶ画面では「最近使った項目」にあります。 | You will find it under “Recents”. | 英語の初版 | You'll find it under “Recents”. |  |
-| 142 | `openInSafari` | Safari で開く | Open in Safari | 英語の初版 | OK |  |
-| 143 | `inThisFile` | このファイルの中身 | In this file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 144 | `fileVoiceFrom` | {name}の声（{language}）· {count} 語 | {name}'s voice ({language}) · {count} words | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 145 | `fileVoiceNamed` | {name}（{language}）· {count} 語 | {name} ({language}) · {count} words | 英語の初版 | OK |  |
-| 146 | `fileRoutinesOne` | ルーティン 1 本: {names} | 1 routine: {names} | 英語の初版 | OK |  |
-| 147 | `fileRoutines` | ルーティン {count} 本: {names} | {count} routines: {names} | 英語の初版 | OK |  |
-| 148 | `namesAndMore` | {names} ほか {count} 本 | {names} and {count} more | 英語の初版 | OK |  |
-| 149 | `routineNoName` | （名前なし） | (no name) | 英語の初版 | OK |  |
-| 150 | `replaceVoiceFrom` | {name}の声はすでにあります。「使う」で新しい方に置き換わります。 | You already have {name}'s voice. “Use” replaces it with this one. | 英語の初版 | You already have {name}'s voice. Tap “Use” to replace it with this one.（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 151 | `replaceVoiceNamed` | 「{name}」はすでにあります。「使う」で新しい方に置き換わります。 | You already have “{name}”. “Use” replaces it with this one. | 英語の初版 | You already have “{name}”. Tap “Use” to replace it with this one. |  |
-| 152 | `replaceRoutines` | 同じルーティンは新しい方に置き換わります。 | Routines you already have are replaced with the new ones. | 英語の初版 | OK |  |
-| 153 | `useFile` | 使う | Use | 英語の初版 | OK |  |
-| 154 | `receivedTitle` | 受け取りました | Received | 英語の初版 | OK |  |
-| 155 | `receivedVoiceFrom` | 「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。 | Choose a dance in “Use” and press ▶ to hear {name}'s voice. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear {name}'s voice.（英語の “Home screen” は iPhone の「ホーム画面」と紛れる。アプリのタブは “Practice”。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）。goHome・receivedVoiceNamed も一緒に）（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 156 | `receivedVoiceNamed` | 「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。 | Choose a dance in “Use” and press ▶ to hear “{name}”. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear “{name}”.（receivedVoiceFrom と同じ理由。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
-| 157 | `receivedRoutines` | 「ルーティン」に入っています。 | They are in “Routines”. | 英語の初版 | You'll find them in “Routines”. |  |
-| 158 | `goHome` | 種目を選ぶ | Choose a dance | 英語の初版 | OK（製品判断: “Home” と iPhone の「ホーム画面」の紛れは receivedVoiceFrom 参照。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
-| 159 | `seeRoutines` | ルーティンを見る | See routines | 英語の初版 | OK |  |
+| 138 | `receiveTitle` | 受け取る | Receive | 英語の初版 | OK |  |
+| 139 | `chooseFile` | ファイルを選ぶ | Choose a file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 140 | `readingFile` | 読んでいます… | Reading… | 英語の初版 | OK |  |
+| 141 | `receiveHelpLine` | LINE で届いたファイルは、先に「"ファイル"に保存」しておくと、ここで選べます。 | If the file came by LINE, save it with “Save to Files” first. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | OK |  |
+| 142 | `receiveHelpRecents` | 選ぶ画面では「最近使った項目」にあります。 | You will find it under “Recents”. | 英語の初版 | You'll find it under “Recents”. |  |
+| 143 | `openInSafari` | Safari で開く | Open in Safari | 英語の初版 | OK |  |
+| 144 | `inThisFile` | このファイルの中身 | In this file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 145 | `fileVoiceFrom` | {name}の声（{language}）· {count} 語 | {name}'s voice ({language}) · {count} words | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 146 | `fileVoiceNamed` | {name}（{language}）· {count} 語 | {name} ({language}) · {count} words | 英語の初版 | OK |  |
+| 147 | `fileRoutinesOne` | ルーティン 1 本: {names} | 1 routine: {names} | 英語の初版 | OK |  |
+| 148 | `fileRoutines` | ルーティン {count} 本: {names} | {count} routines: {names} | 英語の初版 | OK |  |
+| 149 | `namesAndMore` | {names} ほか {count} 本 | {names} and {count} more | 英語の初版 | OK |  |
+| 150 | `routineNoName` | （名前なし） | (no name) | 英語の初版 | OK |  |
+| 151 | `replaceVoiceFrom` | {name}の声はすでにあります。「使う」で新しい方に置き換わります。 | You already have {name}'s voice. “Use” replaces it with this one. | 英語の初版 | You already have {name}'s voice. Tap “Use” to replace it with this one.（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 152 | `replaceVoiceNamed` | 「{name}」はすでにあります。「使う」で新しい方に置き換わります。 | You already have “{name}”. “Use” replaces it with this one. | 英語の初版 | You already have “{name}”. Tap “Use” to replace it with this one. |  |
+| 153 | `replaceRoutines` | 同じルーティンは新しい方に置き換わります。 | Routines you already have are replaced with the new ones. | 英語の初版 | OK |  |
+| 154 | `useFile` | 使う | Use | 英語の初版 | OK |  |
+| 155 | `receivedTitle` | 受け取りました | Received | 英語の初版 | OK |  |
+| 156 | `receivedVoiceFrom` | 「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。 | Choose a dance in “Use” and press ▶ to hear {name}'s voice. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear {name}'s voice.（英語の “Home screen” は iPhone の「ホーム画面」と紛れる。アプリのタブは “Practice”。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）。goHome・receivedVoiceNamed も一緒に）（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 157 | `receivedVoiceNamed` | 「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。 | Choose a dance in “Use” and press ▶ to hear “{name}”. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear “{name}”.（receivedVoiceFrom と同じ理由。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
+| 158 | `receivedRoutines` | 「ルーティン」に入っています。 | They are in “Routines”. | 英語の初版 | You'll find them in “Routines”. |  |
+| 159 | `goHome` | 種目を選ぶ | Choose a dance | 英語の初版 | OK（製品判断: “Home” と iPhone の「ホーム画面」の紛れは receivedVoiceFrom 参照。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
+| 160 | `seeRoutines` | ルーティンを見る | See routines | 英語の初版 | OK |  |
 
 ## S11 音が鳴らない時
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 160 | `soundHelpSwitch` | 本体横のスイッチ（マナーモード）を確かめる | Check the switch on the side of your phone (silent mode). | 英語の初版 | 製品判断: Make sure your phone isn't on silent.（iPhone 15 Pro 以降と Android には横の消音スイッチが無い。ja 案「消音（マナーモード）になっていないか確かめる」。今の文はスイッチのある SE 向けのまま） |  |
-| 161 | `soundHelpVolume` | 音量を上げる | Turn the volume up. | 英語の初版 | OK |  |
-| 162 | `soundHelpEarphones` | イヤホン・Bluetooth の接続を確かめる | Check your earphones or Bluetooth connection. | 技術語の疑い（Bluetooth）・英語の初版 | OK |  |
-| 163 | `soundHelpRetry` | もう一度 ▶ を押してください。 | Then press ▶ again. | 依頼・英語の初版 | OK |  |
+| 161 | `soundHelpSwitch` | 本体横のスイッチ（マナーモード）を確かめる | Check the switch on the side of your phone (silent mode). | 英語の初版 | 製品判断: Make sure your phone isn't on silent.（iPhone 15 Pro 以降と Android には横の消音スイッチが無い。ja 案「消音（マナーモード）になっていないか確かめる」。今の文はスイッチのある SE 向けのまま） |  |
+| 162 | `soundHelpVolume` | 音量を上げる | Turn the volume up. | 英語の初版 | OK |  |
+| 163 | `soundHelpEarphones` | イヤホン・Bluetooth の接続を確かめる | Check your earphones or Bluetooth connection. | 技術語の疑い（Bluetooth）・英語の初版 | OK |  |
+| 164 | `soundHelpRetry` | もう一度 ▶ を押してください。 | Then press ▶ again. | 依頼・英語の初版 | OK |  |
 
 ## S12 ホーム画面に追加する方法
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 164 | `installTitle` | ホーム画面に追加する | Add to Home Screen | 英語の初版 | OK |  |
-| 165 | `installIntro` | ホーム画面に追加すると、アプリのように開けて、電波が無くても使えます。 | Added to your Home Screen, it opens like an app and works without a signal. | 長さ・英語の初版 | From your Home Screen, it opens like an app and works without a signal. |  |
-| 166 | `installIosStep1` | 画面の下の「…」を押します。 | Tap “…” at the bottom of the screen. | 英語の初版 | OK |  |
-| 167 | `installIosStep2` | 「共有」を押します。 | Tap “Share”. | 英語の初版 | OK |  |
-| 168 | `installIosStep3` | 「もっと見る」を押し、「ホーム画面に追加」を押します。 | Tap “View More”, then “Add to Home Screen”. | 英語の初版 | OK（Task 9 の Simulator（iOS 26.3）で確認済み: ja は「もっと見る」、en は “View More”（“See More” から直した）。並びに “More”（アプリの列の「その他」）もあるので “View More” と書き分ける） |  |
-| 169 | `installIosStep4` | 右上の「追加」を押します。 | Tap “Add” at the top right. | 英語の初版 | OK |  |
-| 170 | `installNotCarried` | 録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。追加したアプリで、もう一度録音・受け取りをしてください。 | Recorded voices, received voices and routines don't carry over to the added app. Record or receive them again in the added app. | 依頼・長さ・英語の初版 | Voices and routines don't carry over to the Home Screen app. Record or receive them again there.（追加したアプリの英語の呼び方は “the Home Screen app” にそろえる。recordAddFirst・aboutPrivacy6 も） |  |
-| 171 | `installOpenInSafari` | Safari で開くと、ホーム画面に追加できます。 | Open this page in Safari to add it to your Home Screen. | 英語の初版 | OK |  |
-| 172 | `installOnPhone` | iPhone や Android で開くと、ホーム画面に追加できます。 | Open this page on your phone to add it to the Home Screen. | 英語の初版 | OK |  |
-| 173 | `installCopyAddress` | アドレスをコピー | Copy the address | 技術語の疑い（アドレス・address）・英語の初版 | OK（製品判断: “Copy the link”／“Link copied” の方が “address” より馴染むかも） |  |
-| 174 | `installAddressCopiedSafari` | アドレスをコピーしました。Safari を開き、アドレス欄に貼り付けてください。 | Address copied. Open Safari and paste it into the address bar. | 技術語の疑い（アドレス・address bar・address）・長さ・英語の初版 | OK（「上の」／“at the top” は D50 で外した＝Fix round 1） |  |
-| 175 | `installAddressCopiedPhone` | アドレスをコピーしました。LINE やメールでスマホに送ってください。 | Address copied. Send it to your phone by LINE or email. | 技術語の疑い（アドレス・address）・英語の初版 | OK |  |
-| 176 | `installAndroidButton` | ホーム画面に追加する | Add to Home Screen | 英語の初版 | OK |  |
-| 177 | `installAndroidStep1` | 右上の「⋮」を押します。 | Tap “⋮” at the top right. | 英語の初版 | OK |  |
-| 178 | `installAndroidStep2` | 「ホーム画面に追加」（または「アプリをインストール」）を押します。 | Tap “Add to Home screen” (or “Install app”). | 英語の初版 | OK |  |
-| 179 | `installAndroidStep3` | 「インストール」を押します。 | Tap “Install”. | 英語の初版 | OK |  |
-| 180 | `installDone` | このアプリはホーム画面から開いています。追加は済んでいます。 | You're using the app from your Home Screen. Nothing more to do. | 英語の初版 | You opened this from your Home Screen, so it's already added. |  |
+| 165 | `installTitle` | ホーム画面に追加する | Add to Home Screen | 英語の初版 | OK |  |
+| 166 | `installIntro` | ホーム画面に追加すると、アプリのように開けて、電波が無くても使えます。 | Added to your Home Screen, it opens like an app and works without a signal. | 長さ・英語の初版 | From your Home Screen, it opens like an app and works without a signal. |  |
+| 167 | `installIosStep1` | 画面の下の「…」を押します。 | Tap “…” at the bottom of the screen. | 英語の初版 | OK |  |
+| 168 | `installIosStep2` | 「共有」を押します。 | Tap “Share”. | 英語の初版 | OK |  |
+| 169 | `installIosStep3` | 「もっと見る」を押し、「ホーム画面に追加」を押します。 | Tap “View More”, then “Add to Home Screen”. | 英語の初版 | OK（Task 9 の Simulator（iOS 26.3）で確認済み: ja は「もっと見る」、en は “View More”（“See More” から直した）。並びに “More”（アプリの列の「その他」）もあるので “View More” と書き分ける） |  |
+| 170 | `installIosStep4` | 右上の「追加」を押します。 | Tap “Add” at the top right. | 英語の初版 | OK |  |
+| 171 | `installNotCarried` | 録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。追加したアプリで、もう一度録音・受け取りをしてください。 | Recorded voices, received voices and routines don't carry over to the added app. Record or receive them again in the added app. | 依頼・長さ・英語の初版 | Voices and routines don't carry over to the Home Screen app. Record or receive them again there.（追加したアプリの英語の呼び方は “the Home Screen app” にそろえる。recordAddFirst・aboutPrivacy6 も） |  |
+| 172 | `installOpenInSafari` | Safari で開くと、ホーム画面に追加できます。 | Open this page in Safari to add it to your Home Screen. | 英語の初版 | OK |  |
+| 173 | `installOnPhone` | iPhone や Android で開くと、ホーム画面に追加できます。 | Open this page on your phone to add it to the Home Screen. | 英語の初版 | OK |  |
+| 174 | `installCopyAddress` | アドレスをコピー | Copy the address | 技術語の疑い（アドレス・address）・英語の初版 | OK（製品判断: “Copy the link”／“Link copied” の方が “address” より馴染むかも） |  |
+| 175 | `installAddressCopiedSafari` | アドレスをコピーしました。Safari を開き、アドレス欄に貼り付けてください。 | Address copied. Open Safari and paste it into the address bar. | 技術語の疑い（アドレス・address bar・address）・長さ・英語の初版 | OK（「上の」／“at the top” は D50 で外した＝Fix round 1） |  |
+| 176 | `installAddressCopiedPhone` | アドレスをコピーしました。LINE やメールでスマホに送ってください。 | Address copied. Send it to your phone by LINE or email. | 技術語の疑い（アドレス・address）・英語の初版 | OK |  |
+| 177 | `installAndroidButton` | ホーム画面に追加する | Add to Home Screen | 英語の初版 | OK |  |
+| 178 | `installAndroidStep1` | 右上の「⋮」を押します。 | Tap “⋮” at the top right. | 英語の初版 | OK |  |
+| 179 | `installAndroidStep2` | 「ホーム画面に追加」（または「アプリをインストール」）を押します。 | Tap “Add to Home screen” (or “Install app”). | 英語の初版 | OK |  |
+| 180 | `installAndroidStep3` | 「インストール」を押します。 | Tap “Install”. | 英語の初版 | OK |  |
+| 181 | `installDone` | このアプリはホーム画面から開いています。追加は済んでいます。 | You're using the app from your Home Screen. Nothing more to do. | 英語の初版 | You opened this from your Home Screen, so it's already added. |  |
 
 ## S13 プライバシー・アプリについて
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 181 | `deleteAllData` | データを全て消す | Delete all data | 技術語の疑い（データ・data）・英語の初版 | OK |  |
-| 182 | `confirmDeleteAllTitle` | このアプリのデータを全て消しますか？ | Delete all data in this app? | 技術語の疑い（データ・data）・英語の初版 | OK |  |
-| 183 | `confirmDeleteAllDetail` | 録音した声・受け取った声・ルーティン・設定が消えます。元に戻せません。 | Recorded voices, received voices, routines and settings will be deleted. This can't be undone. | 長さ・英語の初版 | OK |  |
-| 184 | `confirmDeleteAll` | 消す | Delete | 英語の初版 | OK |  |
-| 185 | `aboutTitle` | Dance Count について | About Dance Count | 法務確認待ち・英語の初版 | OK |  |
-| 186 | `aboutApp` | Dance Count — for Ballroom　版⍽{version} | Dance Count — for Ballroom · Version⍽{version} | 法務確認待ち・技術語の疑い（版・version）・英語の初版 | OK |  |
-| 187 | `aboutOperator` | 運営：くうが株式会社 | Operated by Kuga Inc. | 法務確認待ち・英語の初版 | OK |  |
-| 188 | `aboutContact` | 問い合わせ | Contact | 法務確認待ち・英語の初版 | OK |  |
-| 189 | `aboutNotOfficial` | このアプリのカウントは、公式のもの・監修を受けたものではありません。 | The counts in this app are not official and have not been reviewed by any organization. | 法務確認待ち・長さ・英語の初版 | OK |  |
-| 190 | `aboutPrivacyHeading` | プライバシー | Privacy | 法務確認待ち・英語の初版 | OK |  |
-| 191 | `aboutPrivacy1` | 録音した声・受け取った声・ルーティン・設定は、この端末の中にだけ保存されます。運営者（くうが株式会社）がこれらを受け取ることはありません。 | Recorded voices, received voices, routines and settings are saved only on this device. The operator (Kuga Inc.) never receives them. | 法務確認待ち・長さ・英語の初版 | OK |  |
-| 192 | `aboutPrivacy2` | このアプリは、利用状況を集めたり、外部に送ったりする仕組みを持っていません（解析ツール・広告はなく、書体も外部から取り寄せません）。 | This app has no way to collect how it is used or to send that information anywhere (no analytics, no ads, and fonts are not fetched from other sites). | 法務確認待ち・長さ・英語の初版 | This app has no way to collect usage information or send it anywhere (no analytics, no ads, and no fonts loaded from other sites). |  |
-| 193 | `aboutPrivacy3` | アプリのファイル（画面・音声・書体）を配信するサーバーには、ブラウザが通常送る情報（アクセスの日時など）が記録されることがあります。 | The server that delivers the app's files (screens, sounds and fonts) may record what browsers normally send, such as the time of access. | 法務確認待ち・技術語の疑い（ブラウザ・ファイル・サーバー・browser・file・server）・長さ・英語の初版 | The server that delivers the app's files (screens, sounds and fonts) may record information browsers normally send, such as the time of access. |  |
-| 194 | `aboutPrivacy4` | マイクは、声を録音する画面でだけ使います。許可を取る時と、「録音する」「録り直す」を押した後の 1.5 秒だけ開き、すぐ閉じます。録音した声はこの端末に残り、いつでも消せます。 | The microphone is used only on the voice recording screen: when you allow access, and for 1.5 seconds after you tap “Record” or “Record again”. It is closed right after. Recordings stay on this device, and you can delete them at any time. | 法務確認待ち・技術語の疑い（マイク・microphone）・長さ・英語の初版 | The microphone is used only on the recording screen. It turns on only when you allow access and for 1.5 seconds after you tap “Record” or “Record again”, then turns off right away. Recordings stay on this device, and you can delete them at any time. |  |
-| 195 | `aboutPrivacy5` | 「配る」で作ったファイルには、あなたの名前と、入れた声・ルーティン、作った日時が入ります。誰に渡すかは、あなた自身が決めます。LINE やメールでの受け渡しは、それぞれのサービスの決まりに従います。受け取ったファイルには、送った人の名前と声が入っています。 | A file made with “Share” contains your name, the voice and routines you put in it, and the date it was made. You decide who gets it. Sending it by LINE or email follows the rules of those services. A file you receive contains the sender's name and voice. | 法務確認待ち・技術語の疑い（ファイル・file）・長さ・英語の初版 | A file made with “Share” contains your name, the voice and routines you put in it, and the date it was made. You decide who gets it. If you send it by LINE or email, those services' own terms apply. A file you receive contains the sender's name and voice. |  |
-| 196 | `aboutPrivacy6` | データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the app added to the Home Screen keep their data separately. Only the one you have open is deleted. | 法務確認待ち・技術語の疑い（ブラウザ・データ・browser・data）・長さ・英語の初版 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the Home Screen app keep their data separately, and only the one you have open is deleted. |  |
-| 197 | `aboutCreditsHeading` | 使っているもの | Credits | 法務確認待ち・英語の初版 | OK |  |
-| 198 | `aboutCreditFonts` | 書体：Inter・Noto Sans JP（SIL Open Font License 1.1） | Fonts: Inter and Noto Sans JP (SIL Open Font License 1.1) | 法務確認待ち・長さ・英語の初版 | OK |  |
-| 199 | `aboutCreditCode` | Preact・Workbox（MIT License） | Preact and Workbox (MIT License) | 法務確認待ち・英語の初版 | OK |  |
-| 200 | `aboutCreditIcons` | 一部のアイコン：Lucide（ISC License） | Some icons: Lucide (ISC License) | 法務確認待ち・英語の初版 | OK |  |
+| 182 | `deleteAllData` | データを全て消す | Delete all data | 技術語の疑い（データ・data）・英語の初版 | OK |  |
+| 183 | `confirmDeleteAllTitle` | このアプリのデータを全て消しますか？ | Delete all data in this app? | 技術語の疑い（データ・data）・英語の初版 | OK |  |
+| 184 | `confirmDeleteAllDetail` | 録音した声・受け取った声・ルーティン・設定が消えます。元に戻せません。 | Recorded voices, received voices, routines and settings will be deleted. This can't be undone. | 長さ・英語の初版 | OK |  |
+| 185 | `confirmDeleteAll` | 消す | Delete | 英語の初版 | OK |  |
+| 186 | `aboutTitle` | Dance Count について | About Dance Count | 法務確認待ち・英語の初版 | OK |  |
+| 187 | `aboutApp` | Dance Count — for Ballroom　版⍽{version} | Dance Count — for Ballroom · Version⍽{version} | 法務確認待ち・技術語の疑い（版・version）・英語の初版 | OK |  |
+| 188 | `aboutOperator` | 運営：くうが株式会社 | Operated by Kuga Inc. | 法務確認待ち・英語の初版 | OK |  |
+| 189 | `aboutContact` | 問い合わせ | Contact | 法務確認待ち・英語の初版 | OK |  |
+| 190 | `aboutNotOfficial` | このアプリのカウントは、公式のもの・監修を受けたものではありません。 | The counts in this app are not official and have not been reviewed by any organization. | 法務確認待ち・長さ・英語の初版 | OK |  |
+| 191 | `aboutPrivacyHeading` | プライバシー | Privacy | 法務確認待ち・英語の初版 | OK |  |
+| 192 | `aboutPrivacy1` | 録音した声・受け取った声・ルーティン・設定は、この端末の中にだけ保存されます。運営者（くうが株式会社）がこれらを受け取ることはありません。 | Recorded voices, received voices, routines and settings are saved only on this device. The operator (Kuga Inc.) never receives them. | 法務確認待ち・長さ・英語の初版 | OK |  |
+| 193 | `aboutPrivacy2` | このアプリは、利用状況を集めたり、外部に送ったりする仕組みを持っていません（解析ツール・広告はなく、書体も外部から取り寄せません）。 | This app has no way to collect how it is used or to send that information anywhere (no analytics, no ads, and fonts are not fetched from other sites). | 法務確認待ち・長さ・英語の初版 | This app has no way to collect usage information or send it anywhere (no analytics, no ads, and no fonts loaded from other sites). |  |
+| 194 | `aboutPrivacy3` | アプリのファイル（画面・音声・書体）を配信するサーバーには、ブラウザが通常送る情報（アクセスの日時など）が記録されることがあります。 | The server that delivers the app's files (screens, sounds and fonts) may record what browsers normally send, such as the time of access. | 法務確認待ち・技術語の疑い（ブラウザ・ファイル・サーバー・browser・file・server）・長さ・英語の初版 | The server that delivers the app's files (screens, sounds and fonts) may record information browsers normally send, such as the time of access. |  |
+| 195 | `aboutPrivacy4` | マイクは、声を録音する画面でだけ使います。許可を取る時と、「録音する」「録り直す」を押した後の 1.5 秒だけ開き、すぐ閉じます。録音した声はこの端末に残り、いつでも消せます。 | The microphone is used only on the voice recording screen: when you allow access, and for 1.5 seconds after you tap “Record” or “Record again”. It is closed right after. Recordings stay on this device, and you can delete them at any time. | 法務確認待ち・技術語の疑い（マイク・microphone）・長さ・英語の初版 | The microphone is used only on the recording screen. It turns on only when you allow access and for 1.5 seconds after you tap “Record” or “Record again”, then turns off right away. Recordings stay on this device, and you can delete them at any time. |  |
+| 196 | `aboutPrivacy5` | 「配る」で作ったファイルには、あなたの名前と、入れた声・ルーティン、作った日時が入ります。誰に渡すかは、あなた自身が決めます。LINE やメールでの受け渡しは、それぞれのサービスの決まりに従います。受け取ったファイルには、送った人の名前と声が入っています。 | A file made with “Share” contains your name, the voice and routines you put in it, and the date it was made. You decide who gets it. Sending it by LINE or email follows the rules of those services. A file you receive contains the sender's name and voice. | 法務確認待ち・技術語の疑い（ファイル・file）・長さ・英語の初版 | A file made with “Share” contains your name, the voice and routines you put in it, and the date it was made. You decide who gets it. If you send it by LINE or email, those services' own terms apply. A file you receive contains the sender's name and voice. |  |
+| 197 | `aboutPrivacy6` | データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the app added to the Home Screen keep their data separately. Only the one you have open is deleted. | 法務確認待ち・技術語の疑い（ブラウザ・データ・browser・data）・長さ・英語の初版 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the Home Screen app keep their data separately, and only the one you have open is deleted. |  |
+| 198 | `aboutCreditsHeading` | 使っているもの | Credits | 法務確認待ち・英語の初版 | OK |  |
+| 199 | `aboutCreditFonts` | 書体：Inter・Noto Sans JP（SIL Open Font License 1.1） | Fonts: Inter and Noto Sans JP (SIL Open Font License 1.1) | 法務確認待ち・長さ・英語の初版 | OK |  |
+| 200 | `aboutCreditCode` | Preact・Workbox（MIT License） | Preact and Workbox (MIT License) | 法務確認待ち・英語の初版 | OK |  |
+| 201 | `aboutCreditIcons` | 一部のアイコン：Lucide（ISC License） | Some icons: Lucide (ISC License) | 法務確認待ち・英語の初版 | OK |  |
 
 ## 共通（複数の画面・部品）
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 201 | `documentTitle` | Dance Count — for Ballroom | Dance Count — for Ballroom | 英語の初版 | OK |  |
-| 202 | `switchLanguage` | English | 日本語 | 英語の初版 | OK |  |
-| 203 | `tabFigures` | フィガー | Figures | 英語の初版 |  |  |
-| 204 | `tabRoutines` | ルーティン | Routines | 英語の初版 | OK |  |
-| 205 | `navLabel` | メイン | Main | 英語の初版 | OK |  |
-| 206 | `back` | 戻る | Back | 英語の初版 | OK |  |
-| 207 | `backToCover` | 表紙 | Cover | 英語の初版 |  |  |
-| 208 | `coverMake` | 作る | Make | 英語の初版 |  |  |
-| 209 | `makeRoutines` | ルーティンを作る・直す | Make and edit routines | 英語の初版 |  |  |
-| 210 | `chooseDance` | 種目を選んでください | Choose a dance | 英語の初版 | OK |  |
-| 211 | `danceGroup` | 種目 | Dances | 英語の初版 | OK |  |
-| 212 | `resume` | 続きから | Resume | 英語の初版 | OK |  |
-| 213 | `speed` | 速さ | Speed | 英語の初版 | OK |  |
-| 214 | `speedSlow` | ゆっくり | Slower | 英語の初版 | OK |  |
-| 215 | `speedStandard` | 標準 | Standard | 英語の初版 | OK |  |
-| 216 | `speedFast` | 速め | Faster | 英語の初版 | OK |  |
-| 217 | `tempoMark` | ♩={tempo} | ♩={tempo} | 英語の初版 | OK |  |
-| 218 | `metronome` | メトロノーム | Metronome | 英語の初版 | OK |  |
-| 219 | `leadIn` | はじめの合図 | Lead-in | 英語の初版 | 製品判断: “Count-in”（音楽・ダンスでより通じる語。leadInNow “Count-in…”・leadInLength “Count-in length” も一緒に） |  |
-| 220 | `leadInNow` | はじめの合図… | Lead-in… | 英語の初版 | OK |  |
-| 221 | `on` | オン | On | 英語の初版 | OK |  |
-| 222 | `off` | オフ | Off | 英語の初版 | OK |  |
-| 223 | `voiceChip` | 声: {name} | Voice: {name} | 英語の初版 | OK |  |
-| 224 | `standardVoiceShort` | 標準（英語） | Standard (English) | 英語の初版 | OK |  |
-| 225 | `moreOptions` | くわしく | More options | 英語の初版 | OK |  |
-| 226 | `moreOptionsWithTempo` | くわしく · ♩={tempo} | More options · ♩={tempo} | 英語の初版 | OK |  |
-| 227 | `fineSpeed` | 速さの細かい調整 | Fine speed | 英語の初版 | Fine-tune speed |  |
-| 228 | `competitionSpeed` | 競技の速さ（♩={min}〜{max}） | Competition speed (♩={min}–{max}) | 英語の初版 | OK |  |
-| 229 | `repeat` | 繰り返す | Repeat | 英語の初版 | OK |  |
-| 230 | `play` | 再生 | Play | 英語の初版 | OK |  |
-| 231 | `stop` | 停止 | Stop | 英語の初版 | OK |  |
-| 232 | `nowCount` | いま {count} | Now: {count} | 英語の初版 | OK |  |
-| 233 | `noSoundLink` | 音が鳴らない時は | If there is no sound | 英語の初版 | OK（ja は見出し soundHelpTitle「音が鳴らない時」にそろえて「音が鳴らない時は」に直した＝Fix round 1。en は元から同じ） |  |
-| 234 | `close` | 閉じる | Close | 英語の初版 | OK |  |
-| 235 | `voicesTitle` | 声 | Voice | 英語の初版 | Voices |  |
+| 202 | `documentTitle` | Dance Count — for Ballroom | Dance Count — for Ballroom | 英語の初版 | OK |  |
+| 203 | `switchLanguage` | English | 日本語 | 英語の初版 | OK |  |
+| 204 | `tabFigures` | フィガー | Figures | 英語の初版 |  |  |
+| 205 | `tabRoutines` | ルーティン | Routines | 英語の初版 | OK |  |
+| 206 | `navLabel` | メイン | Main | 英語の初版 | OK |  |
+| 207 | `back` | 戻る | Back | 英語の初版 | OK |  |
+| 208 | `backToCover` | 表紙 | Cover | 英語の初版 |  |  |
+| 209 | `coverMake` | 作る | Make | 英語の初版 |  |  |
+| 210 | `makeRoutines` | ルーティンを作る・直す | Make and edit routines | 英語の初版 |  |  |
+| 211 | `chooseDance` | 種目を選んでください | Choose a dance | 英語の初版 | OK |  |
+| 212 | `danceGroup` | 種目 | Dances | 英語の初版 | OK |  |
+| 213 | `resume` | 続きから | Resume | 英語の初版 | OK |  |
+| 214 | `speed` | 速さ | Speed | 英語の初版 | OK |  |
+| 215 | `speedSlow` | ゆっくり | Slower | 英語の初版 | OK |  |
+| 216 | `speedStandard` | 標準 | Standard | 英語の初版 | OK |  |
+| 217 | `speedFast` | 速め | Faster | 英語の初版 | OK |  |
+| 218 | `tempoMark` | ♩={tempo} | ♩={tempo} | 英語の初版 | OK |  |
+| 219 | `metronome` | メトロノーム | Metronome | 英語の初版 | OK |  |
+| 220 | `leadIn` | はじめの合図 | Lead-in | 英語の初版 | 製品判断: “Count-in”（音楽・ダンスでより通じる語。leadInNow “Count-in…”・leadInLength “Count-in length” も一緒に） |  |
+| 221 | `leadInNow` | はじめの合図… | Lead-in… | 英語の初版 | OK |  |
+| 222 | `on` | オン | On | 英語の初版 | OK |  |
+| 223 | `off` | オフ | Off | 英語の初版 | OK |  |
+| 224 | `voiceChip` | 声: {name} | Voice: {name} | 英語の初版 | OK |  |
+| 225 | `standardVoiceShort` | 標準（英語） | Standard (English) | 英語の初版 | OK |  |
+| 226 | `moreOptions` | くわしく | More options | 英語の初版 | OK |  |
+| 227 | `moreOptionsWithTempo` | くわしく · ♩={tempo} | More options · ♩={tempo} | 英語の初版 | OK |  |
+| 228 | `fineSpeed` | 速さの細かい調整 | Fine speed | 英語の初版 | Fine-tune speed |  |
+| 229 | `competitionSpeed` | 競技の速さ（♩={min}〜{max}） | Competition speed (♩={min}–{max}) | 英語の初版 | OK |  |
+| 230 | `repeat` | 繰り返す | Repeat | 英語の初版 | OK |  |
+| 231 | `play` | 再生 | Play | 英語の初版 | OK |  |
+| 232 | `stop` | 停止 | Stop | 英語の初版 | OK |  |
+| 233 | `nowCount` | いま {count} | Now: {count} | 英語の初版 | OK |  |
+| 234 | `noSoundLink` | 音が鳴らない時は | If there is no sound | 英語の初版 | OK（ja は見出し soundHelpTitle「音が鳴らない時」にそろえて「音が鳴らない時は」に直した＝Fix round 1。en は元から同じ） |  |
+| 235 | `close` | 閉じる | Close | 英語の初版 | OK |  |
 | 236 | `standardVoiceEnglish` | 標準の声（英語） | Standard voice (English) | 英語の初版 | OK。製品判断（Fable OQ7）: どこでも短い “Standard (English)” にすれば 320px 幅の特別扱いが要らなくなる |  |
 | 237 | `soundHelpTitle` | 音が鳴らない時 | If there is no sound | 英語の初版 | OK |  |
 | 238 | `updateReady` | 新しい版があります。 | A new version is ready. | 技術語の疑い（版・version）・英語の初版 | An update is ready. |  |
@@ -358,12 +358,12 @@
 | 258 | `defaultVoiceNameEn` | 自分の声（英語） | My voice (English) | 英語の初版 | OK |  |
 | 259 | `defaultVoiceNameJa` | 自分の声（日本語） | My voice (Japanese) | 英語の初版 | OK |  |
 | 260 | `previewVoice` | 試聴 | Preview | 英語の初版 | OK |  |
-| 261 | `recordVoice` | 自分の声を録音する | Record your voice | 英語の初版 | OK |  |
-| 262 | `voiceTiming` | 声のタイミング | Voice timing | 英語の初版 | OK |  |
-| 263 | `voiceEarlier` | 早く | Earlier | 英語の初版 | OK |  |
-| 264 | `voiceLater` | 遅く | Later | 英語の初版 | OK |  |
-| 265 | `voiceTimingHint` | 声が遅れて聞こえたら「早く」を押します。 | If the voice sounds late, press “Earlier”. | 英語の初版 | If the voice sounds late, tap “Earlier”. |  |
-| 266 | `share` | 配る | Share | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
+| 261 | `voiceTiming` | 声のタイミング | Voice timing | 英語の初版 | OK |  |
+| 262 | `voiceEarlier` | 早く | Earlier | 英語の初版 | OK |  |
+| 263 | `voiceLater` | 遅く | Later | 英語の初版 | OK |  |
+| 264 | `voiceTimingHint` | 声が遅れて聞こえたら「早く」を押します。 | If the voice sounds late, press “Earlier”. | 英語の初版 | If the voice sounds late, tap “Earlier”. |  |
+| 265 | `share` | 配る | Share | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
+| 266 | `shareRoutines` | ルーティンを配る | Share routines | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
 | 267 | `receiveFromFile` | ファイルから受け取る | Receive from a file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
 | 268 | `instructionsCopyByHand` | 長押しで選んでコピーできます。 | Press and hold to select and copy. | 英語の初版 | Touch and hold the text to select and copy it. |  |
 | 269 | `backupTipRoutine` | ルーティンは「配る」でファイルにして、自分にも送っておけます。 | You can turn routines into a file with “Share” and send it to yourself. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | Use “Share” to save routines in a file you can send to yourself. |  |

@@ -165,39 +165,36 @@ const STATES = [
     texts: ['保存できませんでした。'] },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  // 段8（Ruling 98）: 言語・声・「困った時は」の束（追加の方法・音が鳴らない時）・「先生の方へ」の束（録音・配る）・「プライバシー・アプリについて」＝5（上限ちょうど）。
-  // ops は固定しない（「S1 案内カード」と同じ扱い）: 1280×900 は 5 つとも初期表示・375×667 は「プライバシー・アプリについて」が下で 4・
-  // 375×548 は「先生の方へ」も下で 3（opsSmall）。生徒が使う 言語・声・「困った時は」の 2 行は 548 でも初期表示に入る（firstView）
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', opsSmall: 3, total: 5,
-    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], teacher: ['自分の声を録音する', 'ルーティンを配る'] },
-    textKeys: ['settingsHelpHeading', 'forTeachers', 'settingsAbout'],
-    firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
-  // Fable 答え 2: 生徒が使う 3 つ（言語・声・「ホーム画面に追加する方法」）は帯があっても 375×548 の初期表示に入る
-  // 段8: 帯があると 375×548 では「音が鳴らない時」の行も下（S11 は S2/S5 の枠からも行ける）。言語・声・「ホーム画面に追加する方法」は入ったまま（Ruling 98-1）
-  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
-    firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]'] },
-  // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
-  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
-  // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。S6「声」・S2 の声チップから入っても、フォーカスは見出し（main に落ちない）
-  { name: 'S7（設定から）', hash: '#/voices', via: { hash: '#/settings', screen: 'S6' }, screen: 'S7', kind: 'focus', ops: 3, total: 3, focusHeading: true,
-    steps: [{ click: 'a[href="#/voices"]' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
-  // D56: S7 への入口は S2／S5 の声チップ（S1 の先生カードは無くなった。Ruling 115-5）
-  { name: 'S7（再生画面から）', hash: '#/voices', via: { hash: '#/practice/waltz', screen: 'S2' }, screen: 'S7', kind: 'focus', ops: 3, total: 3, focusHeading: true,
+  // D56（Ruling 115-4・118-3）: S6 は 言語・「困った時は」の束（追加の方法・音が鳴らない時）・「プライバシー・アプリについて」＝3（「声」は再生画面の声チップへ・
+  // 「先生の方へ」は表紙の「作る」へ）。375×548 でも 3 つとも初期表示に入る。左上「‹ 表紙」・下タブ無し
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', ops: 3, total: 3,
+    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'] },
+    textKeys: ['settingsHelpHeading', 'settingsAbout', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
+    firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]', '.dc-settings-about'] },
+  // 帯があっても 375×548 で言語と「困った時は」は初期表示に入る（「プライバシー・アプリについて」は下でもよい＝ops は固定しない）
+  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
+    firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
+  // 段4（Ruling 60・63）＋段5（Ruling 86-1）＋D56（Ruling 115-5）: S7 は 一覧 1＋「ファイルから受け取る」1＝2。「自分の声を録音する」は表紙の「作る」へ移し、1 行の案内に。
+  // 行を開くと voice-actions が足される。
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 2, total: 2, voiceRows: ['標準の声（英語）'], textKeys: ['recordFromMake'], absent: ['.dc-record-link'] },
+  // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。D56: S7 への入口は S2／S5 の声チップ（S1 の先生カード・S6 の「声」は無くなった。Ruling 115-5）。
+  // フォーカスは見出し（main に落ちない）
+  { name: 'S7（再生画面から）', hash: '#/voices', via: { hash: '#/practice/waltz', screen: 'S2' }, screen: 'S7', kind: 'focus', ops: 2, total: 2, focusHeading: true,
     steps: [{ click: 'a.dc-chip-row' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
-  { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
-  // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下の 2 つのボタンはスクロールで届く（初期表示は固定しない）
-  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 3, rows: 23 },
+  { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下のボタンはスクロールで届く（初期表示は固定しない）
+  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 2, rows: 23 },
   // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
-  { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'focus', ops: 3, total: 3, alert: true,
+  { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true,
     texts: ['この声はまだ端末に入っていません。'] },
-  // 段5 Task 10b: 600px 未満の高さでは「ファイルから受け取る」「自分の声を録音する」を横 1 行に並べ、声が 3 本でも 375×548 の初期表示に入る
-  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
-    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link', '.dc-record-link'] },
-  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+  // 段5 Task 10b・D56: 声が 3 本でも「ファイルから受け取る」は 375×548 の初期表示に入る
+  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
+    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link'] },
+  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     actions: { group: 'voice-actions', labels: ['配る', '削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
   // D37: 受け取った声は配れない（開いた行は「削除」だけ）
-  { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+  { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     actions: { group: 'voice-actions', labels: ['削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn], confirm: true },
@@ -249,9 +246,9 @@ const STATES = [
   // 段8 Task 12（D51・final-review m2）: 録音もルーティンも無い時は帯に「先に…と配れます。」の 1 行（操作は増やさない＝名前と主ボタン（押せない）の 2）
   { name: 'S9 何も無い', hash: '#/share', screen: 'S9', kind: 'focus', ops: 2, total: 2, primaryDisabled: true, textKeys: ['shareNothingYet'], firstView: ['.dc-dock-note'] },
   { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'], firstView: ['[data-list]'] },
-  // 段8 Task 6 fix 1（レビュー I-1）: S6「ルーティンを配る」から（S9 も読み込み中の形を通る）。フォーカスは上の行の名前（h1）
-  { name: 'S9（設定から）', hash: '#/share', via: { hash: '#/settings', screen: 'S6' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true,
-    focusHeading: true, steps: [{ click: 'a[href="#/share"]' }, { wait: '[data-screen="S9"]:not([data-loading])' }] },
+  // 段8 Task 6 fix 1（レビュー I-1）・D56: M0「配る（ファイルを作る）」から（S9 も読み込み中の形を通る）。フォーカスは上の行の名前（h1）
+  { name: 'S9（作るから）', hash: '#/share', via: { hash: '#/make', screen: 'M0' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true,
+    focusHeading: true, steps: [{ click: 'a.dc-hub[href="#/share"]' }, { wait: '[data-screen="S9"]:not([data-loading])' }] },
   { name: 'S9 作った後', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], fakeShare: true, total: 6,
     texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
     steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
