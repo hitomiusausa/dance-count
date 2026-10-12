@@ -36,6 +36,15 @@ const LANGUAGES: readonly VoiceLocale[] = ['en', 'ja-JP'];
 type Alert = 'none' | 'no-voice' | 'save-failed';
 type Blocked = 'none' | 'denied' | 'failed' | 'unsupported';
 
+// 段8 Task 9（通し確認）: 数える言葉の行は括弧の前でだけ折る（iOS 26 で「スロー／…）」、Chrome で「に、／スロー…）」と括弧の中で折れた）。
+// 括弧の中は 1 かたまり（320 幅でも 1 行に入る長さ）。textContent は変えない（<wbr> は文字を足さない）
+function countLabel(label: string) {
+  const open = label.search(/（| \(/);
+  if (open <= 0) return label;
+  const cut = label[open] === ' ' ? open + 1 : open;   // 英語は空白の後で（空白が折れ目）
+  return <>{label.slice(0, cut)}<wbr /><span class="dc-nowrap">{label.slice(cut)}</span></>;
+}
+
 function blockedBy(error: unknown): Blocked {
   if (!(error instanceof RecorderError)) return 'failed';
   return error.kind;
@@ -280,7 +289,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
                 onClick={() => setLanguage(locale)}>
                 {checked ? <Icon name="check" /> : <span class="dc-ic" aria-hidden="true" />}
                 <span class="dc-radio-text">
-                  <span>{translator.t(locale === 'ja-JP' ? 'countInJapanese' : 'countInEnglish')}</span>
+                  <span>{countLabel(translator.t(locale === 'ja-JP' ? 'countInJapanese' : 'countInEnglish'))}</span>
                   {progress.recorded > 0 && (
                     <small>{progress.complete ? translator.t('recordedAll') : translator.t('recordedUpTo', { count: progress.recorded })}</small>
                   )}

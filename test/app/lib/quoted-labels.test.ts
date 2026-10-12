@@ -11,8 +11,8 @@ test('quoted UI labels become unbreakable parts; the rest stays as is', () => {
   // 段7 Task 12: 括弧の後の動詞も折らない（375 幅の Android の手順 2 が「押しま／す。」と折れた）
   assert.deepEqual(splitQuotedLabels('「ホーム画面に追加」（または「アプリをインストール」）を押します。').map(part => part.text),
     ['「ホーム画面に追加」', '（または', '「アプリをインストール」', '）を', '押します。']);
-  assert.deepEqual(splitQuotedLabels('Tap “See More”, then “Add to Home Screen”.'), [
-    { text: 'Tap ', label: false }, { text: '“See More”', label: true }, { text: ', then ', label: false },
+  assert.deepEqual(splitQuotedLabels('Tap “View More”, then “Add to Home Screen”.'), [
+    { text: 'Tap ', label: false }, { text: '“View More”', label: true }, { text: ', then ', label: false },
     { text: '“Add to Home Screen”', label: true }, { text: '.', label: false }
   ]);
   assert.deepEqual(splitQuotedLabels('引用の無い文'), [{ text: '引用の無い文', label: false }]);

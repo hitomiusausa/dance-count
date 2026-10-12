@@ -69,7 +69,7 @@ export const APP_MESSAGES = {
     installIntro: 'Added to your Home Screen, it opens like an app and works without a signal.',
     installIosStep1: 'Tap “…” at the bottom of the screen.',
     installIosStep2: 'Tap “Share”.',
-    installIosStep3: 'Tap “See More”, then “Add to Home Screen”.',
+    installIosStep3: 'Tap “View More”, then “Add to Home Screen”.',
     installIosStep4: 'Tap “Add” at the top right.',
     installNotCarried: "Recorded voices, received voices and routines don't carry over to the added app. Record or receive them again in the added app.",
     installOpenInSafari: 'Open this page in Safari to add it to your Home Screen.',

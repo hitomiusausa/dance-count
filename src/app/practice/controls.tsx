@@ -163,7 +163,7 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: numbe
           <span>{translator.t('voiceLater')}</span><Icon name="chev-r" />
         </button>
       </div>
-      <div class="dc-offset-hint">{translator.t('voiceTimingHint')}</div>
+      <div class="dc-offset-hint">{phrased(translator, 'voiceTimingHint')}</div>
     </div>
   );
 }
@@ -203,8 +203,8 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
           </a>
         </>
       )}
-      {notice === 'stopped' && <div class="dc-alert-text"><b>{phrased(translator, 'playbackStopped')}</b></div>}
-      {notice === 'voice-missing' && <div class="dc-alert-text"><b>{phrased(translator, 'voiceMissing')}</b></div>}
+      {notice === 'stopped' && <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'playbackStopped')}</b></div>}
+      {notice === 'voice-missing' && <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'voiceMissing')}</b></div>}
       {/* 段8（Ruling 103-3・段4 Task 5）: 保存失敗の枠は「閉じる」で閉じ、元の案内に戻る（ほかの案内を隠したままにしない） */}
       {notice === 'save-failed' && (
         <>
