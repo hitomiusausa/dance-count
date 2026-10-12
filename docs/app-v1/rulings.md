@@ -2720,6 +2720,10 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 ## 代理決定の台帳（D45 の続き）
 
 - **D46（代理決定・ひとみうさ確認待ち）録音の前に「先にホーム画面に追加」を 1 行で勧める**（S8 の最初の画面・iPhone のブラウザ（`ios-safari`・`ios-other`）・追加前・まだ 1 語も録っていない時だけ。`showsRecordInstallHint`）。文は上の「D46」の節のとおり。— 代案: (a) 足さない (b) S6「先生の方へ」の見出しの下に 1 行。— 代償: S8 の最初の画面に 16px の 3 文が増える（録音前の 1 回だけ）。Android の「Chrome と追加したアプリで保存領域が同じ」が外れていれば Android にも出す（実機確認表 15）。実機確認表 A-16・B。
+- **D47（代理決定・ひとみうさ／法務の確認待ち）S13 のプライバシーの文（案）**。アプリが実際にすることだけ。法的な約束は入れていない。
+- **D48（代理決定・確認待ち）S13 の「このアプリについて」の項目**: 運営「くうが株式会社」（英語表記は仮に “Kuga Inc.”＝**社名の英語表記はひとみうさ確認**）・問い合わせ `info@kugainc.com`（`mailto:`）・版番号・「公式・監修済みではありません」の 1 文・使っているもの（Inter／Noto Sans JP＝SIL OFL・Preact＝MIT・Workbox＝MIT）。**標準の声を Google Cloud Text-to-Speech で作ったことを書くか**は法務の判断（書かなくても規約上は問題ないと見るが**推測**）。— 代案: 「使っているもの」を出さない（短くなる。OFL は配布時のライセンス同梱が条件なので、`dist` に LICENSE を置く方が確実＝計画者は `public/licenses/` に OFL の全文を置く。これは判断でなく作業）。
+- **D49（代理決定・確認待ち）配る人の名前が「先生」で終わる時は「さん」を付けない**（「山田先生の声」「山田先生から」「山田先生が作成」。`distributorVoice`・`receivedFrom`・`madeBy`・`fileVoiceFrom`・`replaceVoiceFrom`・`receivedVoiceFrom` の 6 鍵を、名前の末尾で 2 通りに分ける純粋関数 `honorific(name)` に通す。英語は影響なし＝“Yamada-sensei's voice” のまま）。— 代案: (a) そのまま「山田先生さんの声」(b) S9 の名前の欄に「「先生」は付けずに名前だけ」の補助文（S9 が 548 で窮屈になる）。— 代償: 「先生」で終わる名前（例「花子先生」）が人名の一部だった場合も「さん」が付かない（害は無い）。
+- **D50（代理決定・確認待ち）英語の一次案のうち、意味を変えない明らかな誤り（綴り・引用符の不揃い・“practise”）は監修の前に直してよい**。意味に関わる語（“Share”／“Send”・“Lead-in”・“Resume” など）は触らない。
 
 ## 計画者の発見 1〜20（要約）
 
@@ -2763,3 +2767,308 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 - **Tasks 9〜11 と 6〜8 の直し便を同時に走らせた**（触るファイルが重ならない）。合わせた HEAD のゲートは Task 12 で取った（テスト 575・ui:check 332）。
 - **通し確認の問い 1〜5**（`docs/app-v1/stage7-usability-walk.md` §5）: (1) Safari で日本語の本文が語の途中で折れる → **段8でアプリ全体の方針を決める**（句の切れ目を折らない塊にする等）(2) S1 カードの「× 閉じる」の置き場 → このまま（好みの一覧へ）(3) アイコンが空きのあるページに置かれる → 実機確認表 1b（迷うなら手順 5 を足す）(4) Safari の「…」のメニューが手順を隠す → このまま (5) 最初の起動が 4〜10 秒白い → 実機確認表 3b（長ければ段8で読み込み中の 1 行／manifest の背景色）。
 - **Task 12 の直し**: 手順の動詞「押します。」「押し、」と S10 の iOS の語を折らない塊に（裁定の範囲の折り返し。文言は変えていない）。
+
+---
+
+# 段8（仕上げ）計画前の裁定 — Fable（2026-10-12・代理決定を含む）
+
+作成: 2026-10-12 / ブランチ `agent/app-v1`（HEAD `e5c39e9`「段7の締め」） / 書き手: Fable（設計と裁定だけ。コードと `docs/app-v1/rulings.md` には触れていない。採用が決まったら計画者がこの文書の Ruling 96〜105 と D47〜D50 を `rulings.md` 末尾へ転記する）。
+
+前提:
+- 段2〜7 は実装・レビュー済み（段3 追加便〜段7 は実機確認待ち）。段8は仕様 §13 の「仕上げ: 日英文言の監修、S11・S13、エラー全件、禁止語テスト、アクセシビリティ最終」と、その後の **全体の統合レビュー（Opus 総合 → 修正便 1 回 → 差分再レビュー 1 回）** を範囲にする。
+- 段8へ送られていた物（全部この文書で答える）: S6 の並び（Ruling 92-8）・Safari の語の途中の折り返し（段5 §0b-3・段7 walk 問い 1）・英語 “See More”（Ruling 92 答え 5）・英語 548 の S8 の D46／S12 の D43 の行・最初の起動の白い時間（walk 問い 5）・書体の道具の文字の出どころ（段7 M1）・S7 の声が 20 本で U5 を超える（段4→段8）・英語 UI で録った声の既定名（Ruling 76-1）・法務ページの中身（§12）・各段の「置いておいた Minor」。
+- ひとみうさの常設要件: 60〜70代の初めての人が止まらない・迷わない／iPhone SE（375×548 の Safari・375×667 のホーム画面のアプリ）が基準／320 幅で横スクロールなし。
+- **push・デプロイ・DNS・配信基盤・課金は禁止のまま**。`npm install`（devDependencies）は可。
+- 法務の文は**法的な約束を作らない**。アプリが実際にすること・しないことだけを書き、「ひとみうさ／法務の確認待ち」と印を付ける（§2 Ruling 99）。
+
+---
+
+## 0. コード・環境・外部で確かめた事実（裁定の根拠。推測は明記）
+
+### 0-1. アプリの現物（`e5c39e9`）
+
+- **文言**: `src/app/i18n/messages.ts` の鍵は **254**（en／ja-JP が完全一致。`test/app/i18n.test.ts` が鍵の一致と禁止語を検査）。英語は全部「初版」の印のまま。「〜してください」を含む ja の鍵は **10**（1 画面 1 つの手動基準に対して、画面ごとの数は未集計）。
+- **S11（音が鳴らない時）**: `SoundHelpScreen.tsx` が段2から存在し、`App.tsx` の `SIMPLE_SCREENS` に登録済み。中身は見出し＋`ol.dc-steps` 3 行（スイッチ／音量／イヤホン・Bluetooth）＋`p.dc-body`「もう一度 ▶ を押してください。」＝仕様 §4 S11 のとおり。`ui:check` の状態 `S11` は ops の期待値なし。**S6 からの行が無い**（下）。
+- **S13（プライバシー・アプリについて）**: `routes.ts` に `S13: { kind:'list', parent:'S6', tab:'settings', path:'/about' }` は登録済み。画面は**無い**（`SIMPLE_SCREENS` に無く S1 へ落ちる）。「データを全て消す」の処理も無い（`platform/storage.ts` に `clear` は無い。ストアは `routines`・`settings`・`voice-packs` の 3 つ・`DB_VERSION=2`）。版は `src/app/app-version.ts` の `APP_VERSION`（`package.json` の `0.3.0` を Vite が埋める）。
+- **S6（設定）の今の行**: 言語（radio 群）・声 ›・ホーム画面に追加する方法 ›・見出し「先生の方へ」・自分の声を録音する ›・ルーティンを配る › ＝ 主要操作 **5（上限）**。仕様 §4 S6 の「音が鳴らない時 ›」が**入っていない**（S11 の入口は S2/S5 の警告の枠だけ）。段8で S11 と S13 の行を足すと **7**。
+- **ネットワーク**: アプリが網に出るのは `platform/assets.ts:17` の `fetch(input)`（同一オリジンの標準の声の `manifest.json`／WAV）と、SW の precache・書体の runtime cache だけ。`src/engine/figure-terminology.js` の先頭に ISTD の URL 定数が 2 つあるが**出典のメモで fetch はしない**。`XMLHttpRequest`・`sendBeacon`・外部の `<script>`・解析・広告・cookie は**無い**。`localStorage` は旧画面の表示言語の鍵を 1 回読んで消すだけ（`legacy-locale.ts`）。マイクは S8「録音をはじめる」のタップ内だけ（`platform/recorder.ts`）。`navigator.share` は S9 のタップ内だけ。
+- **アクセシビリティの現物**: 全画面が `<main data-screen>`、下タブは `<nav aria-label>`、戻るは文字つき、`role="radio"/"switch"/"radiogroup"/"group"/"status"/"alertdialog"`・`aria-labelledby`・`aria-checked`・`aria-pressed` は付いている。現在カウントは `aria-live="off"`＋`aria-label`・拍の列は `aria-hidden`（毎拍の読み上げを避ける＝正しい）。`:focus-visible` は 3px の枠。**画面が替わった時にフォーカスを動かす処理は無い**（`focus()` は S4 のつかみだけ）。`<html lang>` は `applyDocumentLanguage` で表示言語に追従。`ui:check` は U7（コントラスト）・U8（動き）・U9（640×450 の拡大）を持つが、**ラベルの欠け・名前の無いボタン・見出しの順・ランドマークの重複は見ていない**。
+- **折り返しの現物**: `base.css` は `word-break: auto-phrase`（Chrome だけ）を 8 か所、`word-break: keep-all` を 3 か所、`.dc-nowrap`、`⁠` の手当て（S10 の「"ファイル"」）を使っている。本文の折り返しは**ブラウザ任せ**。
+- **書体の道具**: `tools/fonts/needed-subsets.js` の `TEXT_SOURCES` は固定 5 ファイル（`messages.ts`・`ui-messages.js`・`figure-terminology.js`・`count-vocabularies.js`・`dance-profiles.js`）。S13 の長文を別のファイルに書くと一覧に入らない（段7 M1）。
+- **起動の殻**: `index.html` は `<div id="app"></div>` だけ（インラインの CSS・読み込み中の表示なし）。`App` は設定とルーティンを読み終えるまで `null`（`STORAGE_OPEN_TIMEOUT_MS=1500`）。manifest は `background_color:'#FFFFFF'`・`theme_color:'#1B2A4A'`。
+- **`ui:check` の周**: 375×667・1280×900（reduced-motion 有無）＋375×548＋640×450＋320×568、**locale は `ja-JP` だけ**（英語の配置は一度も機械検査していない）。`ui-state` は 7 値（`no-sound`・`wakelock-tip`・`confirm-delete`・`mic-denied`・`no-voice`・`no-recorder`・`update-ready`）。§11 の行のうち **強制表示できない見た目**: 保存失敗（S2/S4/S5/S8/S10）・再生が止まった（`stopped`）・声が端末に無い（`voice-missing`）・マイクが使えない（`mic-failed`）・共有を拒まれた（S9）・声が 20（S10）・ルーティン 200 超（S10）・一部のルーティンが読めない（S10 確認）。これらはスモークか手でしか見ていない。
+- **実機確認表**: `stage3-device-check.md` 42 行（17〜42 が未確認）・`stage4` 32 行・`stage5` 14 行＋B・C・`stage7` 23 行（A 1〜17・B・C）。4 枚に分かれ、順番（Safari → https）の指示は HANDOVER §0 にだけある。
+
+### 0-2. 計測（2026-10-12・スクラッチ `scratchpad/budoux-probe/probe.mjs`。本物の木は触っていない）
+
+- **BudouX 0.9.3**（npm 最新）の日本語モデルで ja 254 鍵を句に切った: 句は計 **756**（1 鍵あたり 2.98）。`chunks.join('') === 原文` が全鍵で成立。**プレースホルダ `{name}` 等を句の途中で切った鍵は 0**。ja モデルは `ja.js` **23.6KB**（runtime に持ち込むならこの分が precache に増える）。
+- **Playwright の WebKit（webkit-2311＝playwright-core 1.61.1 の同梱版）**で、30 字以上の ja 文 34 本を 18px・幅 343px（375−16×2）と 288px（320−16×2）に描いた:
+
+| 幅 | 方式 | 行数 | はみ出し | 1 字＋句点だけの最終行 | 句の途中で折れた行 |
+|---|---|---|---|---|---|
+| 343 | 素のまま（今） | 86 | 0 | **5** | **38** |
+| 343 | `word-break: auto-phrase` | 86 | 0 | 5 | 38（＝効いていない） |
+| 343 | **`keep-all` ＋ 句の境に `<wbr>`** | 87 | 0 | **0** | 13（※） |
+| 288 | 素のまま | 99 | 0 | 4 | 50 |
+| 288 | `keep-all` ＋ `<wbr>` | 106 | 0 | 0 | 15（※） |
+
+  ※ 句の途中に見える 13／15 は「、」「。」の後や「Safari で」の空白など、句の中にある**正規の折り返し点**で折れた行（語の途中ではない）。ZWSP（U+200B）の方式は textContent に文字が増えて計測が狂うので表から外した（折り返しの見た目は `<wbr>` と同じ）。
+- 同じ WebKit で `CSS.supports('word-break','auto-phrase')` は **false**、`CSS.supports('text-wrap','pretty')` は **true**。
+- Chromium の headless shell は版違い（1228 が無い）で起動できず、Chrome 本体（`channel:'chrome'`）での比較は省いた（段7の通し確認で「Chrome は句で折れる」は確認済み）。
+
+### 0-3. 外部事実（確認済み／推測を分ける。F41 の続き）
+
+| # | 事実 | 状態 | 出典 |
+|---|---|---|---|
+| F42 | WebKit は 2023-06 に `word-break: auto` を実装したが、`auto-phrase` の日本語の句分割は feature flag の裏で、2024-05 時点でも「flag が ICU の通常の折り返しまで変える」regression が開いている。2026 年の出荷状況を書いた一次資料は見つからず。**0-2 の実測（WebKit 2311 で非対応・iOS 26.3 Simulator で語の途中で折れる＝段7 walk）を正とする** | 実測で確認・出荷状況は不明 | https://bugs.webkit.org/show_bug.cgi?id=258668 ・ https://bugs.webkit.org/show_bug.cgi?id=274628 ・ https://caniuse.com/word-break |
+| F43 | WebKit は `word-break: keep-all` の下で ZWSP（U+200B）で折れないバグを 2022 年に直している（Chrome・Firefox と同じに）。`<wbr>` は仕様上どのモードでも折り返し点 | 確認済み（Bugzilla の resolved）＋0-2 の実測 | https://bugs.webkit.org/show_bug.cgi?id=248201 |
+| F44 | `text-wrap: pretty` は WebKit が 2025 に Technology Preview で実装（段落全体を見て折り返しを選ぶ）。0-2 の WebKit で `supports` が真 | 確認済み（WebKit blog の要約＋実測） | https://gigazine.net/news/20250409-safari-better-typography-text-wrap-pretty/ |
+| F45 | **BudouX（Google・Apache-2.0）** npm 最新 **0.9.3**。純粋 JS・依存なし・`loadDefaultJapaneseParser().parse(text)` が句の配列を返す。Chrome の `auto-phrase` も同じ系統のモデル | 確認済み（`npm install` の現物） | https://www.jsdelivr.com/package/npm/budoux |
+| F46 | **`@axe-core/playwright` 最新 4.13.0**（`axe-core` 4.14.0）。`new AxeBuilder({ page }).withTags([...]).analyze()` で違反の一覧 | 確認済み（`npm view`。2026-10-12） | https://www.npmjs.com/package/@axe-core/playwright |
+| F47 | iOS の英語の共有シートで日本語の「もっと見る」に当たるラベルの実物は未確認（“See More”／“More” のどちらか） | **未確認**（Simulator を英語にして見る＝Ruling 103-4） | — |
+| F48 | iOS 15.4 以降、manifest から追加した Web アプリの起動画面は `background_color`・`name`・アイコンから OS が作る（`apple-touch-startup-image` は不要） | 一般知識（**推測**。実機の最初の起動で白い時間が「OS の起動画面の後」か「殻が描けるまで」かを分けて見る＝Ruling 101） | — |
+
+---
+
+## 1. 計画者が止まる問い（この文書で全部答える）
+
+| # | 問い | 答えの場所 |
+|---|---|---|
+| Q1 | 段8のタスクの切り方・順番・担当・統合レビューとの境目 | §4 |
+| Q2 | 文言監修の方法（道具・一次案・ひとみうさの見方・英語の規則・既定名） | Ruling 96 |
+| Q3 | Safari の折り返し（アプリ全体の方針・i18n のプレースホルダとの関係・英語） | Ruling 97 |
+| Q4 | S6 の並び（S11・S13 の行が入ると 7 になる） | Ruling 98 |
+| Q5 | S11・S13 の中身（法務の文・運営・問い合わせ・版・データを全て消す） | Ruling 99・D47〜D49 |
+| Q6 | §11 のエラー全件の照合と、強制表示できない状態の扱い | Ruling 100 |
+| Q7 | 起動時の白い画面（splash・殻） | Ruling 101 |
+| Q8 | アクセシビリティ最終（axe の組み込み・フォーカス・ランドマーク・英語の配置・VoiceOver） | Ruling 102 |
+| Q9 | 書体の道具の文字の出どころ・S7 の U5・置いておいた Minor のうち拾う物 | Ruling 103 |
+| Q10 | 統合レビューの範囲と進め方（§13）・実機確認の統合表・初見テスト（G9） | Ruling 104・105 |
+
+---
+
+## 2. 裁定
+
+## Ruling 96（Q2）文言監修 — 道具が「監修シート」を作り、英語は一次案を AI が作ってから、**最終はひとみうさ**。鍵の正本は `messages.ts` のまま
+
+**決定**:
+1. **監修シート `docs/app-v1/stage8-copy-review.md` を道具で作る**（新規 `tools/i18n/copy-review-sheet.js`・純粋 Node・`npm run copy:sheet`）。列: `#`・画面（鍵の前置きと `tools/check-app-ui.js` の `texts`／各画面の `translator.t(` の参照から機械的に決める。決まらない鍵は「共通」）・鍵・**ja**・**en**・印（下）・ひとみうさの直し（空欄）。並びは画面順（S1〜S13・共通・案内文・エラー）。印は機械で付ける: **依頼**（「〜してください」／“Please”。画面ごとの数も脚注に＝手動基準「1 画面 1 つ」の材料）・**技術語の疑い**（「ブラウザ」「アドレスバー」「ファイル」「版」など段4 M3 で挙がった語の一覧を道具に持つ）・**長さ**（ja 35 字／en 70 字を超える＝1 行に収まらない）・**英語の初版**（段ごとの注記が「初版」のままの鍵）。同じ文が複数の鍵にある時は 1 行にまとめず、そのまま（鍵は正本）。
+2. **英語の一次案は Opus（または Sonnet）が「英語の母語話者の編集者」として 1 周**（シートの「直し」列に提案を書く。コードは触らない）。規則: 米国綴り（`practice`）・引用符は “ ” で統一（iOS の実物のラベル “Share” “Add to Home Screen” “Add” はそのまま）・1 文 1 動作・60〜70代に馴染む語（“Tap” は iOS の実物に合わせ、“Press” はボタン ▶ だけ）・禁止語の英語（Import・Export・Voice pack・Storage・Cache・Sync・Error code）は使わない・“Lead-in” は Count-in も可（仕様 §6）・**訳の意味を変えない**（意味を変える提案は「製品判断」と印を付けてひとみうさへ）。
+3. **ひとみうさの見方**: シートの「直し」列に書くか、番号で言う（「12 は『送る』に」）。決まった物だけ計画者が `messages.ts` に写す（1 コミット・禁止語テストが自動で走る・`ja-phrases.json` は Ruling 97 の道具で作り直す）。ひとみうさが寝ている間は **一次案を入れずに待つ**（英語の一次案を先に入れると、段8の統合レビューが「監修前の文」を見ることになる → 一次案のうち**明らかな誤り**（綴り・引用符の不揃い・“practise”）だけは先に直してよい＝代理決定 D50）。
+4. **段8で決まっている文言の変更**（ひとみうさの確認は要るが、既定で入れる）:
+   - `voiceLimitReached` ja「声が {count} を超えるため、受け取れません。」→「声はすでに {count} あるので、受け取れません。」（段5 M6: 英語の方が正確だった）。
+   - `micHowToOther` の「アドレスバーの左のマーク」は据え置き（Ruling 76-3。代わる語が無い）。
+   - **録音の声の既定名（Ruling 76-1）**: 既定名は**録音した時の表示言語**で付ける（`defaultVoiceNameEn`／`Ja` を表示言語で引く＝今の作り）。英語 UI で録ると “My voice (English)” になる。日本語 UI で録って後で英語に切り替えると「自分の声（英語）」のまま＝**名前は保存した文字で、言語で言い換えない**（ルーティン名と同じ扱い。段4からの持ち越しはこれで閉じる）。
+   - 「配る／Share」「送る」は**ひとみうさの判断**（段5 §0b-4）。シートの先頭に置く。
+5. **シートに載せない物**: 種目名（`ui-messages.js`。段0で確定）・フィガー名（照合済み・ISTD の綴り）・案内文の `PUBLIC_APP_URL` の行（公開前に別途）。
+
+**理由**: 254 鍵を画面の外で読んでも 60〜70代の目にはならないので、シートは「画面ごと・印つき」にして、ひとみうさが見る時間を短くする。英語は一次案を人（AI）が作らないと「初版」のまま公開される。
+
+**外れた時の代償**: 道具が 1 つ増える（画面の割り当てが外れる鍵は「共通」に落ちるだけ）。ひとみうさの監修が終わるまで、段8の統合レビューは「文言は監修前」の前提で読む（§4 の順序）。
+
+## Ruling 97（Q3）折り返し — **ビルド時に BudouX で ja の鍵を句に切った表を生成し、本文の描画で句の境に `<wbr>` を入れ、`word-break: keep-all`（＋`overflow-wrap: anywhere` の安全弁）**。`auto-phrase` は撤去して 1 つの動きにする。文字列そのものには何も入れない
+
+**決定**:
+1. **生成物 `src/app/i18n/ja-phrases.json`**（commit する）: `{ "<鍵>": ["句", "句", …] }`。作るのは新規 `tools/i18n/segment-ja.js`（`npm run i18n:phrases`・devDependency **`budoux` 0.9.3 固定**）。規則: `chunks.join('') === 原文`・**`{…}` のプレースホルダは句の途中で切らない**（切れていたら前後の句を結合してから書く。0-2 の実測では 0 件だが番人として）・` `・`⁠` を含む鍵は**そのまま 1 句**（既に手で折り方を決めた文: `voiceInProgressCount`・`recordedUpTo`・`reviewFromFirst`・`receiveHelpLine`）。
+2. **番人 `test/app/i18n-phrases.test.ts`**: 全 ja 鍵について `join === 原文`・プレースホルダが無傷・**JSON が古くない**（`messages.ts` を変えて `i18n:phrases` を忘れたら落ちる。`fixtures.test.ts` と同じ型）。BudouX をテストで動かす（devDependency なので可）。
+3. **描画の口 `src/app/i18n/phrased.tsx`**: `phrased(translator, key, vars)` → 句ごとに `translator` と同じ置換を当て、`<wbr>` で繋いだ VNode の配列を返す（**英語の時は `translator.t()` の文字列をそのまま返す**。英語は空白で折れる）。`textContent` に余計な文字が入らないので、`ui:check` の `texts`・クリップボード（案内文）・`aria-label`・`document.title`・テストの文字列比較は**今のまま**。置換の値（名前・数）は句の中で置換するので、名前は折らない塊になる（長い名前は `overflow-wrap: anywhere` が最後に折る）。
+4. **使う場所（本文だけ）**: `p.dc-body`・`ol.dc-steps li`・`div.dc-hint`・`.dc-alert-text`・`.dc-dock-note`・`.dc-backup-tip`・`.dc-result`・`.dc-receive-help`／`-item`／`-note`・`.dc-record-intro`・`.dc-record-add-first`・`.dc-install` の本文・S9 の同意の文・S13 の本文（Ruling 99）。**見出し・ボタン・チップ・行の名前には使わない**（既に `nowrap`／`keep-all`／`[data-ellipsis]` で決めてある）。
+5. **CSS**: 上の本文の型に `word-break: keep-all; overflow-wrap: anywhere;` を 1 つの規則にまとめ、`word-break: auto-phrase` を**全部消す**（Chrome と Safari で同じ折り方＝1 つの正。Chrome の auto-phrase と BudouX は同じ系統なので見た目の差は小さい）。`text-wrap: pretty`／`balance` の 2 行（`.dc-record-intro`・`.dc-record-hint`）は**残す**（Safari 26 でも効く＝F44。効かない所では無害）。
+6. **`ui:check` への追加（U10 の読み替え）**: 本文の要素で **最終行が「1 字＋句読点」だけ**の物を違反にする（0-2 の「孤立する「す。」」。`<wbr>` が入った後は 0 になる見込み＝回帰の番人）。計測は 0-2 の `getClientRects` の方法を `tools/check-app-ui.js` に移す。**英語の周**は Ruling 102-5。
+7. **やらないこと**: 手で `<br>` を入れる（CLAUDE.md の折り返し診断の原則）／runtime で BudouX を動かす（モデル 23.6KB を precache に足し、毎描画で切る理由が無い）／ZWSP を文字列に埋める（クリップボード・テスト・`aria-label` に漏れる）。
+
+**理由**: 0-2 の実測で、Safari で「語の途中で折れた行」が 38 → 13（残りは句読点など正規の点）・「す。」だけの行が 5 → 0 になり、はみ出しは 0、行数は 343px で +1 だけ。ビルド時に切れば実行時の重さはゼロで、鍵を足せば番人が「作り直し忘れ」を止める。
+
+**外れた時の代償**: 288px（320 幅）では行が +7（106 行／34 本）＝縦に少し伸びる（横スクロール無しは保たれる）。BudouX の句は統計なので稀に不自然な所で折れる（その鍵は `⁠` で手当て＝今の S10 と同じ）。生成物が 1 つ増え、`messages.ts` を変えるたびに `npm run i18n:phrases`（忘れるとテストが落ちる）。
+
+## Ruling 98（Q4）S6 の並び — 見出しつきの束を S1 の種目タイルと同じ「1 つの判断」として数え、**言語・声・「困った時は」（追加の方法・音が鳴らない時）・「先生の方へ」（録音・配る）・「プライバシー・アプリについて」（版を併記）＝ 5**
+
+**決定**:
+1. S6 の上から: 見出し「設定」→（更新の帯）→ **言語**（radio 群＝1）→ **声 ›**（1）→ 見出し「**困った時は / If something's wrong**」の下に **「ホーム画面に追加する方法 ›」「音が鳴らない時 ›」**（`[data-group="help"]`＝1）→ 見出し「先生の方へ」の下に **「自分の声を録音する ›」「ルーティンを配る ›」**（`[data-group="teacher"]`＝1）→ **「プライバシー・アプリについて ›」**（右端に `small.dc-link-value` で「版 0.3.0 / Version 0.3.0」＝1）。主要操作 **5**（上限ちょうど・段8以後は足せない）。548 の初期表示は 言語・声・「ホーム画面に追加する方法」が**帯があっても入る**（段7 答え 2 の条件を `firstView` で固定したまま。概算 326px＋帯 70px ＜ 480px）。
+2. **数え方の読み替え（Ruling 18 の注記）**: 「見出し（`h2.dc-field-label`）の下に並ぶ**同じ種類の行**」は、S1 の種目タイル（`[data-group="dance"]`＝10 個の `<a>` で 1）と同じく 1 つの判断として `[data-group]` にしてよい。**条件**: (a) 必ず目に見える見出しがある（見出し無しの束は抜け道なので禁止）(b) 行は同じ種類（全部が「› で画面へ行く行」）(c) U5（10 以下）はそのまま当てる。`ui:check` の S6 の期待値: **5／5**・375×548 の初期は **4**（「プライバシー…」が下）・更新あり **5**（548 は 3）。
+3. **代案（採らない）**: (A) 「先生の方へ ›」1 行で小画面 S6b を作る（画面が 1 つ増え、先生の 2 行が 1 タップ遠くなる）(B) 「プライバシー・アプリについて」を「困った時は」の束に入れて 4 にする（余裕は出るが「困った時」と「アプリについて」は種類が違う＝(b) に反する）。ひとみうさが余裕を望めば (B)。
+4. 「音が鳴らない時 ›」の行は**段8で初めて S6 に入る**（仕様 §4 S6 のとおり。今は S2/S5 の枠からしか行けない）。
+
+**理由**: 60〜70代の目には「設定」が 7 行並ぶより、見出しで「自分のこと／困った時／先生」に分かれている方が早い。数え方は S1 の先例に合わせただけで、新しい規則ではない。
+
+**外れた時の代償**: S6 は再び上限ちょうど（v1 ではもう足さない。第2弾の「曲」の設定は S2 の「くわしく」側＝Ruling 20）。見出し「困った時は」の語は監修シートに載せる。
+
+## Ruling 99（Q5）S11・S13 — S11 は今の 3 行＋1 行のまま（文言だけ監修）。S13 は「このアプリについて」＋「プライバシー」＋「データを全て消す」の 1 画面。文は**アプリが実際にすることだけ**を書き、法的な約束は書かない。問い合わせは `mailto:`
+
+**決定（S11）**:
+1. 中身は今のまま（本体横のスイッチ／音量／イヤホン・Bluetooth → もう一度 ▶）。Ruling 97 の本文の型（`li`）に `<wbr>` を入れる。入口は S2/S5 の枠と **S6「困った時は」**（Ruling 98）。主要操作 0。文言は監修シートで（「本体横のスイッチ（マナーモード）を確かめる」の「本体横」は iPhone 15 以降のアクションボタンでも通じる語＝据え置き）。
+
+**決定（S13。`src/app/screens/AboutScreen.tsx`・一覧画面・下タブあり・`BackButton`・親 S6・`#/about`）**:
+2. **文は別ファイル `src/app/i18n/about.ts`** に `{ en: AboutText, 'ja-JP': AboutText }`（`AboutText = { paragraphs: string[]; … }` の形で段落の配列）。`messages.ts` に長文を詰めない。`test/app/i18n.test.ts` の**鍵の一致と禁止語の検査を `about.ts` にも掛ける**（段落の数と順も en／ja で一致）。書体の道具の出どころにも入れる（Ruling 103-1）。
+3. **画面の構成（上から・本文 18px・各段落 `p.dc-body`・Ruling 97 の `<wbr>` 入り）**:
+   - 見出し「Dance Count について / About Dance Count」。1 行「Dance Count — for Ballroom　版 {version}」（`APP_VERSION`）。
+   - 「運営：くうが株式会社 / Operated by Kuga Inc.」（英語の社名表記は**ひとみうさの確認**＝D48）。「問い合わせ：info@kugainc.com」は `<a href="mailto:info@kugainc.com" class="dc-link-row">`（主要操作 1。文字にもアドレスをそのまま出す＝コピーできる）。
+   - 「このアプリのカウントは、公式のもの・監修を受けたものではありません。 / The counts in this app are not official and have not been reviewed by any organization.」（仕様 §12。団体名・級は出さない）。
+   - 見出し「プライバシー / Privacy」の下に、**事実だけ**の短い段落（下の D47 の案）。
+   - 見出し「使っているもの / Credits」: 書体 Inter・Noto Sans JP（SIL Open Font License）、Preact（MIT）、Workbox（MIT）。標準の声の作り方（Google Cloud Text-to-Speech で作った音声を同梱）を書くかは**ひとみうさ／法務の確認**（D48）。
+   - 最下部 `.dc-button--secondary dc-wide`「**データを全て消す / Delete all data**」→ `ConfirmDialog`（質問 1 つ「このアプリのデータを全て消しますか？　録音した声・受け取った声・ルーティン・設定が消えます。」・ボタン 2 つ・取り消し「やめる」が左・実行「消す / Delete」）。主要操作 **2**（mailto＋消す）。`ui:check`: `S13`（ops 2・total 2・`texts` に運営と問い合わせ）・`S13 確認`（`?ui-state=confirm-delete-all`・見た目だけ）。
+4. **「データを全て消す」の処理（`platform/storage.ts` に `clearAllAppData(storage)`）**: 1 つの readwrite トランザクションで `routines`・`settings`・`voice-packs` を `clear()` → `caches.delete(INBOX_CACHE)`（`platform/files.ts` 経由）→ 旧画面の `localStorage` の鍵を消す → `reloadPage()`（S1 が初期状態で開く。前回カード・案内カードの印も消える）。**SW の precache と書体の cache は消さない**（ユーザーのデータではない。§7「SW のキャッシュにユーザーデータは入れない」の裏返し）。`deleteDatabase` は使わない（開いたままだと blocked）。失敗したら §11 の「保存できませんでした」の型で枠を出す（消せなかった旨の 1 文「消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。」＝新しい鍵。禁止語を避ける）。テスト: 偽の storage で 3 ストアが空になる・失敗で例外が返る。
+5. **iOS の 2 つの保存領域（F34）**: 「データを全て消す」は**開いている方**（Safari か追加したアプリ）だけを消す。プライバシーの文にその旨を 1 行入れる（D47 の案 6）。
+
+**決定（法務の扱い）**:
+6. 文は D47 の案を**そのまま入れて公開はしない**。「ひとみうさ／法務の確認待ち」の印を HANDOVER §0b と監修シートに付ける。準拠法・免責・損害賠償の条項は**書かない**（約束を作らない方針。必要なら法務が足す）。
+
+**理由**: §12 の芯（端末内・解析なし・外部送信なし・受け渡しは本人・消せる）は 0-1 で**コードの現物として確認できた**ので、その範囲だけを文にする。配信サーバーの記録（Cloudflare 等のアクセスログ）は「アプリが送る」のではなく「ブラウザが普通に送る」物で、黙るより 1 行で言う方が正直。
+
+**外れた時の代償**: 第2弾（曲）や解析を入れる日に、この文を書き直す（鍵は `about.ts` に閉じている）。mailto は PC で既定のメールが無いと何も起きない（アドレスは文字で見えているので止まらない）。
+
+## Ruling 100（Q6）§11 エラー全件 — 「状況 → 鍵 → 画面 → 強制表示 → 検査」の表を `docs/app-v1/stage8-error-matrix.md` に作り、強制表示できない 7 つの見た目に `ui-state` を足す。`ui:check` が全行を少なくとも 1 周ずつ見る
+
+**決定**:
+1. 表の行は仕様 §11 の 21 行＋段8で足す 1 行（データを消せなかった）。列: 状況・鍵（ja／en）・出す画面と型（`[data-alert]`／`.dc-result`／`.dc-hint`）・ボタン・**強制表示の方法**（`ui-state`・seed・スモーク）・**検査**（`ui:check` の状態名／スモークの場面名）・実機でしか見られない物（マナーモード・電話・Bluetooth）。空欄が残る行は違反。
+2. **`UiState` に足す**（見た目だけ・Ruling 43 の「4 つ目以降は裁定」に当たる＝ここで裁定）: `save-failed`（S2・S4・S5・S8・S10 確認）・`stopped`（S2・S5「再生が止まりました」）・`voice-missing`（S2・S5・S7）・`mic-failed`（S8）・`share-refused`（S9・`.dc-result` と「ファイルを保存する」）・`voice-limit`（S10 選ぶ）・`routines-over-limit`（S10 確認・`routinesOverLimit` の行）・`confirm-delete-all`（S13）。`ui:check` に各 1 状態（`alert:true`・`texts` に 1 文目・主要操作の期待値つき。548・320 も既存の周で回る）。
+3. **§11 の読み替えで直す物**: 「マイク非対応」のボタン「戻る」は `BackButton` で満たす（枠の中にボタン無し＝今のとおり）。「オフラインで音声未キャッシュ」の出す場所「S2/S7」のうち **S7 は試聴（▶ 試聴）の失敗時**に同じ 1 文を出す（今は S2/S5 だけ。段8で足す）。
+4. 「技術用語・コード番号なし」は禁止語テストが守る。「何が起きたか 1 文＋次に押すもの」は表の列で目視。
+
+**理由**: 「全件」は表が無いと言えない。`ui-state` は見た目の検査の口で、処理の分岐は変えない。
+
+**外れた時の代償**: `ui-state` が 15 値になる（`routes.ts` の配列 1 つ。遷移で消える＝今のまま）。`ui:check` が +8 状態 × 5 周 ≒ +40 項目。
+
+## Ruling 101（Q7）起動の白い画面 — `index.html` に**静的な殻（アプリ名だけ・インライン CSS ≤ 600B）**を置き、`App` が描いたら消える。OS の起動画面（`background_color`・アイコン）はそのまま。長さは Simulator で測ってから足すかを決めない＝**先に入れる**（安い・害がない）
+
+**決定**:
+1. `index.html` の `<div id="app">` の中に `<div class="dc-boot" aria-hidden="true"><b>Dance Count</b><small>for Ballroom</small></div>`。`<head>` に `<style>` でその 2 つだけ（白地・紺の文字・画面の上 40% に中央・システム書体・`dc-boot` の外は何も書かない）。Preact の `render` が `#app` の中身を置き換えるので JS 側の変更は不要。文は言語に依らない固有名詞だけ（読み込み中の文は入れない＝言語が決まる前）。`check-dist` の文字列走査に引っかからないことを確認（`index.html` は走査対象）。
+2. **測る**（Task 9 の確かめ役・iOS Simulator）: ホーム画面のアプリを完全に閉じて起動 → 0.5 秒ごとの連続スクリーンショットで「OS の起動画面 → 白 → 殻 → S1」の各区間を 2 回測り、台帳に書く。殻が出るまでの白が 1 秒を超えるなら原因は殻の前（SW の `index.html` 取得）＝precache の `index.html` が当たっているかを `smoke:pwa` で見直す。
+3. `App` の `null`（設定を読み終えるまで）は**そのまま**（前回カードのちらつき防止＝Ruling 26）。1.5 秒の上限も変えない。
+4. `apple-mobile-web-app-status-bar-style` は書かない（Ruling 93-2）。
+
+**理由**: 「4〜10 秒白い」の大半は Simulator の初回（新しい保存領域）で、実機の値は未測。殻は 600B で副作用が無く、どちらの原因でも「真っ白で止まった」に見える時間を短くする。
+
+**外れた時の代償**: `index.html` に 2 行の見た目が増える（Noto ではなくシステム書体で 0.3 秒ほど出る）。
+
+## Ruling 102（Q8）アクセシビリティ最終 — `@axe-core/playwright` 4.13.0 を `ui:check` に組み込み（全状態・375×667 の 1 周・WCAG 2.1 A/AA のタグ）、違反 0 を完了条件に。画面が替わったら見出しへフォーカス。英語の周を 548 と 320 に足す。VoiceOver は実機の確認表に 1 節
+
+**決定**:
+1. **axe**: devDependency `@axe-core/playwright` **4.13.0** 固定（F46）。`tools/check-app-ui.js` の各状態の最後（375×667・no-preference の周だけ。1280 と 548 では走らせない＝重複）に `new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze()` → `violations` が 1 つでもあれば違反（`id`・`impact`・`nodes[0].target` を出す）。**`disableRules` は空から始め**、誤検出があればその規則と理由を `tools/check-app-ui.js` の先頭の定数 `AXE_DISABLED_RULES` に書く（裁定が要る）。`best-practice` のタグは**入れない**（U1〜U15 と重なる・誤検出が多い）。件数は +1 項目／状態（≒ +70）。
+2. **フォーカス（画面が替わった時）**: `App.tsx` で `screen` が変わるたびに、その画面の `h1`（無い画面は `main`）へ `focus({ preventScroll: true })`（`tabindex="-1"` を付ける。`platform/` の境界は `document.activeElement` を触らないので `ref.current.focus()` で可）。`h1:focus`／`main:focus` は `outline: none`（`:focus-visible` の枠を見出しには出さない。キーボードで Tab した時だけ次の要素に枠が出る）。**S2 の「前回」カード即再生**（タップ内の解除 → マウント後に再生）とは干渉しない（フォーカスは音に関係しない）が、Task 9 で `smoke:practice` が通ることを見る。VoiceOver は見出しから読み始める＝60〜70代の VoiceOver 利用者が「どの画面か」を最初に聞ける。
+3. **ランドマークと名前（`ui:check` に U16 を足す）**: `main` が**ちょうど 1 つ**・`nav[data-nav]` に `aria-label`・`h1` が 1 つ（S4 の種目選びのように `h1` が無い状態は違反。見出しの無い画面を無くす）・**名前の無い操作**（`button`・`a`・`[role=button]` で可視文字も `aria-label` も `aria-labelledby` も無い）が 0・`img`／`svg` は `aria-hidden` か `aria-label`（`icons.test.ts` が既に装飾の `aria-hidden` を見る）。
+4. **拡大・文字サイズ**: U9（640×450 で横スクロール無し）は**そのまま**。iOS の「文字サイズ」（Dynamic Type）は Web には効かないので対象外。Safari の「ページの拡大 200%」は U9 と同じ。実機の確認表に「設定 → Safari → ページの拡大 150% で S2 の 5 つが押せる」を 1 行。
+5. **英語の周（`ui:check`）**: 全状態を **英語（`locale:'en'`・設定 seed `uiLocale:'en'`）で 375×548 と 320×568 の 2 周**足す（主要操作の期待値は日本語と同じ・`texts` は英語の鍵に置き換え・U10 の「ボタン 2 行」「孤立行」も当てる）。これで D46（S8 の 3 文）と D43（S12 の 1 行）の英語 548 が機械で見られる。見込み +130 項目（332 → 約 580。dev と preview の両方で 1 周ずつ）。
+6. **VoiceOver（実機・ひとみうさ）**: 統合表（Ruling 105）に 1 節: VoiceOver を入れて S1 → ワルツ → ▶ → 停止 → 戻る → 設定 → 言語 の 7 手順が、読み上げだけで辿れる（現在カウントは読まない＝`aria-live="off"` の確認を含む）。Simulator の VoiceOver は使えないので実機。
+7. **色だけに頼らない**（手動項目）は Task 9 の通し確認で全状態のスクショを「グレースケール」でも撮る（Playwright の `emulateMedia({ forcedColors:'active' })` は Chrome では色を落とさないので、CSS `filter: grayscale(1)` を注入して撮る）。見分けが付かない物があれば裁定。
+
+**理由**: U1〜U15 は「高齢者向けの数値」で、WCAG の「名前・役割・状態」は別の軸。axe は後者を機械で拾う一番安い道具で、版を固定すれば CI でも同じ結果になる。英語の配置を一度も機械で見ていないのは公開前の穴。
+
+**外れた時の代償**: `ui:check` が長くなる（+200 項目・数分）。axe の誤検出は定数で止める（理由を書く）。フォーカスの移動で、キーボードの人は画面が替わるたびに見出しから Tab を始める（意図どおり）。
+
+## Ruling 103（Q9）書体の出どころ・S7 の U5・置いておいた Minor から拾う物・英語の “See More”
+
+**決定**:
+1. **書体の道具の出どころ**: `TEXT_SOURCES` を「`src/app/i18n/*.ts` の全部（`messages.ts`・`about.ts`・将来の鍵）＋ `src/engine` の 4 ファイル」の **glob** にする（`ja-phrases.json` は原文と同じ字なので入れなくてよいが、入れても害なし）。番人 **`test/tools/fonts-coverage.test.js`**: `APP_MESSAGES` と `about.ts` の**全字**が選んだサブセットの `unicode-range` に入る（入らない字＝端末の書体に化ける字が 1 つでもあれば落ちる）。段7 M1 を閉じる。
+2. **S7 の `[data-group="voice"]` の U5**: 属性 **`data-choices-max="24"`**（標準 2＋自分 2＋受け取った 20）を群に付け、`ui:check` は `data-choices-max` があればその値、`data-catalog` は今までどおり 20、無ければ 10。`S7 24 本` の状態を 1 つ足す（seed で 20 本受け取った声・375×548 でも「自分の声を録音する」はスクロールで届く＝Ruling 71-6 と同じ扱い・横スクロール無し）。**S7 の 2 つのボタンを下に固定する案は採らない**（段5 §0b-2。声が 4 本以上になる生徒は稀で、スクロールで届く。固定するとタブと帯が同居し Ruling 17 に反する）。
+3. **置いておいた Minor から段8で拾う物（ユーザーに見える物だけ）**:
+   - 段7 m-3 **アプリを少し切り替えただけで S4 の未完成の行が捨てられる** → `onPageHidden` では**有効な行だけ確定して保存し、未完成の行（名前だけ・不正なカウント）は開いたまま残す**（捨てるのは「戻る」の時だけ）。画面が本当に閉じられた時は失われる（Ruling 94-3 のとおり保証しない）。テスト 1 件（`smoke:routines` の hidden の場面に「名前だけの行が残る」を足す）。
+   - 段4 Task 5 **保存失敗の枠が S2/S5 のほかの案内を隠し、閉じる × が無い** → 枠に「閉じる」（`[data-alert-action]`・数えない）を足し、閉じたら元の案内に戻る。`save-failed` の `ui-state`（Ruling 100-2）で見る。
+   - 段7 M5（iOS 26 の Safari はスクロールでバーが縮み「…」が隠れる／バーを上にした人） → S12 の手順 1 の文に括弧で「（画面の上に出ている時は上の「…」）」を足すかは**実機確認 A-1 の後**（統合表に 1 行）。今は変えない。
+   - 段5 §0b-5「山田先生」→「山田先生さんの声」 → **D49**（名前が「先生」で終わる時は「さん」を付けない）。
+   - 段7 M4 320 幅の S12 で D43 の行が初期表示の下 → 標準どおり（横スクロール無しだけ）。据え置き。
+   - 段5 Task 8 S8 のバックアップの 1 行が 320 で 3 行 → Ruling 97 で自然に直る見込み（Task 9 で見る）。
+   - **拾わない物**（触る時に）: 段7 M4（複数タブの「更新する」）・M5（5 秒待ち）・段5 M2/M3（blob の revoke・iOS 15）・段4 Task 6（選んでいない声の削除）・段3 の小さな残り・`distributor.id`（D40 の根本の解。版を上げずに足せるが、v1 公開後の最初の修正便で。理由: 配布ファイルの形を変えると `fixtures.test.ts` と段5の実機確認の前提が動く）。
+4. **英語の “See More”（F47）**: Task 9 の確かめ役が **iOS Simulator を英語にして**（`xcrun simctl spawn booted defaults write .GlobalPreferences AppleLanguages -array en`・`AppleLocale en_US` → 再起動）Safari の共有シートの実物のラベルを撮り、`installIosStep3` の英語をその語に合わせる（ひとみうさの手を借りない）。D41 の「大きい iPhone で『もっと見る』が要るか」は実機のまま。
+5. **`dist` の `.woff`（29MB の大半）**: 段8では**落とさない**（端末は読まない・公開の置き場に置かれるだけ。`fonts.css` の import を変えずに落とす方法は Vite の `build.rollupOptions.output` の細工になり、段7の書体の番人を揺らす）。公開後の任意作業のまま。
+
+**理由**: 段8は最後の段で、「ユーザーに見える小さな傷」を拾う機会はここしかない。見えない物（内部の型・コメント）は統合レビューの Minor として残してよい。
+
+**外れた時の代償**: `smoke:routines` の hidden の場面の期待が変わる（名前だけの行が残る）。S7 の 24 本は seed が重い（20 パック × 12 語の WAV ≒ 15MB を IndexedDB に書く。`ui:check` の 1 状態だけなので許容。重ければ語を 1 本の短い WAV で共有）。
+
+## Ruling 104（Q10 前半）統合レビュー（仕様 §13「Opus 総合レビュー → 修正便 1 回 → 差分再レビュー 1 回」）— 範囲・入力・出力・直す基準
+
+**決定**:
+1. **時期**: 段8の Task 10（締め）の後・**ひとみうさの文言監修の前後どちらでも始められる**が、監修が終わっていなければ「文言は監修前」と報告書の冒頭に書く。実機確認（段3〜8）とは独立に進める（実機の指摘は別の修正便）。
+2. **レビュー役**: どの段の実装にも関わっていない **Opus**（新しい文脈・`agent/app-v1` の `git archive` を別の木に展開して自分でゲートを再実行）。入力は 仕様・全体地図・`rulings.md`・各段の台帳と「置いておいた Minor」・HANDOVER・この文書。
+3. **範囲（報告書 `docs/app-v1/final-review.md` の節＝この順）**:
+   1. ゲートの再実行（`npm test`・`typecheck`・`build`（check-dist の最後の行）・`timing:audit && timing:compare`・`src/engine` の diff ゼロ（段1の集約直後 `955462e` 以前の基準との比較）・`ui:check` dev と preview・`smoke:*` 5 本・`du -sh dist`）。数値を表に。
+   2. **仕様準拠の表 S1〜S13**: §4 の各画面の箇条（段の読み替えを含む）を 1 行ずつ「実装どおり／違う／未実装（裁定済み）」で。違うのに裁定が無い物が Critical。
+   3. **§11 のエラー全件**（`stage8-error-matrix.md` を自分で再確認）・**§12 の法務**（文がコードの事実と一致するか。0-1 の網の棚卸しを自分でやり直す: `fetch`・`XMLHttpRequest`・`sendBeacon`・外部 URL・cookie・`localStorage`）。
+   4. **§6 の手動項目**（色だけに頼らない・ダイアログの型・依頼 1 画面 1 つ・行の長さ）とアクセシビリティ（axe 0・フォーカス・名前）。
+   5. **安全**: 受け取るファイルの検証（上限・型・名前の不可視文字）・受け取った名前の描画（Preact の文字列として描かれる＝HTML にならないことを確認）・SW が受ける POST の上限・`share_target` の 303・precache に secrets が無い（`PUBLIC_APP_URL` 以外の環境変数が `dist` に出ていない）。
+   6. **常設要件**: 60〜70代が止まらないか（各画面の「次に押す物」が 1 つに見えるか）・375×548・320。段4・5・7 の通し確認の「問い」で据え置きになった物を再評価。
+   7. **残った持ち越し**（全体地図・HANDOVER §5・各台帳の Minor）の一覧と、「v1 公開前に直す／公開後」の仕分けの提案。
+   8. 指摘は **Critical（公開を止める）／Important（修正便で直す）／Minor（記録）** の 3 段。各指摘に 再現手順・該当ファイル:行・提案。
+4. **修正便（1 回）**: Critical と Important を全部、Minor は「10 分以内・ユーザーに見える」物だけ。**新しい製品判断はしない**（要るなら Fable／ひとみうさへ。修正便を止めない＝残して報告）。1 便の中でもタスクごとに別エージェントのレビュー（SDD の流儀）。
+5. **差分再レビュー（1 回）**: 同じレビュー役が修正便の diff だけを見る（新しい指摘は Minor として記録するだけで、再修正便は作らない＝仕様 §13 の「1 回」を守る。Critical が出た時だけ例外でひとみうさに上げる）。
+6. **出口**: 報告書・修正便・再レビューの要約を HANDOVER §0 に写し、「公開前にひとみうさがやること」の一覧（文言監修の残り・実機確認・https の置き場・公開 URL・D44 のアイコン・6b の決定）を 1 枚にする。
+
+**理由**: 段ごとのレビューは「その段の計画」に対して行った。統合レビューだけが「仕様の全体」に対して行う唯一の機会で、範囲を列挙しないと「動いているから OK」に流れる。
+
+**外れた時の代償**: Opus の 1 文脈で仕様 675 行＋画面 13 を読むのは重い（報告書の節を分けて複数便にしてよい。順序は上のとおり）。
+
+## Ruling 105（Q10 後半）実機確認の統合表と初見テスト — `docs/app-v1/device-check-master.md` 1 枚に、順番どおり・番号を引き継いで集約。元の 4 枚は残す（記録）。G9 は 1 枚の台本
+
+**決定**:
+1. **`docs/app-v1/device-check-master.md`（Task 10 で手で書く。道具は作らない）**: 節は**やる順**。
+   - **0 準備**（Mac の dev を 5199 で・iPhone の Safari で `http://<IP>:5199/?r=` ・再読み込みの決まり・Safari と追加したアプリは別の保存領域＝Safari の確認を先に全部）。
+   - **1 Safari（http・段3 追加便 17〜42 → 段4 1〜32 → 段5 1〜14）**: 1 行ずつ「番号（元の表の番号）・何をする・何が見えれば ✓・結果欄」。元の表の文を**短く写す**（長い説明は元の表へのリンク）。
+   - **2 https の置き場の後（段7 A 1〜17 → 段8）**: 段8の新しい行: S6 の新しい並び／S11 を S6 から開く／S13 の文・mailto が開く・「データを全て消す」で S1 が初期状態になる（Safari と追加したアプリの片方だけ）／**本物の iOS 26 で本文が句で折れる**（S10 の 2 行・S12 の 4 行・S8 の説明・S13）／英語に切り替えて S8・S12 の 548／ページの拡大 150%／VoiceOver 7 手順（Ruling 102-6）／最初の起動の白い時間（秒）。
+   - **3 代理決定を実物で（D23〜D50 の 1 表）**: 「このままでよい／変えたい」の 2 択。元の表の B 節はここに集める。
+   - **4 好み（段5・段7の C 節＋段8）**: 1 表。
+   - **5 Android（あれば）**: 段5・段7の Android の行をまとめる。
+   - 各行に `元: stage7 A-4` のように出どころを書く。元の 4 枚の先頭に「正本は master。ここは記録」の 1 行を足す。
+2. **初見テスト（G9）の台本 `docs/app-v1/first-sight-test.md`**: 対象 1 名以上（60〜70代・社交ダンス経験者が望ましい）。手順: 何も説明せず iPhone を渡し「ワルツのカウントを鳴らしてみてください」→ 観察（止まった所・押した物・言った言葉）→ 次に「もう少しゆっくりにしてください」→「止めて、タンゴにしてください」→ 終わったら 3 つ聞く（迷った所／読めなかった字／もう一度使いたいか）。記録は表 1 枚。**成功の条件**: 説明なしで ▶ まで 2 分以内。失敗した所は統合レビューの Important として扱う（ひとみうさが決める）。
+3. 段8の完了条件には「master に段8の行が入っている」までを入れ、**実機の ✓ 自体は入れない**（ひとみうさの時間に依る。全体地図の「人の確認点」の段8の行をそう読み替える）。
+
+**理由**: 4 枚の表を別々の日に別々の順で見ると、Safari の確認が追加したアプリの後になって「声が消えた」（F34）のような誤解が起きる。1 枚で順番を固定する。
+
+**外れた時の代償**: master が長い（約 120 行）。元の表と二重になるが、元は記録として凍結する。
+
+---
+
+## ひとみうさの決定（代理）— 起きたら見直してもらう
+
+- **D47（代理決定・ひとみうさ／法務の確認待ち）S13 のプライバシーの文（案）**。アプリが実際にすることだけ。法的な約束は入れていない。
+  1. 「録音した声・受け取った声・ルーティン・設定は、この端末の中にだけ保存されます。運営者（くうが株式会社）がこれらを受け取ることはありません。」
+  2. 「このアプリは、利用状況を集めたり、外部に送ったりする仕組みを持っていません（解析ツール・広告・外部の書体の読み込みはありません）。」
+  3. 「アプリのファイル（画面・音声・書体）を配信するサーバーには、ブラウザが通常送る情報（アクセスの日時など）が記録されることがあります。」（配信基盤が決まったら、その事業者名を入れるかを法務が判断）
+  4. 「マイクは、「録音をはじめる」を押した時にだけ使います。録音はこの端末に残り、いつでも消せます。」
+  5. 「「配る」で作ったファイルには、あなたの名前と、入れた声・ルーティンが入ります。誰に渡すかは、あなた自身が決めます。LINE やメールでの受け渡しは、それぞれのサービスの決まりに従います。受け取ったファイルには、送った人の名前と声が入っています。」
+  6. 「データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。」
+  7. 英語は上の文を同じ段落の順で（Ruling 96-2 の一次案の対象）。
+  - 代案: (a) 3 を書かない（配信ログは運営者の管理外として黙る）(b) 1〜6 を「3 行の要約」に縮め、長い文は公開サイト側のページに置く（v1 はサイトが無いので (b) は採らない）。
+- **D48（代理決定・確認待ち）S13 の「このアプリについて」の項目**: 運営「くうが株式会社」（英語表記は仮に “Kuga Inc.”＝**社名の英語表記はひとみうさ確認**）・問い合わせ `info@kugainc.com`（`mailto:`）・版番号・「公式・監修済みではありません」の 1 文・使っているもの（Inter／Noto Sans JP＝SIL OFL・Preact＝MIT・Workbox＝MIT）。**標準の声を Google Cloud Text-to-Speech で作ったことを書くか**は法務の判断（書かなくても規約上は問題ないと見るが**推測**）。— 代案: 「使っているもの」を出さない（短くなる。OFL は配布時のライセンス同梱が条件なので、`dist` に LICENSE を置く方が確実＝計画者は `public/licenses/` に OFL の全文を置く。これは判断でなく作業）。
+- **D49（代理決定・確認待ち）配る人の名前が「先生」で終わる時は「さん」を付けない**（「山田先生の声」「山田先生から」「山田先生が作成」。`distributorVoice`・`receivedFrom`・`madeBy`・`fileVoiceFrom`・`replaceVoiceFrom`・`receivedVoiceFrom` の 6 鍵を、名前の末尾で 2 通りに分ける純粋関数 `honorific(name)` に通す。英語は影響なし＝“Yamada-sensei's voice” のまま）。— 代案: (a) そのまま「山田先生さんの声」(b) S9 の名前の欄に「「先生」は付けずに名前だけ」の補助文（S9 が 548 で窮屈になる）。— 代償: 「先生」で終わる名前（例「花子先生」）が人名の一部だった場合も「さん」が付かない（害は無い）。
+- **D50（代理決定・確認待ち）英語の一次案のうち、意味を変えない明らかな誤り（綴り・引用符の不揃い・“practise”）は監修の前に直してよい**。意味に関わる語（“Share”／“Send”・“Lead-in”・“Resume” など）は触らない。
+
+---
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認）
+
+**判断**
+1. D47（プライバシーの文）・D48（運営の英語表記・使っているもの・TTS の記載）— 法務の確認が要るなら、その前の下書きとして。
+2. D49（「先生」の敬称）・D50（英語の明らかな誤り）。
+3. 監修シート `docs/app-v1/stage8-copy-review.md`（できてから）。先頭に「配る／送る」と S6 の見出し「困った時は」。
+4. S6 の並び（Ruling 98。5 か、「プライバシー…」を束に入れて 4 か）。
+5. Ruling 103-3 の「拾わない物」（特に `distributor.id`＝D40 の根本の解を v1 公開後にすること）。
+
+**確認（統合表 Ruling 105）**
+6. 本物の iOS 26 で本文が句で折れる（Ruling 97 は Playwright の WebKit と Simulator で見る。実機の書体での最終確認）。
+7. 「データを全て消す」が開いている方だけを消す（D47-6）。
+8. VoiceOver の 7 手順・ページの拡大 150%。
+9. 初見テスト（G9）の相手がいるか（いなければ公開後に）。
+
+---
+
+## 4. 計画への反映（計画者）
+
+- **順序**: 段8の詳細計画は今書いてよい（段7の最終レビューの直し便が先に入るなら、その HEAD を起点に数を測り直す）。`agent/app-v1` で逐次（worktree なし）。文言監修（ひとみうさ）は段8の途中で返ってきても、Task 1 のシートに書き込む形で受け、Task 10 の前に `messages.ts` に写す。統合レビュー（Ruling 104）は段8の締めの後に別便。
+- **タスク（担当は Sonnet が既定。危ない所だけ Opus）**:
+  1. **監修シートの道具**（`tools/i18n/copy-review-sheet.js`・`npm run copy:sheet`・`docs/app-v1/stage8-copy-review.md` 生成）＋ Ruling 96-4 の確定分（`voiceLimitReached`・既定名の規則の注記）。— Sonnet
+  2. **折り返し**（`budoux` 0.9.3・`tools/i18n/segment-ja.js`・`ja-phrases.json`・`phrased.tsx`・CSS の `keep-all` 統一と `auto-phrase` 撤去・番人 2 つ・`ui:check` の孤立行）。— **Opus**（CSS がアプリ全体に当たる）
+  3. **S6 の並び＋S11 の入口**（Ruling 98・`data-group="help"/"teacher"`・見出し 2 つ・版の併記は Task 4 の後で `small`）。— Sonnet
+  4. **S13**（`about.ts`・`AboutScreen.tsx`・`clearAllAppData`・`ConfirmDialog`・mailto・OFL の全文を `public/licenses/`・`check-dist` が `licenses/` を許す・書体の出どころの glob と coverage テスト）。— Sonnet
+  5. **§11 の表と `ui-state` の追加**（`stage8-error-matrix.md`・8 値・`ui:check` 8 状態・S7 試聴失敗の 1 文・保存失敗の枠の「閉じる」）。— Sonnet
+  6. **アクセシビリティ**（`@axe-core/playwright` 4.13.0・U16・フォーカス移動・英語の周 2 つ・グレースケールの撮影）。— **Opus**（`ui:check` の構造に触る）
+  7. **起動の殻**（`index.html`・`check-dist` の確認）＋ **S7 の `data-choices-max`＋24 本の状態** ＋ **段7 m-3（未完成の行を残す）**。— Sonnet
+  8. **D49 の敬称**（`honorific`・6 鍵・テスト）＋ 英語の一次案（シートへ。コードは触らない）。— Opus（英語の編集者役）
+  9. **使いやすさの通し確認＋Simulator**（548／667／320／1280 × ja／en・本物の iOS 26 の折り返し・英語の共有シートのラベル（Ruling 103-4）・最初の起動の白の計測（Ruling 101-2）・`smoke:*` 全部・撮影は `~/.playwright-mcp/`・終わったらブラウザを閉じる）。— Opus
+  10. **締め**（`device-check-master.md`・`first-sight-test.md`・台帳 `stage8-ledger.md`・HANDOVER（§0 に「公開前にひとみうさがやること」・D47〜D50）・全体地図（段8行・持ち越し表を「済」に）・仕様の注記（§4 S6/S11/S13・§6 U16 と英語の周・§11 の表・§12 の文の置き場・§14）・`rulings.md` へ Ruling 96〜105・D47〜D50・F42〜F48 を転記）。— Sonnet
+- **先にスクラッチで実証する 3 点**: (a) `budoux` 0.9.3 の `parse` が `{name}` を切らない＝0-2 で済（計画者は `ja-phrases.json` の生成まで回す）(b) `@axe-core/playwright` 4.13.0 が `playwright-core` 1.61.1 の `page` を受ける（peer は `playwright`。`playwright-core` の `Page` でも `evaluate` があれば動くはず＝**推測**。駄目なら `axe-core` 4.14.0 の `axe.min.js` を `addScriptTag` で注入して `axe.run()` を自分で呼ぶ）(c) `h1` への `focus({preventScroll:true})` が iOS Safari で画面をスクロールさせない（Simulator で S1 → S2）。
+- **新規ファイル**: `tools/i18n/copy-review-sheet.js`・`tools/i18n/segment-ja.js`・`src/app/i18n/ja-phrases.json`・`src/app/i18n/phrased.tsx`・`src/app/i18n/about.ts`・`src/app/screens/AboutScreen.tsx`・`src/app/lib/honorific.ts`・`public/licenses/OFL.txt`（Inter・Noto Sans JP）・`test/app/i18n-phrases.test.ts`・`test/tools/fonts-coverage.test.js`・`test/app/lib/honorific.test.ts`・`docs/app-v1/stage8-copy-review.md`（生成）・`stage8-error-matrix.md`・`device-check-master.md`・`first-sight-test.md`・`stage8-ledger.md`・`final-review.md`（統合レビュー）。
+- **変更するファイル**: `package.json`（devDependencies `budoux`・`@axe-core/playwright`・scripts `copy:sheet`・`i18n:phrases`）・`index.html`（殻）・`App.tsx`（S13 登録・フォーカス）・`routes.ts`（`UiState` 8 値）・`SettingsScreen.tsx`・`SoundHelpScreen.tsx`（`<wbr>`）・`PracticeScreen`／`RoutinePlayScreen`／`controls.tsx`（`voice-missing`・`stopped`・`save-failed` の強制表示と「閉じる」）・`VoicesScreen.tsx`（試聴失敗の 1 文・`data-choices-max`）・`ReceiveScreen`／`ShareScreen`／`RecordVoiceScreen`／`InstallHelpScreen`／`RoutineEditScreen`（本文に `phrased`・`ui-state`・m-3）・`styles/base.css`（`keep-all` 統一・`auto-phrase` 撤去・`dc-about`・`h1:focus`）・`i18n/messages.ts`（S6 見出し・S13 の鍵・`voiceLimitReached`・消せなかった 1 文・監修の反映）・`platform/storage.ts`（`clearAllAppData`）・`platform/files.ts`（inbox の削除の口）・`platform/page.ts`（変更なしの見込み）・`tools/fonts/needed-subsets.js`（glob）・`tools/check-app-ui.js`（axe・U16・孤立行・英語の周・`data-choices-max`・新状態）・`tools/check-dist.js`（`licenses/`・`index.html` の殻）・`tools/ui-check-voices.js`（24 本の seed）・`tools/smoke-routines.js`（m-3 の場面）・`test/app/i18n.test.ts`（`about.ts`）・`test/app/routes.test.ts`（`UiState`）・仕様・全体地図・HANDOVER・`rulings.md`。
+- **触らない**: `src/engine/*`（0 行。`localization.js` の置換は `phrased.tsx` 側で同じ規則を書く＝`{name}` の単純置換）・ゴールデン・`output/timing-audit-before.json`・`legacy/*`・`public/audio/*`・`fonts.css` の import・配布ファイルの形（`fixtures.test.ts` を落とさない）。
+- **完了条件（段8の終わり・別エージェントが再実行）**: `npm test`（件数。新規 ≒ 30）・`typecheck`・`build`（check-dist の最後の行・precache の MB が 6MB 以下のまま・`licenses/` が dist にある）・`timing:audit && timing:compare` 一致・`src/engine` diff ゼロ・**`ui:check` dev と preview で全 PASS（axe 違反 0・英語の 2 周込み・件数）**・`smoke:*` 5 本・`i18n:phrases` を回しても diff ゼロ・`copy:sheet` を回しても diff ゼロ・Simulator (Ruling 101-2・103-4・102 の (c))・375／1280 のスクロール領域ごとの撮影（S6・S11・S13・エラー 8 状態・英語 548）・`device-check-master.md` に段8の行がある。**G3（U1〜U16 違反ゼロ）・G8（禁止語ゼロ）はここで閉じる**。G5・G6・G7・G9 は実機（ひとみうさ）。
+- **統合レビュー**: Ruling 104 をそのまま別便の brief に。
