@@ -1,5 +1,5 @@
 // アプリ（新UI）の文言。キーは全言語で完全一致させる（test/app/i18n.test.ts が検査）。
-// 英語は初版。段8で監修する。旧画面の文言は src/engine/ui-messages.js に残す（legacy/ が使う）。
+// 英語は初版。段8の監修は docs/app-v1/stage8-copy-review.md（npm run copy:sheet が作る。Ruling 96）。旧画面の文言は src/engine/ui-messages.js に残す（legacy/ が使う）。
 export const APP_MESSAGES = {
   en: {
     appName: 'Dance Count',
@@ -492,7 +492,7 @@ export const APP_MESSAGES = {
     fileTooLarge: 'このファイルは大きすぎて受け取れません。',
     fileTooNew: '新しいアプリで作られたファイルです。アプリを更新してください。',
     updateApp: '更新する',
-    voiceLimitReached: '声が {count} を超えるため、受け取れません。使わない声を削除してから、もう一度選んでください。',
+    voiceLimitReached: '声はすでに {count} あるので、受け取れません。使わない声を削除してから、もう一度選んでください。',
     inThisFile: 'このファイルの中身',
     languageEnglish: '英語',
     languageJapanese: '日本語',

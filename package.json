@@ -36,7 +36,8 @@
     "smoke:share": "node tools/smoke-share.js",
     "smoke:pwa": "node tools/smoke-pwa.js",
     "fixtures:share": "node tools/make-share-fixtures.js",
-    "timing:compare": "node tools/compare-timing-audit.js"
+    "timing:compare": "node tools/compare-timing-audit.js",
+    "copy:sheet": "node tools/i18n/copy-review-sheet.js"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

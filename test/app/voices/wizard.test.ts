@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { packFixture } from '../helpers/voice-fixtures.ts';
+import { packDisplayName } from '../../../src/app/voices/selection.ts';
+import { newRecordedPack } from '../../../src/app/voices/store.ts';
 import { createAppTranslator } from '../../../src/app/i18n/index.ts';
 import { defaultVoiceName, firstMissingIndex, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts } from '../../../src/app/voices/wizard.ts';
 
@@ -62,4 +64,10 @@ test('ui-state URLs never write voices; no-voice starts from a copy of the saved
   const saved = packFixture('en', 12);
   assert.equal(uiStateStartPack(null, fresh), fresh);
   assert.equal(uiStateStartPack(saved, fresh), saved);
+});
+
+test('a recorded voice is named in the display language at the time of recording, and the saved name is not re-translated (Ruling 96-4・76-1)', () => {
+  assert.equal(defaultVoiceName(createAppTranslator('en'), 'en'), 'My voice (English)');
+  const recordedInJapaneseUi = newRecordedPack('en', defaultVoiceName(createAppTranslator('ja-JP'), 'en'), '2026-10-12T00:00:00.000Z');
+  assert.equal(packDisplayName(createAppTranslator('en'), recordedInJapaneseUi), '自分の声（英語）', 'switching to English later shows the stored name as it is (like a routine name)');
 });

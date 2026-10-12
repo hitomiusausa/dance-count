@@ -59,3 +59,8 @@ test('every dance has a display name in both locales (dance-profiles name is not
   assert.equal(danceName('waltz', 'ja-JP'), 'ワルツ');
   assert.equal(danceName('slowfox', 'en'), 'Slow Foxtrot');
 });
+
+test('stage 8 settled copy: the voice limit says how many voices you already have (Ruling 96-4・段5 M6)', () => {
+  assert.equal(createAppTranslator('ja-JP').t('voiceLimitReached', { count: 20 }), '声はすでに 20 あるので、受け取れません。使わない声を削除してから、もう一度選んでください。');
+  assert.equal(createAppTranslator('en').t('voiceLimitReached', { count: 20 }), "You already have 20 voices. Delete one you don't use, then choose the file again.");
+});
