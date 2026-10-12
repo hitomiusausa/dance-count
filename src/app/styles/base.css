@@ -29,6 +29,8 @@ button { cursor: pointer; }
 .dc-screen { flex: 1; width: 100%; max-width: 640px; margin: 0 auto; padding: 16px 16px calc(var(--tabh) + 16px + env(safe-area-inset-bottom)); }
 .dc-screen--focus { padding-bottom: 16px; }
 .dc-screen--dock { padding-bottom: calc(var(--dockh) + 16px + env(safe-area-inset-bottom)); }
+/* D56: 下タブは「使う」の U1・U2 だけ。タブの無い画面（表紙・作る・設定・一覧）は下の余白をタブのぶん取らない */
+.dc-shell:not([data-tabs]) .dc-screen:not(.dc-screen--dock) { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .dc-heading { font-size: 22px; font-weight: 700; line-height: 1.3; margin: 24px 0 12px; letter-spacing: var(--track); }
 .dc-body { font-size: 18px; margin: 0 0 12px; }
 
@@ -60,12 +62,55 @@ button { cursor: pointer; }
 .dc-resume-go > span { white-space: nowrap; }
 .dc-resume-go { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; border-radius: var(--r-s);
   background: var(--on-primary); color: var(--primary); font-size: 18px; font-weight: 800; }
-.dc-teacher { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; margin-top: 8px; padding: 4px; text-decoration: none;
-  border-top: var(--bw) solid var(--line); border-bottom: var(--bw) solid var(--line); }
-.dc-teacher-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 999px; background: var(--icon-circle); color: #FFFFFF; }
-.dc-teacher b { flex: 1; font-size: 18px; }
-.dc-teacher > .dc-ic, .dc-chip-row > .dc-ic:last-child { color: var(--ink2); }
-.dc-home .dc-heading { margin: 8px 0 4px; }
+.dc-chip-row > .dc-ic:last-child { color: var(--ink2); }
+.dc-home .dc-heading { margin: 16px 0 8px; }   /* D56: 見出しが h1 になり、上の先生カードが無くなった */
+
+/* S0 表紙（D56・Ruling 115-1）: 扉は 104px 以上・アイコン円 48px・見出し 26px 800・説明 16px。「使う」は紺塗り、「作る」は枠線。
+   C 案: 「使う」の扉の下に「前回の練習 ▶ 続きから」（--soft の帯）を 1 つの枠でくっつける */
+.dc-cover { padding-top: 12px; }
+.dc-door { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 104px; margin-top: 12px; padding: 10px 12px 10px 16px; text-decoration: none;
+  border: var(--bw) solid var(--primary); border-radius: var(--r); background: var(--surface); color: var(--primary); }
+.dc-door--main { background: var(--primary); color: var(--on-primary); }
+.dc-door-icon { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 999px; background: var(--icon-circle); color: #FFFFFF; }
+.dc-door--main .dc-door-icon { background: var(--on-primary); color: var(--primary); }
+.dc-door-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.dc-door-text b { font-size: 26px; font-weight: 800; letter-spacing: var(--track); }
+.dc-door-text small { margin-top: 2px; font-size: 16px; font-weight: 400; line-height: 1.3; color: var(--ink2); }
+.dc-door--main .dc-door-text small { color: #E4E7EE; }
+.dc-doorset { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; border: var(--bw) solid var(--primary); border-radius: var(--r); overflow: hidden;
+  background: var(--soft); }   /* 扉と「続きから」の間 8px（U3）は --soft の帯に見える */
+.dc-doorset .dc-door { margin: 0; border: none; border-radius: 0; }
+.dc-door-resume { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 56px; padding: 4px 12px 4px 16px; border: none;
+  background: var(--soft); color: var(--ink); text-align: left; }
+.dc-door-resume .dc-resume-text small { color: var(--ink2); }
+.dc-door-resume .dc-resume-text b { font-size: 20px; }
+.dc-door-resume .dc-resume-go { background: var(--primary); color: var(--on-primary); padding: 0 14px; }
+.dc-cover-settings { margin-top: 20px; }
+.dc-cover .dc-update { margin-top: 16px; }
+.dc-link-stack { display: flex; flex-direction: column; line-height: 1.3; }
+.dc-link-stack small { font-size: 16px; font-weight: 400; color: var(--ink2); }
+
+/* M0 作る（D56・Ruling 115-3）: 行 80px・アイコン円・見出し 18px・状態の 1 行 16px */
+.dc-make-intro { margin: 0 0 8px; }
+.dc-hublist { margin-top: 4px; border-top: var(--bw) solid var(--line); }
+.dc-hub { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 80px; padding: 8px 2px; text-decoration: none; color: var(--ink);
+  border-bottom: var(--bw) solid var(--line); }
+.dc-hub + .dc-hub { margin-top: 8px; }   /* 行と行の間 8px（U3） */
+.dc-hub-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.dc-hub-text b { font-size: 18px; }
+.dc-hub-text small { font-size: 16px; color: var(--ink2); }
+.dc-hub > .dc-ic:last-child { color: var(--ink2); }
+
+/* U2 使う › ルーティン（D56・Ruling 115-2）: 行を押すとすぐ鳴る。右端の「▶ 再生」は札（装飾。行全体が 1 つのボタン）。鳴らせない行はボタンにしない */
+.dc-routines-use .dc-receive-link { margin-top: 0; }
+/* 長いルーティン名（40 字）は 2 行で「…」（S5 の見出しと同じ扱い。Ruling 47。札「▶ 再生」の幅を残す） */
+.dc-row--play .dc-row-text b, .dc-row--off .dc-row-text b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.dc-play-tag { display: inline-flex; align-items: center; gap: 4px; flex: none; min-height: 48px; padding: 0 10px 0 8px; border-radius: var(--r-s);
+  background: var(--primary); color: var(--on-primary); font-size: 16px; font-weight: 800; white-space: nowrap; }
+.dc-row--off { color: var(--ink2); cursor: default; }
+.dc-row-text .dc-row-warn { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--warn-ink); }
+.dc-row-warn .dc-ic { width: 20px; height: 20px; }
+.dc-edit-in-make { margin-top: 12px; }
 .dc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
 .dc-tile { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 6px 2px; text-decoration: none;
   border-bottom: var(--bw) solid var(--line); }
@@ -349,6 +394,7 @@ button { cursor: pointer; }
   .dc-tab { flex: none; flex-direction: row; gap: 8px; padding: 0 16px; font-size: 18px; }
   .dc-tab[aria-current="page"] { background: var(--soft); border-radius: 999px; }
   .dc-screen { padding-top: calc(var(--tabh-top) + 16px); padding-bottom: 32px; }
+  .dc-shell:not([data-tabs]) .dc-screen { padding-top: 16px; }
   .dc-screen--focus { padding-top: 16px; }
   .dc-screen--dock { padding-bottom: calc(var(--dockh) + 24px); }
   .dc-practice { max-width: 960px; }
@@ -380,8 +426,8 @@ button { cursor: pointer; }
   /* 「English」・前回カード・先生カードの間は 8px のまま（U3 の下限。ui:check の 375×548 で確認）。そのぶん上の余白と見出しの行の高さで詰める */
   .dc-home { padding-top: 4px; }
   .dc-resume { min-height: 56px; padding: 4px 12px 4px 20px; }   /* 60 → 56（主ボタン基準 56 は守る） */
-  .dc-teacher { padding: 2px 4px; }                                /* 58 → 56 */
-  .dc-home .dc-heading { margin: 0; font-size: 20px; line-height: 1.2; }   /* 22 → 20（Ruling 71 の「外れた時」の候補を先に使う） */
+  .dc-cover { padding-top: 4px; }
+  .dc-home .dc-heading { margin: 12px 0 4px; font-size: 20px; line-height: 1.2; }   /* 22 → 20（Ruling 71）。D56 で先生カードが無くなったぶん上を 12px 空ける */
   .dc-tiles { gap: 8px 14px; }                                     /* 行間 8 は U3 の下限 */
   .dc-tile { min-height: 48px; padding: 2px; gap: 0; }             /* 64 → 48（U3 の下限） */
   .dc-tile b, .dc-tile small { line-height: 1.15; }

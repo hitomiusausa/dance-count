@@ -69,20 +69,21 @@ try {
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 
-  await page.goto(`${BASE}#/routines`);
-  await page.waitForSelector('[data-screen="S3"]');
-  if (await page.locator('[data-row]').count()) errors.push('S3 should start empty');
+  // D56: 作る側の一覧は M1（#/make/routines）
+  await page.goto(`${BASE}#/make/routines`);
+  await page.waitForSelector('[data-screen="M1"]');
+  if (await page.locator('[data-row]').count()) errors.push('M1 should start empty');
 
-  // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず S3 に着く・名前は残る
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず M1 に着く・名前は残る
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.locator('[data-group="dance"] button').first().click();
   await page.locator('[data-screen="S4"] .dc-field input').fill('金曜クラス');
   await page.goBack();
-  await page.waitForSelector('[data-screen="S3"]');
-  if (!page.url().endsWith('#/routines')) errors.push(`back after typing a name should land on the list (url ${page.url()})`);
+  await page.waitForSelector('[data-screen="M1"]');
+  if (!page.url().endsWith('#/make/routines')) errors.push(`back after typing a name should land on the list (url ${page.url()})`);
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   const typed = await page.locator('[data-row] .dc-row-head').allTextContents();
   if (typed.length !== 1 || !typed[0]?.includes('金曜クラス')) errors.push(`a name typed before going back was not kept: ${JSON.stringify(typed)}`);
   await page.locator('[data-row] .dc-row-head').first().click();
@@ -91,7 +92,7 @@ try {
   await page.waitForSelector('.dc-empty');
 
   // 作る: 新しいルーティン → 種目（ワルツ）→ 0件の下固定「＋ フィガーを追加」
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.waitForSelector('[data-screen="S4"] [data-group="dance"]');
   await page.locator('[data-group="dance"] button').first().click();
   if (!page.url().endsWith('#/routines/new')) errors.push(`choosing a dance must not save yet (url ${page.url()})`);
@@ -159,10 +160,10 @@ try {
 
   // 戻る → 一覧 → 再読み込みしても残る
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   const rows = await page.locator('[data-row] .dc-row-head').allTextContents();
   if (rows.length !== 1 || !rows[0]?.includes('3 フィガー')) errors.push(`after reload the list shows ${JSON.stringify(rows)}`);
   await page.locator('[data-row] .dc-row-head').first().click();
@@ -171,9 +172,9 @@ try {
   const firstCounts = (await page.locator('.dc-figure-head small').first().textContent())?.trim();
   if (firstCounts !== '1 2 3 1 2 3') errors.push(`back with a valid open row should commit it (first figure shows "${firstCounts}")`);
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
 
-  // 鳴らす: 行を開いて ▶（タブ → 行 → ▶ の3タップ目）→ S5 ですぐ鳴る
+  // 鳴らす（作る側の試聴）: 行を開いて ▶ 試聴 → S5 ですぐ鳴る
   await page.locator('[data-row] .dc-row-head').first().click();
   await page.locator('[data-row-body] .dc-primary').click();
   await page.waitForSelector('[data-screen="S5"]');
@@ -181,18 +182,18 @@ try {
 
   // 消す: 戻る → 行を開いて削除 → 確認の「削除する」→ 0件
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
   await page.locator('[data-row] .dc-row-head').first().click();
   await page.locator('[data-row-body] .dc-button--secondary').last().click();
   await page.locator('dialog[open] .dc-primary').click();
   await page.waitForSelector('.dc-empty');
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
   if (await page.locator('[data-row]').count()) errors.push('the deleted routine came back after reload');
 
   // 使える文字はいつも見える（Ruling 50 D14）: 空欄でも「使える文字：1・2・3・&」。12a3 はその行が赤く理由の行は無し。&123 は灰のまま下に理由。
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.locator('[data-group="dance"] button').first().click();
   await page.locator('.dc-dock .dc-primary').click();
   await addFigure(page, 'ウィスク', '123');
@@ -503,7 +504,7 @@ try {
   await clearPage.waitForSelector('[data-screen="S13"]');
   await clearPage.locator('.dc-about-delete').click();
   await clearPage.locator('dialog[open] .dc-primary').click();
-  await clearPage.waitForFunction(() => location.hash === '#/' && document.querySelector('[data-screen="S1"]'));
+  await clearPage.waitForFunction(() => location.hash === '#/' && document.querySelector('[data-screen="S0"]'));
   const left = await clearPage.evaluate(() => new Promise(resolve => {
     const request = indexedDB.open('dance-count-v2');
     request.onsuccess = () => {
@@ -515,7 +516,7 @@ try {
     };
   }));
   if (Object.values(left).some(count => count !== 0)) errors.push(`Ruling 99-4: data left after "Delete all data" ${JSON.stringify(left)}`);
-  if (await clearPage.locator('[data-resume]').count()) errors.push('Ruling 99-4: S1 still shows "Last time" after "Delete all data"');
+  if (await clearPage.locator('[data-resume]').count()) errors.push('Ruling 99-4: the cover still shows "Last practice" after "Delete all data"');
   await clearContext.close();
 } finally {
   await browser.close();

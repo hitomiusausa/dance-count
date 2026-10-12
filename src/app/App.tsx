@@ -11,8 +11,10 @@ import { openAppStorage, requestPersistentStorage, type AppStorage } from './pla
 import { resolveScreen } from './router/resolve.ts';
 import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { AboutScreen } from './screens/AboutScreen.tsx';
+import { CoverScreen } from './screens/CoverScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { InstallHelpScreen } from './screens/InstallHelpScreen.tsx';
+import { MakeScreen } from './screens/MakeScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutineEditScreen } from './screens/RoutineEditScreen.tsx';
 import { RoutinePlayScreen } from './screens/RoutinePlayScreen.tsx';
@@ -47,9 +49,11 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8・S10・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2・S4・S5・U2・M1・S7・S8・S10・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
+  S0: CoverScreen,
   S1: HomeScreen,
+  M0: MakeScreen,
   S6: SettingsScreen,
   S9: ShareScreen,
   S11: SoundHelpScreen,
@@ -112,7 +116,7 @@ export function App() {
   const i18n = useMemo(() => ({ translator, setLocale: (next: AppLocale) => update({ uiLocale: next }) }), [translator, update]);
   useEffect(() => applyDocumentLanguage(locale, translator.t('documentTitle')), [locale, translator]);
 
-  // 見つからない・鳴らせないルーティンは S3 へ置き換え（Ruling 37・40）。ルーティンを読み終える前は判断しない。
+  // 見つからない・鳴らせないルーティンは一覧（M1／U2）へ置き換え（Ruling 37・40・116）。ルーティンを読み終える前は判断しない。
   // 段8（Ruling 101）: 設定を読み終えて最初の画面を DOM に入れたら、起動の殻を外す（画面を入れる前に外すと白い時間ができる）。
   // useLayoutEffect は DOM に入れた後・ブラウザが描く前に走るので、殻だけ・画面だけの間に白いフレームも、殻と画面が重なるフレームも無い
   useLayoutEffect(() => { if (settings) removeBootShell(); }, [settings !== null]);
@@ -136,16 +140,18 @@ export function App() {
 
   if (!settings) return null;
   const { screen } = resolved;
-  const Simple = SIMPLE_SCREENS[screen] ?? HomeScreen;
+  const Simple = SIMPLE_SCREENS[screen] ?? CoverScreen;
+  const tabs = showsTabs(screen) ? tabOf(screen) : null;
   return (
     <I18nContext.Provider value={i18n}>
       <SettingsContext.Provider value={{ settings, update }}>
         <RoutinesContext.Provider value={routinesValue}>
           <StorageContext.Provider value={storage.current}>
-            <div class="dc-shell" lang={locale} ref={shell}>
+            <div class="dc-shell" lang={locale} ref={shell} data-tabs={tabs ? '' : undefined}>
               <IconSprite />
               {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
-                : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />
+                : screen === 'U2' ? <RoutinesScreen key="use" mode="use" uiState={route.query.uiState} />
+                : screen === 'M1' ? <RoutinesScreen key="make" mode="make" uiState={route.query.uiState} />
                 : screen === 'S4' ? <RoutineEditScreen routineId={route.params.routineId} uiState={route.query.uiState} />
                 : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
                 : screen === 'S7' ? <VoicesScreen uiState={route.query.uiState} />
@@ -153,7 +159,7 @@ export function App() {
                 : screen === 'S10' ? <ReceiveScreen uiState={route.query.uiState} />
                 : screen === 'S13' ? <AboutScreen uiState={route.query.uiState} />
                 : <Simple />}
-              {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
+              {tabs && <TabBar current={tabs} />}
             </div>
           </StorageContext.Provider>
         </RoutinesContext.Provider>

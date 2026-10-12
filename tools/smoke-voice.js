@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 段4の完了条件（全体地図・Ruling 63-5）を本物の Chrome と偽マイク（WAV ファイル）で確かめる。
-// S1「先生の声で練習」→ S7「自分の声を録音する」→ S8 英語 →「録音をはじめる」→ 3 語録って「戻る」→ S7 に「· 3 / 12 語」→
+// 表紙「作る」→ M0「自分の声を録音する」→ S8 英語 →「録音をはじめる」→ 3 語録って「戻る」→ M0 に「英語 · 3 / 12 語 · 続きから」→ S7 に「· 3 / 12 語」→
 // 開いて「続きを録音する」→ 4 語目から 12 語目まで（録るたびに波形と「聞く」）→ 完成 → 聞き比べ（自分の声・標準の声が鳴って止まる）→
 // 「完了」→ S7 で選ばれている → S2 ワルツが自分の声で鳴る・チップ「声: 自分の声（英語）」→ 再読み込みでも同じ →
 // くわしくの「早く」×2 で「−20 ms」→ 再読み込みでも残る → S7 で削除 → チップ「声: 標準（英語）」。
@@ -123,11 +123,12 @@ async function wordNumber(page) {
 const browser = await launch('fake-mic.wav');
 try {
   const { page } = await openPage(browser);
+  // D56（Ruling 115-3）: 録音の入口は表紙の「作る」→ M0 の行
   await page.goto(BASE);
-  await page.waitForSelector('[data-screen="S1"]');
-  await page.locator('[data-teacher-card]').click();
-  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  await page.locator('.dc-record-link').click();
+  await page.waitForSelector('[data-screen="S0"]');
+  await page.locator('[data-door="make"]').click();
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  await page.locator('a.dc-hub[href="#/voices/record"]').click();
   await page.waitForSelector('[data-step="intro"]');
   if ((await page.locator('[data-group="record-language"] [role="radio"]').first().getAttribute('aria-checked')) !== 'true') errors.push('S8: English is not the first choice');
   await page.locator('.dc-dock .dc-primary').click();
@@ -142,6 +143,10 @@ try {
   }
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.locator('[data-back]').click();
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  const status = (await page.locator('a.dc-hub[href="#/voices/record"] small').textContent())?.trim();
+  if (status !== '英語 · 3 / 12 語 · 続きから') errors.push(`M0: the recording row reads "${status}"`);
+  await page.goto(`${BASE}#/voices`);
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
   const partial = (await page.locator('.dc-voice-partial').textContent())?.replace(/\u00a0/g, ' ').trim(); // 「3 / 12 語」は改行しない空白（U+00A0）でつないである
   if (partial !== '自分の声（英語） · 3 / 12 語') errors.push(`S7: partial row reads "${partial}"`);

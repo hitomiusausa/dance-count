@@ -72,9 +72,9 @@ try {
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 
-  // 1. 初めて開く: SW が入り、precache が sw.js の一覧と同じ数になる
+  // 1. 初めて開く: SW が入り、precache が sw.js の一覧と同じ数になる（D56: 起動は表紙 S0）
   await page.goto(BASE);
-  await page.waitForSelector('[data-screen="S1"]');
+  await page.waitForSelector('[data-screen="S0"]');
   const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
   if (scope !== BASE) errors.push(`service worker scope ${scope}, expected ${BASE}`);
   const cached = await page.waitForFunction(async expected => {
@@ -84,7 +84,7 @@ try {
   }, precacheUrls.length, { timeout: PRECACHE_TIMEOUT_MS, polling: 200 }).then(() => true, () => false);
   if (!cached) errors.push(`precache did not reach ${precacheUrls.length} entries`);
   await page.reload();   // ここから SW がこのページを受け持つ（clients.claim はしない＝初回は網から読んだまま）
-  await page.waitForSelector('[data-screen="S1"]');
+  await page.waitForSelector('[data-screen="S0"]');
   if (!(await page.evaluate(() => Boolean(navigator.serviceWorker.controller)))) errors.push('the page is not controlled by the service worker after a reload');
   // アプリの入口（scope の直下・index.html）以外の深いパスには index.html を返さない（段7 レビュー M2）。サーバーの 404 がそのまま見える
   // （別のタブで見る: 404 の「Failed to load resource」をこのタブのコンソールの失敗に数えない）
@@ -95,13 +95,15 @@ try {
   if (!entry?.fromServiceWorker()) errors.push('index.html?… was not answered by the service worker');
   await probe.close();
 
-  // 2. 網を切る（機内モードの代わり）。開き直しても S1 が描け、ワルツとパソドブレが鳴り、網へ出る要求が 0
+  // 2. 網を切る（機内モードの代わり）。開き直しても表紙と S1 が描け、ワルツとパソドブレが鳴り、網へ出る要求が 0
   const failed = [];
   const audio = [];
   page.on('requestfailed', request => failed.push(request.url()));
   page.on('response', response => { if (/\/audio\//.test(response.url())) audio.push({ url: response.url(), sw: response.fromServiceWorker() }); });
   await context.setOffline(true);
   await page.reload();
+  await page.waitForSelector('[data-screen="S0"]');
+  await page.locator('[data-door="use"]').click();
   await page.waitForSelector('[data-screen="S1"]');
   await page.locator('[data-group="dance"] a').first().click();
   await page.waitForSelector('[data-screen="S2"]');

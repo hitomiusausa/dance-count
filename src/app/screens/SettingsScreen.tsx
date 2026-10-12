@@ -1,4 +1,5 @@
 import { APP_VERSION } from '../app-version.ts';
+import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { IconName } from '../components/icon-names.ts';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
@@ -34,6 +35,7 @@ export function SettingsScreen() {
   const { voice } = usePlaybackVoice();
   return (
     <main class="dc-screen" data-screen="S6">
+      <BackButton screen="S6" />
       <h1 class="dc-heading">{translator.t('settingsTitle')}</h1>
       <UpdateBanner />
       <h2 class="dc-field-label">{translator.t('settingsLanguage')}</h2>

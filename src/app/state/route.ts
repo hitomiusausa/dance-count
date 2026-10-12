@@ -19,7 +19,7 @@ export function navigate(target: RouteTarget): void {
   setHash(buildHash(target));
 }
 
-// 履歴を積まずに画面を替える（新規ルーティンの ID 発行・見つからないルーティンから S3 へ。Ruling 37・40）。
+// 履歴を積まずに画面を替える（新規ルーティンの ID 発行・見つからないルーティンから一覧へ・下タブの切替。Ruling 37・40・116）。
 // 見てきた列の末尾も置き換えて、幻の履歴を残さない。
 export function replaceRoute(target: RouteTarget): void {
   const hash = buildHash(target);
@@ -33,5 +33,5 @@ export function goBack(current: ScreenId): void {
     historyBack();
     return;
   }
-  replaceRoute({ screen: parentScreen(current) ?? 'S1', params: {} });
+  replaceRoute({ screen: parentScreen(current) ?? 'S0', params: {} });
 }

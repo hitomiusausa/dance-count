@@ -8,6 +8,7 @@ import { AxeBuilder } from '@axe-core/playwright';
 import { chromium } from 'playwright-core';
 import { ABOUT_TEXT } from '../src/app/i18n/about.ts';
 import { APP_MESSAGES } from '../src/app/i18n/messages.ts';
+import { SCREENS, showsTabs } from '../src/app/router/routes.ts';
 import { UI_CHECK_ROUTINES as R, manyRoutines, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
@@ -56,16 +57,25 @@ const PLAYED = { lastDanceId: 'waltz', hints: { firstPlaybackDone: true } };   /
 const S4_13 = `#/routines/${R.waltz13.id}/edit`;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
-  { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
-  { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
+  // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
+  // 言語は [data-utility]、更新の帯の「更新する」は [data-alert-action]（数えない）。戻る・下タブは無い（U11）
+  { name: 'S0 初回', hash: '#/', screen: 'S0', kind: 'cover', ops: 3, total: 3, absent: ['[data-resume]'], textKeys: ['coverUse', 'coverMake', 'coverUseSub', 'coverMakeSub'] },
+  { name: 'S0 前回あり', hash: '#/', screen: 'S0', kind: 'cover', settingsSeed: PLAYED, ops: 4, total: 4, firstView: ['[data-door="use"]', '[data-resume]', '[data-door="make"]', '.dc-cover-settings'],
+    placed: [['[data-resume]', '[data-door="use"]']], textKeys: ['continueLast'] },
+  // S2 を開いただけ（まだ鳴らしていない）では「続きから」は出さない（hints.firstPlaybackDone が立ってから。Ruling 115-1）
+  { name: 'S0 開いただけ', hash: '#/', screen: 'S0', kind: 'cover', prepare: '#/practice/waltz', ops: 3, total: 3, absent: ['[data-resume]'] },
+  { name: 'S0 更新あり', hash: '#/?ui-state=update-ready', screen: 'S0', kind: 'cover', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: '.dc-cover-settings' },
+  // U1（S1 の ID のまま #/use。D56 Ruling 115-2）: 「先生の声で練習」カードを外した。主要操作は 種目群 1（前回カードがあれば 2）。左上「‹ 表紙」・下タブ 2 つ
+  { name: 'S1 初回', hash: '#/use', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, absent: ['[data-teacher-card]'], textKeys: ['backToCover', 'tabFigures'] },
+  { name: 'S1 前回あり', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, prepare: '#/practice/waltz' },
   // 段7（Ruling 90-3・90-7）: 更新の帯は S1 の最下段（種目タイルの下）。「更新する」は [data-alert-action]＝数えない。375×548 の初期表示（U12）は崩れない
-  { name: 'S1 更新あり', hash: '#/?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 2, total: 2, teacherAndTiles: true, alert: true,
+  { name: 'S1 更新あり', hash: '#/use?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, alert: true,
     texts: ['新しい版があります。', '更新する'], bannerAfter: '.dc-tiles' },
   // 段7（Ruling 92-7・D42）: 初めて鳴った後の iPhone の Safari に、種目タイルの下の案内カード（行＋「閉じる」＝2）。PC には出さない。
-  // 初期表示は 375 幅では 3 のまま（カードは下）・1280×900 ではカードまで見えて 5（上限内）なので ops は固定しない
-  { name: 'S1 案内カード', hash: '#/', screen: 'S1', kind: 'root', settingsSeed: PLAYED, userAgent: IOS_SAFARI_UA, total: 5, teacherAndTiles: true,
+  // 初期表示は 375 幅では 2 のまま（カードは下）・1280×900 ではカードまで見えて 4（上限内）なので ops は固定しない
+  { name: 'S1 案内カード', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, userAgent: IOS_SAFARI_UA, total: 4, tilesInView: true,
     texts: ['ホーム画面に追加すると、アプリのように使えます', '閉じる'], placed: [['[data-install-card]', '.dc-tiles']] },
-  { name: 'S1 案内カード（PC では出ない）', hash: '#/', screen: 'S1', kind: 'root', settingsSeed: PLAYED, ops: 3, total: 3, teacherAndTiles: true, absent: ['[data-install-card]'] },
+  { name: 'S1 案内カード（PC では出ない）', hash: '#/use', screen: 'S1', kind: 'root', settingsSeed: PLAYED, ops: 2, total: 2, tilesInView: true, absent: ['[data-install-card]'] },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
@@ -80,14 +90,29 @@ const STATES = [
   // Ruling 103-3（段4 Task 5）: 保存失敗の枠は「閉じる」で閉じる（ほかの案内を隠したままにしない）
   { name: 'S2 保存できなかった・閉じた', hash: '#/practice/waltz?ui-state=save-failed', screen: 'S2', kind: 'focus', total: 5,
     steps: [{ click: '[data-alert="save-failed"] [data-alert-action]' }], absent: ['[data-alert]'] },
-  { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
-  { name: 'S3 更新あり', hash: '#/routines?ui-state=update-ready', screen: 'S3', kind: 'root', ops: 1, total: 1, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // D56（Ruling 115-2・118-3）: U2「使う › ルーティン」。「ファイルから受け取る」1・一覧 [data-list] 1。行を押すとすぐ鳴る（鳴らせない行は操作ではない）。
+  // 一覧の下に「直す・消す時は表紙の「作る」から」の 1 行。編集・削除・配るは無い
+  { name: 'U2 0件', hash: '#/use/routines', screen: 'U2', kind: 'root', ops: 1, total: 1, textKeys: ['receiveFromFile', 'editFromMake'], absent: ['[data-row-body]'] },
+  { name: 'U2 3本（鳴らせない行あり）', hash: '#/use/routines', screen: 'U2', kind: 'root', seed: [R.waltz13, R.empty, R.longJa], ops: 2, total: 2,
+    playRows: { play: 2, off: 1 }, textKeys: ['cannotPlayEmpty', 'editFromMake'], absent: ['[data-group="routine-actions"]', '.dc-primary'] },
+  { name: 'U2 更新あり', hash: '#/use/routines?ui-state=update-ready', screen: 'U2', kind: 'root', ops: 1, total: 1, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // 古い #/routines（D56 より前の案内・ブックマーク）は U2 に着き、ハッシュは #/use/routines に置き換わる（Ruling 116-1）
+  { name: 'U2 古い経路から', hash: '#/routines', screen: 'U2', kind: 'root', ops: 1, total: 1, landsOn: '#/use/routines' },
+  // D56（Ruling 115-3）: M0「作る」。行 3 つ（録音・ルーティン・配る。束にしない）＝3。行の下に「今どこまでできたか」の 1 行。左上「‹ 表紙」・下タブ無し
+  { name: 'M0 未録音', hash: '#/make', screen: 'M0', kind: 'root', ops: 3, total: 3, texts: ['まだ録音していません', 'まだありません'], textKeys: ['makeIntro', 'makeShareSub'] },
+  { name: 'M0 途中', hash: '#/make', screen: 'M0', kind: 'root', voiceSeed: [V.partialJa], seed: [R.waltz13], ops: 3, total: 3,
+    texts: ['日本語 · 7 / 12 語 · 続きから', '1 本（受け取った物も直せます）'] },
+  { name: 'M0 完成', hash: '#/make', screen: 'M0', kind: 'root', voiceSeed: [V.completeEn, V.receivedJa], seed: [R.waltz13, R.empty], ops: 3, total: 3,
+    texts: ['英語 · 12 / 12 語 · 録音済み', '2 本（受け取った物も直せます）'] },
+  // M1「作る › ルーティン」（今までの S3。D56 Ruling 115-3）: 「＋ 新しいルーティン」1・一覧 1。開いた行は「試聴」・編集・配る・削除（群は 1）。左上「‹ 戻る」（M0 へ）・下タブ無し
+  { name: 'M1 0件', hash: '#/make/routines', screen: 'M1', kind: 'list', ops: 1, total: 1 },
+  { name: 'M1 更新あり', hash: '#/make/routines?ui-state=update-ready', screen: 'M1', kind: 'list', ops: 1, total: 1, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段5（Ruling 86-4）: 鳴らせる行には「配る」が編集と削除の間に（群は 1 つなので 3 のまま）
-  { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3,
-    actions: { group: 'routine-actions', labels: ['再生', '編集', '配る', '削除'] } },
-  { name: 'S3 削除の確認', hash: '#/routines?ui-state=confirm-delete', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], confirm: true },
+  { name: 'M1 2本・1本開', hash: '#/make/routines', screen: 'M1', kind: 'list', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3,
+    actions: { group: 'routine-actions', labels: ['試聴', '編集', '配る', '削除'] } },
+  { name: 'M1 削除の確認', hash: '#/make/routines?ui-state=confirm-delete', screen: 'M1', kind: 'list', seed: [R.waltz13, R.empty], confirm: true },
   // 段7 最終レビュー m2（Ruling 30 の枠は 1 つ）: 新しい版があっても、消せなかった知らせが出ている間は更新の帯を出さない
-  { name: 'S3 更新あり・消せなかった', hash: '#/routines?ui-state=update-ready', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], failDeletes: true, alert: true,
+  { name: 'M1 更新あり・消せなかった', hash: '#/make/routines?ui-state=update-ready', screen: 'M1', kind: 'list', seed: [R.waltz13, R.empty], failDeletes: true, alert: true,
     steps: [{ click: '.dc-row-head >> nth=0' }, { click: '[data-group="routine-actions"] button >> nth=3' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
     absent: ['[data-alert="update"]'] },
   { name: 'S4 新規・種目選択', hash: '#/routines/new', screen: 'S4', kind: 'focus', ops: 1, total: 1 },
@@ -143,39 +168,40 @@ const STATES = [
   // 段8（Ruling 98）: 言語・声・「困った時は」の束（追加の方法・音が鳴らない時）・「先生の方へ」の束（録音・配る）・「プライバシー・アプリについて」＝5（上限ちょうど）。
   // ops は固定しない（「S1 案内カード」と同じ扱い）: 1280×900 は 5 つとも初期表示・375×667 は「プライバシー・アプリについて」が下で 4・
   // 375×548 は「先生の方へ」も下で 3（opsSmall）。生徒が使う 言語・声・「困った時は」の 2 行は 548 でも初期表示に入る（firstView）
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', opsSmall: 3, total: 5,
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', opsSmall: 3, total: 5,
     linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], teacher: ['自分の声を録音する', 'ルーティンを配る'] },
     textKeys: ['settingsHelpHeading', 'forTeachers', 'settingsAbout'],
     firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // Fable 答え 2: 生徒が使う 3 つ（言語・声・「ホーム画面に追加する方法」）は帯があっても 375×548 の初期表示に入る
   // 段8: 帯があると 375×548 では「音が鳴らない時」の行も下（S11 は S2/S5 の枠からも行ける）。言語・声・「ホーム画面に追加する方法」は入ったまま（Ruling 98-1）
-  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
+  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
     firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]'] },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
-  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
-  // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。S6「声」・S1「先生の声で練習」から入っても、フォーカスは見出し（main に落ちない）
-  { name: 'S7（設定から）', hash: '#/voices', via: { hash: '#/settings', screen: 'S6' }, screen: 'S7', kind: 'list', ops: 3, total: 3, focusHeading: true,
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
+  // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。S6「声」・S2 の声チップから入っても、フォーカスは見出し（main に落ちない）
+  { name: 'S7（設定から）', hash: '#/voices', via: { hash: '#/settings', screen: 'S6' }, screen: 'S7', kind: 'focus', ops: 3, total: 3, focusHeading: true,
     steps: [{ click: 'a[href="#/voices"]' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
-  { name: 'S7（ホームから）', hash: '#/voices', via: { hash: '#/', screen: 'S1' }, screen: 'S7', kind: 'list', ops: 3, total: 3, focusHeading: true,
-    steps: [{ click: 'a[data-teacher-card]' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
-  { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // D56: S7 への入口は S2／S5 の声チップ（S1 の先生カードは無くなった。Ruling 115-5）
+  { name: 'S7（再生画面から）', hash: '#/voices', via: { hash: '#/practice/waltz', screen: 'S2' }, screen: 'S7', kind: 'focus', ops: 3, total: 3, focusHeading: true,
+    steps: [{ click: 'a.dc-chip-row' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
+  { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下の 2 つのボタンはスクロールで届く（初期表示は固定しない）
-  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 3, rows: 23 },
+  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 3, rows: 23 },
   // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
-  { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true,
+  { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'focus', ops: 3, total: 3, alert: true,
     texts: ['この声はまだ端末に入っていません。'] },
   // 段5 Task 10b: 600px 未満の高さでは「ファイルから受け取る」「自分の声を録音する」を横 1 行に並べ、声が 3 本でも 375×548 の初期表示に入る
-  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
+  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link', '.dc-record-link'] },
-  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
     actions: { group: 'voice-actions', labels: ['配る', '削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
   // D37: 受け取った声は配れない（開いた行は「削除」だけ）
-  { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+  { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
     actions: { group: 'voice-actions', labels: ['削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
-  { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
-  { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], failDeletes: true, alert: true,
+  { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn], confirm: true },
+  { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn], failDeletes: true, alert: true,
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
       { click: '[data-group="voice-actions"] button >> nth=-1' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
     absent: ['[data-alert="update"]'] },
@@ -271,7 +297,7 @@ const STATES = [
   { name: 'S10 一部読めない', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2,
     texts: ['ルーティン「こわれたルーティン」は読めませんでした。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
-  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', 'ホームで種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
+  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },
@@ -279,30 +305,31 @@ const STATES = [
   { name: 'S11（設定から）', hash: '#/help/sound', via: { hash: '#/settings', screen: 'S6' }, screen: 'S11', kind: 'focus', focusHeading: true,
     steps: [{ click: 'a[href="#/help/sound"]' }, { wait: '[data-screen="S11"]' }] },
   // 段8 S13（Ruling 99-3）: 主要操作は mailto と「データを全て消す」の 2（375 幅の初期表示は文が長いので固定しない）。確認ダイアログは見た目だけ（消さない）
-  { name: 'S13', hash: '#/about', screen: 'S13', kind: 'list', total: 2,
+  { name: 'S13', hash: '#/about', screen: 'S13', kind: 'focus', total: 2,
     textKeys: ['aboutOperator', 'aboutNotOfficial', 'deleteAllData'], texts: ['info@kugainc.com'],
     firstView: ['.dc-about-contact'] },
-  { name: 'S13 全て消す確認', hash: '#/about?ui-state=confirm-delete-all', screen: 'S13', kind: 'list', confirm: true,
+  { name: 'S13 全て消す確認', hash: '#/about?ui-state=confirm-delete-all', screen: 'S13', kind: 'focus', confirm: true,
     texts: ['このアプリのデータを全て消しますか？', '録音した声・受け取った声・ルーティン・設定が消えます。'] },
   // 消せなかった（IndexedDB の clear が投げる）: 実経路で「データを全て消す」→「消す」→ 枠（ボタン無し）。S13 のまま
-  { name: 'S13 消せなかった', hash: '#/about', screen: 'S13', kind: 'list', failClears: true, alert: true, total: 2,
+  { name: 'S13 消せなかった', hash: '#/about', screen: 'S13', kind: 'focus', failClears: true, alert: true, total: 2,
     steps: [{ click: '.dc-about-delete' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="clear-failed"]' }],
     texts: ['消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。'] },
   // 段7 S12（Ruling 92・95-3）: 端末ごとに 1 通りだけ。iPhone の Safari は手順 4 行（iOS 26.3 の実物どおり）と「引き継がれません」の 1 行（D43）
-  { name: 'S12 iPhone Safari', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, ops: 0, total: 0,
+  { name: 'S12 iPhone Safari', hash: '#/help/install', screen: 'S12', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 0, total: 0,
     texts: ['画面の下の「…」を押します。', '「共有」を押します。', '「もっと見る」を押し、「ホーム画面に追加」を押します。', '右上の「追加」を押します。',
       '録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。'], textKeys: ['installNotCarried'],
     firstView: ['.dc-install-steps li:last-child', '.dc-install-note'] },
-  { name: 'S12 iPhone 他ブラウザ', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_CHROME_UA, ops: 1, total: 1,
+  { name: 'S12 iPhone 他ブラウザ', hash: '#/help/install', screen: 'S12', kind: 'focus', userAgent: IOS_CHROME_UA, ops: 1, total: 1,
     texts: ['Safari で開くと、ホーム画面に追加できます。', 'アドレスをコピー'] },
-  { name: 'S12 Android', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, installPrompt: true, ops: 1, total: 1, firstView: ['.dc-install .dc-primary'] },
-  { name: 'S12 Android ボタンなし', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, ops: 0, total: 0, texts: ['右上の「⋮」を押します。', '「インストール」を押します。'] },
-  { name: 'S12 PC', hash: '#/help/install', screen: 'S12', kind: 'list', ops: 1, total: 1, texts: ['iPhone や Android で開くと、ホーム画面に追加できます。'] },
+  { name: 'S12 Android', hash: '#/help/install', screen: 'S12', kind: 'focus', userAgent: ANDROID_UA, installPrompt: true, ops: 1, total: 1, firstView: ['.dc-install .dc-primary'] },
+  { name: 'S12 Android ボタンなし', hash: '#/help/install', screen: 'S12', kind: 'focus', userAgent: ANDROID_UA, ops: 0, total: 0, texts: ['右上の「⋮」を押します。', '「インストール」を押します。'] },
+  { name: 'S12 PC', hash: '#/help/install', screen: 'S12', kind: 'focus', ops: 1, total: 1, texts: ['iPhone や Android で開くと、ホーム画面に追加できます。'] },
   // ホーム画面のアプリでは S6 の行から入る（S12 のアドレスで起動すると練習へ置き換える。段7 fix 1・レビュー I2 ＝下の状態）
-  { name: 'S12 追加済み', hash: '#/help/install', via: { hash: '#/settings', screen: 'S6' }, screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
+  { name: 'S12 追加済み', hash: '#/help/install', via: { hash: '#/settings', screen: 'S6' }, screen: 'S12', kind: 'focus', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
     steps: [{ click: 'a[href="#/help/install"]' }, { wait: '[data-screen="S12"]' }], focusHeading: true,
     texts: ['このアプリはホーム画面から開いています。追加は済んでいます。'], absent: ['.dc-install-steps'] },
-  { name: 'ホーム画面のアプリを S12 のアドレスで起動', hash: '#/help/install', screen: 'S1', kind: 'root', userAgent: IOS_SAFARI_UA, standalone: true, launchOnly: true, ops: 2, total: 2, teacherAndTiles: true }
+  // D56（Ruling 117-1）: ホーム画面のアプリの起動は表紙（S12 のアドレスで起動しても表紙へ置き換える）
+  { name: 'ホーム画面のアプリを S12 のアドレスで起動', hash: '#/help/install', screen: 'S0', kind: 'cover', userAgent: IOS_SAFARI_UA, standalone: true, launchOnly: true, ops: 3, total: 3 }
 ];
 
 // U9・320 の周で全画面を回る前に入れるルーティン（S4・S5 が開けるように）。199 本の状態（bulkSeed）は入れない（S4 新規が上限で S3 へ置き換わる）
@@ -400,14 +427,17 @@ try {
       // 開いたままの状態（OQ11 の番人）: 別の画面を経ていない・操作していない・確認ダイアログでない
       const firstLoad = !(state.via || state.steps || state.openMore || state.confirm || state.prepare);
       const shown = english ? { ...state, ...JAPANESE_ONLY_CHECKS, texts: undefined } : state;
-      const problems = await page.evaluate(audit, { state: { ...shown, textKeys, firstLoad, steps: undefined, compact, english, narrow: viewport === NARROW_VIEWPORT, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      // D56（Ruling 116-3）: 下タブは「使う」の U1・U2 だけ・「戻る」は表紙 S0 以外の全画面（種別の表は routes.ts の SCREENS が正）
+      const layout = { tabsExpected: showsTabs(state.screen), backExpected: SCREENS[state.screen].kind !== 'cover', kindExpected: SCREENS[state.screen].kind };
+      const landed = state.landsOn && !(await landOn(page, state.landsOn)) ? [`R116 the hash is ${await page.evaluate(() => location.hash)}, expected ${state.landsOn}`] : [];
+      const problems = await page.evaluate(audit, { state: { ...shown, ...layout, textKeys, firstLoad, steps: undefined, compact, english, narrow: viewport === NARROW_VIEWPORT, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
       // 段8（Ruling 102-1）: axe の違反（規則・重さ・最初の要素）
       if (axe) {
         const { violations: found } = await new AxeBuilder({ page }).withTags(AXE_TAGS).disableRules(AXE_DISABLED_RULES).analyze();
         for (const item of found) problems.push(`AXE ${item.id} (${item.impact}) ${item.nodes.length} × ${item.nodes[0]?.target.join(' ')}`);
       }
       const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
-      report(label, [...openFail, ...problems, ...consoleErrors]);
+      report(label, [...openFail, ...landed, ...problems, ...consoleErrors]);
       await context.close();
     }
   }
@@ -426,6 +456,7 @@ try {
   for (const state of CHECKED.filter(item => !item.launchOnly)) {
     await page.goto(BASE + state.hash);
     await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
+    if (state.landsOn) await landOn(page, state.landsOn);   // 置き換えが済んでから次の状態へ（済む前に次のハッシュへ行くと、遅れた置き換えが上書きする）
     const { scrollWidth, clientWidth, meta } = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
@@ -449,6 +480,7 @@ try {
   for (const state of CHECKED.filter(item => !item.launchOnly)) {
     await narrowPage.goto(BASE + state.hash);
     await narrowPage.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
+    if (state.landsOn) await landOn(narrowPage, state.landsOn);
     const { scrollWidth, clientWidth } = await narrowPage.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
     if (scrollWidth > clientWidth) narrowProblems.push(`320 ${state.name}: horizontal scroll ${scrollWidth} > ${clientWidth}`);
   }
@@ -465,11 +497,11 @@ try {
       // 前回カード（最も長い名前のヴィエニーズワルツを前回にする）の種目名と「続きから」も同じ目で見る（修正便の追加裁定）
       await tilePage.goto(BASE + '#/practice/vwaltz');
       await tilePage.waitForSelector('[data-screen="S2"]:not([data-loading])');
-      for (const hash of ['#/', '#/routines/new']) {
+      for (const hash of ['#/use', '#/routines/new']) {
         await tilePage.goto(BASE + hash);
         await tilePage.waitForSelector('[data-screen]:not([data-loading]) .dc-tile b');
         await tilePage.evaluate(() => document.fonts.ready);
-        if (hash === '#/' && !(await tilePage.locator('[data-resume]').count())) tileProblems.push('I1 #/ the last-session card is not shown');
+        if (hash === '#/use' && !(await tilePage.locator('[data-resume]').count())) tileProblems.push('I1 #/use the last-session card is not shown');
         tileProblems.push(...(await tilePage.evaluate(tileNameBreaks)).map(problem => `I1 ${hash} ${problem}`));
       }
       report(`種目名の折れ ${viewport.width}x${viewport.height} ${locale}`, tileProblems);
@@ -481,6 +513,11 @@ try {
 }
 
 process.exit(violations ? 1 : 0);
+
+// D56（Ruling 116-1）: 古い経路の置き換え（replaceRoute）がハッシュに届くのを待つ。届いたら true
+async function landOn(page, hash) {
+  return page.waitForFunction(expected => location.hash.startsWith(expected), hash, { timeout: 5000 }).then(() => true, () => false);
+}
 
 // 段7: 設定（settings ストアの 'app'）を書く。ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB に書く
 async function seedSettingsInPage(settings) {
@@ -730,6 +767,8 @@ function audit({ state, LIMITS, reducedMotion }) {
     let reported = false;
     while (texts.nextNode()) {
       if (!texts.currentNode.textContent.trim()) continue;
+      // [data-ellipsis]（2 行で「…」に切る名前）と、表紙の扉の説明 [data-description]（扉の名前ではなく説明。下の R115 が行数を見る）は数えない
+      if (texts.currentNode.parentElement?.closest('[data-ellipsis], [data-description]')) continue;
       const range = document.createRange();
       range.selectNodeContents(texts.currentNode);
       const lines = new Set([...range.getClientRects()].filter(rect => rect.width > 0).map(rect => Math.round(rect.top))).size;
@@ -810,15 +849,16 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 段8（Ruling 101）: 起動の殻は最初の画面を描いたら消えている
   if (document.querySelector('.dc-boot')) issues.push('R101 the boot shell is still on the page');
 
-  // U11 下タブと戻る（種別の表と照合）
+  // U11 下タブと戻る（D56・Ruling 116-3: 下タブは U1・U2 だけ、戻るは表紙 S0 以外のすべて。種別の表 routes.ts と照合）
   const nav = document.querySelector('[data-nav]');
   const back = document.querySelector('[data-back]');
   const navVisible = Boolean(nav && visible(nav));
   const backVisible = Boolean(back && visible(back));
-  if (state.kind === 'focus' && navVisible) issues.push('U11 tabs are visible on a focus screen');
-  if (state.kind !== 'focus' && !navVisible) issues.push('U11 tabs are missing on a root/list screen');
-  if (state.kind === 'root' && backVisible) issues.push('U11 back button on a root screen');
-  if (state.kind !== 'root') {
+  if (state.kind !== state.kindExpected) issues.push(`U11 the state says kind "${state.kind}", routes.ts says "${state.kindExpected}"`);
+  if (!state.tabsExpected && navVisible) issues.push('U11 tabs are visible on a screen without tabs');
+  if (state.tabsExpected && !navVisible) issues.push('U11 tabs are missing on a "Use" root screen');
+  if (!state.backExpected && backVisible) issues.push('U11 back button on the cover');
+  if (state.backExpected) {
     if (!backVisible) issues.push('U11 back button missing');
     else {
       const rect = back.getBoundingClientRect();
@@ -827,10 +867,8 @@ function audit({ state, LIMITS, reducedMotion }) {
     }
   }
 
-  // U12 S1: 先生カードと10種目が初期表示に入る（Ruling 16）
-  if (state.teacherAndTiles) {
-    const teacher = document.querySelector('[data-teacher-card]');
-    if (!teacher || !fullyInView(teacher)) issues.push('U12 teacher card is not fully in the first view');
+  // U12 S1（U1）: 10種目が初期表示に入る（Ruling 16・D56 Ruling 118-3 の tilesInView）
+  if (state.tilesInView) {
     const tiles = [...document.querySelectorAll('[data-group="dance"] > *')];
     if (tiles.length !== 10) issues.push(`U12 expected 10 dance tiles, found ${tiles.length}`);
     tiles.forEach((tile, index) => { if (!fullyInView(tile)) issues.push(`U12 dance tile ${index + 1} is not fully in the first view (bottom ${Math.round(tile.getBoundingClientRect().bottom)} > ${Math.round(usableBottom)})`); });
@@ -973,6 +1011,21 @@ function audit({ state, LIMITS, reducedMotion }) {
       if (!symbols || !(symbols.compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('D52 the auto-counts line must come after the allowed-symbols line');
     }
     if (form?.querySelector('.dc-primary')?.disabled) issues.push('D52 "Add" is not pressable after the counts were filled in');
+  }
+  // D56（Ruling 115-1・115-3）: 表紙の扉の説明・M0 の行の状態の 1 行は 4 行まで（320 幅の日本語で 4 行。名前「使う」「作る」・行の名前は U10 の 2 行の規則のまま）
+  for (const description of document.querySelectorAll('[data-description]')) {
+    if (!visible(description)) continue;
+    const lines = Math.round(description.getBoundingClientRect().height / parseFloat(getComputedStyle(description).lineHeight));
+    if (lines > 4) issues.push(`R115 a door description is ${lines} lines > 4 ${describe(description)}`);
+  }
+  // D56（Ruling 115-2）: U2 の行は鳴らせる行だけがボタン（右端に「▶ 再生」の札）。鳴らせない行はボタンでなく、注意の 1 行を持つ
+  if (state.playRows) {
+    const play = [...document.querySelectorAll('[data-list] button.dc-row--play')].filter(visible);
+    const off = [...document.querySelectorAll('[data-list] [data-row-off]')].filter(visible);
+    if (play.length !== state.playRows.play) issues.push(`R115 ${play.length} playable rows, expected ${state.playRows.play}`);
+    if (off.length !== state.playRows.off) issues.push(`R115 ${off.length} rows that cannot play, expected ${state.playRows.off}`);
+    if (play.some(row => !row.querySelector('.dc-play-tag'))) issues.push('R115 a playable row has no "Play" tag');
+    if (off.some(row => row.matches('button, a') || row.querySelector('button, a') || !row.querySelector('.dc-row-warn'))) issues.push('R115 a row that cannot play is pressable or has no note');
   }
   // Ruling 52・D16: 行の注意は 2 つで、依頼（「してください」）はちょうど 1 つ（Ruling 7 の機械判定）。全体の注意は一覧の下に 1 つ
   if (state.barNote) {
