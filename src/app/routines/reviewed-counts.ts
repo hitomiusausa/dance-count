@@ -1,4 +1,4 @@
-import { figureIdentity } from './figure-names.ts';
+import { figureIdentity, figureSlug, verifiedFigure } from './figure-names.ts';
 
 // 監修済みのカウント表（D52・Ruling 109・110）。ひとみうさが監修シート（docs/app-v1/figure-counts-review.md）で
 // 「判定」に OK か訂正を書いた行だけをここへ写す。判定が空の行（未監修の案）は 1 件も書かない（Ruling 3 はそのまま有効）。
@@ -45,3 +45,28 @@ export function reviewedCounts(danceId: string, name: string): ReviewedCount | n
   if (!identity.startsWith('figure:')) return null;
   return REVIEWED_COUNTS.find(entry => entry.danceId === danceId && figureIdentity(danceId, entry.englishName) === identity) ?? null;
 }
+
+// D57（Ruling 119・120-2）: 「フィガー」タブ（F1）が並べる、種目ごとの監修済みのフィガー（登録簿の定義順＝D20 の一覧と同じ順）。
+// slug は経路の印（figure-names.ts の figureSlug）。表が変わっても関数は同じ（テストは buildReviewedFigures に作り物の表を渡す）
+export interface ReviewedFigure { slug: string; englishName: string; counts: string }
+export interface ReviewedFigureTable {
+  reviewedFigures(danceId: string): readonly ReviewedFigure[];
+  reviewedFigureBySlug(danceId: string, slug: string | undefined): ReviewedFigure | null;
+}
+export function buildReviewedFigures(entries: readonly ReviewedCount[]): ReviewedFigureTable {
+  const byDance = new Map<string, ReviewedFigure[]>();
+  const sorted = entries
+    .map(entry => ({ entry, order: verifiedFigure(entry.danceId, entry.englishName)?.order ?? Number.MAX_SAFE_INTEGER }))
+    .sort((a, b) => a.order - b.order);
+  for (const { entry } of sorted) {
+    const list = byDance.get(entry.danceId) ?? [];
+    list.push(Object.freeze({ slug: figureSlug(entry.englishName), englishName: entry.englishName, counts: entry.counts }));
+    byDance.set(entry.danceId, list);
+  }
+  return {
+    reviewedFigures: danceId => byDance.get(danceId) ?? [],
+    reviewedFigureBySlug: (danceId, slug) => (slug === undefined ? null : byDance.get(danceId)?.find(figure => figure.slug === slug) ?? null)
+  };
+}
+export const REVIEWED_FIGURES: ReviewedFigureTable = buildReviewedFigures(REVIEWED_COUNTS);
+export const { reviewedFigures, reviewedFigureBySlug } = REVIEWED_FIGURES;

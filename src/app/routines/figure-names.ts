@@ -109,3 +109,24 @@ export function figureNameSuggestions(danceId: string, query: string, locale: 'e
     .map(figure => figure.display[shown])
     .slice(0, limit);
 }
+
+// D57（Ruling 120-1）: 経路に入れるフィガーの印（英語名の小文字化・英数以外を「-」に畳み、前後の「-」を落とす）。
+// “Chasse from PP” → chasse-from-pp。照合済みの全フィガーで種目内に重複が無く、経路の 1 区切りに合うことをテストで固定する
+const FIGURE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export function figureSlug(englishName: string): string {
+  return englishName.normalize('NFKC').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+export function isFigureSlug(value: unknown): value is string {
+  return typeof value === 'string' && FIGURE_SLUG.test(value);
+}
+
+// D57（Ruling 120-2）: 照合済みのフィガーの表示名（表示の言語の表記＝figureNameChoices と同じ）。登録簿の定義順の番号も返す（並べ替え用）。
+// 照合済みでない英語名は null（監修表は照合済みの名前だけ＝Ruling 110-2 (c)）
+export function verifiedFigure(danceId: string, englishName: string): { order: number; display: { ja: string; en: string } } | null {
+  const figures = FIGURES.filter(figure => figure.danceId === danceId);
+  const order = figures.findIndex(figure => figure.display.en === englishName);
+  return order < 0 ? null : { order, display: figures[order]!.display };
+}
+export function figureDisplayName(danceId: string, englishName: string, locale: 'en' | 'ja-JP'): string {
+  return verifiedFigure(danceId, englishName)?.display[shownIn(locale)] ?? englishName;
+}

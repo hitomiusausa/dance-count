@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { IMPLEMENTED_SCREENS, resolveScreen } from '../../src/app/router/resolve.ts';
 import { SCREENS, parseHash } from '../../src/app/router/routes.ts';
 import { ROUTINES_MAX } from '../../src/app/routines/limits.ts';
+import { buildReviewedFigures } from '../../src/app/routines/reviewed-counts.ts';
 import { createRoutine, type Routine } from '../../src/app/routines/routine.ts';
 
 const NOW = '2026-10-11T09:00:00.000Z';
@@ -64,4 +65,30 @@ test('S12 opens from stage 7 and S13 from stage 8: every screen of the spec is b
   assert.deepEqual(resolve('#/help/install'), { screen: 'S12', redirect: null });
   assert.deepEqual(resolve('#/about?ui-state=confirm-delete-all'), { screen: 'S13', redirect: null });
   assert.deepEqual([...IMPLEMENTED_SCREENS], Object.keys(SCREENS));
+});
+
+// D57（Ruling 119-6・120-4・122-3）: F1 は監修済みのフィガーが 1 件以上の種目だけ。表の中身に頼らない検査は作り物の表を渡す
+const EMPTY_TABLE = buildReviewedFigures([]);
+const WHISK_ONLY = buildReviewedFigures([{ danceId: 'waltz', englishName: 'Whisk', counts: '123', basis: 'テスト', reviewedBy: 'ひとみうさ', reviewedAt: '2026-10-13' }]);
+const basic = (danceId: string) => ({ screen: 'S2', redirect: { screen: 'S2', params: { danceId } } });
+
+test('F1 opens only for a dance with reviewed figures; otherwise the basic count, unknown dances go to U1 (Ruling 119-6)', () => {
+  assert.deepEqual(resolveScreen(parseHash('#/figures/waltz'), ALL, WHISK_ONLY), { screen: 'F1', redirect: null });
+  assert.deepEqual(resolveScreen(parseHash('#/figures/waltz'), ALL, EMPTY_TABLE), basic('waltz'), 'an empty table never shows F1');
+  assert.deepEqual(resolveScreen(parseHash('#/figures/tango'), ALL, WHISK_ONLY), basic('tango'));
+  assert.deepEqual(resolveScreen(parseHash('#/figures/hiphop'), ALL, WHISK_ONLY), { screen: 'S1', redirect: null });
+});
+
+test('S2 with a figure needs that figure in the table; an unknown slug falls back to the basic count (Ruling 120-4)', () => {
+  assert.deepEqual(resolveScreen(parseHash('#/practice/waltz/whisk'), ALL, WHISK_ONLY), { screen: 'S2', redirect: null });
+  assert.deepEqual(resolveScreen(parseHash('#/practice/waltz/natural-turn'), ALL, WHISK_ONLY), basic('waltz'));
+  assert.deepEqual(resolveScreen(parseHash('#/practice/waltz/whisk'), ALL, EMPTY_TABLE), basic('waltz'));
+  assert.deepEqual(resolveScreen(parseHash('#/practice/hiphop/whisk'), ALL, WHISK_ONLY), { screen: 'S1', redirect: null });
+  assert.deepEqual(resolveScreen(parseHash('#/practice/waltz'), ALL, EMPTY_TABLE), { screen: 'S2', redirect: null });
+});
+
+test('the shipped table: waltz, slow foxtrot and tango have F1; quickstep and the Latin dances go straight to S2 (2026-10-13 の 20 件)', () => {
+  for (const danceId of ['waltz', 'slowfox', 'tango']) assert.deepEqual(resolve(`#/figures/${danceId}`), { screen: 'F1', redirect: null }, danceId);
+  for (const danceId of ['quickstep', 'vwaltz', 'rumba', 'chacha', 'samba', 'pasodoble', 'jive']) assert.deepEqual(resolve(`#/figures/${danceId}`), basic(danceId), danceId);
+  assert.deepEqual(resolve('#/practice/waltz/whisk'), { screen: 'S2', redirect: null });
 });

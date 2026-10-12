@@ -1,12 +1,13 @@
 // ハッシュ ↔ 画面の対応表（仕様 §3）。純粋関数だけ。window には触らない（platform/hash.ts の役目）。
 // D56（Ruling 116）: 表紙 S0（#/）・「使う」の U1（今の S1 の ID のまま #/use）と U2（#/use/routines）・「作る」の M0（#/make）と M1（#/make/routines）。
 // S3 は廃止（古い #/routines は U2 へ置き換え）。深い画面（S2・S4・S5・S7〜S13）の path は変えない。
-export type ScreenId = 'S0' | 'S1' | 'U2' | 'M0' | 'M1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
+// D57（Ruling 119-1）: F1「種目のフィガー」（#/figures/:danceId）。監修済みのフィガーが 1 件以上ある種目だけ（resolve.ts）。
+export type ScreenId = 'S0' | 'S1' | 'U2' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
 // cover＝表紙（戻る無し・下タブ無し）。root＝側の入口（U1・U2・M0）。list＝一覧（M1・S6）。focus＝集中画面
 export type ScreenKind = 'cover' | 'root' | 'focus' | 'list';
 export type Side = 'use' | 'make';
 export type TabId = 'practice' | 'routines';
-export type RouteParams = { danceId?: string; routineId?: string };
+export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: string };
 // 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33。confirm-delete は S3・S7 の削除確認・Ruling 43・60-4。
 // mic-denied・no-voice・no-recorder は S8 の枠・Ruling 63-3（no-https は http で開いた時の非対応の枠・D53）。update-ready は S1・S3・S6・S7 の更新の帯・段7 Ruling 90-7）。
 // confirm-delete-all は S13 の「データを全て消す」の確認（段8・Ruling 99-3・100-2。見た目だけで、消さない）。
@@ -33,6 +34,7 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
   U2: { kind: 'root', parent: 'S0', side: 'use', tab: 'routines', path: '/use/routines' },
   M0: { kind: 'root', parent: 'S0', side: 'make', tab: null, path: '/make' },
   M1: { kind: 'list', parent: 'M0', side: 'make', tab: null, path: '/make/routines' },
+  F1: { kind: 'focus', parent: 'S1', side: 'use', tab: null, path: '/figures/:danceId' },
   S2: { kind: 'focus', parent: 'S1', side: 'use', tab: null, path: '/practice/:danceId' },
   S4: { kind: 'focus', parent: 'M1', side: 'make', tab: null, path: '/routines/new' },
   S5: { kind: 'focus', parent: 'U2', side: 'use', tab: null, path: '/routines/:routineId/play' },
@@ -46,8 +48,11 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
   S13: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/about' }
 };
 
-// S4 は「新規」と「編集」の2つの形を持つので、編集の形をここで足す。
-const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'S4', path: '/routines/:routineId/edit' }];
+// S4 は「新規」と「編集」の2つの形を持つので、編集の形をここで足す。S2 はフィガーを鳴らす形（D57・Ruling 120-1）。
+const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [
+  { screen: 'S4', path: '/routines/:routineId/edit' },
+  { screen: 'S2', path: '/practice/:danceId/:figureSlug' }
+];
 // 古い経路（D56 より前の案内・ブックマーク）。今の画面に読み替え、resolve.ts がハッシュを置き換える
 const ALIAS_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'U2', path: '/routines' }];
 

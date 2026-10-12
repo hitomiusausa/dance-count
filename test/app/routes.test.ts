@@ -29,7 +29,7 @@ test('every screen hash from spec §3 parses to its screen and params', () => {
 });
 
 test('empty, malformed and unknown hashes fall back to the cover instead of throwing (D56)', () => {
-  for (const hash of ['', '#', '#/nope', '#/practice', '#/practice/', '#/practice/a/b', '#/routines/x/delete', 'garbage', '#/practice/%E3%81%82', '#/practice/<script>', '#/use/x', '#/make/x']) {
+  for (const hash of ['', '#', '#/nope', '#/practice', '#/practice/', '#/practice/a/b/c', '#/routines/x/delete', 'garbage', '#/practice/%E3%81%82', '#/practice/<script>', '#/use/x', '#/make/x']) {
     assert.deepEqual(parseHash(hash), { screen: 'S0', params: {}, query: {} }, JSON.stringify(hash));
   }
 });
@@ -96,7 +96,7 @@ test('tabs show on the two "Use" roots only (D56・Ruling 116-1)', () => {
 
 test('back without history goes to the parent from the D56 route table (Ruling 116-1)', () => {
   const expected: Record<ScreenId, ScreenId | null> = {
-    S0: null, S1: 'S0', U2: 'S0', M0: 'S0', M1: 'M0', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
+    S0: null, S1: 'S0', U2: 'S0', M0: 'S0', M1: 'M0', F1: 'S1', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
     S8: 'M0', S9: 'M0', S10: 'U2', S11: 'S6', S12: 'S6', S13: 'S6'
   };
   for (const screen of Object.keys(expected) as ScreenId[]) assert.equal(parentScreen(screen), expected[screen], screen);
@@ -106,4 +106,16 @@ test('only the cover has no back button; the screens under the cover say "Cover"
   const kinds = Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map(screen => [screen, SCREENS[screen].kind]));
   assert.deepEqual(Object.entries(kinds).filter(([, kind]) => kind === 'cover').map(([screen]) => screen), ['S0']);
   assert.deepEqual((Object.keys(SCREENS) as ScreenId[]).filter(screen => parentScreen(screen) === 'S0').sort(), ['M0', 'S1', 'S6', 'U2']);
+});
+
+test('D57: F1 is #/figures/:danceId and S2 has a figure form #/practice/:danceId/:figureSlug (Ruling 119-1・120-1)', () => {
+  assert.deepEqual(parseHash('#/figures/waltz'), { screen: 'F1', params: { danceId: 'waltz' }, query: {} });
+  assert.equal(buildHash({ screen: 'F1', params: { danceId: 'waltz' } }), '#/figures/waltz');
+  assert.deepEqual(parseHash('#/practice/waltz/whisk'), { screen: 'S2', params: { danceId: 'waltz', figureSlug: 'whisk' }, query: {} });
+  assert.equal(buildHash({ screen: 'S2', params: { danceId: 'waltz', figureSlug: 'chasse-from-pp' } }), '#/practice/waltz/chasse-from-pp');
+  assert.equal(buildHash({ screen: 'S2', params: { danceId: 'waltz' } }), '#/practice/waltz');
+  assert.equal(parseHash('#/figures/bad id').screen, 'S0');
+  assert.equal(parseHash('#/practice/waltz/a/b').screen, 'S0');
+  assert.equal(SCREENS.F1.kind, 'focus');
+  assert.equal(showsTabs('F1'), false);
 });

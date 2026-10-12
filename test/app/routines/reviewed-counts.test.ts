@@ -5,7 +5,8 @@ import path from 'node:path';
 import { DANCE_NAMES } from '../../../src/engine/ui-messages.js';
 import { checkCounts, normalizeCounts } from '../../../src/app/routines/counts.ts';
 import { figureIdentity } from '../../../src/app/routines/figure-names.ts';
-import { REVIEWED_COUNTS, reviewedCounts } from '../../../src/app/routines/reviewed-counts.ts';
+import { REVIEWED_COUNTS, buildReviewedFigures, reviewedCounts, reviewedFigureBySlug, reviewedFigures, type ReviewedCount } from '../../../src/app/routines/reviewed-counts.ts';
+import { figureNameChoices, figureSlug } from '../../../src/app/routines/figure-names.ts';
 
 // 監修済みのカウント表の番人（D52・Ruling 110-2）。「ひとみうさが OK を付けた行だけ出荷」を人の注意でなくテストで守る。
 const root = path.resolve(import.meta.dirname, '../../..');
@@ -121,4 +122,29 @@ test('(e) the table and autoCounts do not read the unreviewed data', async () =>
       assert.ok(!text.includes(word), `${file} contains "${word}"`);
     }
   }
+});
+
+// D57（Ruling 120-2・122-3）: 「フィガー」タブの並び（登録簿の定義順）と slug での引き方。作り物の表で順を固定し、出荷の表は件数の和で見る
+const fake = (danceId: string, englishName: string, counts: string): ReviewedCount => ({ danceId, englishName, counts, basis: 'テスト', reviewedBy: 'ひとみうさ', reviewedAt: '2026-10-13' });
+
+test('reviewedFigures lists a dance in the registry order, not the table order', () => {
+  const table = buildReviewedFigures([fake('waltz', 'Whisk', '123'), fake('waltz', 'Closed Changes', '123'), fake('tango', 'Progressive Link', 'QQ')]);
+  assert.deepEqual(table.reviewedFigures('waltz').map(figure => figure.englishName), ['Closed Changes', 'Whisk']);
+  assert.deepEqual(table.reviewedFigures('waltz')[1], { slug: 'whisk', englishName: 'Whisk', counts: '123' });
+  assert.deepEqual(table.reviewedFigures('quickstep'), []);
+  assert.equal(table.reviewedFigureBySlug('waltz', 'whisk')?.counts, '123');
+  for (const slug of ['natural-turn', 'Whisk', undefined]) assert.equal(table.reviewedFigureBySlug('waltz', slug), null, String(slug));
+  assert.equal(table.reviewedFigureBySlug('tango', 'whisk'), null, 'the slug is looked up within the dance');
+  assert.deepEqual(buildReviewedFigures([]).reviewedFigures('waltz'), [], 'an empty table has no figures');
+});
+
+test('the shipped table: every entry is listed once under its dance, in registry order, and found by its slug', () => {
+  const dances = [...new Set(REVIEWED_COUNTS.map(entry => entry.danceId))];
+  assert.equal(dances.reduce((sum, danceId) => sum + reviewedFigures(danceId).length, 0), REVIEWED_COUNTS.length);
+  for (const danceId of dances) {
+    const order = figureNameChoices(danceId, 'en');
+    const listed = reviewedFigures(danceId).map(figure => order.indexOf(figure.englishName));
+    assert.deepEqual(listed, [...listed].sort((a, b) => a - b), danceId);
+  }
+  for (const entry of REVIEWED_COUNTS) assert.equal(reviewedFigureBySlug(entry.danceId, figureSlug(entry.englishName))?.counts, entry.counts, entry.englishName);
 });
