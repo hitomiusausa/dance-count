@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build && node tools/check-dist.js",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
     "test": "node --test \"test/**/*.test.{js,ts}\"",
     "legacy": "python3 -m http.server 4173",
     "routines:migrate": "node tools/migrate-legacy-routines.js",
@@ -47,6 +47,13 @@
     "@types/node": "24.19.2",
     "playwright-core": "^1.61.1",
     "typescript": "6.0.3",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "vite-plugin-pwa": "2.0.0",
+    "workbox-build": "7.4.1",
+    "workbox-expiration": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-routing": "7.4.1",
+    "workbox-strategies": "7.4.1",
+    "workbox-window": "7.4.1"
   }
 }

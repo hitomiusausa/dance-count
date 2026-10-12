@@ -1,3 +1,4 @@
+import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY } from '../../share-inbox-contract.ts';
 import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename.ts';
 import { BUNDLE_MAX_BYTES } from '../share/limits.ts';
 
@@ -75,11 +76,11 @@ export async function readBundleText(file: File): Promise<string> {
   return file.text();
 }
 
-// Android の共有（share_target）の受け口の契約（Ruling 79-2）。段7の Service Worker が POST の 'bundle' を
-// cache 'dance-count-inbox' の './inbox/bundle' に Response として put し（ヘッダー 'X-File-Name' に encodeURIComponent したファイル名）、
-// './#/receive' へ 303 で送る。S10 はマウント時にこれを呼び、あれば「確認」から始める。読んだら消す（2 回受け取らない）。
-export const INBOX_CACHE = 'dance-count-inbox';
-export const INBOX_KEY = './inbox/bundle';
+// Android の共有（share_target）の受け口の契約（Ruling 79-2・93-3）。Service Worker（src/sw.ts）が POST のファイルを
+// Cache の INBOX_CACHE の INBOX_KEY に Response として put し（ヘッダー INBOX_FILE_HEADER に encodeURIComponent したファイル名）、
+// S10 へ 303 で送る。S10 はマウント時にこれを呼び、あれば「確認」から始める。読んだら消す（2 回受け取らない）。
+// 値の正本は src/share-inbox-contract.ts（SW と同じ物を import する。段7）。
+export { INBOX_CACHE, INBOX_KEY };
 
 export async function takeInboxFile(): Promise<File | null> {
   if (typeof caches === 'undefined') return null;
@@ -89,7 +90,7 @@ export async function takeInboxFile(): Promise<File | null> {
     if (!response) return null;
     const blob = await response.blob();
     await cache.delete(INBOX_KEY);
-    const header = response.headers.get('X-File-Name');
+    const header = response.headers.get(INBOX_FILE_HEADER);
     let name = RECEIVED_FILE_FALLBACK;
     try { if (header) name = decodeURIComponent(header); } catch { /* 名前が読めなくても中身は受け取る */ }
     return new File([blob], cleanReceivedFileName(name, RECEIVED_FILE_FALLBACK), { type: blob.type });

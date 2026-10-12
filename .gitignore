@@ -4,6 +4,7 @@
 node_modules/
 *.bak
 dist/
+dist-*/
 
 # 段6（Ruling 65-3・67）: 候補の音声は commit しない・鍵を置かない
 output/voices/
