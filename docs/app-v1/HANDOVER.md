@@ -1,28 +1,26 @@
 # アプリ化 v1 — 引き継ぎ（HANDOVER）
 
-更新: 2026-10-12 夜（ひとみうさ就寝中の委任で: **段8（仕上げ）と統合レビュー（Task 11〜13）まで完了**。v1 の残りは **`po-checklist.md` の 1 枚**（決めること・実機・文言と好み）。代理決定は D23〜D51）
+更新: 2026-10-13（役割分け D55〜D57 の締め。**§0 が正**。枝 `agent/auto-counts`・未マージ・未 push）／2026-10-12 夜（ひとみうさ就寝中の委任で: **段8（仕上げ）と統合レビュー（Task 11〜13）まで完了**。v1 の残りは **`po-checklist.md` の 1 枚**（決めること・実機・文言と好み）。代理決定は D23〜D51）
 ブランチ: `agent/app-v1`（最新は `git log`。最後は統合レビューの差分再レビュー（段8 Task 13）のコミット）。**main 未マージ・未 push**（ひとみうさの判断で、段4〜8もこのブランチで続け、公開直前にまとめる）
 
 ---
 
-## 0. ひとみうさへ — やることは **`docs/app-v1/po-checklist.md` の 1 枚だけ**
+## 0. ひとみうさへ — 役割分け（D55〜D57）と自動カウント（D52）は枝 `agent/auto-counts` に載っている（2026-10-13）
 
-1. **A 決めること**（https の置き場・日本語の標準の声 6b・文言の監修・法務・アイコンの絵 D44・公開 URL・代理決定 D23〜D51・版番号・TTS の出どころ・前回カードの長い名前）。どれも「このままでよい」なら一言。
-2. **B 実機で見ること**は `device-check-master.md` を上から（Safari → https の後 → 代理決定 → 好み → Android）。初見テストは `first-sight-test.md`。
-3. **C 文言と好み**は気づいたら一言。
-4. 公開のビルドは `RELEASE=1 PUBLIC_APP_URL=https://… npm run build`（URL が空なら止まる）。push・デプロイはひとみうさの許可の後だけ。
+**場所と状態**
+- 新しい作業は**すべて枝 `agent/auto-counts`**（worktree `/Users/usausagi/Documents/AI_Playground/Dance Count auto-counts`）にある。**`agent/app-v1` にはマージしていない**。**push もしていない**。
+- 載っている物: D52（自動カウント・監修表 20 件）・D53・D55（カウントの型の帯）・D56（表紙 S0 ＋「使う」「作る」・下タブ・受け取ったルーティン）・D57（フィガータブ F1・前回の「ワルツ · ウィスク」）・通し確認の直し便（Fable 答え 2026-10-13）。
+- 数（`8b5f918` の時点）: `npm test` **678**・fail 0／`ui:check` **869 PASS**／スモーク 5 本 OK。推移は `role-split-ledger.md`。
+- マージの条件（Ruling 112-4）: **ひとみうさの実機確認**（`device-check-master.md` の **1c〜1e**。1b も）の後に `agent/app-v1` へ **`--no-ff`** でマージ。push はひとみうさ。
+- 監修シートの転記のたびに `requires: 'reviewed'` の状態が新しい表で走ることを確かめる（Ruling 122-4）。
 
-**統合レビュー（段8 Task 11〜13・2026-10-12）**: 仕様の全体と照らして Critical 0・Important 2・Minor 11（`final-review.md`）。
-修正便（`68ca979`〜`628ecf5`）で Important 2（種目名の語の途中の折れ・公開 URL の番人）と Minor 3（起動の殻のまま・S9 の行き止まり＝D51・コメント）を直した。
-差分の再レビューで 6 件とも直ったことを確かめた（回帰なし・テスト 628・ui:check 664・スモーク 5 本）。残りは公開後の Minor と、po-checklist の判断だけ。
+**次の一手**: 枝全体の最終レビュー → 直し（最終レビューに回した Parked は `role-split-ledger.md` 末尾）→ **ひとみうさの実機確認（device-check 1c〜1e・po-checklist 15〜17）** → マージ。
 
-### 段8の締めで起きたこと（2026-10-12・寝ている間の委任。お金 0 円・push もデプロイもしていない）
+**ひとみうさのやること**は引き続き **`docs/app-v1/po-checklist.md` の 1 枚**（A 決めること 1〜17・B 実機・C 文言と好み）。公開のビルドは `RELEASE=1 PUBLIC_APP_URL=https://… npm run build`（URL が空なら止まる）。push・デプロイはひとみうさの許可の後だけ。
 
-- **段8（仕上げ）完了（実装・レビュー）**。テスト **619**（tests 619／fail 0）・`ui:check` **653 PASS**（dev と公開ビルドの両方・axe 違反 0・英語の 2 周込み）・スモーク 5 本 OK・`dist OK: 1078 files … precache 172 entries 2.92 MB`・`dist/licenses` 5 ファイル・`timing:compare` 一致・`src/engine` の差分 0。台帳は `stage8-ledger.md`。
-- 代理決定 **D47〜D50**（§0b）。Fable が計画の 11 問に答えた（`rulings.md` 末尾）。
-- 段8の通し確認で見つけた大きな物: **起動の殻が描かれなかった**（書体の `@font-face` が描画を止める CSS に入っていた）→ Task 9b で書体の CSS を別にして直した（Slow 3G の初回 8.4 → 4.4 秒）。iOS の再起動の白は Simulator で約 0.6〜1.1 秒で、大半は iOS 側（実機で測る）。英語の共有シートの語は “View More”（実物）。
-- 過去の「寝ている間に起きたこと」（段4〜段7）は **§0c** に残してある（古い。今は上の §0 が正）。
+関連の文書: 計画 `docs/superpowers/plans/2026-10-13-app-v1-role-split.md`・台帳 `role-split-ledger.md`・通し確認 `role-split-usability-walk.md`・裁定 `rulings.md` 末尾（Fable の答え 2 節）。
 
+---
 
 ## 0b. ひとみうさに見て・決めてほしいこと（代理決定 D23〜D50 の台帳。**今の残りは §0 と `po-checklist.md`、実機の確認は `device-check-master.md`**）
 
@@ -150,6 +148,25 @@
 5. 答えと実機の指摘が出たら、小さな修正便で直す → 次の段へ: **段8（仕上げ。文言監修・S11・S13・法務・エラー・アクセシビリティ）の詳細計画**（書き手: Opus。全体地図の持ち越し表と下の §5 の「段8へ」を必ず拾う）。段6b は決定カードの答えしだい（日本語の声は JSON の 1 行と音を置くだけで precache に乗る）。
 6. push したくなったら一言（`agent/app-v1` の push はひとみうさの許可の後だけ）。
 
+## 0-old. （2026-10-12 時点の §0。古い。上の §0 が正）ひとみうさへ — やることは **`docs/app-v1/po-checklist.md` の 1 枚だけ**
+
+1. **A 決めること**（https の置き場・日本語の標準の声 6b・文言の監修・法務・アイコンの絵 D44・公開 URL・代理決定 D23〜D51・版番号・TTS の出どころ・前回カードの長い名前）。どれも「このままでよい」なら一言。
+2. **B 実機で見ること**は `device-check-master.md` を上から（Safari → https の後 → 代理決定 → 好み → Android）。初見テストは `first-sight-test.md`。
+3. **C 文言と好み**は気づいたら一言。
+4. 公開のビルドは `RELEASE=1 PUBLIC_APP_URL=https://… npm run build`（URL が空なら止まる）。push・デプロイはひとみうさの許可の後だけ。
+
+**統合レビュー（段8 Task 11〜13・2026-10-12）**: 仕様の全体と照らして Critical 0・Important 2・Minor 11（`final-review.md`）。
+修正便（`68ca979`〜`628ecf5`）で Important 2（種目名の語の途中の折れ・公開 URL の番人）と Minor 3（起動の殻のまま・S9 の行き止まり＝D51・コメント）を直した。
+差分の再レビューで 6 件とも直ったことを確かめた（回帰なし・テスト 628・ui:check 664・スモーク 5 本）。残りは公開後の Minor と、po-checklist の判断だけ。
+
+### 段8の締めで起きたこと（2026-10-12・寝ている間の委任。お金 0 円・push もデプロイもしていない）
+
+- **段8（仕上げ）完了（実装・レビュー）**。テスト **619**（tests 619／fail 0）・`ui:check` **653 PASS**（dev と公開ビルドの両方・axe 違反 0・英語の 2 周込み）・スモーク 5 本 OK・`dist OK: 1078 files … precache 172 entries 2.92 MB`・`dist/licenses` 5 ファイル・`timing:compare` 一致・`src/engine` の差分 0。台帳は `stage8-ledger.md`。
+- 代理決定 **D47〜D50**（§0b）。Fable が計画の 11 問に答えた（`rulings.md` 末尾）。
+- 段8の通し確認で見つけた大きな物: **起動の殻が描かれなかった**（書体の `@font-face` が描画を止める CSS に入っていた）→ Task 9b で書体の CSS を別にして直した（Slow 3G の初回 8.4 → 4.4 秒）。iOS の再起動の白は Simulator で約 0.6〜1.1 秒で、大半は iOS 側（実機で測る）。英語の共有シートの語は “View More”（実物）。
+- 過去の「寝ている間に起きたこと」（段4〜段7）は **§0c** に残してある（古い。今は上の §0 が正）。
+
+---
 
 ## 1. 読む順番
 

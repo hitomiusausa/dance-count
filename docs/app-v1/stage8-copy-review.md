@@ -240,11 +240,11 @@
 | 155 | `replaceRoutines` | 同じルーティンは新しい方に置き換わります。 | Routines you already have are replaced with the new ones. | 英語の初版 | OK |  |
 | 156 | `useFile` | 使う | Use | 英語の初版 | OK |  |
 | 157 | `receivedTitle` | 受け取りました | Received | 英語の初版 | OK |  |
-| 158 | `receivedVoiceFrom` | 「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。 | Choose a dance in “Use” and press ▶ to hear {name}'s voice. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear {name}'s voice.（英語の “Home screen” は iPhone の「ホーム画面」と紛れる。アプリのタブは “Practice”。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）。goHome・receivedVoiceNamed も一緒に）（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 159 | `receivedVoiceNamed` | 「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。 | Choose a dance in “Use” and press ▶ to hear “{name}”. | 英語の初版 | 製品判断: Choose a dance on the Practice screen and press ▶ to hear “{name}”.（receivedVoiceFrom と同じ理由。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
+| 158 | `receivedVoiceFrom` | 「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。 | Choose a dance in “Use” and press ▶ to hear {name}'s voice. | 英語の初版 | OK（Fable 2026-10-13: 「ホームで」をやめ「「使う」で」に。英語は “Home screen” が iPhone の「ホーム画面」と紛れるので “Choose a dance in “Use””。アプリのタブ名は ja「使う」／en “Use”）（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 159 | `receivedVoiceNamed` | 「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。 | Choose a dance in “Use” and press ▶ to hear “{name}”. | 英語の初版 | OK（receivedVoiceFrom と同じ理由。Fable 2026-10-13: 「ホームで」→「「使う」で」） |  |
 | 160 | `receivedRoutines` | 「ルーティン」に入っています。 | They are in “Routines”. | 英語の初版 | You'll find them in “Routines”. |  |
 | 161 | `receivedRoutinesToo` | ルーティンは、下の「ルーティン」にあります。 | The routines are under “Routines” at the bottom. | 英語の初版 |  |  |
-| 162 | `goHome` | 種目を選ぶ | Choose a dance | 英語の初版 | OK（製品判断: “Home” と iPhone の「ホーム画面」の紛れは receivedVoiceFrom 参照。ja の「ホームで」「ホームへ」も同じ（画面に「ホーム」という語は無く、タブは「練習」）） |  |
+| 162 | `goHome` | 種目を選ぶ | Choose a dance | 英語の初版 | OK（Fable 2026-10-13: 「ホームへ」→「種目を選ぶ」／“Choose a dance”。“Home” と iPhone の「ホーム画面」の紛れを避ける。画面に「ホーム」という語は無い） |  |
 | 163 | `seeRoutines` | ルーティンを見る | See routines | 英語の初版 | OK |  |
 
 ## S11 音が鳴らない時
