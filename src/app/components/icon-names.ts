@@ -3,6 +3,6 @@ export const ICON_NAMES = [
   'play', 'stop', 'globe', 'chevron', 'chev-r', 'chev-l', 'repeat', 'metronome', 'gauge',
   'voice', 'leadin', 'check', 'mic', 'alert', 'home', 'list', 'gear',
   'plus', 'edit', 'trash', 'up', 'down', 'copy', 'undo', 'redo', 'grip', 'share',
-  'more', 'plus-square', 'close'
+  'more', 'plus-square', 'close', 'info'
 ] as const;
 export type IconName = typeof ICON_NAMES[number];

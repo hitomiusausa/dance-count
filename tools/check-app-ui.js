@@ -104,13 +104,16 @@ const STATES = [
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  // 段5（Ruling 86-5）: S6 に「ルーティンを配る」＝4
-  // 段7（Ruling 92-8）: 「ホーム画面に追加する方法」で 5（上限ちょうど。段8の S13 で並びを裁定し直す）
-  // 375×548 では最後の「ルーティンを配る」が初期表示の下（先生向け・スクロールで届く。opsSmall）
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 5, opsSmall: 4, total: 5 },
-  // 375×548 では帯（1 行・約 50px）のぶん最後の行が初期表示の下へ（スクロールで届く。Ruling 71-6 と同じ扱いの opsSmall）
+  // 段8（Ruling 98）: 言語・声・「困った時は」の束（追加の方法・音が鳴らない時）・「先生の方へ」の束（録音・配る）・「プライバシー・アプリについて」＝5（上限ちょうど）。
+  // ops は固定しない（「S1 案内カード」と同じ扱い）: 1280×900 は 5 つとも初期表示・375×667 は「プライバシー・アプリについて」が下で 4・
+  // 375×548 は「先生の方へ」も下で 3（opsSmall）。生徒が使う 言語・声・「困った時は」の 2 行は 548 でも初期表示に入る（firstView）
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', opsSmall: 3, total: 5,
+    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], teacher: ['自分の声を録音する', 'ルーティンを配る'] },
+    texts: ['困った時は', '先生の方へ', 'プライバシー・アプリについて', '版 '],
+    firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // Fable 答え 2: 生徒が使う 3 つ（言語・声・「ホーム画面に追加する方法」）は帯があっても 375×548 の初期表示に入る
-  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', ops: 5, opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
+  // 段8: 帯があると 375×548 では「音が鳴らない時」の行も下（S11 は S2/S5 の枠からも行ける）。言語・声・「ホーム画面に追加する方法」は入ったまま（Ruling 98-1）
+  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', opsSmall: 3, total: 5, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
     firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]'] },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
@@ -581,6 +584,17 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(element.textContent) && !element.querySelector('.dc-phrased') && !element.closest('.dc-phrased')) {
       issues.push(`R97 wrapped Japanese text has no phrase breaks ${describe(element)}`);
     }
+  }
+
+  // 段8（Ruling 98-2）: › の行の束（[data-group] の中の .dc-link-row）は目に見える見出しを持つ（aria-labelledby で指す h2）。見出しの無い束は抜け道
+  for (const group of document.querySelectorAll('[data-group]')) {
+    if (!group.querySelector(':scope > .dc-link-row')) continue;
+    const heading = document.getElementById(group.getAttribute('aria-labelledby') ?? '');
+    if (!heading || !visible(heading) || !group.contains(heading)) issues.push(`R98 the row group "${group.dataset.group}" has no visible heading of its own`);
+  }
+  for (const [name, labels] of Object.entries(state.linkGroups ?? {})) {
+    const rows = [...document.querySelectorAll(`[data-group="${name}"] > .dc-link-row .dc-link-label`)].map(label => label.textContent.trim());
+    if (JSON.stringify(rows) !== JSON.stringify(labels)) issues.push(`R98 group "${name}" rows ${JSON.stringify(rows)}, expected ${JSON.stringify(labels)}`);
   }
 
   // U11 下タブと戻る（種別の表と照合）

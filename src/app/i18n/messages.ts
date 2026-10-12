@@ -55,6 +55,10 @@ export const APP_MESSAGES = {
     // 段7（Ruling 90・92・D41〜D45）: 更新の帯・S12 ホーム画面に追加する方法・S1 の案内カード・S6 の行。英語は初版（段8で監修）
     updateReady: 'A new version is ready.',
     settingsInstall: 'How to add to the Home Screen',
+    // 段8（Ruling 98）: S6 の見出し「困った時は」の束・S13 の行（版を右に）
+    settingsHelpHeading: "If something's wrong",
+    settingsAbout: 'Privacy & about this app',
+    versionLabel: 'Version {version}',
     installTitle: 'Add to Home Screen',
     installIntro: 'Added to your Home Screen, it opens like an app and works without a signal.',
     installIosStep1: 'Tap “…” at the bottom of the screen.',
@@ -313,6 +317,9 @@ export const APP_MESSAGES = {
     soundHelpRetry: 'もう一度 ▶ を押してください。',
     updateReady: '新しい版があります。',
     settingsInstall: 'ホーム画面に追加する方法',
+    settingsHelpHeading: '困った時は',
+    settingsAbout: 'プライバシー・アプリについて',
+    versionLabel: '版 {version}',
     installTitle: 'ホーム画面に追加する',
     installIntro: 'ホーム画面に追加すると、アプリのように開けて、電波が無くても使えます。',
     installIosStep1: '画面の下の「…」を押します。',
