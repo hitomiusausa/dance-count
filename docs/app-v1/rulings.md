@@ -2530,6 +2530,7 @@ Simulator の後始末: **iPhone SE（`0E53FFB2…`）のホーム画面 2 ペ�
    - **段7で足す**: (a) S4 の最初の保存（`persist()` の `first` が真で `ok` の時）(b) S10「使う」で保存が全部通った後 (c) **起動時に `isStandalone()` の時だけ**（`App.tsx` のマウント後 1 回。F35: WebKit はホーム画面アプリなら許可する＝一番効く所。ブラウザのタブでは起動時に呼ばない＝Firefox の許可ダイアログ（F40・推測）を初回に出さないため）。
    - 結果は画面に出さない（Ruling 11）。
 2. **`platform/page.ts` に `onPageHidden(listener): () => void`**（`document.visibilitychange` で `hidden` と `pagehide` の両方。境界テストのとおり `platform/` だけ）。**S4 はマウント中これを購読し、hidden で「開いている行を閉じて保存」**（既存の `act(current => current.close())` と `pendingName` の確定と同じ経路。ハッシュは置き換えない＝`persist({ replace:false })`）。戻った時は行が閉じているが中身は残る（60〜70代の「書いたのに消えた」を防ぐ。段3計画の発見 #8）。S8 は語ごとに保存済み・S9 の名前は blur で保存＝同じ hook で `pendingName` 相当を確定してよい（任意）。
+   - **訂正（段7 最終レビュー I1・`f0fc733`）**: hidden は「離れる」ではない。**有効な行だけ確定して閉じ、無効・書きかけ（名前だけ等）の行は打ったまま開けておく**（`RoutineEditor.closeIfValid`。LINE へカウントを見に行って戻ると続きから打てる。上の「原則どおり確定」＝無効なら捨てる、は誤り）。
 3. 書き込みは `IDBTransaction` の完了で `true`（`storage.ts`）。hidden の後に OS が固めると完了しないことがある＝**それでも「戻る時だけ」より失う機会は減る**。保証はしない（Ruling 11 のバックアップの 1 行が最後の守り）。
 
 **理由**: F35 で「ホーム画面アプリ」が persist の許可条件そのものと分かったので、起動時の 1 回が最も確実。タブでは今までどおり「保存した直後」に寄せ、Firefox の初見ダイアログを避ける。
