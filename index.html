@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <title>Dance Count</title>
   <!-- 段8（Ruling 101）: 起動の殻。アプリが最初の画面を描くまでの白い時間に、アプリの名前だけを出す（言語が決まる前なので固有名詞だけ）。
-       Preact の render が #app の中身を置き換えるので消す処理は要らない。CSS は殻の 2 つだけ（600 バイト以下＝tools/pwa/check-pwa.js） -->
+       Preact の render は #app の中身を置き換えない（殻の横に画面を足す）ので、アプリが最初の画面を入れた後に removeBootShell()（App.tsx）で殻を外す。CSS は殻の 2 つだけ（600 バイト以下＝tools/pwa/check-pwa.js） -->
   <style>.dc-boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:20vh;background:#fff;color:#1B2A4A;font-family:-apple-system,system-ui,sans-serif}.dc-boot b{font-size:28px;font-weight:800}.dc-boot small{margin-top:4px;font-size:16px;color:#4A5670}</style>
 </head>
 <body>
