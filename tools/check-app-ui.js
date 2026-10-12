@@ -453,10 +453,14 @@ try {
       const tileContext = await browser.newContext({ viewport, locale });
       const tilePage = await tileContext.newPage();
       const tileProblems = [];
+      // 前回カード（最も長い名前のヴィエニーズワルツを前回にする）の種目名と「続きから」も同じ目で見る（修正便の追加裁定）
+      await tilePage.goto(BASE + '#/practice/vwaltz');
+      await tilePage.waitForSelector('[data-screen="S2"]:not([data-loading])');
       for (const hash of ['#/', '#/routines/new']) {
         await tilePage.goto(BASE + hash);
         await tilePage.waitForSelector('[data-screen]:not([data-loading]) .dc-tile b');
         await tilePage.evaluate(() => document.fonts.ready);
+        if (hash === '#/' && !(await tilePage.locator('[data-resume]').count())) tileProblems.push('I1 #/ the last-session card is not shown');
         tileProblems.push(...(await tilePage.evaluate(tileNameBreaks)).map(problem => `I1 ${hash} ${problem}`));
       }
       report(`種目名の折れ ${viewport.width}x${viewport.height} ${locale}`, tileProblems);
@@ -486,10 +490,21 @@ async function seedSettingsInPage(settings) {
 }
 
 // ---- ここから下はブラウザの中で動く（page.evaluate に関数ごと渡す。外の変数は使えない） ----
-// 段8 Task 12（final-review I1）: .dc-tile b の文字ごとの行を測り、行が変わる所の前が空白か、間に <wbr> がある時だけ許す
+// 段8 Task 12（final-review I1）: 種目タイルの名前・前回カードの名前と「続きから」の文字ごとの行を測り、
+// 行が変わる所の前が空白か、間に <wbr> がある時だけ許す
 function tileNameBreaks() {
   const issues = [];
-  for (const name of document.querySelectorAll('.dc-tile b')) {
+  // 前回カード: 「続きから」を 1 塊にしたぶん、ボタンがカードの内側に収まり、名前と重ならない
+  const card = document.querySelector('.dc-resume');
+  if (card) {
+    const box = card.getBoundingClientRect();
+    const padRight = parseFloat(getComputedStyle(card).paddingRight) || 0;
+    const go = card.querySelector('.dc-resume-go')?.getBoundingClientRect();
+    const text = card.querySelector('.dc-resume-text b')?.getBoundingClientRect();
+    if (go && go.right > box.right - padRight + 0.5) issues.push(`the last-session button sticks out of the card (${Math.round(go.right)} > ${Math.round(box.right - padRight)})`);
+    if (go && text && text.right > go.left + 0.5) issues.push(`the last-session name runs under the button (${Math.round(text.right)} > ${Math.round(go.left)})`);
+  }
+  for (const name of document.querySelectorAll('.dc-tile b, .dc-resume-text b, .dc-resume-go > span')) {
     if (name.scrollWidth > name.clientWidth + 1) issues.push(`"${name.textContent}" overflows its tile`);
     const chars = [];
     let wbrBefore = false;

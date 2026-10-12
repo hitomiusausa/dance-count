@@ -56,6 +56,8 @@ button { cursor: pointer; }
 .dc-resume-text { display: flex; flex-direction: column; line-height: 1.2; }
 .dc-resume-text small { font-size: 16px; }
 .dc-resume-text b { font-size: 24px; }
+/* 段8 Task 12（修正便の追加裁定）: 「続きから」／“Resume” は折らない 1 塊（360 で「続きか／ら」、320 で「続き／から」になっていた）。320 でも名前の列に「ヴィエニーズ」が入る（ui:check の種目名の折れ） */
+.dc-resume-go > span { white-space: nowrap; }
 .dc-resume-go { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; border-radius: var(--r-s);
   background: var(--on-primary); color: var(--primary); font-size: 18px; font-weight: 800; }
 .dc-teacher { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; margin-top: 8px; padding: 4px; text-decoration: none;
@@ -509,6 +511,9 @@ button { cursor: pointer; }
   .dc-settings-about > .dc-link-label { grid-column: 2; grid-row: 1; }
   .dc-settings-about > .dc-link-value { grid-column: 2; grid-row: 2; text-align: left; }
   .dc-settings-about > .dc-ic:last-child { grid-column: 3; grid-row: 1 / 3; }
+  /* 段8 Task 12: 前回カードの「続きから」を 1 塊にしても、名前の「ヴィエニーズ」とボタンがカードの内側に並ぶように左右の余白を詰める */
+  .dc-resume { padding-left: 12px; padding-right: 8px; }
+  .dc-resume-go { gap: 4px; padding: 0 8px; }
 }
 /* 段8 Task 12（final-review I1）: 種目名は語の境（<wbr>・空白）でだけ折る。1 語が入らない時も語の途中では折らない（overflow-wrap: normal） */
 .dc-dance-name { word-break: keep-all; overflow-wrap: normal; }
