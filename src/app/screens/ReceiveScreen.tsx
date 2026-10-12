@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { BackButton } from '../components/BackButton.tsx';
+import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -118,9 +118,8 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
     });
   };
 
-  const header = (
-    <header class="dc-focus-head"><BackButton screen="S10" /><span class="dc-focus-title">{translator.t('receiveTitle')}</span></header>
-  );
+  // 確認・受け取ったの画面は本文に見出しがあるので、上の行の名前は選ぶ画面でだけ h1（Ruling 102-3）
+  const header = <FocusHeader screen="S10" title={translator.t('receiveTitle')} heading={!plan || step === 'pick'} />;
 
   if (step === 'done' && plan) {
     const voice = plan.voice?.pack;

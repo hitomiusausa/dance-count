@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'preact/hooks';
 import { DANCE_PROFILES, getDanceProfile } from '../../engine/dance-profiles.js';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
-import { BackButton } from '../components/BackButton.tsx';
+import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -186,7 +186,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
   if (!current || choosingDance) {
     return (
       <main class="dc-screen dc-screen--focus" data-screen="S4">
-        <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t(current ? 'editRoutineTitle' : 'newRoutineTitle')}</span></header>
+        <FocusHeader screen="S4" title={translator.t(current ? 'editRoutineTitle' : 'newRoutineTitle')} heading={false} />
         <h1 class="dc-heading">{translator.t('chooseDance')}</h1>
         <div class="dc-tiles" role="group" aria-label={translator.t('danceGroup')} data-group="dance">
           {DANCE_IDS.map(danceId => (
@@ -251,7 +251,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
       data-keyboard={hidesDock(keyboardOpen, playing) ? 'true' : undefined}>
-      <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
+      <FocusHeader screen="S4" title={translator.t('editRoutineTitle')} heading />
       <NoticeBox notice={notice} onClose={() => {
         if (notice === 'backup-tip') setBackupTip(false);
         else if (notice === 'save-failed') { setSaveFailed(false); playback.dismissSaveFailed(); }

@@ -4,7 +4,10 @@
 // DC_ONLY=S5,S4 のように状態名の頭で絞れる（直しながらの確認用。完了の判定は絞らずに全部で）。
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
 import path from 'node:path';
+import { AxeBuilder } from '@axe-core/playwright';
 import { chromium } from 'playwright-core';
+import { ABOUT_TEXT } from '../src/app/i18n/about.ts';
+import { APP_MESSAGES } from '../src/app/i18n/messages.ts';
 import { UI_CHECK_ROUTINES as R, manyRoutines, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
@@ -15,6 +18,13 @@ const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPh
 // iOS Safari のツールバー表示時の iPhone SE の見える高さ（Task 9 の実測）。主要操作が初期表示に入る（Ruling 71）。
 // 全状態を reduced-motion 無しの 1 周だけ。期待値は opsSmall があればそれ（S5 の声チップはスクロールを許す。Ruling 71-6）、R47 は当てない
 const SE_SAFARI_VIEWPORT = { width: 375, height: 548 };
+// 段8（Ruling 102-1）: axe（@axe-core/playwright 4.13.0）で見る WCAG のタグ。375×667・no-preference・日本語の周だけ（ほかの周は同じ DOM の重複）。
+// best-practice は入れない（U1〜U16 と重なる）。誤検出で止める規則は理由を書いてここに足す（裁定が要る）。今は空
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+const AXE_DISABLED_RULES = [];
+// 段8（Ruling 102-5）: 英語の周（375×548 と 320×568）。期待値は日本語と同じ。日本語の文そのものを見る項目（texts・行の名前など）は飛ばし、
+// textKeys（鍵で書いた文）は表示言語の文で見る
+const ENGLISH = 'en-US';
 const LIMITS = Object.freeze({
   bodyFont: 18, minFont: 16, fineprintFont: 14, // U1
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
@@ -127,7 +137,7 @@ const STATES = [
   // 375×548 は「先生の方へ」も下で 3（opsSmall）。生徒が使う 言語・声・「困った時は」の 2 行は 548 でも初期表示に入る（firstView）
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', opsSmall: 3, total: 5,
     linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], teacher: ['自分の声を録音する', 'ルーティンを配る'] },
-    texts: ['困った時は', '先生の方へ', 'プライバシー・アプリについて', '版 '],
+    textKeys: ['settingsHelpHeading', 'forTeachers', 'settingsAbout'],
     firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // Fable 答え 2: 生徒が使う 3 つ（言語・声・「ホーム画面に追加する方法」）は帯があっても 375×548 の初期表示に入る
   // 段8: 帯があると 375×548 では「音が鳴らない時」の行も下（S11 は S2/S5 の枠からも行ける）。言語・声・「ホーム画面に追加する方法」は入ったまま（Ruling 98-1）
@@ -152,7 +162,7 @@ const STATES = [
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
   { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], failDeletes: true, alert: true,
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
-      { click: '[data-group="voice-actions"] button >> text=削除' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
+      { click: '[data-group="voice-actions"] button >> nth=-1' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
     absent: ['[data-alert="update"]'] },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
@@ -160,7 +170,7 @@ const STATES = [
     steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first'] },
   // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（16px・操作ではない）。375×548 でも言葉の 2 択と主ボタンは初期表示に入る
   { name: 'S8 iPhone Safari（未録音）', hash: '#/voices/record', screen: 'S8', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 2, total: 2, recordLanguage: 'en',
-    steps: [{ wait: '.dc-record-add-first' }], texts: ['ホーム画面に追加してから録音するのがおすすめです。'],
+    steps: [{ wait: '.dc-record-add-first' }], textKeys: ['recordAddFirst'],
     firstView: ['[data-group="record-language"]', '.dc-dock .dc-primary'] },
   // Ruling 72: 説明の 1 行は「すぐ「Slow」と言って」・説明と枠は同じ 60px の箱（枠が出ても丸が動かない）
   { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true, recordHintWord: 'Slow', recordSlot: 60,
@@ -241,10 +251,13 @@ const STATES = [
   { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', 'ホームで種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
-  { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' },
+  { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },
+  // 段8（Ruling 98-4・102-2）: S6「困った時は」から S11 へ。画面が替わると見出しにフォーカス（VoiceOver は画面の名前から読む）
+  { name: 'S11（設定から）', hash: '#/help/sound', via: { hash: '#/settings', screen: 'S6' }, screen: 'S11', kind: 'focus', focusHeading: true,
+    steps: [{ click: 'a[href="#/help/sound"]' }, { wait: '[data-screen="S11"]' }] },
   // 段8 S13（Ruling 99-3）: 主要操作は mailto と「データを全て消す」の 2（375 幅の初期表示は文が長いので固定しない）。確認ダイアログは見た目だけ（消さない）
   { name: 'S13', hash: '#/about', screen: 'S13', kind: 'list', total: 2,
-    texts: ['運営：くうが株式会社', 'info@kugainc.com', 'このアプリのカウントは、公式のもの・監修を受けたものではありません。', 'データを全て消す'],
+    textKeys: ['aboutOperator', 'aboutNotOfficial', 'deleteAllData'], texts: ['info@kugainc.com'],
     firstView: ['.dc-about-contact'] },
   { name: 'S13 全て消す確認', hash: '#/about?ui-state=confirm-delete-all', screen: 'S13', kind: 'list', confirm: true,
     texts: ['このアプリのデータを全て消しますか？', '録音した声・受け取った声・ルーティン・設定が消えます。'] },
@@ -255,7 +268,7 @@ const STATES = [
   // 段7 S12（Ruling 92・95-3）: 端末ごとに 1 通りだけ。iPhone の Safari は手順 4 行（iOS 26.3 の実物どおり）と「引き継がれません」の 1 行（D43）
   { name: 'S12 iPhone Safari', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, ops: 0, total: 0,
     texts: ['画面の下の「…」を押します。', '「共有」を押します。', '「もっと見る」を押し、「ホーム画面に追加」を押します。', '右上の「追加」を押します。',
-      '録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。'],
+      '録音した声・受け取った声・ルーティンは、追加したアプリには引き継がれません。'], textKeys: ['installNotCarried'],
     firstView: ['.dc-install-steps li:last-child', '.dc-install-note'] },
   { name: 'S12 iPhone 他ブラウザ', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_CHROME_UA, ops: 1, total: 1,
     texts: ['Safari で開くと、ホーム画面に追加できます。', 'アドレスをコピー'] },
@@ -271,6 +284,9 @@ const STATES = [
 
 // U9・320 の周で全画面を回る前に入れるルーティン（S4・S5 が開けるように）。199 本の状態（bulkSeed）は入れない（S4 新規が上限で S3 へ置き換わる）
 const sharedSeed = () => [...new Map(STATES.filter(state => !state.bulkSeed).flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()];
+// 英語の周で飛ばす、日本語の文そのものを比べる項目（構造・数・大きさ・axe 以外）
+const JAPANESE_ONLY_CHECKS = { voiceRows: undefined, actions: undefined, nameChoices: undefined, nameChosen: undefined, sameNameCopy: undefined,
+  doneName: undefined, linkGroups: undefined, barNote: undefined };
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
 const CHECKED = ONLY.length ? STATES.filter(state => ONLY.some(prefix => state.name.startsWith(prefix))) : STATES;
 
@@ -290,14 +306,18 @@ const report = (label, problems) => {
 
 try {
   // 2 画面幅 × reduced-motion 有無 ＋ 375×548（Safari SE・no-preference だけ。Ruling 71-9）
+  // 段8: ＋英語の 375×548・320×568（Ruling 102-5）。axe は 375×667・no-preference・日本語の周だけ（Ruling 102-1）
   const RUNS = [
-    ...VIEWPORTS.flatMap(viewport => ['no-preference', 'reduce'].map(reducedMotion => ({ viewport, reducedMotion, compact: false }))),
-    { viewport: SE_SAFARI_VIEWPORT, reducedMotion: 'no-preference', compact: true }
-  ];
+    ...VIEWPORTS.flatMap(viewport => ['no-preference', 'reduce'].map(reducedMotion => ({ viewport, reducedMotion, compact: false, locale: 'ja-JP' }))),
+    { viewport: SE_SAFARI_VIEWPORT, reducedMotion: 'no-preference', compact: true, locale: 'ja-JP' },
+    { viewport: SE_SAFARI_VIEWPORT, reducedMotion: 'no-preference', compact: true, locale: ENGLISH },
+    { viewport: NARROW_VIEWPORT, reducedMotion: 'no-preference', compact: true, locale: ENGLISH }
+  ].map(run => ({ ...run, axe: run.locale === 'ja-JP' && run.viewport === VIEWPORTS[0] && run.reducedMotion === 'no-preference' }));
   for (const state of CHECKED) {
-    for (const { viewport, reducedMotion, compact } of RUNS) {
-      const label = `${state.name} @ ${viewport.width}x${viewport.height}${compact ? ' (Safari SE)' : ''}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}`;
-      const context = await browser.newContext({ viewport, locale: 'ja-JP', reducedMotion, permissions: ['microphone'], ...(state.userAgent ? { userAgent: state.userAgent } : {}) });
+    for (const { viewport, reducedMotion, compact, locale, axe } of RUNS) {
+      const english = locale === ENGLISH;
+      const label = `${state.name} @ ${viewport.width}x${viewport.height}${compact ? ' (Safari SE)' : ''}${reducedMotion === 'reduce' ? ' reduced-motion' : ''}${english ? ' English' : ''}`;
+      const context = await browser.newContext({ viewport, locale, reducedMotion, permissions: ['microphone'], ...(state.userAgent ? { userAgent: state.userAgent } : {}) });
       // 共有シートの代わり（Ruling 87-2）: 共有できる端末として、すぐ「送った」で返す（headless の Chrome は共有シートを出せない）
       if (state.fakeShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.resolve(); });
       // 段8: 共有シートの無い端末（PC の Chrome。headless の Chrome は canShare が真を返すことがあるので偽にする＝smoke:share の先生と同じ）
@@ -353,7 +373,14 @@ try {
       await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => window.scrollTo(0, 0));
       // steps はブラウザに渡さない（S10 大きすぎの 20MB のファイルを audit の引数に載せない）
-      const problems = await page.evaluate(audit, { state: { ...state, steps: undefined, compact, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      const textKeys = (state.textKeys ?? []).map(key => (english ? APP_MESSAGES.en[key] ?? ABOUT_TEXT.en[key] : APP_MESSAGES['ja-JP'][key] ?? ABOUT_TEXT['ja-JP'][key]));
+      const shown = english ? { ...state, ...JAPANESE_ONLY_CHECKS, texts: undefined } : state;
+      const problems = await page.evaluate(audit, { state: { ...shown, textKeys, steps: undefined, compact, english, narrow: viewport === NARROW_VIEWPORT, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      // 段8（Ruling 102-1）: axe の違反（規則・重さ・最初の要素）
+      if (axe) {
+        const { violations: found } = await new AxeBuilder({ page }).withTags(AXE_TAGS).disableRules(AXE_DISABLED_RULES).analyze();
+        for (const item of found) problems.push(`AXE ${item.id} (${item.impact}) ${item.nodes.length} × ${item.nodes[0]?.target.join(' ')}`);
+      }
       const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
       report(label, [...openFail, ...problems, ...consoleErrors]);
       await context.close();
@@ -667,6 +694,30 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (JSON.stringify(rows) !== JSON.stringify(labels)) issues.push(`R98 group "${name}" rows ${JSON.stringify(rows)}, expected ${JSON.stringify(labels)}`);
   }
 
+  // U16（段8・Ruling 102-3）: ランドマークと名前。main はちょうど 1 つ・下タブの nav に名前・見出し h1 はちょうど 1 つ（見出しの無い画面を作らない）・
+  // 名前の無い操作（文字も aria-label も aria-labelledby も無い）は 0・svg は aria-hidden か名前つき
+  const mains = [...document.querySelectorAll('main')].filter(visible);
+  if (mains.length !== 1) issues.push(`U16 ${mains.length} main landmarks, expected 1`);
+  for (const navigation of document.querySelectorAll('nav[data-nav]')) if (!navigation.getAttribute('aria-label')?.trim()) issues.push('U16 the tab bar nav has no name');
+  const headings = [...document.querySelectorAll('h1')].filter(visible);
+  if (headings.length !== 1) issues.push(`U16 ${headings.length} h1 headings, expected 1`);
+  const accessibleName = element => {
+    const label = element.getAttribute('aria-label')?.trim();
+    if (label) return label;
+    const ids = element.getAttribute('aria-labelledby')?.split(/\s+/).filter(Boolean) ?? [];
+    const labelled = ids.map(id => document.getElementById(id)?.textContent?.trim() ?? '').join(' ').trim();
+    if (labelled) return labelled;
+    return (element.textContent ?? '').trim();
+  };
+  for (const element of document.querySelectorAll('button, a[href], [role=button], [role=radio], [role=switch], [role=checkbox]')) {
+    if (!visible(element)) continue;
+    if (!accessibleName(element)) issues.push(`U16 control without a name ${describe(element)}`);
+  }
+  for (const graphic of document.querySelectorAll('svg, img')) {
+    if (!visible(graphic) || graphic.closest('[aria-hidden="true"]')) continue;
+    if (!graphic.getAttribute('aria-label') && !graphic.getAttribute('alt')) issues.push(`U16 ${graphic.tagName.toLowerCase()} is neither hidden nor named ${describe(graphic.parentElement ?? graphic)}`);
+  }
+
   // U11 下タブと戻る（種別の表と照合）
   const nav = document.querySelector('[data-nav]');
   const back = document.querySelector('[data-back]');
@@ -875,7 +926,7 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (innerHeight >= 600 && !shown) issues.push('R71 the record hint is hidden for a recorded word at 600px or more');
   }
   // 段5（Ruling 82・83・87-2）: 要素が初期表示に入る・主ボタンが押せない／押せる・画面に出る文
-  for (const selector of state.firstView ?? []) {
+  for (const selector of state.narrow ? [] : state.firstView ?? []) {   // 320 幅は「横スクロール無し・崩れない」の幅（初期表示の約束は 375×548）
     const element = document.querySelector(selector);
     if (!element || !visible(element)) issues.push(`R87 ${selector} is not shown`);
     else if (!fullyInView(element)) issues.push(`R87 ${selector} is not fully in the first view`);
@@ -901,9 +952,12 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!banner) issues.push('R90 the update banner is not shown');
     else if (!banner.previousElementSibling?.matches(state.bannerAfter)) issues.push(`R90 the update banner is not right after ${state.bannerAfter}`);
   }
-  for (const text of state.texts ?? []) {
-    if (!document.body.innerText.replace(/\u00a0/g, ' ').includes(text)) issues.push(`R87 the screen does not say "${text}"`);
+  const said = document.body.innerText.replace(/\u00a0/g, ' ').replace(/\u2060/g, '');
+  for (const text of [...(state.texts ?? []), ...state.textKeys]) {
+    if (!said.includes(text.replace(/\u00a0/g, ' ').replace(/\u2060/g, ''))) issues.push(`R87 the screen does not say "${text}"`);
   }
+  // 段8（Ruling 102-2）: 画面が替わった後は、その画面の見出し（h1）にフォーカスがある
+  if (state.focusHeading && !document.activeElement?.matches('main h1')) issues.push(`R102 focus is on ${document.activeElement?.tagName ?? 'nothing'}, expected the screen heading (main h1)`);
   if (state.doneName) {
     const value = document.querySelector('#dc-s8-name')?.value;
     if (value !== state.doneName) issues.push(`R59 the name field reads "${value}", expected "${state.doneName}"`);

@@ -46,6 +46,7 @@
     "preact": "10.29.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@preact/preset-vite": "2.10.6",
     "@types/node": "24.19.2",
     "budoux": "0.9.3",

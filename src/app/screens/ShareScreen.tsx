@@ -2,6 +2,7 @@ import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { PUBLIC_APP_URL } from '../app-url.ts';
 import { BackButton } from '../components/BackButton.tsx';
+import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -202,7 +203,7 @@ export function ShareScreen() {
   );
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-share" data-screen="S9" data-result={result ? result.kind : undefined}>
-      <header class="dc-focus-head"><BackButton screen="S9" /><span class="dc-focus-title">{translator.t('shareTitle')}</span></header>
+      <FocusHeader screen="S9" title={translator.t('shareTitle')} heading />
       {result && (
         <div class="dc-share-done" ref={resultRef}>
           <div class="dc-result" role="status">

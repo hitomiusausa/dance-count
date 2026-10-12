@@ -1,5 +1,5 @@
 import type { ComponentType } from 'preact';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { IconSprite } from './components/Icon.tsx';
 import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
@@ -111,6 +111,20 @@ export function App() {
 
   // 見つからない・鳴らせないルーティンは S3 へ置き換え（Ruling 37・40）。ルーティンを読み終える前は判断しない。
   const resolved = resolveScreen(route, routines);
+  // 段8（Ruling 102-2）: 画面が替わったら、その画面の見出し h1（無ければ main）へフォーカスを移す（VoiceOver が新しい画面の名前から読む・
+  // キーボードの人は見出しから Tab を始める）。最初の表示では動かさない。スクロールさせない（preventScroll）。音には関係しない
+  const shell = useRef<HTMLDivElement>(null);
+  const shownScreen = useRef<ScreenId | null>(null);
+  useLayoutEffect(() => {   // 描いた直後・画面に出る前に（「画面は出たのにフォーカスがまだ前の所」の一瞬を作らない）
+    if (!settings) return;
+    const previous = shownScreen.current;
+    shownScreen.current = resolved.screen;
+    if (previous === null || previous === resolved.screen) return;
+    const target = shell.current?.querySelector<HTMLElement>('main h1') ?? shell.current?.querySelector<HTMLElement>('main');
+    if (!target) return;
+    target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  }, [settings !== null, resolved.screen]);
   const redirectHash = settings && resolved.redirect ? buildHash(resolved.redirect) : null;
   useEffect(() => { if (resolved.redirect && redirectHash) replaceRoute(resolved.redirect); }, [redirectHash]);
 
@@ -122,7 +136,7 @@ export function App() {
       <SettingsContext.Provider value={{ settings, update }}>
         <RoutinesContext.Provider value={routinesValue}>
           <StorageContext.Provider value={storage.current}>
-            <div class="dc-shell" lang={locale}>
+            <div class="dc-shell" lang={locale} ref={shell}>
               <IconSprite />
               {screen === 'S2' ? <PracticeScreen key={route.params.danceId} danceId={route.params.danceId!} uiState={route.query.uiState} />
                 : screen === 'S3' ? <RoutinesScreen uiState={route.query.uiState} />

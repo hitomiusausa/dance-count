@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { BackButton } from '../components/BackButton.tsx';
+import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
@@ -227,9 +227,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     replaceRoute({ screen: 'S9', params: {} });
   };
 
-  const header = (
-    <header class="dc-focus-head"><BackButton screen="S8" /><span class="dc-focus-title">{translator.t('recordTitle')}</span></header>
-  );
+  // 完成の画面だけは本文に見出し（「録音できました」）があるので、上の行の名前は h1 にしない（Ruling 102-3）
+  const header = <FocusHeader screen="S8" title={translator.t('recordTitle')} heading={step.kind !== 'done' || !pack} />;
 
   if (blocked === 'unsupported') {
     return (

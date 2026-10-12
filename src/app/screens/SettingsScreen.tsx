@@ -67,7 +67,7 @@ export function SettingsScreen() {
           ))}
         </div>
       ))}
-      <a class="dc-link-row dc-settings-section" href={buildHash({ screen: 'S13', params: {} })}>
+      <a class="dc-link-row dc-settings-section dc-settings-about" href={buildHash({ screen: 'S13', params: {} })}>
         <Icon name="info" />
         <span class="dc-link-label">{phrased(translator, 'settingsAbout')}</span>
         <small class="dc-link-value">{translator.t('versionLabel', { version: APP_VERSION })}</small>
