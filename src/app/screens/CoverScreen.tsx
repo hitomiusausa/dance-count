@@ -51,7 +51,7 @@ export function CoverScreen() {
       </a>
       <a class="dc-link-row dc-cover-settings" href={buildHash({ screen: 'S6', params: {} })}>
         <Icon name="gear" />
-        <span class="dc-link-label dc-link-stack"><span>{translator.t('settingsTitle')}</span><small>{translator.t('coverSettingsSub')}</small></span>
+        <span class="dc-link-label dc-link-stack"><span>{translator.t('settingsTitle')}</span><small>{phrased(translator, 'coverSettingsSub')}</small></span>
         <Icon name="chev-r" />
       </a>
       <UpdateBanner />

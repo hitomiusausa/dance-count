@@ -1,3 +1,4 @@
+import { Fragment } from 'preact';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
@@ -39,12 +40,22 @@ export function FigureListScreen({ danceId }: { danceId: string }) {
         {reviewedFigures(danceId).map(figure => (
           <div key={figure.slug} role="listitem" class="dc-row" data-row>
             <button type="button" class="dc-row-head dc-row--play" data-figure={figure.slug} onClick={() => play(figure.slug)}>
-              <span class="dc-row-text"><b>{figureDisplayName(danceId, figure.englishName, locale)}</b><small>{formatCounts(danceId, figure.counts)}</small></span>
+              <span class="dc-row-text"><b><FigureName name={figureDisplayName(danceId, figure.englishName, locale)} /></b><small>{formatCounts(danceId, figure.counts)}</small></span>
               {tag}
             </button>
           </div>
         ))}
       </div>
     </main>
+  );
+}
+
+// フィガー名は「・」「＆」・空白の後でだけ折る（.dc-figure-name＝keep-all）。iOS の WebKit は keep-all の下で「・」の後でも折らず、
+// 安全弁（overflow-wrap: anywhere）で「シャッセ・ト／ゥ」と切るので、折ってよい所に <wbr> を明示する（使いやすさの通し確認 Task 7）。textContent は同じ
+function FigureName({ name }: { name: string }) {
+  return (
+    <span class="dc-figure-name">
+      {name.split(/(?<=[・＆ ])/).map((part, index) => <Fragment key={index}>{index > 0 && <wbr />}{part}</Fragment>)}
+    </span>
   );
 }

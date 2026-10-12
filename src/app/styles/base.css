@@ -118,6 +118,9 @@ button { cursor: pointer; }
 .dc-basic-row .dc-play-tag { background: var(--on-primary); color: var(--primary); }
 .dc-figures-heading { margin-top: 20px; }
 .dc-figures .dc-list { margin-top: 4px; }
+/* 使いやすさの通し確認（Task 7）: フィガー名は「・」「＆」・空白の所で折る（.dc-figure-name）。札との間を 6px にして、320 幅で
+   「ヘジテーションチェンジ」（198px）・「クローズド・テレマーク」が 1 行に入る（10px だと字の欄が 196px で「チェン／ジ」） */
+[data-screen="F1"] .dc-row-head { gap: 6px; }
 .dc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
 .dc-tile { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 6px 2px; text-decoration: none;
   border-bottom: var(--bw) solid var(--line); }
