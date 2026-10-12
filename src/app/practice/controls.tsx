@@ -182,7 +182,7 @@ export function PlayDock({ playing, onToggle }: { playing: boolean; onToggle(): 
 
 // [data-alert] の枠は1つだけ（Ruling 30）。中の操作は [data-alert-action] の1つまで（U4 から除外。Ruling 23）。
 // 375 幅で高さ 120px 以下に収めるため、文は補助文（16px）の1段落・アイコン列なし（左の太線＋太字で示す）。
-export type AlertNotice = SessionNotice | 'save-failed';
+export type AlertNotice = SessionNotice | 'save-failed' | 'backup-tip';   // backup-tip は S4 の最初の保存の後に 1 回（Ruling 86-3）
 
 // ui-state は見た目だけを強制する（Ruling 33）。設定・hints・再生には書かない。S2・S5 で共通。
 export const FORCED_NOTICE: Partial<Record<UiState, SessionNotice>> = { 'no-sound': 'no-sound', 'wakelock-tip': 'wake-tip' };
@@ -203,6 +203,12 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
       {notice === 'stopped' && <div class="dc-alert-text"><b>{translator.t('playbackStopped')}</b></div>}
       {notice === 'voice-missing' && <div class="dc-alert-text"><b>{translator.t('voiceMissing')}</b></div>}
       {notice === 'save-failed' && <div class="dc-alert-text"><b>{translator.t('saveFailed')}</b></div>}
+      {notice === 'backup-tip' && (
+        <>
+          <div class="dc-alert-text">{translator.t('backupTipRoutine')}</div>
+          <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
+        </>
+      )}
       {notice === 'wake-tip' && (
         <>
           <div class="dc-alert-text">{translator.t('wakeLockTip')}</div>

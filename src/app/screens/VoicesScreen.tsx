@@ -8,6 +8,7 @@ import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import { buildHash, type UiState } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import { requestRecordLanguage } from '../state/record-language.ts';
+import { requestShareIntent } from '../state/share-intent.ts';
 import { navigate } from '../state/route.ts';
 import { useSettings } from '../state/settings.ts';
 import { useStorage } from '../state/storage.ts';
@@ -20,7 +21,8 @@ import { isCompletePack, listVoicePacks, packProgress, removeVoicePack, type Voi
 // 1 回目のタップで選ぶ（selectedVoiceId と voiceLocale を一緒に書く）。選んだ行には「▶ 試聴」（ワルツ 1 小節）。
 // 選んでいる自分の声・受け取った声をもう一度タップすると行が開き「削除」（同時に 1 つ）。途中の声は選べない行（role="button"）で、
 // タップすると開いて「続きを録音する」と「削除」（計画 Open question 1）。下に「自分の声を録音する」（→ S8）。
-// 「ファイルから受け取る」「配る」「ファイルに保存」は段5（Ruling 55-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
+// 段5（Ruling 86-1・D37）: 下に「ファイルから受け取る」（→ S10）。開いた録音の声に「配る」（→ S9 にこの声を選んだ状態で）。受け取った声は「削除」だけ。
+// 「ファイルに保存」は作らない（Ruling 82-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
 export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();
@@ -91,7 +93,10 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
             </button>
           )}
         </div>
-        {open && voice.kind === 'pack' && <VoiceActions onDelete={() => setDeleting(voice.pack)} />}
+        {open && voice.kind === 'pack' && (
+          <VoiceActions onDelete={() => setDeleting(voice.pack)}
+            onShare={voice.pack.origin === 'recorded' ? () => { session.stop(); requestShareIntent({ voiceId: voice.pack.id }); navigate({ screen: 'S9', params: {} }); } : undefined} />
+        )}
       </div>
     );
   };
@@ -123,6 +128,9 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
           );
         })}
       </div>
+      <a class="dc-button dc-button--secondary dc-wide dc-receive-link" href={buildHash({ screen: 'S10', params: {} })}>
+        <span>{translator.t('receiveFromFile')}</span>
+      </a>
       <a class="dc-button dc-primary dc-wide dc-record-link" href={buildHash({ screen: 'S8', params: {} })}>
         <Icon name="mic" /><span>{translator.t('recordVoice')}</span>
       </a>
@@ -134,14 +142,19 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   );
 }
 
-// 開いた行の操作（段4は削除と、途中の声の「続きを録音する」。段5で「配る」「ファイルに保存」を同じ群に足す）。
-function VoiceActions({ onDelete, onContinue }: { onDelete(): void; onContinue?(): void }) {
+// 開いた行の操作（途中の声の「続きを録音する」・録音の声の「配る」・削除。Ruling 86-1）。群は 1 つ（主要操作 1）。
+function VoiceActions({ onDelete, onContinue, onShare }: { onDelete(): void; onContinue?(): void; onShare?(): void }) {
   const { translator } = useI18n();
   return (
     <div class="dc-row-actions dc-voice-actions" data-group="voice-actions">
       {onContinue && (
         <button type="button" class="dc-button dc-button--secondary" onClick={onContinue}>
           <Icon name="mic" /><span>{translator.t('continueRecording')}</span>
+        </button>
+      )}
+      {onShare && (
+        <button type="button" class="dc-button dc-button--secondary" onClick={onShare}>
+          <Icon name="share" /><span>{translator.t('share')}</span>
         </button>
       )}
       <button type="button" class="dc-button dc-button--secondary" onClick={onDelete}>

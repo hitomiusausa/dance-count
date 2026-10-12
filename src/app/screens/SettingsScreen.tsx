@@ -11,7 +11,7 @@ const LANGUAGES: Array<{ locale: AppLocale; label: string; lang: string }> = [
 ];
 
 // S6 設定（仕様 §4 S6・Ruling 60-8）。言語（切替は即保存。Ruling 26）・声（→ S7。今の声の名前を右に）・
-// 見出し「先生の方へ」の下に「自分の声を録音する」（→ S8）。「ルーティンを配る」は段5、ほかの項目は段7・8で足す。
+// 見出し「先生の方へ」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9・印なし。Ruling 86-5）。ほかの項目は段7・8で足す。
 export function SettingsScreen() {
   const { translator, setLocale } = useI18n();
   const { voice } = usePlaybackVoice();
@@ -41,6 +41,11 @@ export function SettingsScreen() {
       <a class="dc-link-row" href={buildHash({ screen: 'S8', params: {} })}>
         <Icon name="mic" />
         <span class="dc-link-label">{translator.t('recordVoice')}</span>
+        <Icon name="chev-r" />
+      </a>
+      <a class="dc-link-row" href={buildHash({ screen: 'S9', params: {} })}>
+        <Icon name="share" />
+        <span class="dc-link-label">{translator.t('shareRoutines')}</span>
         <Icon name="chev-r" />
       </a>
     </main>

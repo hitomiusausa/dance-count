@@ -440,3 +440,10 @@ button { cursor: pointer; }
 .dc-receive-dock .dc-button { flex: 1; max-width: 300px; }
 /* S10 の枠は 3 行の文＋「Safari で開く」で 120px 以下（Ruling 83-1・Ruling 23 の高さ） */
 .dc-receive .dc-alert-text { line-height: 1.3; }
+/* S7 の下の 2 ボタン（Ruling 86-1）: 「ファイルから受け取る」（上・白）→「自分の声を録音する」（下・紺） */
+.dc-receive-link { margin-top: 24px; }
+.dc-receive-link + .dc-record-link { margin-top: 12px; }
+/* S8 完成のバックアップの 1 行（Ruling 86-2。操作ではない・16px） */
+.dc-backup-tip { margin-top: 12px; }
+/* S3 の開いた行（Ruling 86-4）: 「編集」「配る」「削除」の 3 つは語の途中で折らない（320 幅では 2 段に並ぶ） */
+.dc-row-actions .dc-button--secondary { flex: 1 0 auto; white-space: nowrap; }

@@ -46,7 +46,9 @@ const STATES = [
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
-  { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3 },
+  // 段5（Ruling 86-4）: 鳴らせる行には「配る」が編集と削除の間に（群は 1 つなので 3 のまま）
+  { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3,
+    actions: { group: 'routine-actions', labels: ['再生', '編集', '配る', '削除'] } },
   { name: 'S3 削除の確認', hash: '#/routines?ui-state=confirm-delete', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], confirm: true },
   { name: 'S4 新規・種目選択', hash: '#/routines/new', screen: 'S4', kind: 'focus', ops: 1, total: 1 },
   { name: 'S4 0件', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, ops: 3, total: 3 },
@@ -72,6 +74,10 @@ const STATES = [
   { name: 'S4 追加の行・名前を選んだ後', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, patterns: 8, pressed: 0,
     nameChosen: 'フォーラウェイリバース＆スリップピボット',
     steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
+  // 段5（Ruling 86-3）: 新しいルーティンの最初の保存の後に 1 回だけ「配る」で自分にも送れる、の枠（閉じる 1 つ・120px 以下）
+  { name: 'S4 最初の保存の案内', hash: '#/routines/new', screen: 'S4', kind: 'focus', alert: true, total: 3, texts: ['ルーティンは「配る」でファイルにして、自分にも送っておけます。'],
+    steps: [{ click: '.dc-tile >> nth=0' }, { fill: ['[aria-labelledby="dc-s4-name-label"]', '金曜のワルツ'] }, { press: ['[aria-labelledby="dc-s4-name-label"]', 'Enter'] },
+      { wait: '[data-alert="backup-tip"]' }] },
   { name: 'S4 小節の注意', hash: `#/routines/${R.waltzOffBar.id}/edit`, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzOffBar], total: 5, barNote: true },
   // ↑ ops は固定しない: 375×667 では注意の行のぶん「＋ フィガーを追加」が下の帯の下に隠れて初期表示 4、1280 幅では 5（「S4 13件・閉」と同じ扱い。U4 の上限 5 は当たる）
   // opsSmall: 375×548（Safari SE）では声チップが帯の下＝初期表示 4（Ruling 71-6）
@@ -80,13 +86,19 @@ const STATES = [
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 3, total: 3 },
-  // 段4（Ruling 60・63）: S7 は 一覧 1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
-  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 2, total: 2, voiceRows: ['標準の声（英語）'] },
-  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
+  // 段5（Ruling 86-5）: S6 に「ルーティンを配る」＝4
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 4, total: 4 },
+  // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
+  { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'] },
-  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
+  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+    actions: { group: 'voice-actions', labels: ['配る', '削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
+  // D37: 受け取った声は配れない（開いた行は「削除」だけ）
+  { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 4,
+    actions: { group: 'voice-actions', labels: ['削除'] },
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
@@ -98,7 +110,10 @@ const STATES = [
   { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, takeShown: true, takeShownCompact: true,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
       { click: '.dc-record-dock .dc-button--secondary' }, { wait: '.dc-take' }] },
-  { name: 'S8 完成', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 4, doneName: '自分の声（英語）',
+  // 段5（Ruling 86-2・D39）: 帯は「完了」「配る ›」＝5（上限）。初めての完成の画面にだけバックアップの 1 行。375×548 でも 5 つが入る
+  { name: 'S8 完成', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 5, doneName: '自分の声（英語）',
+    texts: ['「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。'],
+    firstView: ['#dc-s8-name', '[data-group="compare"]', '.dc-record-again', '.dc-record-dock .dc-button--secondary', '.dc-record-dock .dc-primary'],
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
   { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60 },
@@ -185,6 +200,7 @@ try {
         if (step.click) await page.locator(step.click).click();
         if (step.fill) await page.locator(step.fill[0]).fill(step.fill[1]);
         if (step.upload) await page.locator(step.upload[0]).setInputFiles(step.upload[1]);
+        if (step.press) await page.locator(step.press[0]).press(step.press[1]);
         if (step.wait) await page.waitForSelector(step.wait);
       }
       if (state.openMore) await page.locator('summary[data-more]').click();
@@ -662,6 +678,10 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.primaryDisabled !== undefined) {
     const primary = document.querySelector('.dc-dock .dc-primary');
     if (!primary || primary.disabled !== state.primaryDisabled) issues.push(`R82 the main button is ${primary?.disabled ? 'disabled' : 'pressable'}, expected ${state.primaryDisabled ? 'disabled' : 'pressable'}`);
+  }
+  if (state.actions) {
+    const labels = [...document.querySelectorAll(`[data-group="${state.actions.group}"] button`)].filter(visible).map(button => button.textContent.trim());
+    if (JSON.stringify(labels) !== JSON.stringify(state.actions.labels)) issues.push(`R86 ${state.actions.group} ${JSON.stringify(labels)}, expected ${JSON.stringify(state.actions.labels)}`);
   }
   for (const text of state.texts ?? []) {
     if (!document.body.innerText.replace(/\u00a0/g, ' ').includes(text)) issues.push(`R87 the screen does not say "${text}"`);

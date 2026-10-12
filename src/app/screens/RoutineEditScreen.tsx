@@ -40,6 +40,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const editor = useRef<RoutineEditor | null>(null);
   const saved = useRef(false);   // 端末に1回でも保存したか（新規は最初の確定まで false）
   const [saveFailed, setSaveFailed] = useState(false);
+  const [backupTip, setBackupTip] = useState(false);   // 最初の保存の後に 1 回だけの「配るで自分にも送れる」（Ruling 86-3）
   const [choosingDance, setChoosingDance] = useState(false);   // フィガー0件の時の「変える」
   // 画面のキーボードが開いている間は下の帯（「▶ 全体を試聴」）を出さない（D19・F6 round 4。iOS 26 は帯をキーボードの上へ
   // 持ち上げ、打っている欄のすぐ下を覆う）。フォーカスや指の動きでは決めず、見えている高さで決める（lib/keyboard.ts）。
@@ -92,7 +93,16 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     const current = editor.current;
     if (!current) return;
     const routine = { ...current.routine, updatedAt: new Date().toISOString() };
-    void save(routine).then(ok => setSaveFailed(!ok));
+    const first = !saved.current;
+    void save(routine).then(ok => {
+      setSaveFailed(!ok);
+      // 最初の保存が書けた時だけ（失敗の枠が出ている時は出さず、次の機会に回す。枠は 1 つ）。出したら hints に書く（閉じなくても次回は出さない）。
+      const hints = latestSettings.current.hints;
+      if (ok && first && mounted.current && !hints.backupTipShownForRoutine) {
+        setBackupTip(true);
+        update({ hints: { ...hints, backupTipShownForRoutine: true } });
+      }
+    });
     if (!saved.current) {
       saved.current = true;
       if (replace && mounted.current) replaceRoute({ screen: 'S4', params: { routineId: routine.id } });
@@ -177,7 +187,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
   const open = current.open;
   const count = routine.figures.length;
   const playing = view.playing || view.starting;
-  const notice: AlertNotice = saveFailed || playback.saveFailed ? 'save-failed' : view.notice;
+  const notice: AlertNotice = saveFailed || playback.saveFailed ? 'save-failed' : backupTip ? 'backup-tip' : view.notice;
   const sounding = (index: number) => view.playing && view.figureIndex === index;
   // 小節の注意（D16・Ruling 52）。閉じた行のうち上から最初の1件だけ全文（「必要なら編集してください。」つき）、残りは短い形。
   // 開いている行は見出しに出さない（入力欄の下に短い形。FigureForm）。「最初」は閉じた行の中で数えるので、全文は常に1つ。
@@ -224,7 +234,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     <main class="dc-screen dc-screen--focus dc-screen--dock" data-screen="S4" data-playing={playing ? 'true' : 'false'}
       data-keyboard={hidesDock(keyboardOpen, playing) ? 'true' : undefined}>
       <header class="dc-focus-head"><BackButton screen="S4" /><span class="dc-focus-title">{translator.t('editRoutineTitle')}</span></header>
-      <NoticeBox notice={notice} onClose={() => session.dismissNotice()} />
+      <NoticeBox notice={notice} onClose={() => (notice === 'backup-tip' ? setBackupTip(false) : session.dismissNotice())} />
       <RoutineNameField name={routine.name} onText={text => { pendingName.current = text; }}
         onCommit={name => { pendingName.current = null; act(editor => editor.rename(name)); }} />
       <div class="dc-dance-line">

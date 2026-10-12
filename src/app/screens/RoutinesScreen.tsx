@@ -8,13 +8,14 @@ import type { UiState } from '../router/routes.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { requestAutoplay } from '../state/autoplay.ts';
+import { requestShareIntent } from '../state/share-intent.ts';
 import { useI18n } from '../state/i18n.ts';
 import { navigate } from '../state/route.ts';
 import { useRoutines } from '../state/routines.ts';
 
 // S3 ルーティン一覧（仕様 §4・Ruling 35・40・41・44）。上から「＋ 新しいルーティン」→ 一覧（作った順）。
 // 行をタップで開く（同時に1つ）。開いた行: 鳴らせる時は ▶ 再生（S5 で即再生）・編集・削除。
-// 「配る」は段5で足す（Ruling 41）。ui-state=confirm-delete は最初の行の削除確認を見た目だけ出す（Ruling 43）。
+// 鳴らせる時は編集と削除の間に「配る」（→ S9 にこのルーティンを選んだ状態で。Ruling 86-4）。ui-state=confirm-delete は最初の行の削除確認を見た目だけ出す（Ruling 43）。
 export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { routines, remove } = useRoutines();
@@ -70,6 +71,12 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
                         <button type="button" class="dc-button dc-button--secondary" onClick={() => navigate({ screen: 'S4', params: { routineId: routine.id } })}>
                           <Icon name="edit" /><span>{translator.t('edit')}</span>
                         </button>
+                        {playability === 'ok' && (
+                          <button type="button" class="dc-button dc-button--secondary"
+                            onClick={() => { requestShareIntent({ routineId: routine.id }); navigate({ screen: 'S9', params: {} }); }}>
+                            <Icon name="share" /><span>{translator.t('share')}</span>
+                          </button>
+                        )}
                         <button type="button" class="dc-button dc-button--secondary" onClick={() => setDeleting(routine)}>
                           <Icon name="trash" /><span>{translator.t('delete')}</span>
                         </button>

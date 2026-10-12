@@ -172,7 +172,8 @@ try {
     await page.waitForFunction(element => element.getAttribute('aria-pressed') === 'false', await button.elementHandle(), { timeout: SOUND_TIMEOUT_MS })
       .catch(() => errors.push(`compare ${index}: did not end by itself`));
   }
-  await page.locator('.dc-dock .dc-primary').click();
+  // 段5（D39）: 完成の帯は「完了」（左）と「配る ›」（右・主ボタン）。ここは「完了」で S7 へ
+  await page.locator('.dc-record-dock button', { hasText: '完了' }).click();
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
   const chosen = (await page.locator('[data-group="voice"] [role="radio"][aria-checked="true"]').textContent())?.trim();
   if (chosen !== '自分の声（英語）') errors.push(`S7: chosen row is "${chosen}"`);

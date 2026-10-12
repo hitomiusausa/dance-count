@@ -8,6 +8,7 @@ import { usePracticeSession } from '../practice/use-session.ts';
 import type { UiState } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import { takeRecordLanguage } from '../state/record-language.ts';
+import { requestShareIntent } from '../state/share-intent.ts';
 import { replaceRoute } from '../state/route.ts';
 import { useSettings } from '../state/settings.ts';
 import { useStorage } from '../state/storage.ts';
@@ -38,7 +39,9 @@ function blockedBy(error: unknown): Blocked {
 
 export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
-  const { update } = useSettings();
+  const { settings, update } = useSettings();
+  // バックアップの 1 行（Ruling 86-2）は、この端末で完成の画面を初めて出した時だけ（出したら hints に書く。閉じるボタンは無い）
+  const [backupTip] = useState(() => !settings.hints.backupTipShownForRecording);
   const storage = useStorage();
   const [language, setLanguage] = useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en');
   const [saved, setSaved] = useState<Record<VoiceLocale, VoicePackRecord | null> | null>(null);
@@ -82,6 +85,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     return () => { alive = false; };
   }, [take]);
   useEffect(() => { if (!comparePlaying) setComparing(null); }, [comparePlaying]);
+  const doneShown = step.kind === 'done' && pack !== null;
+  useEffect(() => {
+    if (doneShown && backupTip && persists) update({ hints: { ...settings.hints, backupTipShownForRecording: true } });
+  }, [doneShown]);
 
   const leaveWord = () => {
     generation.current += 1;
@@ -206,6 +213,15 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     replaceRoute({ screen: 'S7', params: {} });
   };
 
+  // 「配る ›」（Ruling 86-2・D39）: この声を選んでから S9 へ置き換え（S9 の「戻る」は S7）。S9 にはこの声が選ばれた状態で開く。
+  const share = () => {
+    if (!pack) return;
+    session.stop();
+    if (persists) update(chooseVoice(packSelection(pack)));
+    requestShareIntent({ voiceId: pack.id });
+    replaceRoute({ screen: 'S9', params: {} });
+  };
+
   const header = (
     <header class="dc-focus-head"><BackButton screen="S8" /><span class="dc-focus-title">{translator.t('recordTitle')}</span></header>
   );
@@ -298,9 +314,13 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         <button type="button" class="dc-button dc-button--secondary dc-wide dc-record-again" onClick={() => goTo({ kind: 'word', index: 0 })}>
           <Icon name="mic" /><span>{translator.t('reviewFromFirst')}</span>
         </button>
-        <div class="dc-dock">
-          <button type="button" class="dc-button dc-primary dc-dock-button" onClick={finish}>
+        {backupTip && <div class="dc-hint dc-backup-tip">{translator.t('backupTipRecording')}</div>}
+        <div class="dc-dock dc-record-dock">
+          <button type="button" class="dc-button dc-button--secondary" onClick={finish}>
             <Icon name="check" /><span>{translator.t('finishDone')}</span>
+          </button>
+          <button type="button" class="dc-button dc-primary" onClick={share}>
+            <span>{translator.t('share')}</span><Icon name="chev-r" />
           </button>
         </div>
       </main>
