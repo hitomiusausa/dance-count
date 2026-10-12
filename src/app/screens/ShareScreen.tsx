@@ -1,7 +1,6 @@
 import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { PUBLIC_APP_URL } from '../app-url.ts';
-import { BackButton } from '../components/BackButton.tsx';
 import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
@@ -135,7 +134,8 @@ export function ShareScreen() {
     setChosen(current => (current.includes(routine.id) ? current.filter(id => id !== routine.id) : [...current, routine.id]));
   };
 
-  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><BackButton screen="S9" /></main>;
+  // 段8 Task 6 fix 1（レビュー I-1）: 読み込み中の形にも、読み終えた後と同じ上の行（名前の h1）を出す（フォーカスが h1 に残る）
+  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><FocusHeader screen="S9" title={translator.t('shareTitle')} heading /></main>;
 
   const atLimit = chosenRoutines.length >= BUNDLE_ROUTINES_MAX;
   const voiceSection = (

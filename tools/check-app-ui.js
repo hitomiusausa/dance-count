@@ -145,6 +145,11 @@ const STATES = [
     firstView: ['[data-group="language"]', 'a[href="#/voices"]', 'a[href="#/help/install"]'] },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
+  // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。S6「声」・S1「先生の声で練習」から入っても、フォーカスは見出し（main に落ちない）
+  { name: 'S7（設定から）', hash: '#/voices', via: { hash: '#/settings', screen: 'S6' }, screen: 'S7', kind: 'list', ops: 3, total: 3, focusHeading: true,
+    steps: [{ click: 'a[href="#/voices"]' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
+  { name: 'S7（ホームから）', hash: '#/voices', via: { hash: '#/', screen: 'S1' }, screen: 'S7', kind: 'list', ops: 3, total: 3, focusHeading: true,
+    steps: [{ click: 'a[data-teacher-card]' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下の 2 つのボタンはスクロールで届く（初期表示は固定しない）
   { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 3, rows: 23 },
@@ -203,8 +208,11 @@ const STATES = [
   { name: 'S9 声あり', hash: '#/share', via: { hash: '#/voices', screen: 'S7' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: true,
     firstView: ['[data-group="distributor"]', '[data-group="share-voice"]', '.dc-consent-row', '.dc-dock .dc-primary'],
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
-      { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }] },
+      { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
   { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'], firstView: ['[data-list]'] },
+  // 段8 Task 6 fix 1（レビュー I-1）: S6「ルーティンを配る」から（S9 も読み込み中の形を通る）。フォーカスは上の行の名前（h1）
+  { name: 'S9（設定から）', hash: '#/share', via: { hash: '#/settings', screen: 'S6' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true,
+    focusHeading: true, steps: [{ click: 'a[href="#/share"]' }, { wait: '[data-screen="S9"]:not([data-loading])' }] },
   { name: 'S9 作った後', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], fakeShare: true, total: 6,
     texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
     steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
@@ -279,7 +287,7 @@ const STATES = [
   { name: 'S12 PC', hash: '#/help/install', screen: 'S12', kind: 'list', ops: 1, total: 1, texts: ['iPhone や Android で開くと、ホーム画面に追加できます。'] },
   // ホーム画面のアプリでは S6 の行から入る（S12 のアドレスで起動すると練習へ置き換える。段7 fix 1・レビュー I2 ＝下の状態）
   { name: 'S12 追加済み', hash: '#/help/install', via: { hash: '#/settings', screen: 'S6' }, screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
-    steps: [{ click: 'a[href="#/help/install"]' }, { wait: '[data-screen="S12"]' }],
+    steps: [{ click: 'a[href="#/help/install"]' }, { wait: '[data-screen="S12"]' }], focusHeading: true,
     texts: ['このアプリはホーム画面から開いています。追加は済んでいます。'], absent: ['.dc-install-steps'] },
   { name: 'ホーム画面のアプリを S12 のアドレスで起動', hash: '#/help/install', screen: 'S1', kind: 'root', userAgent: IOS_SAFARI_UA, standalone: true, launchOnly: true, ops: 2, total: 2, teacherAndTiles: true }
 ];
@@ -376,8 +384,10 @@ try {
       await page.evaluate(() => window.scrollTo(0, 0));
       // steps はブラウザに渡さない（S10 大きすぎの 20MB のファイルを audit の引数に載せない）
       const textKeys = (state.textKeys ?? []).map(key => (english ? APP_MESSAGES.en[key] ?? ABOUT_TEXT.en[key] : APP_MESSAGES['ja-JP'][key] ?? ABOUT_TEXT['ja-JP'][key]));
+      // 開いたままの状態（OQ11 の番人）: 別の画面を経ていない・操作していない・確認ダイアログでない
+      const firstLoad = !(state.via || state.steps || state.openMore || state.confirm || state.prepare);
       const shown = english ? { ...state, ...JAPANESE_ONLY_CHECKS, texts: undefined } : state;
-      const problems = await page.evaluate(audit, { state: { ...shown, textKeys, steps: undefined, compact, english, narrow: viewport === NARROW_VIEWPORT, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
+      const problems = await page.evaluate(audit, { state: { ...shown, textKeys, firstLoad, steps: undefined, compact, english, narrow: viewport === NARROW_VIEWPORT, afterAction: Boolean(state.openMore || state.steps) }, LIMITS, reducedMotion: reducedMotion === 'reduce' });
       // 段8（Ruling 102-1）: axe の違反（規則・重さ・最初の要素）
       if (axe) {
         const { violations: found } = await new AxeBuilder({ page }).withTags(AXE_TAGS).disableRules(AXE_DISABLED_RULES).analyze();
@@ -968,6 +978,8 @@ function audit({ state, LIMITS, reducedMotion }) {
   }
   // 段8（Ruling 102-2）: 画面が替わった後は、その画面の見出し（h1）にフォーカスがある
   if (state.focusHeading && !document.activeElement?.matches('main h1')) issues.push(`R102 focus is on ${document.activeElement?.tagName ?? 'nothing'}, expected the screen heading (main h1)`);
+  // 段8 Task 6 fix 1（OQ11・レビュー M-1）: 開いたまま（画面を移っていない・操作していない）なら、フォーカスは動かさない（body のまま）
+  if (state.firstLoad && document.activeElement !== document.body) issues.push(`R102 focus moved to ${describe(document.activeElement)} on first load, expected body`);
   if (state.doneName) {
     const value = document.querySelector('#dc-s8-name')?.value;
     if (value !== state.doneName) issues.push(`R59 the name field reads "${value}", expected "${state.doneName}"`);

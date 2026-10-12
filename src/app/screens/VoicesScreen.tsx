@@ -50,7 +50,9 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   }, [storage]);
   useEffect(() => { if (uiState === 'confirm-delete' && packs?.[0]) setDeleting(packs[0]); }, [uiState, packs]);
 
-  if (packs === null) return <main class="dc-screen" data-screen="S7" data-loading><BackButton screen="S7" /></main>;
+  // 段8 Task 6 fix 1（レビュー I-1）: 読み込み中の形にも、読み終えた後と同じ位置に同じ見出しを出す。Preact が同じ h1 を使い回すので、
+  // 画面が替わった時に App が置いたフォーカスが h1 に残る（読み込み中に main へ落ちない）
+  if (packs === null) return <main class="dc-screen" data-screen="S7" data-loading><BackButton screen="S7" /><h1 class="dc-heading">{translator.t('voicesTitle')}</h1></main>;
 
   const notice = deleteFailed ? 'save-failed' : (uiState === 'voice-missing' && !forcedDismissed) || view.notice === 'voice-missing' ? 'voice-missing' : 'none';
   const complete = packs.filter(isCompletePack);
