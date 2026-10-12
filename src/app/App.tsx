@@ -8,6 +8,7 @@ import { deviceLanguages } from './platform/locale.ts';
 import { applyDocumentLanguage, removeBootShell } from './platform/page.ts';
 import { isStandalone } from './platform/pwa.ts';
 import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
+import { scrollPageToTop } from './platform/viewport.ts';
 import { resolveScreen } from './router/resolve.ts';
 import { buildHashWithQuery, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { AboutScreen } from './screens/AboutScreen.tsx';
@@ -33,7 +34,7 @@ import { DEFAULT_SETTINGS, forgetRoutineSettings, type AppSettings } from './set
 import { loadSettings, saveSettings } from './settings/store.ts';
 import { I18nContext } from './state/i18n.ts';
 import { RoutinesContext, type RoutinesValue } from './state/routines.ts';
-import { replaceRoute, useRoute } from './state/route.ts';
+import { lastNavigationWasBack, replaceRoute, useRoute } from './state/route.ts';
 import { SettingsContext } from './state/settings.ts';
 import { StorageContext } from './state/storage.ts';
 
@@ -131,6 +132,8 @@ export function App() {
     const previous = shownScreen.current;
     shownScreen.current = resolved.screen;
     if (previous === null || previous === resolved.screen) return;
+    // 進む時だけ上端。戻る時はブラウザの復元（F1 の同じ行に戻る）を残す。Fable 答え 2026-10-13 §2-1
+    if (!lastNavigationWasBack()) scrollPageToTop();
     const target = shell.current?.querySelector<HTMLElement>('main h1') ?? shell.current?.querySelector<HTMLElement>('main');
     if (!target) return;
     target.setAttribute('tabindex', '-1');

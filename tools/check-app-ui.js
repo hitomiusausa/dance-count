@@ -19,7 +19,11 @@ import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const VIEWPORTS = [{ width: 375, height: 667 }, { width: 1280, height: 900 }];
 const ZOOM_VIEWPORT = { width: 640, height: 450 }; // 1280×900 の 200% 拡大相当（U9）
-const NARROW_VIEWPORT = { width: 320, height: 568 }; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
+const NARROW_VIEWPORT = { width: 320, height: 568 };
+// Fable 答え 2026-10-13 §2-4: iPhone SE の Safari 150%（「ぁあ」の 3 段目）相当。300px 未満は「ページが横に動かない・文字が切れない・主要ボタンが押せる」の 3 つだけ
+const PHONE_ZOOM_VIEWPORT = { width: 250, height: 445 };
+// 250 で「文字が切れない」（U10 の clipped text）も見る状態（48px・2 行・初期表示の数は問わない）
+const ZOOM_TEXT_STATES = ['S0 初回', 'S0 前回あり', 'S1 前回あり', 'S1 前回あり・長いフィガー', 'S2 くわしく閉', 'S2 くわしく開']; // 最も狭い端末（iPhone SE 第1世代）。横スクロールが出ない（段4から全画面）
 // iOS Safari のツールバー表示時の iPhone SE の見える高さ（Task 9 の実測）。主要操作が初期表示に入る（Ruling 71）。
 // 全状態を reduced-motion 無しの 1 周だけ。期待値は opsSmall があればそれ（S5 の声チップはスクロールを許す。Ruling 71-6）、R47 は当てない
 const SE_SAFARI_VIEWPORT = { width: 375, height: 548 };
@@ -108,6 +112,9 @@ const STATES = [
   // U1 のタイルから（実経路）: 画面が替わると見出し h1 にフォーカス
   { name: 'F1（タイルから）', hash: '#/figures/waltz', via: { hash: '#/use', screen: 'S1' }, screen: 'F1', kind: 'focus', requires: 'reviewed', ops: 2, total: 2, focusHeading: true,
     steps: [{ click: '[data-group="dance"] a >> nth=0' }, { wait: '[data-screen="F1"]' }] },
+  // Fable 答え 2026-10-13 §2-1: F1 の一番下の行（Playwright の click が行まで F1 を送る）→ S2 は上端から（「‹ 戻る」と名前が見える）
+  { name: 'S2 F1 の下の行から', hash: REVIEWED ? `#/practice/waltz/${WALTZ_FIGURES.at(-1).slug}` : '#/practice/waltz', via: { hash: '#/figures/waltz', screen: 'F1' }, screen: 'S2', kind: 'focus',
+    requires: 'reviewed', steps: [{ click: '[data-list] [data-figure] >> nth=-1' }, { wait: '[data-screen="S2"]' }], atTop: true, speedAndPlay: true },
   // S2 のフィガーの形: 見出しの下に「名前 · 型」・帯はフィガーの語・くわしくの「カウントの型」は無い（開くと 8＝ワルツは 1 減る）
   { name: 'S2 フィガー', hash: REVIEWED ? `#/practice/waltz/${W1.slug}` : '#/practice/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', ops: 5, speedAndPlay: true,
     texts: REVIEWED ? [`${figureNameJa('waltz', W1.englishName)} · ${spaced(W1.counts)}`] : [], strip: REVIEWED ? { labels: spaced(W1.counts) } : undefined },
@@ -299,6 +306,9 @@ const STATES = [
       { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
   // 段8 Task 12（D51・final-review m2）: 録音もルーティンも無い時は帯に「先に…と配れます。」の 1 行（操作は増やさない＝名前と主ボタン（押せない）の 2）
   { name: 'S9 何も無い', hash: '#/share', screen: 'S9', kind: 'focus', ops: 2, total: 2, primaryDisabled: true, textKeys: ['shareNothingYet'], firstView: ['.dc-dock-note'] },
+  // Fable 答え 2026-10-13 §2-3: 途中の自分の声だけの時は「録音した声はまだありません。」ではなく進み具合と「そろうと配れる」（操作は増えない）
+  { name: 'S9 録音が途中', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.partialJa], ops: 3, total: 3, primaryDisabled: true,
+    texts: ['日本語の声は 7 / 12 語まで録音ずみです。12 語そろうと配れます。'], firstView: ['[data-list]'] },
   { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'], firstView: ['[data-list]'] },
   // 段8 Task 6 fix 1（レビュー I-1）・D56: M0「配る（ファイルを作る）」から（S9 も読み込み中の形を通る）。フォーカスは上の行の名前（h1）
   { name: 'S9（作るから）', hash: '#/share', via: { hash: '#/make', screen: 'M0' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true,
@@ -348,8 +358,14 @@ const STATES = [
   { name: 'S10 一部読めない', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2,
     texts: ['ルーティン「こわれたルーティン」は読めませんでした。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
-  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
+  // Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束はルーティンの在りかを 1 文で（出口は 1 つのまま・375×548 でも初期表示）
+  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1,
+    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'ルーティンは、下の「ルーティン」にあります。'], firstView: ['.dc-dock .dc-primary'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
+      { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
+  { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
+    absentTexts: ['ルーティンは、下の「ルーティン」にあります。'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-only.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },
   // 段8（Ruling 98-4・102-2）: S6「困った時は」から S11 へ。画面が替わると見出しにフォーカス（VoiceOver は画面の名前から読む）
@@ -473,13 +489,15 @@ try {
       if (state.openMore) await page.locator('summary[data-more]').click();
       if (state.confirm) await page.waitForSelector('dialog[open][data-confirm]');
       const opened = state.openMore ? await page.locator('details[open]').count() : 0;
+      // atTop（Fable 答え 2026-10-13 §2-1）: 進む画面替えの後は上端。下の scrollTo(0, 0) より前に読む（audit の中では 0 に戻した後になる）
+      const carried = state.atTop ? await page.evaluate(() => window.scrollY) : 0;
       await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => window.scrollTo(0, 0));
       // steps はブラウザに渡さない（S10 大きすぎの 20MB のファイルを audit の引数に載せない）
       const textKeys = (state.textKeys ?? []).map(key => (english ? APP_MESSAGES.en[key] ?? ABOUT_TEXT.en[key] : APP_MESSAGES['ja-JP'][key] ?? ABOUT_TEXT['ja-JP'][key]));
       // 開いたままの状態（OQ11 の番人）: 別の画面を経ていない・操作していない・確認ダイアログでない
       const firstLoad = !(state.via || state.steps || state.openMore || state.confirm || state.prepare);
-      const shown = english ? { ...state, ...JAPANESE_ONLY_CHECKS, texts: undefined } : state;
+      const shown = english ? { ...state, ...JAPANESE_ONLY_CHECKS, texts: undefined, absentTexts: undefined } : state;
       // D56（Ruling 116-3）: 下タブは「使う」の U1・U2 だけ・「戻る」は表紙 S0 以外の全画面（種別の表は routes.ts の SCREENS が正）
       const layout = { tabsExpected: showsTabs(state.screen), backExpected: SCREENS[state.screen].kind !== 'cover', kindExpected: SCREENS[state.screen].kind };
       const landed = state.landsOn && !(await landOn(page, state.landsOn)) ? [`R116 the hash is ${await page.evaluate(() => location.hash)}, expected ${state.landsOn}`] : [];
@@ -490,6 +508,7 @@ try {
         for (const item of found) problems.push(`AXE ${item.id} (${item.impact}) ${item.nodes.length} × ${item.nodes[0]?.target.join(' ')}`);
       }
       const openFail = state.openMore && opened === 0 ? ['U4 "more" did not open'] : [];
+      if (carried > 0) problems.push(`R102 scroll carried over: scrollY ${carried}`);
       report(label, [...openFail, ...landed, ...problems, ...consoleErrors]);
       await context.close();
     }
@@ -540,6 +559,47 @@ try {
   report(`横スクロール ${NARROW_VIEWPORT.width}x${NARROW_VIEWPORT.height}`, narrowProblems);
   await narrow.close();
 
+  // Fable 答え 2026-10-13 §2-4: 250×445（Safari 150% 相当）を日英 2 周。全状態で横スクロールが出ない。ZOOM_TEXT_STATES は seed して開き、文字が切れない（U10 clipped）も見る
+  for (const locale of ['ja-JP', ENGLISH]) {
+    const zoom = await browser.newContext({ viewport: PHONE_ZOOM_VIEWPORT, locale });
+    const zoomPage = await zoom.newPage();
+    const zoomProblems = [];
+    await zoomPage.goto(BASE);
+    await zoomPage.waitForSelector('[data-screen]');
+    await zoomPage.evaluate(seedRoutinesInPage, sharedSeed());
+    await zoomPage.reload();
+    await zoomPage.waitForSelector('[data-screen]');
+    for (const state of CHECKED.filter(item => !item.launchOnly)) {
+      await zoomPage.goto(BASE + state.hash);
+      await zoomPage.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
+      if (state.landsOn) await landOn(zoomPage, state.landsOn);
+      const { scrollWidth, clientWidth } = await zoomPage.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+      if (scrollWidth > clientWidth) zoomProblems.push(`250 ${state.name}: horizontal scroll ${scrollWidth} > ${clientWidth}`);
+    }
+    await zoom.close();
+    for (const state of CHECKED.filter(item => ZOOM_TEXT_STATES.includes(item.name))) {
+      const context = await browser.newContext({ viewport: PHONE_ZOOM_VIEWPORT, locale });
+      const page = await context.newPage();
+      if (state.prepare) {
+        await page.goto(BASE + state.prepare);
+        await page.waitForSelector('[data-screen]:not([data-loading])');
+        await page.goto(BASE + state.hash);
+      } else if (state.settingsSeed) {
+        await page.goto(BASE + '#/');
+        await page.waitForSelector('[data-screen]');
+        await page.evaluate(seedSettingsInPage, state.settingsSeed);
+        await openAfterSeed(page, BASE + state.hash);
+      } else await page.goto(BASE + state.hash);
+      await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
+      if (state.openMore) await page.locator('summary[data-more]').click();
+      await page.evaluate(() => document.fonts.ready);
+      const found = await page.evaluate(zoomTextAudit);
+      zoomProblems.push(...found.map(problem => `250 ${state.name}: ${problem}`));
+      await context.close();
+    }
+    report(`横スクロール・切れた字 ${PHONE_ZOOM_VIEWPORT.width}x${PHONE_ZOOM_VIEWPORT.height} ${locale}`, zoomProblems);
+  }
+
   // 段8 Task 12（final-review I1）: 種目タイルの名前（S1・S4 の種目選び）が語の途中で折れない（2 行になる時は空白か <wbr> の所だけ）・はみ出さない。
   // 360（Android の標準）と 320（iPhone の拡大表示）× 日英。1 画面に 1 回の読み込みだけ（数秒）
   for (const viewport of TILE_VIEWPORTS) {
@@ -573,6 +633,26 @@ async function landOn(page, hash) {
 }
 
 // 段7: 設定（settings ストアの 'app'）を書く。ブラウザの中で動く（page.evaluate に渡す）。アプリが版上げした DB に書く
+// 250 幅の「文字が切れない」（audit の U10 clipped text と同じ判定だけ。ブラウザの中で動く）
+function zoomTextAudit() {
+  const issues = [];
+  const de = document.documentElement;
+  if (de.scrollWidth > de.clientWidth) issues.push(`horizontal scroll ${de.scrollWidth} > ${de.clientWidth}`);
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const elements = new Set();
+  while (walker.nextNode()) {
+    const parent = walker.currentNode.parentElement;
+    if (parent && walker.currentNode.textContent.trim() && parent.checkVisibility()) elements.add(parent);
+  }
+  for (const element of elements) {
+    if (element.closest('[data-ellipsis]')) continue;
+    if (element.scrollWidth > element.clientWidth + 1 && getComputedStyle(element).overflowX !== 'visible') {
+      issues.push(`U10 clipped text ${element.scrollWidth} > ${element.clientWidth} ${element.tagName.toLowerCase()}.${element.className} "${element.textContent.trim().slice(0, 30)}"`);
+    }
+  }
+  return issues;
+}
+
 async function seedSettingsInPage(settings) {
   const db = await new Promise((resolve, reject) => {
     const request = indexedDB.open('dance-count-v2', 2);
@@ -1213,6 +1293,8 @@ function audit({ state, LIMITS, reducedMotion }) {
   for (const text of [...(state.texts ?? []), ...state.textKeys]) {
     if (!said.includes(text.replace(/\u00a0/g, ' ').replace(/\u2060/g, ''))) issues.push(`R87 the screen does not say "${text}"`);
   }
+  // 出てはいけない文（Fable 答え 2026-10-13 §2-2: 声だけの束にルーティンの 1 文は出ない）
+  for (const text of state.absentTexts ?? []) if (said.includes(text)) issues.push(`R87 the screen must not say "${text}"`);
   // 段8（Ruling 102-2）: 画面が替わった後は、その画面の見出し（h1）にフォーカスがある
   if (state.focusHeading && !document.activeElement?.matches('main h1')) issues.push(`R102 focus is on ${document.activeElement?.tagName ?? 'nothing'}, expected the screen heading (main h1)`);
   // 段8 Task 6 fix 1（OQ11・レビュー M-1）: 開いたまま（画面を移っていない・操作していない）なら、フォーカスは動かさない（body のまま）

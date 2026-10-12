@@ -151,7 +151,7 @@ button { cursor: pointer; }
 @media (max-width: 359px) { .dc-beats { gap: 4px; } }
 .dc-beats li[aria-current="true"] { color: var(--beat-on); border-bottom: 6px solid var(--beat-on); font-weight: 800; }
 .dc-field-label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
-.dc-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dc-seg { display: grid; grid-template-columns: repeat(var(--seg-cols, 3), 1fr); gap: 8px; }   /* 列数は controls.tsx の --seg-cols（出ている速さの数） */
 .dc-opt { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; padding: 4px;
   border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); line-height: 1.2; }
 .dc-opt b { font-size: 18px; }
@@ -573,6 +573,33 @@ button { cursor: pointer; }
   .dc-resume { padding-left: 12px; padding-right: 8px; }
   .dc-resume-go { gap: 4px; padding: 0 8px; }
 }
+/* Fable 答え 2026-10-13 §2-4: 300px 未満（iPhone SE の Safari 150%＝250px 相当）。守るのは「ページが横に動かない・文字が切れない・主要ボタンが押せる」の 3 つだけ
+   （48px・2 行・初期表示の数は 320 以上の約束）。前回の行は 2 段（名前の下・右寄せに「▶ 続きから」）・言語ボタンは自分の幅を保つ・速さは詰める */
+@media (max-width: 299px) {
+  .dc-door-resume, .dc-resume { flex-wrap: wrap; }
+  .dc-door-resume .dc-resume-text, .dc-resume .dc-resume-text { flex: 1 1 100%; }
+  .dc-door-resume .dc-resume-go, .dc-resume .dc-resume-go { margin-left: auto; }
+  .dc-appbar { flex-wrap: wrap; }
+  .dc-brand { min-width: 0; }
+  .dc-utility { flex: 0 0 auto; padding: 0 10px; }
+  .dc-seg { gap: 4px; grid-template-columns: repeat(var(--seg-cols, 3), minmax(max-content, 1fr)); }   /* 列は字の幅から（「ゆっく／り」にしない） */
+  .dc-opt { padding-left: 2px; padding-right: 2px; }
+  .dc-opt-label { font-size: 16px; }
+  .dc-opt small { font-size: 14px; }
+  /* 英語は詰めても「Slower／Standard ♩=84／Faster」が 250px に入らない（280px）ので縦 1 列（日本語は詰めるだけで入る） */
+  .dc-shell:lang(en) .dc-seg { grid-template-columns: 1fr; }
+  /* くわしくの「競技の速さ（♩=84〜90）」などのチップは 1 行に入らないので折る（ページを横に動かさない） */
+  .dc-chip { max-width: 100%; padding-top: 6px; padding-bottom: 6px; line-height: 1.3; white-space: normal; }
+  /* S5 の一覧の 15 語のカウント（216px）・S8 の「（いち、に、スロー…）」（198px）は 1 行に入らないので、折ってよいことにする */
+  .dc-play-row { flex-wrap: wrap; }
+  .dc-play-row small { flex: 1 1 100%; white-space: normal; text-align: right; }
+  .dc-radio-text .dc-nowrap { white-space: normal; }
+  /* 12 語の帯（data-dense）は 20px の丸 12 個が 218px に入らず、端の丸が隠れる。300px 未満だけ丸を 16px・間を 2px に */
+  .dc-beats[data-dense] { gap: 2px; }
+  .dc-beats[data-dense] li { min-width: 16px; }
+}
+/* 「前回の練習」「前回」は 2 語以内なので折らない（250px 相当で「前回の練／習」になった。Fable 答え 2026-10-13 §2-4） */
+.dc-resume-text small { white-space: nowrap; }
 /* 段8 Task 12（final-review I1）: 種目名は語の境（<wbr>・空白）でだけ折る。1 語が入らない時も語の途中では折らない（overflow-wrap: normal） */
 .dc-dance-name { word-break: keep-all; overflow-wrap: normal; }
 /* D57: 前回の「ワルツ · ウィスク」のフィガー名も語の途中で折らない（375×548 で「ウィス／ク」になった）。1 行に入らない長い名前だけ最後に折る */

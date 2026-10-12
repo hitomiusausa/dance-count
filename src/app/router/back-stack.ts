@@ -15,6 +15,12 @@ export function replaceTop(stack: readonly string[], hash: string): string[] {
   return [...stack.slice(0, -1), hashPath(hash)];
 }
 
+// 画面替えの向き（Fable 答え 2026-10-13 §2-1）: 列が縮んだ＝戻った。置き換え（replaceTop）・同じ長さ＝進む扱い。
+// 進む時だけ新しい画面を上端にし、戻る時はブラウザのスクロールの復元を残す（App.tsx）。
+export function wentBack(before: readonly string[], after: readonly string[]): boolean {
+  return after.length < before.length;
+}
+
 export function canGoBackInHistory(stack: readonly string[]): boolean {
   return stack.length > 1;
 }

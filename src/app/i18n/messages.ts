@@ -232,6 +232,7 @@ export const APP_MESSAGES = {
     shareVoiceHeading: 'Voice',
     shareVoiceNone: 'None',
     shareNoRecordedVoice: "You haven't recorded a voice yet.",
+    shareVoiceInProgress: 'Your {language} voice has {count} / {total} words. It can be shared once all {total} are recorded.',
     shareVoicePrepFailed: "This voice couldn't be put in a file.",
     shareConsent: 'I agree to put my voice in this file and share it. I will manage who receives it.',
     shareConsentNeeded: 'Tick the box to create the file.',
@@ -290,6 +291,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: "Choose a dance in “Use” and press ▶ to hear {name}'s voice.",
     receivedVoiceNamed: 'Choose a dance in “Use” and press ▶ to hear “{name}”.',
     receivedRoutines: 'They are in “Routines”.',
+    receivedRoutinesToo: 'The routines are under “Routines” at the bottom.',
     goHome: 'Choose a dance',
     seeRoutines: 'See routines'
   },
@@ -519,6 +521,7 @@ export const APP_MESSAGES = {
     shareVoiceHeading: '声',
     shareVoiceNone: '入れない',
     shareNoRecordedVoice: '録音した声はまだありません。',
+    shareVoiceInProgress: '{language}の声は {count} / {total} 語まで録音ずみです。{total} 語そろうと配れます。',
     shareVoicePrepFailed: 'この声はファイルにできませんでした。',
     shareConsent: '自分の声をこのファイルに入れて配ることに同意します。配り先は自分で管理します。',
     shareConsentNeeded: '同意すると、ファイルを作れます。',
@@ -577,6 +580,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: '「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。',
     receivedVoiceNamed: '「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。',
     receivedRoutines: '「ルーティン」に入っています。',
+    receivedRoutinesToo: 'ルーティンは、下の「ルーティン」にあります。',
     goHome: '種目を選ぶ',
     seeRoutines: 'ルーティンを見る'
   }

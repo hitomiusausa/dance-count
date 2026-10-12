@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'preact/hooks';
 import { historyBack, historyGo, onHashChange, readHash, setHash } from '../platform/hash.ts';
-import { canGoBackInHistory, dropLast, exitByBack, recordVisit, replaceTop, stepsBackTo } from '../router/back-stack.ts';
+import { canGoBackInHistory, dropLast, wentBack, exitByBack, recordVisit, replaceTop, stepsBackTo } from '../router/back-stack.ts';
 import { buildHash, buildHashWithQuery, parentScreen, parseHash, type RedirectTarget, type Route, type RouteTarget, type ScreenId } from '../router/routes.ts';
 
 // このタブで見てきた画面の列（「戻る」の判断用。仕様 §3・Ruling 17）。起動時の画面から始まる。
 let visited: string[] = recordVisit([], readHash());
+// 最後の画面替えが「戻る」だったか（Fable 答え 2026-10-13 §2-1。App.tsx が進む時だけ上端にする）
+let lastMoveWasBack = false;
+
+export function lastNavigationWasBack(): boolean {
+  return lastMoveWasBack;
+}
 
 export function useRoute(): Route {
   const [route, setRoute] = useState<Route>(() => parseHash(readHash()));
   useEffect(() => onHashChange(hash => {
-    visited = recordVisit(visited, hash);
+    const next = recordVisit(visited, hash);
+    lastMoveWasBack = wentBack(visited, next);
+    visited = next;
     setRoute(parseHash(hash));
   }), []);
   return route;
@@ -25,6 +33,7 @@ export function navigate(target: RouteTarget): void {
 export function replaceRoute(target: RedirectTarget): void {
   const hash = buildHashWithQuery(target);
   visited = replaceTop(visited, hash);
+  lastMoveWasBack = false;
   setHash(hash, { replace: true });
 }
 

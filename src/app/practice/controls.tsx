@@ -44,7 +44,7 @@ export function SpeedChoices({ presets, selected, onChoose }: {
   return (
     <>
       <div class="dc-field-label"><Icon name="gauge" /><span>{translator.t('speed')}</span></div>
-      <div class="dc-seg" role="radiogroup" aria-label={translator.t('speed')} data-group="speed" style={{ gridTemplateColumns: `repeat(${shown.length}, 1fr)` }}>
+      <div class="dc-seg" role="radiogroup" aria-label={translator.t('speed')} data-group="speed" style={{ '--seg-cols': shown.length }}>
         {shown.map(preset => {
           const checked = selected === preset;
           return (

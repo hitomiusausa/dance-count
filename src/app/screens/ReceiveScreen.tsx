@@ -131,6 +131,8 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
         <p class="dc-body">
           {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
+        {/* Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束は、出口（種目を選ぶ）は 1 つのまま、ルーティンの在りかを 1 文で */}
+        {voice && plan.routines.length > 0 && <p class="dc-body">{phrased(translator, 'receivedRoutinesToo')}</p>}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
             onClick={() => exitTo({ screen: voice ? 'S1' : 'U2', params: {} })}>

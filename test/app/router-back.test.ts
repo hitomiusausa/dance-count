@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canGoBackInHistory, dropLast, exitByBack, recordVisit, replaceTop, stepsBackTo } from '../../src/app/router/back-stack.ts';
+import { canGoBackInHistory, dropLast, exitByBack, recordVisit, replaceTop, stepsBackTo, wentBack } from '../../src/app/router/back-stack.ts';
 
 const walk = (hashes: string[]) => hashes.reduce<string[]>((stack, hash) => recordVisit(stack, hash), []);
 
@@ -78,4 +78,20 @@ test('an exit whose target is the previous screen goes back instead of stacking 
   assert.equal(exitByBack(onReceive, '#/use'), false);
   // 直接開いた S10（Android の共有）→ 置き換え
   assert.equal(exitByBack(['#/receive'], '#/use/routines'), false);
+});
+
+// Fable 答え 2026-10-13 §2-1: 進む時だけ新しい画面を上端に（戻る時はブラウザの復元を残す）
+test('wentBack: a forward visit is not a back move', () => {
+  const before = walk(['#/', '#/use', '#/figures/waltz']);
+  assert.equal(wentBack(before, recordVisit(before, '#/practice/waltz/whisk')), false);
+});
+
+test('wentBack: returning to the previous screen (history back) is a back move', () => {
+  const before = walk(['#/', '#/use', '#/figures/waltz', '#/practice/waltz/whisk']);
+  assert.equal(wentBack(before, recordVisit(before, '#/figures/waltz')), true);
+});
+
+test('wentBack: a replacement (same length) counts as forward', () => {
+  const before = walk(['#/', '#/use']);
+  assert.equal(wentBack(before, replaceTop(before, '#/use/routines')), false);
 });
