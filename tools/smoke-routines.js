@@ -9,6 +9,7 @@
 // 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）→
 // 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）→
 // 英語表示で一覧の "Whisk" は日本語の「ウィスク」の行と同じフィガー＝複製の形（D22）→
+// 前に使ったカウントが名前のタップで入る・打ち替えたら印が消える（D52）→
 // キーボードを開いたままのドラッグで画面が流れない・鳴らしている間は帯が残る（最終レビュー2 I1・M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
@@ -336,6 +337,38 @@ try {
   if ((await kanaForm.locator('.dc-primary').textContent())?.trim() !== COPY) errors.push(`the katakana name should switch to "${COPY}" ("${await kanaForm.locator('.dc-primary').textContent()}")`);
   await context.close();
 
+  // フィガーを選んだらカウントを自動で入れる（D52・Ruling 106〜108・112-3）: ウィスク（12&3）を持つ waltz13 が端末にある所で、
+  // 2 本目のワルツ（waltzAuto）の追加の行 → 一覧の「ウィスク」をタップ → 欄に 12&3・下に「前に使ったカウントです」→「追加する」の 2 タップで行が増える。
+  // 次の追加の行で「ナチュラルターン」→ 自動で入った欄を打ち替えると印の行が消え、名前を変えても打った値は置き換わらない
+  const autoContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
+  const autoPage = await autoContext.newPage();
+  autoPage.on('pageerror', error => errors.push(`pageerror (auto counts): ${error.message}`));
+  await autoPage.goto(`${BASE}#/`);
+  await autoPage.waitForSelector('[data-screen]');
+  await autoPage.evaluate(seedRoutinesInPage, [R.waltz13, R.waltzAuto]);
+  await openAfterSeed(autoPage, `${BASE}#/routines/${R.waltzAuto.id}/edit`);
+  await autoPage.waitForSelector('[data-screen="S4"]');
+  const usedWhisk = R.waltz13.figures.find(figure => figure.name === 'ウィスク');
+  await autoPage.locator('.dc-add-tail').click();
+  const autoForm = autoPage.locator('.dc-figure-form').last();
+  await autoForm.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ウィスク$/ }).click();
+  if ((await autoForm.locator('.dc-input--counts').inputValue()) !== usedWhisk?.counts) errors.push(`auto counts: tapping ウィスク should fill ${usedWhisk?.counts} ("${await autoForm.locator('.dc-input--counts').inputValue()}")`);
+  const autoNote = (await autoForm.locator('[data-auto-counts="history"]').textContent().catch(() => null))?.trim();
+  if (autoNote !== '前に使ったカウントです') errors.push(`auto counts: the note under the counts should read 前に使ったカウントです ("${autoNote}")`);
+  await autoForm.locator('.dc-primary').click();   // 2 タップ目
+  const autoRows = await autoPage.locator('.dc-figure-head').allTextContents();
+  if (autoRows.length !== 2 || !autoRows[1].includes('ウィスク') || !autoRows[1].includes([...usedWhisk.counts].join(' '))) errors.push(`auto counts: "Add" should add ウィスク ${usedWhisk?.counts} as the 2nd row (${JSON.stringify(autoRows)})`);
+  await autoPage.locator('.dc-add-tail').click();
+  const autoForm2 = autoPage.locator('.dc-figure-form').last();
+  await autoForm2.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ナチュラルターン$/ }).click();
+  if (await autoForm2.locator('[data-auto-counts]').count() !== 1) errors.push('auto counts: tapping ナチュラルターン should fill the counts with the note');
+  await autoForm2.locator('.dc-input--counts').fill('123123');
+  if (await autoForm2.locator('[data-auto-counts]').count()) errors.push('auto counts: typing over the filled counts should remove the note');
+  await autoForm2.locator('input').nth(0).fill('ウィスク');   // 同じルーティンにあるので複製の形（D19）。打った値は残る
+  await autoForm2.locator('input').nth(0).fill('リバースターン');
+  if ((await autoForm2.locator('.dc-input--counts').inputValue()) !== '123123') errors.push(`auto counts: typed counts must not be replaced by a name change ("${await autoForm2.locator('.dc-input--counts').inputValue()}")`);
+  await autoContext.close();
+
   // 同じフィガーなら同じ名前（D22）: 英語表示で、日本語の「ウィスク」が入っているルーティン（waltz13 の 4 行目）の追加の行 →
   // 一覧の "Whisk" をタップ → 複製の形（注意は保存した名前を英語の表示で "Whisk"・カウントの欄なし・"Add a copy (…)"）→ 押すと 14 行目が足される
   const enContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'en-US' });
@@ -529,4 +562,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);

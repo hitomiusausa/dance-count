@@ -111,8 +111,14 @@ const STATES = [
   { name: 'S4 0件・追加の行', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-dock-button' }], total: 5,
     nameChoices: { count: 19, heading: 'タンゴのフィガー（19）', first: 'プログレッシブリンク' } },
   // 一覧の 17 番目（waltz13 は定義順の 0〜12 番を使うので未使用＝複製の形にならない。最長のワルツ名で 2 行の U10 も通す）
+  // D52: 端末のほかのワルツにこの名前が無く、監修済みの表も空なので、欄は空のまま・自動入力の行なし
   { name: 'S4 追加の行・名前を選んだ後', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 6, patterns: 8, pressed: 0,
-    nameChosen: 'フォーラウェイリバース＆スリップピボット',
+    nameChosen: 'フォーラウェイリバース＆スリップピボット', absent: ['[data-auto-counts]'],
+    steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
+  // D52・Ruling 107・108: 2 本目のワルツ（waltzAuto）がこの名前を 12&3 で持つ → タップで欄に 12&3・形が 1 つ押され・「前に使ったカウントです」・
+  // 「追加する」が押せる（名前をタップ → 追加するの 2 タップ）。操作の数は不変（6）。印の行は欄の aria-describedby に入る
+  { name: 'S4 追加の行・前に使ったカウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: [...SEEDED, R.waltzAuto], total: 6, patterns: 8, pressed: 1,
+    autoFilled: { from: 'history', counts: R.waltzAuto.figures[0].counts, name: R.waltzAuto.figures[0].name }, textKeys: ['countsFromHistory'],
     steps: [{ click: '.dc-add-tail' }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
   // 段5（Ruling 86-3）: 新しいルーティンの最初の保存の後に 1 回だけ「配る」で自分にも送れる、の枠（閉じる 1 つ・120px 以下）
   { name: 'S4 最初の保存の案内', hash: '#/routines/new', screen: 'S4', kind: 'focus', alert: true, total: 3, texts: ['ルーティンは「配る」でファイルにして、自分にも送っておけます。'],
@@ -204,6 +210,9 @@ const STATES = [
   { name: 'S8 保存できなかった', hash: '#/voices/record?ui-state=save-failed', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60,
     texts: ['保存できませんでした。'] },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
+  // D53: http（LAN の IP など）で開くと iOS は録音の口ごと隠す。枠の文は「https で開くと録音できます」（ブラウザを替えても録れないため）
+  { name: 'S8 http で開いた', hash: '#/voices/record?ui-state=no-https', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0,
+    textKeys: ['recordNeedsHttps'], absent: ['[data-alert="no-recorder"]'] },
   // 段5（Ruling 82・87-2）: S9 は 名前・声・同意・ルーティン・「ファイルを作る」＝5（上限）。作った後は「案内文をコピー」が足されて 6。
   // firstView: 375×548 でも名前・声・同意・主ボタンが初期表示に入る（声を選んだ後＝人の操作の後なので ops ではなく要素で見る）。
   // 段5 Task 10b: 声の指定（S7 の「配る」）で来た時だけ 名前 → 声 → 同意 → ルーティン の並び（指定なしは ルーティン → 声）。via で S7 から実経路で開く
@@ -948,6 +957,22 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (document.querySelector('[data-group="figure-names"]')) issues.push('R54 the figure name list is still shown after choosing a name');
     if (!form?.querySelector('.dc-input--counts')) issues.push('R54 the counts field did not appear after choosing a name');
     if (!form?.querySelector('.dc-primary')?.disabled) issues.push('R54 "Add" is pressable before the counts are entered');
+  }
+  // D52・Ruling 107・108: 一覧の名前をタップしたら前に使ったカウントが入り、欄の下（使える文字・理由の行の後）に印の 1 行。「追加する」が押せる
+  if (state.autoFilled) {
+    const form = [...document.querySelectorAll('.dc-figure-form')].pop();
+    const name = form?.querySelector('input')?.value;
+    if (!state.english && name !== state.autoFilled.name) issues.push(`D52 the name field reads "${name}", expected "${state.autoFilled.name}"`);
+    const field = form?.querySelector('.dc-input--counts');
+    if (field?.value !== state.autoFilled.counts) issues.push(`D52 the counts field reads "${field?.value}", expected "${state.autoFilled.counts}"`);
+    const notes = [...(form?.querySelectorAll('[data-auto-counts]') ?? [])].filter(visible);
+    if (notes.length !== 1 || notes[0].getAttribute('data-auto-counts') !== state.autoFilled.from) issues.push(`D52 expected one [data-auto-counts="${state.autoFilled.from}"] line, found ${notes.length}`);
+    else {
+      if (!(field?.getAttribute('aria-describedby') ?? '').split(' ').includes(notes[0].id)) issues.push('D52 the auto-counts line is not in the counts field aria-describedby');
+      const symbols = form.querySelector('[data-allowed-symbols]');
+      if (!symbols || !(symbols.compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('D52 the auto-counts line must come after the allowed-symbols line');
+    }
+    if (form?.querySelector('.dc-primary')?.disabled) issues.push('D52 "Add" is not pressable after the counts were filled in');
   }
   // Ruling 52・D16: 行の注意は 2 つで、依頼（「してください」）はちょうど 1 つ（Ruling 7 の機械判定）。全体の注意は一覧の下に 1 つ
   if (state.barNote) {
