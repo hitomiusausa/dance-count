@@ -192,6 +192,16 @@ const STATES = [
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus' },
+  // 段8 S13（Ruling 99-3）: 主要操作は mailto と「データを全て消す」の 2（375 幅の初期表示は文が長いので固定しない）。確認ダイアログは見た目だけ（消さない）
+  { name: 'S13', hash: '#/about', screen: 'S13', kind: 'list', total: 2,
+    texts: ['運営：くうが株式会社', 'info@kugainc.com', 'このアプリのカウントは、公式のもの・監修を受けたものではありません。', 'データを全て消す'],
+    firstView: ['.dc-about-contact'] },
+  { name: 'S13 全て消す確認', hash: '#/about?ui-state=confirm-delete-all', screen: 'S13', kind: 'list', confirm: true,
+    texts: ['このアプリのデータを全て消しますか？', '録音した声・受け取った声・ルーティン・設定が消えます。'] },
+  // 消せなかった（IndexedDB の clear が投げる）: 実経路で「データを全て消す」→「消す」→ 枠（ボタン無し）。S13 のまま
+  { name: 'S13 消せなかった', hash: '#/about', screen: 'S13', kind: 'list', failClears: true, alert: true, total: 2,
+    steps: [{ click: '.dc-about-delete' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="clear-failed"]' }],
+    texts: ['消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。'] },
   // 段7 S12（Ruling 92・95-3）: 端末ごとに 1 通りだけ。iPhone の Safari は手順 4 行（iOS 26.3 の実物どおり）と「引き継がれません」の 1 行（D43）
   { name: 'S12 iPhone Safari', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, ops: 0, total: 0,
     texts: ['画面の下の「…」を押します。', '「共有」を押します。', '「もっと見る」を押し、「ホーム画面に追加」を押します。', '右上の「追加」を押します。',
@@ -248,6 +258,10 @@ try {
       // 段7 最終レビュー m2: 端末から消せない（IndexedDB の delete が投げる）。S3／S7 の「保存できませんでした」を出す
       if (state.failDeletes) await context.addInitScript(() => {
         IDBObjectStore.prototype.delete = function () { throw new DOMException('delete refused (ui:check)', 'UnknownError'); };
+      });
+      // 段8: 端末のデータを消せない（IndexedDB の clear が投げる）。S13 の「消せませんでした。…」を出す
+      if (state.failClears) await context.addInitScript(() => {
+        IDBObjectStore.prototype.clear = function () { throw new DOMException('clear refused (ui:check)', 'UnknownError'); };
       });
       // 段7: ホーム画面から開いた状態（display-mode: standalone だけを真に。ほかの問い合わせは本物のまま）
       if (state.standalone) await context.addInitScript(() => {

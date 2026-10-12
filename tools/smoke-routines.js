@@ -458,6 +458,32 @@ try {
   const halfRows = await hidePage.locator('.dc-figure-head').allTextContents();
   if (halfRows.some(row => row.includes('ウィスク途中'))) errors.push('Ruling 94-2 (corrected): a name-only row must not be committed on hide');
   await hideContext.close();
+
+  // 段8（Ruling 99-4）: S13「データを全て消す」→ 確認の「消す」→ 3 つのストアが空・ハッシュは #/・S1 は初期状態（前回カードなし）
+  const clearContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
+  const clearPage = await clearContext.newPage();
+  clearPage.on('pageerror', error => errors.push(`pageerror (delete all): ${error.message}`));
+  await clearPage.goto(`${BASE}#/practice/waltz`);   // 開くだけで「前回」が残る（S1 の前回カード）
+  await clearPage.waitForSelector('[data-screen="S2"]');
+  await clearPage.evaluate(seedRoutinesInPage, [R.waltz13]);
+  await openAfterSeed(clearPage, `${BASE}#/about`);
+  await clearPage.waitForSelector('[data-screen="S13"]');
+  await clearPage.locator('.dc-about-delete').click();
+  await clearPage.locator('dialog[open] .dc-primary').click();
+  await clearPage.waitForFunction(() => location.hash === '#/' && document.querySelector('[data-screen="S1"]'));
+  const left = await clearPage.evaluate(() => new Promise(resolve => {
+    const request = indexedDB.open('dance-count-v2');
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction(['routines', 'settings', 'voice-packs']);
+      const counts = {};
+      for (const name of ['routines', 'settings', 'voice-packs']) transaction.objectStore(name).count().onsuccess = event => { counts[name] = event.target.result; };
+      transaction.oncomplete = () => { db.close(); resolve(counts); };
+    };
+  }));
+  if (Object.values(left).some(count => count !== 0)) errors.push(`Ruling 99-4: data left after "Delete all data" ${JSON.stringify(left)}`);
+  if (await clearPage.locator('[data-resume]').count()) errors.push('Ruling 99-4: S1 still shows "Last time" after "Delete all data"');
+  await clearContext.close();
 } finally {
   await browser.close();
 }
@@ -503,4 +529,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);

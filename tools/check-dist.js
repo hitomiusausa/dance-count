@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { neededFontSubsets } from './fonts/needed-subsets.js';
+import { LICENSE_FILES } from './licenses.js';
 import { checkPwaDist, precacheSummary } from './pwa/check-pwa.js';
 import { checkDistAudio, findSecrets, loadStandardVoices } from './voices/check-pack.js';
 
@@ -10,7 +11,8 @@ const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root, 'dist');
 // 標準音声は src/app/voices/standard-voices.json が正本（Ruling 68-3）。JSON に無いパック・聴感ゲート未通過のパックは出荷しない。
 const standardVoices = await loadStandardVoices();
-const REQUIRED = ['index.html', 'sw.js', 'manifest.webmanifest', ...standardVoices.map(voice => `audio/${voice.id}/manifest.json`)];
+// 段8: ライセンスの全文（D48。書体の OFL は同梱が条件）
+const REQUIRED = ['index.html', 'sw.js', 'manifest.webmanifest', ...standardVoices.map(voice => `audio/${voice.id}/manifest.json`), ...Object.keys(LICENSE_FILES)];
 const FORBIDDEN_PATHS = [/(^|\/)legacy\//, /six-candidates/, /subdivision-review/, /\.html$/];
 // src/engine/data/ 配下の JSON（未監修ルーティン）が1つでも束ねられたら落とす。ファイルごとに固有のキー（目印）を置く。
 // 新しい JSON を src/engine/data/ に足したら、下の DATA_MARKERS にそのファイル固有の目印を足すこと（足し忘れは自己検査で落ちる）。

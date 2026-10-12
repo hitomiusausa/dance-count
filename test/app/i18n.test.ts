@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { ABOUT_PRIVACY_KEYS, ABOUT_TEXT } from '../../src/app/i18n/about.ts';
 import { APP_MESSAGES } from '../../src/app/i18n/messages.ts';
 import { findForbiddenWords } from '../../src/app/i18n/forbidden-words.ts';
 import { createAppTranslator, resolveAppLocale, danceName, APP_LOCALES } from '../../src/app/i18n/index.ts';
@@ -63,4 +64,22 @@ test('every dance has a display name in both locales (dance-profiles name is not
 test('stage 8 settled copy: the voice limit says how many voices you already have (Ruling 96-4・段5 M6)', () => {
   assert.equal(createAppTranslator('ja-JP').t('voiceLimitReached', { count: 20 }), '声はすでに 20 あるので、受け取れません。使わない声を削除してから、もう一度選んでください。');
   assert.equal(createAppTranslator('en').t('voiceLimitReached', { count: 20 }), "You already have 20 voices. Delete one you don't use, then choose the file again.");
+});
+
+test('the S13 text (about.ts) has the same keys in the same order in both languages, none empty, no forbidden words (Ruling 99-2)', () => {
+  assert.deepEqual(Object.keys(ABOUT_TEXT['ja-JP']), Object.keys(ABOUT_TEXT.en));
+  for (const locale of ['en', 'ja-JP'] as const) {
+    for (const [key, value] of Object.entries(ABOUT_TEXT[locale])) {
+      assert.ok(value.trim().length > 0, `${locale}:${key} is empty`);
+      assert.deepEqual(findForbiddenWords(value), [], `${locale}:${key} = "${value}"`);
+    }
+  }
+  assert.deepEqual(Object.keys(ABOUT_TEXT.en).filter(key => key in APP_MESSAGES.en), [], 'about.ts keys never shadow messages.ts keys');
+  assert.deepEqual([...ABOUT_PRIVACY_KEYS], Object.keys(ABOUT_TEXT.en).filter(key => key.startsWith('aboutPrivacy') && key !== 'aboutPrivacyHeading'));
+});
+
+test('S13 states what the app does, never a legal promise, and names the operator and the contact (§12・D47・D48)', () => {
+  const all = Object.values(ABOUT_TEXT['ja-JP']).join('');
+  for (const fact of ['くうが株式会社', 'この端末の中にだけ', '解析ツール', '声を録音する画面でだけ', '公式のもの・監修を受けたものではありません']) assert.ok(all.includes(fact), fact);
+  for (const promise of ['保証', '責任を負', '準拠法', '損害', '同意したものとみなし']) assert.ok(!all.includes(promise), `no legal promise: ${promise}`);
 });

@@ -115,3 +115,9 @@ export async function returnToInbox(file: File): Promise<void> {
     await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, inboxResponseFor(file));
   } catch { /* 戻せなくても更新はする */ }
 }
+
+// S13「データを全て消す」（Ruling 99-4）: 受け口の Cache を丸ごと消す（読む前の共有されたファイルが残らない）。消せなくても続ける（一時の置き場）
+export async function clearInbox(): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try { await caches.delete(INBOX_CACHE); } catch { /* 一時の置き場なので続ける */ }
+}

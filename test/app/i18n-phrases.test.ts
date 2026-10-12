@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadDefaultJapaneseParser } from 'budoux';
+import { ABOUT_TEXT } from '../../src/app/i18n/about.ts';
 import { APP_MESSAGES } from '../../src/app/i18n/messages.ts';
 import { createAppTranslator } from '../../src/app/i18n/index.ts';
 import { phraseParts } from '../../src/app/i18n/phrase-parts.ts';
@@ -12,7 +13,7 @@ import { PHRASES_PATH, jaEntries, renderPhrases, segmentText } from '../../tools
 
 const root = path.resolve(import.meta.dirname, '../..');
 const PHRASES = JA_PHRASES as Record<string, string[]>;
-const JA = APP_MESSAGES['ja-JP'] as Record<string, string>;
+const JA = { ...APP_MESSAGES['ja-JP'], ...ABOUT_TEXT['ja-JP'] } as Record<string, string>;
 const joined = (parts: ReturnType<typeof phraseParts>) => parts.map(part => part.text).join('');
 
 test('the committed ja-phrases.json is not stale (run npm run i18n:phrases after changing messages.ts or about.ts)', async () => {

@@ -55,10 +55,11 @@ export function formatPhrases(phrases) {
   return `{\n${lines.join(',\n')}\n}\n`;
 }
 
-// 句に切る日本語の文（messages.ts の ja-JP。段8 Task 4 で about.ts も足す）
+// 句に切る日本語の文（messages.ts と about.ts の ja-JP。鍵は 2 つのファイルで重ならない＝test/app/i18n.test.ts）
 export async function jaEntries(root = ROOT) {
   const { APP_MESSAGES } = await import(path.join(root, 'src/app/i18n/messages.ts'));
-  return Object.entries(APP_MESSAGES['ja-JP']);
+  const { ABOUT_TEXT } = await import(path.join(root, 'src/app/i18n/about.ts'));
+  return [...Object.entries(APP_MESSAGES['ja-JP']), ...Object.entries(ABOUT_TEXT['ja-JP'])];
 }
 
 export async function renderPhrases(root = ROOT) {

@@ -489,3 +489,8 @@ button { cursor: pointer; }
   .dc-install .dc-heading { margin-top: 8px; }
   .dc-install-steps li { margin-bottom: 4px; }
 }
+/* 段8 S13（Ruling 99-3）: 文は 18px の段落（.dc-body）。見出しは S6 と同じ .dc-field-label。最下部に「データを全て消す」（白のボタン・確認ダイアログ） */
+.dc-about .dc-body { margin-bottom: 10px; }
+.dc-about-contact { margin-bottom: 12px; }
+.dc-about-delete { margin-top: 24px; }
+.dc-about [data-alert="clear-failed"] { margin-top: 24px; }

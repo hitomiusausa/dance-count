@@ -4,9 +4,14 @@
 // 新アプリからは呼ばない（声の保存は src/app/voices/store.ts がここを経由する。Ruling 56）。
 // 版上げの方針（Ruling 56-5）: 上げる時は DB_VERSION と upgradeAppDatabase の 1 か所だけ。test/app/settings/storage-upgrade.test.ts に
 // 0→N・1→N・2→N の 3 経路を足す。既存ストアの削除・改名はしない。
+import { clearInbox } from './files.ts';
+import { forgetLegacyUiLocale } from './legacy-locale.ts';
+
 export const DB_NAME = 'dance-count-v2';
 export const DB_VERSION = 2;
 export type StoreName = 'routines' | 'settings' | 'voice-packs';
+// 利用者のデータが入るストアの全部（S13「データを全て消す」が空にする。Ruling 99-4）
+export const APP_STORES: readonly StoreName[] = ['routines', 'settings', 'voice-packs'];
 
 // keyPath を持つストアは値の id で、持たないストア（settings）は引数のキーで保存する。
 const STORES: Record<StoreName, IDBObjectStoreParameters | undefined> = {
@@ -34,6 +39,8 @@ export interface AppStorage {
   // keyPath を持つストア（voice-packs・routines）は値の id がキー。settings は key を渡す。
   put<T>(store: StoreName, value: T, key?: string): Promise<void>;
   delete(store: StoreName, key: string): Promise<void>;
+  // 1 つの readwrite トランザクションで空にする（全部消えるか、何も消えないか）。確定まで待つ
+  clear(stores: readonly StoreName[]): Promise<void>;
 }
 
 let opening: Promise<AppStorage> | null = null;
@@ -71,6 +78,19 @@ function wrap(db: IDBDatabase): AppStorage {
     },
     async delete(store: StoreName, key: string) {
       await run(db, store, 'readwrite', objectStore => objectStore.delete(key));
+    },
+    clear(stores: readonly StoreName[]) {
+      return new Promise<void>((resolve, reject) => {
+        try {
+          const transaction = db.transaction([...stores], 'readwrite');
+          for (const store of stores) transaction.objectStore(store).clear();
+          transaction.oncomplete = () => resolve();
+          transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB clear was aborted'));
+          transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB clear failed'));
+        } catch (error) {
+          reject(error);
+        }
+      });
     }
   };
 }
@@ -101,4 +121,14 @@ export async function requestPersistentStorage(): Promise<void> {
     if (await manager.persisted?.()) return;
     await manager.persist();
   } catch { /* 何もしない */ }
+}
+
+// S13「データを全て消す」（Ruling 99-4・D47-6）: 3 つのストアを 1 回で空にする → Android の受け口（Cache）を消す → 旧画面の言語の鍵を消す。
+// SW の precache と書体の cache は消さない（利用者のデータではない。§7）。deleteDatabase は使わない（開いたままだと blocked）。
+// 保存領域が開けていない（null）・空にできない時は投げる（画面は「消せませんでした。…」）。消した後の再読み込みは呼び出し側（page.ts の reloadAtHome）。
+export async function clearAllAppData(storage: AppStorage | null, device: { clearInbox(): Promise<void>; forgetLegacy(): void } = { clearInbox, forgetLegacy: forgetLegacyUiLocale }): Promise<void> {
+  if (!storage) throw new Error('storage is not open');
+  await storage.clear(APP_STORES);
+  await device.clearInbox();
+  device.forgetLegacy();
 }

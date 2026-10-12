@@ -10,6 +10,7 @@ import { isStandalone } from './platform/pwa.ts';
 import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
 import { resolveScreen } from './router/resolve.ts';
 import { buildHash, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
+import { AboutScreen } from './screens/AboutScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { InstallHelpScreen } from './screens/InstallHelpScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
@@ -45,7 +46,7 @@ function openStorageWithin(ms: number): Promise<AppStorage | null> {
   });
 }
 
-// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
+// 中身だけで描ける画面（引数の要る S2〜S5・S7・S8・S13 は下で個別に描く）。S9 は印（share-intent）・S10 は受け口（inbox）をマウント時に 1 回だけ読む。どの画面を出すかは router/resolve.ts が決める。
 const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S1: HomeScreen,
   S6: SettingsScreen,
@@ -130,6 +131,7 @@ export function App() {
                 : screen === 'S5' ? <RoutinePlayScreen key={route.params.routineId} routineId={route.params.routineId!} uiState={route.query.uiState} />
                 : screen === 'S7' ? <VoicesScreen uiState={route.query.uiState} />
                 : screen === 'S8' ? <RecordVoiceScreen key={route.query.uiState ?? ''} uiState={route.query.uiState} />
+                : screen === 'S13' ? <AboutScreen uiState={route.query.uiState} />
                 : <Simple />}
               {showsTabs(screen) && <TabBar current={tabOf(screen)} />}
             </div>

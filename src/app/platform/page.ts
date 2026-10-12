@@ -11,6 +11,12 @@ export function reloadPage(): void {
   window.location.reload();
 }
 
+// S13「データを全て消す」の後（Ruling 99-4）: 初期状態の S1 から開き直す（ハッシュを #/ に置き換えてから再読み込み。履歴に S13 を残さない）
+export function reloadAtHome(): void {
+  window.history.replaceState(null, '', '#/');
+  window.location.reload();
+}
+
 // 今の画面のアドレス（S12 の「アドレスをコピー」。Safari・スマホで開き直すと、そのまま同じ手順の画面が出る）。
 export function currentAddress(): string {
   return window.location.href;

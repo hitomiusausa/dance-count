@@ -55,7 +55,8 @@ test('back-to-back saves do not erase each other (serialized read-merge-write)',
     async get<T>(store: StoreName, key: string) { const value = data.get(`${store}/${key}`) as T | undefined; await new Promise(r => setTimeout(r, 0)); return value; },
     async put<T>(store: StoreName, value: T, key?: string) { await new Promise(r => setTimeout(r, 0)); data.set(`${store}/${key}`, value); },
     async getAll() { return []; },
-    async delete() {}
+    async delete() {},
+    async clear() {}
   };
   const results = await Promise.all([saveSettings(storage, { lastDanceId: 'waltz' }), saveSettings(storage, { metronome: false })]);
   assert.deepEqual(results, [true, true]);
@@ -71,7 +72,8 @@ test('a failed save does not break the chain: the next save still writes', async
     async get<T>(store: StoreName, key: string) { return data.get(`${store}/${key}`) as T | undefined; },
     async put<T>(store: StoreName, value: T, key?: string) { if (puts++ === 0) throw new Error('quota'); data.set(`${store}/${key}`, value); },
     async getAll() { return []; },
-    async delete() {}
+    async delete() {},
+    async clear() {}
   };
   const first = saveSettings(storage, { loop: false });
   const second = saveSettings(storage, { metronome: false });

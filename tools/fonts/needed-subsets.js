@@ -7,9 +7,10 @@ import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 
-// アプリの文字の出どころ（Ruling 89-3）。ファイルの全文字を集める（コメントの字が混ざっても多めになるだけ）。
+// アプリの文字の出どころ（Ruling 89-3・103-1）。ファイルの全文字を集める（コメントの字が混ざっても多めになるだけ）。
+// 段8: 文言は src/app/i18n/*.ts の全部（messages.ts・about.ts・将来の鍵）を glob で拾う＝別のファイルに文を書いても漏れない（段7 M1）
 export const TEXT_SOURCES = Object.freeze([
-  'src/app/i18n/messages.ts',
+  'src/app/i18n/*.ts',
   'src/engine/ui-messages.js',
   'src/engine/figure-terminology.js',
   'src/engine/count-vocabularies.js',
@@ -45,8 +46,17 @@ export function subsetsForText(text, faces) {
   return faces.filter(face => [...codes].some(code => face.ranges.some(([a, b]) => code >= a && code <= b))).map(face => face.name);
 }
 
+// TEXT_SOURCES の glob を今の木のファイルに広げる（順は決まった並び）。1 つも当たらない形は投げる＝黙って文字を落とさない
+export function textSourceFiles(root = ROOT) {
+  return TEXT_SOURCES.flatMap(pattern => {
+    const files = fs.globSync(pattern, { cwd: root }).map(file => file.split(path.sep).join('/')).sort();
+    if (files.length === 0) throw new Error(`no file matches ${pattern}`);
+    return files;
+  });
+}
+
 export function readAppText(root = ROOT) {
-  return TEXT_SOURCES.map(file => fs.readFileSync(path.join(root, file), 'utf8')).join('');
+  return textSourceFiles(root).map(file => fs.readFileSync(path.join(root, file), 'utf8')).join('');
 }
 
 // アプリの文字が要るサブセット名（Noto → Inter の順）。サブセットの番号と範囲は太さをまたいで同じなので 400 の CSS で決める。

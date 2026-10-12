@@ -16,7 +16,11 @@ export function memoryStorage(initial: Record<string, unknown> = {}, { failWrite
       const keyPath = KEY_PATH[store];
       data.set(`${store}/${keyPath ? (value as Record<string, string>)[keyPath] : key}`, structuredClone(value));
     },
-    async delete(store: StoreName, key: string) { if (failWrites) throw new Error('quota'); data.delete(`${store}/${key}`); }
+    async delete(store: StoreName, key: string) { if (failWrites) throw new Error('quota'); data.delete(`${store}/${key}`); },
+    async clear(stores: readonly StoreName[]) {
+      if (failWrites) throw new Error('quota');
+      for (const key of [...data.keys()]) if (stores.some(store => key.startsWith(`${store}/`))) data.delete(key);
+    }
   };
   return { storage, data };
 }

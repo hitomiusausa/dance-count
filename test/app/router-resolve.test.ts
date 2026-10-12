@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveScreen } from '../../src/app/router/resolve.ts';
-import { parseHash } from '../../src/app/router/routes.ts';
+import { IMPLEMENTED_SCREENS, resolveScreen } from '../../src/app/router/resolve.ts';
+import { SCREENS, parseHash } from '../../src/app/router/routes.ts';
 import { ROUTINES_MAX } from '../../src/app/routines/limits.ts';
 import { createRoutine, type Routine } from '../../src/app/routines/routine.ts';
 
@@ -37,7 +37,7 @@ test('unknown ids and the reserved word "new" go back to the list (Ruling 37)', 
 test('the practice screen needs a known dance; unbuilt screens show home', () => {
   assert.deepEqual(resolve('#/practice/waltz'), { screen: 'S2', redirect: null });
   assert.deepEqual(resolve('#/practice/hiphop'), { screen: 'S1', redirect: null });
-  assert.deepEqual(resolve('#/about'), { screen: 'S1', redirect: null }, '#/about');   // S13 は段8（S12 は段7で開く・下）
+  assert.deepEqual(resolve('#/about'), { screen: 'S13', redirect: null }, 'S13 is built in stage 8');
   assert.deepEqual(resolve('#/share'), { screen: 'S9', redirect: null }, 'S9 is built in stage 5');
   assert.deepEqual(resolve('#/receive'), { screen: 'S10', redirect: null }, 'S10 is built in stage 5');
   for (const hash of ['#/', '#/routines', '#/settings', '#/voices', '#/help/sound']) assert.equal(resolve(hash).redirect, null, hash);
@@ -51,7 +51,8 @@ test('a new routine is refused by hash too once the list is full (Ruling 37)', (
   assert.deepEqual(resolveScreen(parseHash(`#/routines/${full[0]!.id}/edit`), full), { screen: 'S4', redirect: null });
 });
 
-test('S12 opens from stage 7; S13 is still the home screen until stage 8 (Ruling 92-9)', () => {
+test('S12 opens from stage 7 and S13 from stage 8: every screen of the spec is built (Ruling 92-9・99)', () => {
   assert.deepEqual(resolve('#/help/install'), { screen: 'S12', redirect: null });
-  assert.deepEqual(resolve('#/about'), { screen: 'S1', redirect: null });
+  assert.deepEqual(resolve('#/about?ui-state=confirm-delete-all'), { screen: 'S13', redirect: null });
+  assert.deepEqual([...IMPLEMENTED_SCREENS], Object.keys(SCREENS));
 });
