@@ -3,7 +3,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { LabeledText } from '../components/LabeledText.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
-import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, takeInboxFile } from '../platform/files.ts';
+import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, returnToInbox, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
@@ -43,6 +43,7 @@ export function ReceiveScreen() {
   const latestRoutines = useRef(routinesValue);
   latestRoutines.current = routinesValue;
   const alive = useRef(true);
+  const tooNewFile = useRef<File | null>(null);   // 新しすぎたファイル（「更新する」で受け口へ戻す。段7 最終レビュー m1）
   const inLine = isLineInAppBrowser();
 
   // 選んだ・届いたファイルを読む（20MB を超えたら読まない）→ 形を確かめる → 受け取る計画（ID の付け直し・置き換え・上限）。
@@ -54,6 +55,7 @@ export function ReceiveScreen() {
     try {
       const parsed = parseBundle(await readBundleText(file));
       if (!alive.current) return;
+      tooNewFile.current = parsed.ok || parsed.problem !== 'too-new' ? null : file;
       if (!parsed.ok) { setAlert(parsed.problem === 'too-new' ? { kind: 'too-new' } : { kind: 'broken', file: fileName }); return; }
       const packs = await listVoicePacks(storage);
       if (!alive.current) return;
@@ -78,6 +80,13 @@ export function ReceiveScreen() {
     });
     return () => { alive.current = false; };
   }, []);
+
+  // 新しすぎるファイルの「更新する」: 読んだファイルを受け口へ戻してから更新する（更新の後の S10 がもう一度読む。段7 最終レビュー m1）。
+  const updateKeepingFile = async () => {
+    const file = tooNewFile.current;
+    if (file) await returnToInbox(file);
+    await checkForUpdateThenReload();
+  };
 
   // 「ファイルを選ぶ」: 隠した <input type=file> を同じタップの中で開く。同じファイルを続けて選べるように値は毎回空にする（Ruling 83-5）。
   const choose = () => { if (!busy) input.current?.click(); };
@@ -170,7 +179,7 @@ export function ReceiveScreen() {
   return (
     <main class="dc-screen dc-screen--focus dc-receive" data-screen="S10" data-step="pick">
       {header}
-      {alert ? <PickNotice alert={alert} /> : inLine && (
+      {alert ? <PickNotice alert={alert} onUpdate={() => void updateKeepingFile()} /> : inLine && (
         <div class="dc-alert" role="status" data-alert="in-line">
           <div class="dc-alert-text">{translator.t('openedInLine')}</div>
           {lineUrl && <a class="dc-alert-action" data-alert-action href={lineUrl}><span>{translator.t('openInSafari')}</span><Icon name="chev-r" /></a>}
@@ -189,7 +198,7 @@ export function ReceiveScreen() {
   );
 }
 
-function PickNotice({ alert }: { alert: NonNullable<PickAlert> }) {
+function PickNotice({ alert, onUpdate }: { alert: NonNullable<PickAlert>; onUpdate(): void }) {
   const { translator } = useI18n();
   const text = alert.kind === 'broken' ? translator.t('fileBroken', { file: alert.file })
     : alert.kind === 'too-large' ? translator.t('fileTooLarge')
@@ -198,7 +207,7 @@ function PickNotice({ alert }: { alert: NonNullable<PickAlert> }) {
   return (
     <div class="dc-alert" role="status" data-alert={alert.kind}>
       <div class={`dc-alert-text${alert.kind === 'too-new' ? '' : ' dc-alert-text--solo'}`}><b>{text}</b></div>
-      {alert.kind === 'too-new' && <button type="button" class="dc-alert-action" data-alert-action onClick={() => void checkForUpdateThenReload()}>{translator.t('updateApp')}</button>}
+      {alert.kind === 'too-new' && <button type="button" class="dc-alert-action" data-alert-action onClick={onUpdate}>{translator.t('updateApp')}</button>}
     </div>
   );
 }

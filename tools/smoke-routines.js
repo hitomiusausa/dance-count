@@ -439,6 +439,24 @@ try {
   await hidePage.waitForSelector('[data-screen="S4"]');
   const keptRows = await hidePage.locator('.dc-figure-head').allTextContents();
   if (keptRows.length !== 1 || !keptRows[0]?.includes('ナチュラルターン')) errors.push(`Ruling 94-2: the open row was not saved when the page was hidden (${JSON.stringify(keptRows)})`);
+  // 最終修正（Ruling 94-2 を改める）: 名前だけ打った行は、隠れて戻っても打ったまま開いている（LINE へカウントを見に行く）
+  await hidePage.locator('.dc-add-tail, .dc-dock-button').first().click();
+  const halfForm = hidePage.locator('.dc-figure-form').last();
+  await halfForm.locator('input').nth(0).fill('ウィスク途中');
+  await hidePage.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await hidePage.waitForTimeout(WRITE_SETTLE_MS);
+  await hidePage.evaluate(() => {   // 戻ってきた
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const halfOpen = await hidePage.locator('.dc-figure-form').count();
+  const halfName = halfOpen ? await hidePage.locator('.dc-figure-form').last().locator('input').nth(0).inputValue() : null;
+  if (halfOpen !== 1 || halfName !== 'ウィスク途中') errors.push(`Ruling 94-2 (corrected): a name-only row should stay open as typed after hide → visible (forms ${halfOpen}, name ${JSON.stringify(halfName)})`);
+  const halfRows = await hidePage.locator('.dc-figure-head').allTextContents();
+  if (halfRows.some(row => row.includes('ウィスク途中'))) errors.push('Ruling 94-2 (corrected): a name-only row must not be committed on hide');
   await hideContext.close();
 } finally {
   await browser.close();
@@ -485,4 +503,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data and an open row is saved when the page is hidden; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed; ${webkitNote}`);

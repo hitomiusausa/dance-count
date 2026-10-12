@@ -15,8 +15,50 @@ export const SHARE_TARGET_FIELD = 'bundle';
 // S10 はこの印を見て、ファイルを選んだ時と同じ「大きすぎ」の枠を出す（共有したのに何も起きない、にしない）。
 export const INBOX_TOO_LARGE_HEADER = 'X-Too-Large';
 
+// 共有の POST の本文（multipart）の、ファイルの外の分（区切り・欄の名前・ファイル名・種類）の余裕。これを足しても超える長さは、
+// 中のファイルが必ず BUNDLE_MAX_BYTES を超える（ファイル名が長くても数 KB。余裕を大きめに取り、ちょうど 20MB のファイルを誤って拒まない）。
+export const SHARE_POST_OVERHEAD_BYTES = 64 * 1024;
+
+// 本文を読む前の早めの判定（段7 最終レビュー m3）: Content-Length があり、余裕を足した上限を超えていれば true。
+// 無い・読めない時は false（読んだ後の file.size の判定に任せる）。純粋（Node でテストする）。
+export function shareTooLargeByLength(contentLength: string | null): boolean {
+  if (contentLength === null || !/^\d+$/.test(contentLength.trim())) return false;
+  return Number(contentLength.trim()) > SHARE_POST_MAX_BYTES;
+}
+
+// 本文を上限までだけ読む（段7 最終レビュー m3 の続き）。Chrome は SW の request に Content-Length を見せない（fetch・フォームの POST
+// とも。実測 2026-10-12・Chrome 154）ので、上の判定はほぼ働かない。代わりに本文を少しずつ数え、上限を超えた所で読むのをやめる
+//（取り消す）＝SW のメモリに溜まるのは上限＋1 かたまりまで。超えたら null、収まれば読んだ全部。純粋（Node でテストする）。
+export async function readBodyWithin(body: ReadableStream<Uint8Array>, limit: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { all.set(chunk, offset); offset += chunk.byteLength; }
+  return all;
+}
+
+// 共有の POST の本文の上限（ファイルの上限＋multipart の余裕）。
+export const SHARE_POST_MAX_BYTES = BUNDLE_MAX_BYTES + SHARE_POST_OVERHEAD_BYTES;
+
+// 大きすぎの印（本文の無い Response）。
+export function tooLargeMarker(): Response {
+  return new Response(null, { headers: { [INBOX_TOO_LARGE_HEADER]: '1' } });
+}
+
 // SW が受け口に put する Response（純粋。Node でテストする）。名前は encodeURIComponent してヘッダーに。
 export function inboxResponseFor(file: File): Response {
-  if (file.size > BUNDLE_MAX_BYTES) return new Response(null, { headers: { [INBOX_TOO_LARGE_HEADER]: '1' } });
+  if (file.size > BUNDLE_MAX_BYTES) return tooLargeMarker();
   return new Response(file, { headers: { 'Content-Type': file.type || 'text/plain', [INBOX_FILE_HEADER]: encodeURIComponent(file.name) } });
 }

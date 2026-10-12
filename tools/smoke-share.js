@@ -285,6 +285,20 @@ try {
   if (await s.evaluate(async () => Boolean(await (await caches.open('dance-count-inbox')).match('./inbox/bundle')))) errors.push('inbox: the file is still in the inbox');
   await s.locator('.dc-receive-dock .dc-button--secondary').click();
 
+  // 新しすぎるファイルを共有して「更新する」を押しても、ファイルは失われない（段7 最終レビュー m1）: 更新の後の S10 がもう一度読む
+  //（ここは SW の無い dev なので再読み込みだけ＝同じ版のまま、もう一度「新しすぎ」が出ることで、受け口に戻ったことを確かめる）
+  const tooNewText = fs.readFileSync(path.join(FIXTURES, 'too-new.txt'), 'utf8');
+  await s.evaluate(async text => {
+    await (await caches.open('dance-count-inbox')).put('./inbox/bundle', new Response(text, { headers: { 'Content-Type': 'text/plain', 'X-File-Name': encodeURIComponent('too-new.txt') } }));
+  }, tooNewText);
+  await s.goto(`${BASE}#/`);
+  await s.waitForSelector('[data-screen="S1"]');
+  await s.goto(`${BASE}#/receive`);
+  await s.waitForSelector('[data-alert="too-new"]', { timeout: 5000 }).catch(() => errors.push('m1: the shared too-new file did not show "too new"'));
+  await Promise.all([s.waitForEvent('load', { timeout: 10000 }).catch(() => errors.push('m1: 「更新する」 did not reload')), s.locator('[data-alert="too-new"] [data-alert-action]').click()]);
+  await s.waitForSelector('[data-alert="too-new"]', { timeout: 5000 }).catch(() => errors.push('m1: after 「更新する」 the shared file was lost (S10 did not read it again)'));
+  if (await s.evaluate(async () => Boolean(await (await caches.open('dance-count-inbox')).match('./inbox/bundle')))) errors.push('m1: the too-new file is still in the inbox after S10 read it again');
+
   // 受け取った声は配れない（D37）・消すと標準（英語）に戻る
   await s.goto(`${BASE}#/voices`);
   await s.waitForSelector('[data-screen="S7"]:not([data-loading])');
@@ -307,4 +321,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('share smoke OK: S8 "Share" and the S3 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, S3/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, received voice not shareable and deleted');
+console.log('share smoke OK: S8 "Share" and the S3 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, S3/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted');

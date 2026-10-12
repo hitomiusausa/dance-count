@@ -36,7 +36,8 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
   return (
     <main class="dc-screen" data-screen="S3">
       <h1 class="dc-heading">{translator.t('routinesTitle')}</h1>
-      <UpdateBanner />
+      {/* 枠は同時に 1 つ（Ruling 30）: 知らせが出ている間は更新の帯を引っ込め、閉じたら戻す（段7 最終レビュー m2） */}
+      {!deleteFailed && <UpdateBanner />}
       <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
       <button type="button" class="dc-button dc-primary dc-wide" disabled={routines.length >= ROUTINES_MAX}
         onClick={() => navigate({ screen: 'S4', params: {} })}>

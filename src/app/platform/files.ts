@@ -1,4 +1,4 @@
-import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY, INBOX_TOO_LARGE_HEADER } from '../../share-inbox-contract.ts';
+import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY, INBOX_TOO_LARGE_HEADER, inboxResponseFor } from '../../share-inbox-contract.ts';
 import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename.ts';
 import { BUNDLE_MAX_BYTES } from '../share/limits.ts';
 
@@ -104,4 +104,14 @@ export async function takeInboxFile(): Promise<File | typeof INBOX_TOO_LARGE | n
   } catch {
     return null;
   }
+}
+
+// 新しすぎるファイルの「更新する」（段7 最終レビュー m1）: 再読み込みの前に、読んだファイルを受け口へ戻す。更新の後の S10 はマウント時に
+// takeInboxFile でもう一度読み、新しい版なら「確認」から始まる（LINE へ戻って共有し直さなくてよい。選んだファイルも同じ）。
+// 受け口は「読んだら消す」のまま（ほかの場面で 2 回受け取らない）。戻せなくても更新は続ける（その時は選び直し）。
+export async function returnToInbox(file: File): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try {
+    await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, inboxResponseFor(file));
+  } catch { /* 戻せなくても更新はする */ }
 }

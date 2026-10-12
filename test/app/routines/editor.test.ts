@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formLayout, RoutineEditor, type FormLayout } from '../../../src/app/routines/editor.ts';
+import { formLayout, RoutineEditor, type FormLayout, type OpenRow } from '../../../src/app/routines/editor.ts';
 import { hasFigureNameSuggestions } from '../../../src/app/routines/figure-names.ts';
 import { FIGURES_MAX } from '../../../src/app/routines/limits.ts';
 import { createRoutine, type Routine } from '../../../src/app/routines/routine.ts';
@@ -57,6 +57,43 @@ test('closing rule: any close commits a valid draft and drops an invalid one (Ru
   e.setDraft({ name: 'クローズドチェンジ', counts: '123' });
   assert.equal(e.close(), true);
   assert.equal(e.routine.figures.length, 3);
+});
+
+test('page hidden: only a valid open row is committed; an incomplete row stays open as typed (Ruling 94-2 as corrected)', () => {
+  const e = editor();
+  e.openAdd();
+  e.setDraft({ name: 'クローズドチェンジ' });   // 名前だけ（LINE へカウントを見に行く）
+  assert.equal(e.closeIfValid(), false);
+  assert.deepEqual(e.open, { kind: 'add', draft: { name: 'クローズドチェンジ', counts: '' } });
+  assert.equal(e.routine.figures.length, 2);
+  e.setDraft({ counts: '12a' });                // カウントの途中（無効な文字）
+  assert.equal(e.closeIfValid(), false);
+  assert.deepEqual(e.open?.draft, { name: 'クローズドチェンジ', counts: '12a' });
+  e.setDraft({ counts: '123' });                // 有効 → 確定して閉じる
+  assert.equal(e.closeIfValid(), true);
+  assert.equal(e.open, null);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3', 'クローズドチェンジ:123']);
+  assert.equal(e.closeIfValid(), false);        // 開いている行が無い時は何もしない
+
+  e.openRow(0);
+  e.setDraft({ counts: '12a3' });               // 編集の行の無効な打ち替えは元に戻さない
+  assert.equal(e.closeIfValid(), false);
+  assert.deepEqual(e.open, { kind: 'edit', index: 0, draft: { name: 'ナチュラルターン', counts: '12a3' } });
+  assert.equal(e.routine.figures[0]!.counts, '123');
+
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク', counts: '' }); // 同じ名前（複製して追加の形）も勝手に複製しない
+  assert.equal(e.closeIfValid(), false);
+  assert.equal((e.open as OpenRow | null)?.kind, 'add');
+  assert.equal(e.routine.figures.length, 3);
+});
+
+test('page hidden: a valid unchanged edit row closes without a change', () => {
+  const e = editor();
+  e.openRow(1);
+  assert.equal(e.closeIfValid(), false);
+  assert.equal(e.open, null);
+  assert.equal(e.canUndo, false);
 });
 
 test('opening a row closes "More options"; opening "More options" closes the row by the rule (Ruling 36-2)', () => {

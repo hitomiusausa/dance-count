@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { INBOX_CACHE, INBOX_KEY, INBOX_TOO_LARGE, takeInboxFile } from '../../../src/app/platform/files.ts';
+import { INBOX_CACHE, INBOX_KEY, INBOX_TOO_LARGE, returnToInbox, takeInboxFile } from '../../../src/app/platform/files.ts';
 import { BUNDLE_MAX_BYTES } from '../../../src/app/share/limits.ts';
-import { INBOX_TOO_LARGE_HEADER, inboxResponseFor } from '../../../src/share-inbox-contract.ts';
+import { INBOX_TOO_LARGE_HEADER, SHARE_POST_MAX_BYTES, SHARE_POST_OVERHEAD_BYTES, inboxResponseFor, readBodyWithin, shareTooLargeByLength, tooLargeMarker } from '../../../src/share-inbox-contract.ts';
 
 // Cache API の偽物（段7の Service Worker が書く形: Response の本文＝ファイル、X-File-Name＝名前）。
 function fakeCaches() {
@@ -88,4 +88,64 @@ test('the service worker puts a shared file as it came, and only a marker for on
     assert.equal(caches.stores.get(INBOX_CACHE)?.has(INBOX_KEY), false, 'the marker is taken out too');
     assert.equal(await takeInboxFile(), null);
   } finally { restore(); }
+});
+
+test('a too-new file goes back to the inbox before 「更新する」 and the reloaded S10 reads it again, once (stage-7 final review m1)', async () => {
+  const caches = fakeCaches();
+  const restore = withCaches(caches);
+  try {
+    await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, new Response('{"type":"dance-count-bundle","bundleVersion":99}', { headers: { 'X-File-Name': encodeURIComponent('ルーティン-山田.dancecount.txt') } }));
+    const shared = await takeFile();
+    assert.equal(caches.stores.get(INBOX_CACHE)?.has(INBOX_KEY), false, 'S10 took it (still taken once)');
+    await returnToInbox(shared!);   // 「更新する」を押した
+    const again = await takeFile();   // 更新の後の S10
+    assert.equal(again?.name, 'ルーティン-山田.dancecount.txt');
+    assert.equal(await again?.text(), '{"type":"dance-count-bundle","bundleVersion":99}');
+    assert.equal(await takeInboxFile(), null, 'taken once again after the reload');
+  } finally { restore(); }
+  await returnToInbox(new File(['x'], 'a.txt'));   // Cache API が無くても投げない（更新は続く）
+  const restoreBroken = withCaches({ open: async () => { throw new Error('SecurityError'); } });
+  try { await returnToInbox(new File(['x'], 'a.txt')); } finally { restoreBroken(); }
+});
+
+test('the service worker turns away an oversized share by Content-Length before reading the body (stage-7 final review m3)', async () => {
+  assert.equal(shareTooLargeByLength(String(200 * 1024 * 1024)), true, 'a mistaken 200MB video share');
+  assert.equal(shareTooLargeByLength(String(BUNDLE_MAX_BYTES + SHARE_POST_OVERHEAD_BYTES + 1)), true);
+  assert.equal(shareTooLargeByLength(String(BUNDLE_MAX_BYTES + SHARE_POST_OVERHEAD_BYTES)), false, 'a 20MB file plus the multipart wrapping is still read');
+  assert.equal(shareTooLargeByLength(String(BUNDLE_MAX_BYTES + 1)), false, 'between 20MB and the margin: the read check decides');
+  assert.equal(shareTooLargeByLength('1234'), false);
+  for (const value of [null, '', 'abc', '-1', '1e9']) assert.equal(shareTooLargeByLength(value), false, `no early answer for ${JSON.stringify(value)}`);
+  const marker = tooLargeMarker();
+  assert.equal(marker.headers.get(INBOX_TOO_LARGE_HEADER), '1');
+  assert.equal(await marker.text(), '');
+  const caches = fakeCaches();
+  const restore = withCaches(caches);
+  try {
+    await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, marker);
+    assert.equal(await takeInboxFile(), INBOX_TOO_LARGE, 'S10 shows the same "too large" notice');
+  } finally { restore(); }
+});
+
+test('without Content-Length the service worker counts the body and stops reading past the limit (stage-7 final review m3)', async () => {
+  assert.equal(SHARE_POST_MAX_BYTES, BUNDLE_MAX_BYTES + SHARE_POST_OVERHEAD_BYTES);
+  let pulled = 0;
+  let cancelled = false;
+  const endless = new ReadableStream<Uint8Array>({
+    pull(controller) { pulled += 1; controller.enqueue(new Uint8Array(1024)); },
+    cancel() { cancelled = true; }
+  });
+  assert.equal(await readBodyWithin(endless, 10 * 1024), null, 'over the limit');
+  assert.equal(cancelled, true, 'the rest of the body is not read');
+  assert.ok(pulled <= 12, `stopped right after the limit (${pulled} chunks)`);
+  const form = new FormData();
+  form.append('bundle', new File(['{"type":"dance-count-bundle"}'], '声.dancecount.txt', { type: 'text/plain' }));
+  const request = new Request('https://example.test/receive', { method: 'POST', body: form });
+  const bytes = await readBodyWithin(request.body!, SHARE_POST_MAX_BYTES);
+  assert.ok(bytes);
+  const parsed = await new Response(bytes, { headers: { 'Content-Type': request.headers.get('content-type')! } }).formData();
+  const file = parsed.get('bundle') as File;
+  assert.equal(file.name, '声.dancecount.txt');
+  assert.equal(await file.text(), '{"type":"dance-count-bundle"}');
+  const exact = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new Uint8Array(100)); controller.close(); } });
+  assert.equal((await readBodyWithin(exact, 100))?.byteLength, 100, 'exactly the limit is read');
 });

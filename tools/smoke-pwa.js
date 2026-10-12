@@ -152,6 +152,18 @@ try {
   await page.goto(`${BASE}#/receive`);
   await page.waitForSelector('[data-screen="S10"][data-step="pick"] [data-alert="too-large"]', { timeout: 5000 }).catch(() => errors.push('share_target too large: S10 did not show the too-large notice'));
   if (await page.evaluate(async () => Boolean(await (await caches.open('dance-count-inbox')).match('./inbox/bundle')))) errors.push('share_target: the too-large marker is still in the inbox');
+  // 段7 最終レビュー m3: 上限を大きく超える共有は、本文を全部は読まずに印だけ置く（Chrome は SW に Content-Length を見せないので、
+  // 本文を数えながら読み、上限を超えた所でやめる方が働く）。本文は multipart として壊れた中身にする（全部読んで formData() に
+  // かけていたら投げて何も置かれない）＝印が置かれたことが「解析する前に断った」証拠
+  const early = await page.evaluate(async size => (await fetch('receive', {
+    method: 'POST', body: new Blob([new Uint8Array(size)]), headers: { 'Content-Type': 'multipart/form-data; boundary=dc-smoke' }, redirect: 'manual'
+  })).type, 30 * 1024 * 1024);
+  if (early !== 'opaqueredirect') errors.push(`share_target POST over the Content-Length limit was answered with "${early}", expected a redirect`);
+  const earlyMarker = await page.evaluate(async () => (await (await caches.open('dance-count-inbox')).match('./inbox/bundle'))?.headers.get('X-Too-Large') ?? null);
+  if (earlyMarker !== '1') errors.push('share_target: an oversized POST was not turned away before the body was parsed (no too-large marker)');
+  await page.goto(`${BASE}#/settings`);
+  await page.goto(`${BASE}#/receive`);
+  await page.waitForSelector('[data-screen="S10"][data-step="pick"] [data-alert="too-large"]', { timeout: 5000 }).catch(() => errors.push('share_target oversized POST: S10 did not show the too-large notice'));
 
   // 4. 新しい版: サーバーを dist-b に入れ替えて確かめる → S6 の帯 →「更新する」→ 新しい版で開き直る
   await stop();
@@ -180,4 +192,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`pwa smoke OK: service worker installed and precached ${precacheUrls.length} files; offline the app opens, the waltz and paso doble play from the cache (six.wav?v= too) and Noto Sans JP shows; a deep path is not answered with the app; a shared file posted to ./receive opens S10 on the confirm step and one over 20MB is not stored and shows the too-large notice; a new build shows the update banner on S6 and "Update" switches to it`);
+console.log(`pwa smoke OK: service worker installed and precached ${precacheUrls.length} files; offline the app opens, the waltz and paso doble play from the cache (six.wav?v= too) and Noto Sans JP shows; a deep path is not answered with the app; a shared file posted to ./receive opens S10 on the confirm step and one over 20MB is not stored and shows the too-large notice (a much larger one is turned away while reading, before the body is parsed); a new build shows the update banner on S6 and "Update" switches to it`);

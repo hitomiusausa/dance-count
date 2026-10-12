@@ -106,7 +106,8 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
     <main class="dc-screen" data-screen="S7">
       <BackButton screen="S7" />
       <h1 class="dc-heading">{translator.t('voicesTitle')}</h1>
-      <UpdateBanner />
+      {/* 枠は同時に 1 つ（Ruling 30）: 知らせが出ている間は更新の帯を引っ込め、閉じたら戻す（段7 最終レビュー m2） */}
+      {!deleteFailed && <UpdateBanner />}
       <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
       <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('voicesTitle')} data-group="voice">
         {STANDARD_VOICES.map(voice => radioRow({ kind: 'standard', id: voice.id, locale: voice.locale }, voiceDisplayName(translator, { kind: 'standard', id: voice.id, locale: voice.locale }, 'row')))}

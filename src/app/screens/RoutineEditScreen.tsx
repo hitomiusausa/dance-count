@@ -150,16 +150,17 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
     if (renamed || closed) persist({ replace: false });
   }, []);
 
-  // 画面が隠れた（ホーム画面へ・アプリの切り替え・ロック・閉じる）: 戻る時と同じく、名前欄の打ちかけと開いている行を原則どおり確定して
-  // 保存する（段7・Ruling 94-2。段3計画の発見 #8）。ハッシュは置き換えない。戻ると行は閉じているが、書いた中身は残っている。
+  // 画面が隠れた（ホーム画面へ・アプリの切り替え・ロック・閉じる）: 名前欄の打ちかけと、有効な開いている行だけを確定して保存する
+  // （段7・Ruling 94-2 を最終修正で改める。段3計画の発見 #8）。無効・書きかけの行は打ったまま開けておく（捨てない・閉じない）。
+  // ハッシュは置き換えない。
   useEffect(() => onPageHidden(() => {
     const current = editor.current;
     if (!current) return;
     const renamed = pendingName.current !== null && current.rename(pendingName.current);
     pendingName.current = null;
-    const closed = current.close();
+    const closed = current.closeIfValid();
     if (renamed || closed) persist({ replace: false });
-    rerender(0);
+    rerender(0);   // 有効で変わらない行も閉じるので、描き直しは毎回
   }), []);
 
   // 種目を選ぶ（新規）・選び直す（フィガー0件の「変える」）。選び直しで、名前が前の種目の既定のままなら新しい種目の既定に。

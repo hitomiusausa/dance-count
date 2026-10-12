@@ -64,6 +64,10 @@ const STATES = [
   { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3,
     actions: { group: 'routine-actions', labels: ['再生', '編集', '配る', '削除'] } },
   { name: 'S3 削除の確認', hash: '#/routines?ui-state=confirm-delete', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], confirm: true },
+  // 段7 最終レビュー m2（Ruling 30 の枠は 1 つ）: 新しい版があっても、消せなかった知らせが出ている間は更新の帯を出さない
+  { name: 'S3 更新あり・消せなかった', hash: '#/routines?ui-state=update-ready', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], failDeletes: true, alert: true,
+    steps: [{ click: '.dc-row-head >> nth=0' }, { click: '[data-group="routine-actions"] button >> nth=3' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
+    absent: ['[data-alert="update"]'] },
   { name: 'S4 新規・種目選択', hash: '#/routines/new', screen: 'S4', kind: 'focus', ops: 1, total: 1 },
   { name: 'S4 0件', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, ops: 3, total: 3 },
   { name: 'S4 13件・閉', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5 },
@@ -122,6 +126,10 @@ const STATES = [
     actions: { group: 'voice-actions', labels: ['削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], confirm: true },
+  { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn], failDeletes: true, alert: true,
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
+      { click: '[data-group="voice-actions"] button >> text=削除' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
+    absent: ['[data-alert="update"]'] },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
   { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en',
@@ -234,6 +242,10 @@ try {
         event.userChoice = Promise.resolve({ outcome: 'dismissed' });
         dispatchEvent(event);
       }));
+      // 段7 最終レビュー m2: 端末から消せない（IndexedDB の delete が投げる）。S3／S7 の「保存できませんでした」を出す
+      if (state.failDeletes) await context.addInitScript(() => {
+        IDBObjectStore.prototype.delete = function () { throw new DOMException('delete refused (ui:check)', 'UnknownError'); };
+      });
       // 段7: ホーム画面から開いた状態（display-mode: standalone だけを真に。ほかの問い合わせは本物のまま）
       if (state.standalone) await context.addInitScript(() => {
         const real = window.matchMedia.bind(window);
