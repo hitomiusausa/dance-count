@@ -70,8 +70,8 @@ test('the reviewed table is used only when there is no history (Ruling 106-2)', 
   assert.deepEqual(autoCounts({ danceId: 'waltz', name: 'ウィスク', routines, excludeRoutineId: 'r-aaaaaaaa', reviewed }), { counts: '12&3', from: 'history' });
 });
 
-test('an empty name gives nothing; with no history and the shipped (empty) table, nothing', () => {
+test('an empty name gives nothing; with no history and no reviewed entry, nothing', () => {
   const routines = [routine('r-bbbbbbbb', [['ウィスク', '123']])];
   assert.equal(autoCounts({ danceId: 'waltz', name: '  ', routines, excludeRoutineId: 'r-aaaaaaaa', reviewed: noReviewed }), null);
-  assert.equal(autoCounts({ danceId: 'waltz', name: 'ウィスク', routines: [], excludeRoutineId: 'r-aaaaaaaa' }), null);
+  assert.equal(autoCounts({ danceId: 'waltz', name: 'ウィスク', routines: [], excludeRoutineId: 'r-aaaaaaaa', reviewed: noReviewed }), null);
 });

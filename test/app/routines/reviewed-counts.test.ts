@@ -13,7 +13,8 @@ const SHEET = path.join(root, 'docs/app-v1/figure-counts-review.md');
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 test('(a) every entry is reviewed by ひとみうさ on a real date not in the future', () => {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();   // 端末の日付（UTC だと日本の 0〜9 時に「未来」と誤判定する）
+  const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((n, i) => String(n).padStart(i ? 2 : 4, '0')).join('-');
   for (const entry of REVIEWED_COUNTS) {
     assert.equal(entry.reviewedBy, 'ひとみうさ', entry.englishName);
     assert.match(entry.reviewedAt, DATE, entry.englishName);
