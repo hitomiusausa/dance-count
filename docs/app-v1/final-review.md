@@ -247,3 +247,23 @@
 - 別の木: `/private/tmp/dc-final-review-e1b0d7dc7d1fb6e257be14221cbbc84647d11aec`（git なし）。
 - 撮影と測定のスクリプト: `/private/tmp/claude-501/-Users-usausagi/f8f07fc2-926b-43cd-8cfe-b0c856b4749b/scratchpad/walk/`（`walk.mjs`＝全画面の撮影と本文・`tiles.mjs`＝幅ごとの種目名の折れ・`more.mjs`＝S2 のくわしく・`s9.mjs`＝S9 の行き止まり・`pc.mjs`＝1280 の行の長さ）・`scratchpad/fontcheck.mjs`（エンジンの字とサブセット）・`scratchpad/zw.test.ts`（不可視文字）。
 - ui:check のログ: `/private/tmp/claude-501/uicheck-dev.log`・`uicheck-prev.log`。
+
+---
+
+## 修正便（段8 Task 12・2026-10-12）
+
+コントローラーの裁定どおり I1・I2・m1・m2（D51）・m4 を直した（1 指摘＝1 コミット）。`src/engine` は 0 行。
+
+| 指摘 | コミット | 直し | 番人 |
+|---|---|---|---|
+| I1 | `68ca979` | 種目名を語の境でだけ折る。区切りの表 `src/app/i18n/dance-name-words.ts`（ヴィエニーズ｜ワルツ・スロー｜フォックス・クイック｜ステップ・チャチャ｜チャ・パソ｜ドブレ）＋`DanceName`（`<wbr>`＋`keep-all`・`overflow-wrap: normal`＝1 語が入らない時も語の途中では折らない）。S1 のタイル・前回カード・S4 の種目選び。英語は空白で折れる（表なし） | ui:check「種目名の折れ」360×640・320×568 × 日英（S1・S4。修正前の木では 360 ja 2 件・320 ja 6 件で落ちることを確かめた）・`test/app/dance-name-words.test.ts` |
+| I2 | `cb7b5b7` | check-dist の最後の行に `app url: …`（空なら `(none — student instructions omit the app line)`）。`RELEASE=1` で `PUBLIC_APP_URL` が空・壊れている・https でないと失敗。URL の値は選んでいない（D4） | `test/tools/release-app-url.test.js`。`RELEASE=1 npm run build` は exit 1、`RELEASE=1 PUBLIC_APP_URL=https://example.invalid/` は通る（コミットした URL は無い） |
+| m1 | `83c114c` | 純粋な `bootLoad`（`src/app/settings/boot-load.ts`）: 開けない＝保存なし・設定が読めない＝既定値・ルーティンが読めない＝空。reject しない | テスト 3 件。Playwright で `loadSettings`・`loadRoutines` を強制的に投げさせ、修正前は殻のまま（画面なし）・修正後は S1（タイル 10）を確認 |
+| m2 | `b975cf9` | **D51（代理決定・確認待ち）**: 録音もルーティンも無い S9 の帯に「先に声を録音するか、ルーティンを作ると配れます。」／“Record a voice or make a routine first, and then you can share it.”（`phrased()`・操作は増やさない） | ui:check「S9 何も無い」（ops 2・帯の 1 行が初期表示）・`layout.test.ts` |
+| m4 | `71443f2` | `index.html` の殻のコメントを事実（render は置き換えない → `removeBootShell()`）に。`App.tsx` の同種のコメントも | — |
+
+**ゲート（修正便の後）**: `npm test` **628 / fail 0**（619 → 628）・`typecheck` OK・`npm run build` の最後の行 `dist OK: 1078 files, no legacy pages or unreviewed data, voices: default-en-female-v1, precache 172 entries 2.92 MB, app url: (none — student instructions omit the app line)`・ui:check **dev 5199 664 PASS／公開ビルド 5198 664 PASS**（653 → 664: 「S9 何も無い」7 周＋種目名の折れ 4）・`smoke:practice`・`smoke:routines`・`smoke:voice`・`smoke:share`・`smoke:pwa` OK・`timing:audit` → `timing:compare` identical・`git diff a0d89ec -- src/engine` 空。
+
+**残した指摘**: m3・m5〜m11 は記録のまま（公開後・監修シート・製品判断）。Fable／ひとみうさへの 1・2・3・5 は `po-checklist.md` A-6・A-12〜A-14 に、D51 は A-11 に足した。
+
+**修正便で気づいた 1 点（直していない）**: S1 の前回カードのボタン「続きから」が 360 幅で「続きか／ら」と語の途中で折れる（320 では「続き／から」）。I1 と同じ種類だが種目名の外（`resume` の文言・ボタン）なので、裁定の範囲外として残した。
