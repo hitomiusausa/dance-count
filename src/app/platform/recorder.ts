@@ -26,6 +26,12 @@ export function recorderSupported(): boolean {
   return typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function' && typeof MediaRecorder !== 'undefined';
 }
 
+// 安全でない接続（http の LAN の IP など）で開いている（D53）。iOS は navigator.mediaDevices ごと隠すので、録音できない理由は
+// ブラウザではなく接続。S8 の非対応の枠の文を「https で開くと録音できます」に替えるためだけに使う。
+export function recorderNeedsHttps(): boolean {
+  return typeof window !== 'undefined' && window.isSecureContext === false;
+}
+
 // 録れる形の最初の 1 つ。どれも無ければ undefined（＝ブラウザ既定）。
 export function pickMimeType(isSupported: (type: string) => boolean = type => MediaRecorder.isTypeSupported(type)): string | undefined {
   return MIME_TYPES.find(type => { try { return isSupported(type); } catch { return false; } });

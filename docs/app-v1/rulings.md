@@ -3282,3 +3282,10 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 7. **S13 の「公式・監修済みではありません」（D48）との整合**: 監修表が入っても文はそのまま（ISTD 公式ではない・外部監修ではない、の意味）。変えたければ一言。
 
 ---
+
+# http で開いた時の録音の枠（D53）— 統括の裁定（2026-10-12）
+
+- **D53 http で開くと「このブラウザでは録音できません」と出る**: 実機確認で LAN の IP（http）から開いた iPhone の Safari が S8 で「このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。」を出した。iOS は安全でない接続（`isSecureContext === false`）では `navigator.mediaDevices` ごと隠すので、原因はブラウザではなく接続で、文の指示（Safari か Chrome で開く）は当たらない。
+  - **決定**: `src/app/platform/recorder.ts` に `recorderNeedsHttps()`（`window.isSecureContext === false`）を足し、S8 の非対応の枠は安全でない接続の時だけ文を `recordNeedsHttps`「安全な接続（https）で開くと録音できます。」／"Recording works only over a secure (https) connection." に替える（`data-alert="no-https"`。枠の形・操作 0 は同じ）。安全な接続で口が無い時は今までどおり `noRecorder`。
+  - 見た目の強制に `ui-state=no-https`（S8）を足した（routes.ts の「以後の追加は裁定が要る」に対し、この D53 が裁定）。`ui:check`「S8 http で開いた」。
+  - 公開版は https なので利用者には出ない。開発中の実機確認（http の LAN）で誤った案内を出さないための直し。

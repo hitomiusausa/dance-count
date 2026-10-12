@@ -5,7 +5,7 @@ import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
 import { playBuffer, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
-import { RecorderError, TAKE_MS, recordTake, recorderSupported, requestMicrophone } from '../platform/recorder.ts';
+import { RecorderError, TAKE_MS, recordTake, recorderNeedsHttps, recorderSupported, requestMicrophone } from '../platform/recorder.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import type { UiState } from '../router/routes.ts';
@@ -61,7 +61,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const [pack, setPack] = useState<VoicePackRecord | null>(null);
   const forcedWord = uiState === 'no-voice' || uiState === 'save-failed';
   const [step, setStep] = useState<RecordStep>(() => (forcedWord ? { kind: 'word', index: 0 } : { kind: 'intro' }));
-  const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'mic-failed' ? 'failed' : uiState === 'no-recorder' || !recorderSupported() ? 'unsupported' : 'none'));
+  const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'mic-failed' ? 'failed' : uiState === 'no-recorder' || uiState === 'no-https' || !recorderSupported() ? 'unsupported' : 'none'));
   const [alert, setAlert] = useState<Alert>(uiState === 'no-voice' ? 'no-voice' : uiState === 'save-failed' ? 'save-failed' : 'none');
   const [howTo, setHowTo] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -240,10 +240,14 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const header = <FocusHeader screen="S8" title={translator.t('recordTitle')} heading={step.kind !== 'done' || !pack} />;
 
   if (blocked === 'unsupported') {
+    // D53: 安全でない接続（http）では iOS が録音の口ごと隠す。ブラウザを替えても録れないので、文は「https で開くと…」に
+    const insecure = uiState === 'no-https' || (uiState !== 'no-recorder' && recorderNeedsHttps());
     return (
       <main class="dc-screen dc-screen--focus dc-record" data-screen="S8" data-step="unsupported">
         {header}
-        <div class="dc-alert" role="status" data-alert="no-recorder"><div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'noRecorder')}</b></div></div>
+        <div class="dc-alert" role="status" data-alert={insecure ? 'no-https' : 'no-recorder'}>
+          <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, insecure ? 'recordNeedsHttps' : 'noRecorder')}</b></div>
+        </div>
       </main>
     );
   }
