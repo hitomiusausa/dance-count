@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { LabeledText } from '../components/LabeledText.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
@@ -180,8 +181,9 @@ export function ReceiveScreen() {
         <span>{translator.t(busy ? 'readingFile' : 'chooseFile')}</span>
       </button>
       <div class="dc-receive-help" data-body>
-        <div>{translator.t('receiveHelpLine')}</div>
-        <div>{translator.t('receiveHelpRecents')}</div>
+        {/* iOS の画面の語（「"ファイル"に保存」「最近使った項目」）は WebKit でも途中で折らない（段7 Task 12・S12 と同じ型） */}
+        <div><LabeledText text={translator.t('receiveHelpLine')} /></div>
+        <div><LabeledText text={translator.t('receiveHelpRecents')} /></div>
       </div>
     </main>
   );
