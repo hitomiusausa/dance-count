@@ -445,5 +445,9 @@ button { cursor: pointer; }
 .dc-receive-link + .dc-record-link { margin-top: 12px; }
 /* S8 完成のバックアップの 1 行（Ruling 86-2。操作ではない・16px） */
 .dc-backup-tip { margin-top: 12px; }
+/* 段5の文は句の切れ目で折る（auto-phrase は Chrome だけ。.dc-receive-help と同じ型）。text-wrap の pretty・balance は
+   iOS Safari では「下の案／内文」「選ぶ／と、」のように句の中で折るので使わない（段5 Task 10 の iOS シミュレーターで確認）。
+   Safari の「す。」だけの行は文言の判断（Open question） */
+.dc-dock-note, .dc-backup-tip, .dc-result, .dc-receive .dc-alert-text, .dc-receive-item, .dc-receive-note, .dc-receive .dc-body { word-break: auto-phrase; }
 /* S3 の開いた行（Ruling 86-4）: 「編集」「配る」「削除」の 3 つは語の途中で折らない（320 幅では 2 段に並ぶ） */
 .dc-row-actions .dc-button--secondary { flex: 1 0 auto; white-space: nowrap; }
