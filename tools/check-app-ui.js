@@ -5,7 +5,7 @@
 // 1件でも違反があれば終了コード1。U14（禁止語）は node --test 側（test/app/i18n.test.ts）。
 import path from 'node:path';
 import { chromium } from 'playwright-core';
-import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
+import { UI_CHECK_ROUTINES as R, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
@@ -197,8 +197,9 @@ try {
       if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
       if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
       // via: 別の画面から実経路で入る状態（S7 の「配る」→ S9 など。一回限りの印は URL に無いので直接は開けない）
-      await page.goto(BASE + (state.via?.hash ?? state.hash));
-      if (state.seed || state.voiceSeed) await page.reload();
+      // seed した時は新しく読み込む（動いているアプリにハッシュだけ渡すと、古い一覧で S4／S5 を S3 へ置き換える。段7 Task 1）
+      if (state.seed || state.voiceSeed) await openAfterSeed(page, BASE + (state.via?.hash ?? state.hash));
+      else await page.goto(BASE + (state.via?.hash ?? state.hash));
       await page.waitForSelector(`[data-screen="${state.via?.screen ?? state.screen}"]:not([data-loading])`);
       for (const step of state.steps ?? []) {
         if (step.click) await page.locator(step.click).click();

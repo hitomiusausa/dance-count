@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
-import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
+import { UI_CHECK_ROUTINES as R, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 import { UI_CHECK_VOICES as V, seedVoicePacksInPage } from './ui-check-voices.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
@@ -126,8 +126,7 @@ try {
   await page.waitForSelector('[data-screen]');
   await page.evaluate(seedRoutinesInPage, [R.waltz13]);
   await page.evaluate(seedVoicePacksInPage, [V.completeEn]);
-  await page.goto(`${BASE}#/voices`);
-  await page.reload();
+  await openAfterSeed(page, `${BASE}#/voices`);
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
   await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
   await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
@@ -170,8 +169,7 @@ try {
   await e.waitForSelector('[data-screen]');
   await e.evaluate(seedRoutinesInPage, [R.waltz13]);
   await e.evaluate(seedVoicePacksInPage, [V.completeEn]);
-  await e.goto(`${BASE}#/voices/record`);
-  await e.reload();
+  await openAfterSeed(e, `${BASE}#/voices/record`);
   await e.waitForSelector('[data-screen="S8"][data-step="intro"]');
   await e.locator('[data-group="record-language"] [role="radio"] >> nth=0').click();
   await e.locator('.dc-dock .dc-primary').click();

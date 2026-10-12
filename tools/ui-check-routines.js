@@ -69,3 +69,12 @@ export async function seedRoutinesInPage(routines) {
   });
   db.close();
 }
+
+// seed の後に画面を開く（段7 Task 1・段3からの「seed 直後の S4 待ちで 30 秒切れ」の直し）。
+// 動いているアプリにハッシュだけ変えて渡すと、アプリはメモリの古い一覧（seed の前）で判断し、知らないルーティンの S4／S5 を
+// S3 へ置き換える（replaceRoute）。その後の reload は置き換わった #/routines を読み直すので、重い時ほど S3 が出る。
+// 空のページを挟んで、目当ての URL を新しく読み込む（アプリは IndexedDB から seed 済みの一覧を読む）。
+export async function openAfterSeed(page, url) {
+  await page.goto('about:blank');
+  await page.goto(url);
+}

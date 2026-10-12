@@ -12,7 +12,7 @@
 // キーボードを開いたままのドラッグで画面が流れない・鳴らしている間は帯が残る（最終レビュー2 I1・M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
-import { UI_CHECK_ROUTINES as R, seedRoutinesInPage } from './ui-check-routines.js';
+import { UI_CHECK_ROUTINES as R, openAfterSeed, seedRoutinesInPage } from './ui-check-routines.js';
 
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const SOUND_TIMEOUT_MS = 10000;   // はじめの合図（1小節）＋声の読み込みを待っても、この間にカウントが3種類変わること
@@ -344,8 +344,7 @@ try {
   await enPage.goto(`${BASE}#/`);
   await enPage.waitForSelector('[data-screen]');
   await enPage.evaluate(seedRoutinesInPage, [R.waltz13]);
-  await enPage.goto(`${BASE}#/routines/${R.waltz13.id}/edit`);
-  await enPage.reload();
+  await openAfterSeed(enPage, `${BASE}#/routines/${R.waltz13.id}/edit`);
   await enPage.waitForSelector('[data-screen="S4"]');
   const enWhisk = R.waltz13.figures[3];
   if (enWhisk.name !== 'ウィスク') errors.push(`en same figure: expected the 4th seeded figure to be ウィスク ("${enWhisk.name}")`);
@@ -374,8 +373,7 @@ try {
   await kbPage.goto(BASE + '#/');
   await kbPage.waitForSelector('[data-screen]');
   await kbPage.evaluate(seedRoutinesInPage, [R.waltz13]);
-  await kbPage.goto(BASE + `#/routines/${R.waltz13.id}/edit`);
-  await kbPage.reload();
+  await openAfterSeed(kbPage, BASE + `#/routines/${R.waltz13.id}/edit`);
   await kbPage.waitForSelector('[data-screen="S4"] .dc-grip');
   await kbPage.locator('[data-screen="S4"] .dc-field input').first().focus();
   await fakeKeyboard(kbPage, 300);
@@ -429,8 +427,7 @@ if (wk) {
     await page.goto(BASE + '#/');
     await page.waitForSelector('[data-screen]');
     await page.evaluate(seedRoutinesInPage, [R.waltz13]);
-    await page.goto(BASE + `#/routines/${R.waltz13.id}/edit`);
-    await page.reload();
+    await openAfterSeed(page, BASE + `#/routines/${R.waltz13.id}/edit`);
     await page.waitForSelector('[data-screen="S4"]');
     await page.locator('.dc-add-tail').click();
     const form = page.locator('.dc-figure-form').last();
