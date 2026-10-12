@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { LabeledText } from '../components/LabeledText.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
 import { playBuffer, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
@@ -267,7 +268,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             <div>{translator.t('recordIntro3')}</div>
           </div>
         )}
-        {!micProblem && addFirst && <div class="dc-hint dc-record-add-first">{translator.t('recordAddFirst')}</div>}
+        {!micProblem && addFirst && <div class="dc-hint dc-record-add-first"><LabeledText text={translator.t('recordAddFirst')} /></div>}
         <h2 class="dc-field-label" id="dc-s8-language">{translator.t('recordLanguage')}</h2>
         <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s8-language" data-group="record-language">
           {LANGUAGES.map(locale => {

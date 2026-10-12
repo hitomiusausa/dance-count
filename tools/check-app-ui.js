@@ -191,8 +191,11 @@ const STATES = [
   { name: 'S12 Android', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, installPrompt: true, ops: 1, total: 1, firstView: ['.dc-install .dc-primary'] },
   { name: 'S12 Android ボタンなし', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: ANDROID_UA, ops: 0, total: 0, texts: ['右上の「⋮」を押します。', '「インストール」を押します。'] },
   { name: 'S12 PC', hash: '#/help/install', screen: 'S12', kind: 'list', ops: 1, total: 1, texts: ['iPhone や Android で開くと、ホーム画面に追加できます。'] },
-  { name: 'S12 追加済み', hash: '#/help/install', screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
-    texts: ['このアプリはホーム画面から開いています。追加は済んでいます。'], absent: ['.dc-install-steps'] }
+  // ホーム画面のアプリでは S6 の行から入る（S12 のアドレスで起動すると練習へ置き換える。段7 fix 1・レビュー I2 ＝下の状態）
+  { name: 'S12 追加済み', hash: '#/help/install', via: { hash: '#/settings', screen: 'S6' }, screen: 'S12', kind: 'list', userAgent: IOS_SAFARI_UA, standalone: true, ops: 0, total: 0,
+    steps: [{ click: 'a[href="#/help/install"]' }, { wait: '[data-screen="S12"]' }],
+    texts: ['このアプリはホーム画面から開いています。追加は済んでいます。'], absent: ['.dc-install-steps'] },
+  { name: 'ホーム画面のアプリを S12 のアドレスで起動', hash: '#/help/install', screen: 'S1', kind: 'root', userAgent: IOS_SAFARI_UA, standalone: true, launchOnly: true, ops: 2, total: 2, teacherAndTiles: true }
 ];
 
 const ONLY = (process.env.DC_ONLY ?? '').split(',').map(item => item.trim()).filter(Boolean);
@@ -282,7 +285,8 @@ try {
   await page.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
   await page.reload();
   await page.waitForSelector('[data-screen]');   // アプリがハッシュの変化を聞き始めてから次のハッシュへ
-  for (const state of CHECKED) {
+  // launchOnly: ホーム画面のアプリの起動の置き換えだけを見る状態（この周はホーム画面のアプリを偽らないので、同じハッシュで S12 が出る。S1 は他の状態で回る）
+  for (const state of CHECKED.filter(item => !item.launchOnly)) {
     await page.goto(BASE + state.hash);
     await page.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
     const { scrollWidth, clientWidth, meta } = await page.evaluate(() => ({
@@ -305,7 +309,7 @@ try {
   await narrowPage.evaluate(seedRoutinesInPage, [...new Map(STATES.flatMap(state => state.seed ?? []).map(item => [item.id, item])).values()]);
   await narrowPage.reload();
   await narrowPage.waitForSelector('[data-screen]');
-  for (const state of CHECKED) {
+  for (const state of CHECKED.filter(item => !item.launchOnly)) {
     await narrowPage.goto(BASE + state.hash);
     await narrowPage.waitForSelector(`[data-screen="${state.screen}"]:not([data-loading])`);
     const { scrollWidth, clientWidth } = await narrowPage.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));

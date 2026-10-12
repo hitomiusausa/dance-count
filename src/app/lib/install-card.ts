@@ -25,3 +25,14 @@ export function installGuideFor(kind: PlatformKind, standalone: boolean): Instal
 export function showsRecordInstallHint({ kind, standalone, recorded }: { kind: PlatformKind; standalone: boolean; recorded: boolean }): boolean {
   return (kind === 'ios-safari' || kind === 'ios-other') && !standalone && !recorded;
 }
+
+// ホーム画面のアプリを起動した時の最初のハッシュ（段7 fix 1・レビュー I2）。S12 を開いたまま追加すると、iOS がその時の URL を
+// 保存して毎回 S12（「追加は済んでいます」）から開く恐れがあるので、ホーム画面から開いた時に限り練習（#/）に置き換える。
+// 置き換えない時は null。iOS が start_url を使うなら、元々 #/ なので何も起きない。
+export const INSTALL_HELP_HASH = '#/help/install';
+
+export function launchHashFor({ hash, standalone }: { hash: string; standalone: boolean }): string | null {
+  if (!standalone) return null;
+  const path = hash.split('?')[0];
+  return path === INSTALL_HELP_HASH ? '#/' : null;
+}

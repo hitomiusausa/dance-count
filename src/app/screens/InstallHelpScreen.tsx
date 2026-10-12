@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { LabeledText } from '../components/LabeledText.tsx';
 import type { IconName } from '../components/icon-names.ts';
 import type { MessageKey } from '../i18n/index.ts';
 import { installGuideFor } from '../lib/install-card.ts';
@@ -57,7 +58,7 @@ export function InstallHelpScreen() {
               <ol class="dc-steps dc-install-steps">
                 {IOS_STEPS.map(step => (
                   <li key={step.key}>
-                    <span class="dc-install-step">{step.icon ? <Icon name={step.icon} /> : <span class="dc-ic" aria-hidden="true" />}<span>{translator.t(step.key)}</span></span>
+                    <span class="dc-install-step">{step.icon ? <Icon name={step.icon} /> : <span class="dc-ic" aria-hidden="true" />}<span><LabeledText text={translator.t(step.key)} /></span></span>
                   </li>
                 ))}
               </ol>
@@ -70,7 +71,7 @@ export function InstallHelpScreen() {
             ? <button type="button" class="dc-button dc-primary dc-wide" onClick={() => { void showInstallPrompt(); }}>
                 <Icon name="plus-square" /><span>{translator.t('installAndroidButton')}</span>
               </button>
-            : <ol class="dc-steps">{ANDROID_STEPS.map(key => <li key={key}>{translator.t(key)}</li>)}</ol>)}
+            : <ol class="dc-steps">{ANDROID_STEPS.map(key => <li key={key}><LabeledText text={translator.t(key)} /></li>)}</ol>)}
         </>
       )}
     </main>

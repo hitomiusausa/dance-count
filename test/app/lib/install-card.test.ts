@@ -1,7 +1,7 @@
 // 段7（Ruling 92-1・92-7・D42）: S1 の案内カードの条件と、S12 に出す 1 通り。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installGuideFor, showsInstallCard, showsRecordInstallHint } from '../../../src/app/lib/install-card.ts';
+import { installGuideFor, launchHashFor, showsInstallCard, showsRecordInstallHint } from '../../../src/app/lib/install-card.ts';
 
 const SHOWN = { firstPlaybackDone: true, homeScreenCardDismissed: false };
 
@@ -26,4 +26,11 @@ test('S8 recommends adding to the Home Screen before recording only in an iPhone
   for (const kind of ['android', 'desktop'] as const) assert.equal(showsRecordInstallHint({ kind, standalone: false, recorded: false }), false, kind);
   assert.equal(showsRecordInstallHint({ kind: 'ios-safari', standalone: true, recorded: false }), false, 'not in the added app');
   assert.equal(showsRecordInstallHint({ kind: 'ios-safari', standalone: false, recorded: true }), false, 'too late once a word is recorded');
+});
+
+test('an added app opened on S12 starts on practice instead; browsers and other screens are untouched (review I2)', () => {
+  assert.equal(launchHashFor({ hash: '#/help/install', standalone: true }), '#/');
+  assert.equal(launchHashFor({ hash: '#/help/install?ui-state=x', standalone: true }), '#/');
+  assert.equal(launchHashFor({ hash: '#/help/install', standalone: false }), null, 'a browser keeps S12 (the copied address opens it)');
+  for (const hash of ['', '#/', '#/settings', '#/help/sound', '#/receive']) assert.equal(launchHashFor({ hash, standalone: true }), null, hash);
 });

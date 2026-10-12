@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import './platform/launch.ts';   // 最初に: ホーム画面のアプリが S12 で開いたら練習へ（段7 fix 1。ルーターが最初のハッシュを読む前）
 import { App } from './App.tsx';
 import { configureAudioSession } from './platform/audio-context.ts';
 import { captureInstallPrompt } from './platform/pwa.ts';
