@@ -3373,7 +3373,7 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 
 ---
 
-# 表紙で「使う／作る」に分ける（D56）— 計画前の裁定（Fable・2026-10-12・**ひとみうさの合意待ち。合意までコードは触らない**）
+# 表紙で「使う／作る」に分ける（D56）— 計画前の裁定（Fable・2026-10-12・**ひとみうさの合意 2026-10-13: 全部おすすめ（§1 の合意の行と §3）。計画へ進んでよい**）
 
 作成: 2026-10-12 / 作業ツリー `agent/auto-counts`（D52 の実装と同じ枝） / 書き手: Fable（裁定だけ。コードには触れていない）。比較モック: `docs/app-v1/mockups/role-split-compare.html`（表紙 A／B／C・使う 2 画面・作る 2 画面・設定・声。375×548 と 320×568）。
 この裁定は **D54（Ruling 113「受け取る入口」）を置き換える**（S1 のカードの 2 行目・S3 の「受け取る」は、下の形に吸収される）。**D52（自動カウント・Ruling 106〜112）と D55（カウントの型の帯・Ruling 114）はそのまま**。
@@ -3397,6 +3397,11 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 - **D56 表紙で「使う／作る」に分ける（2026-10-12）**: 「表紙に「使う（生徒用）」「作る（指導者用）」みたいな入口を作って、使う方は、今の練習とルーティン（完成したもの）のセクションへ。そして、ルーティンの中に「受け取る」ボタンを作って送られたファイルを開けるようにできないかな。「作る」の方は先生が作る画面。今の練習のセクションは必要なくて、声の録音とルーティン作成画面と書き出しを配置する。」
   - 補足の答え (1) 受け取ったルーティンは生徒が直してよい。ただし「使う」の中のルーティンは**鳴らすだけ**で、直すのは「作る」から、と小さく案内する。(2) 表紙は**毎回の起動で出す**（最後に開いた側は覚えない）。(3) 声の選択（先生の声／標準の英語）は練習・再生の画面の中（「使う」側に声の節は作らない）。
   - この決定は D54 を置き換える。D52・D55 は生きている。
+- **ひとみうさの合意 2026-10-13: 全部おすすめ**（原文「基本的に全部推奨で。先生の方→指導者の方 「使う」画面下、練習/ルーティンの「練習」→「フィガー」に変更。ついでに「練習」では今は各種目それぞれ一つのステップしか入ってないけど、ルーティンリストのステップを項目を反映させたいな。」）。§3 の 9 問は全部 Fable の推奨で決まり（答えは §3 の各行）。**言葉の変更 2 つ**（Ruling 115 の文言をこの行で読み替える。コードの鍵名は計画者が付ける）:
+  - (a) 「作る」の扉の副題: 「（先生の方）」→ **「（指導者の方）」**。英語 **“For instructors”**。「使う」の副題「（生徒の方）」／“For students” はそのまま。
+  - (b) 「使う」の下タブの 1 つ目: 「練習」→ **「フィガー」**。英語 **“Figures”**（`tabPractice` の値を替えるか `tabFigures` に改名するかは計画者）。2 つ目「ルーティン」／“Routines” はそのまま。U1 の見出し「種目を選んでください」は変えない（タブは「何の棚か」、見出しは「今の問い」）。
+  - 「ついでに」の後半（種目ごとに 1 つのステップしか無い → ルーティンリストのステップを反映）は **D57（この下の節）** で裁定した。
+  - **Ruling 113（D54）は置き換え済みで、実装していない**（2026-10-13 にコードを検索: `instructionsStep2Routines`・`.dc-entry-pair`・S1 カードの 2 行目・S3 の「受け取る」はどれも `src`・`tools`・`test` に無い）。計画者は Ruling 113 を読まなくてよい。
 
 ## 2. 裁定（計画前。番号は Ruling 114 の続き）
 
@@ -3503,20 +3508,129 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 
 **外れた時の代償**: ui:check の状態表の差し替えが大きい（状態名に S3 が無くなる）。実装便は「経路と表紙」「U1／U2／M0／M1」「S6／S7／S10 の出口」「検査」の 4 便に分けるのが安全（計画者へ）。
 
-## 3. ひとみうさに選んでもらうこと（モック §6 と同じ。合意までコードは触らない）
+## 3. ひとみうさに選んでもらったこと（モック §6 と同じ。**2026-10-13 に全部おすすめで合意**）
 
-1. **表紙の形**: A（扉だけ）／B（扉＋前回カード）／**C（扉に「続きから」が付く・推奨）**。
-2. **扉の言葉**: ①「使う」「作る」＋（生徒の方）（先生の方）（推奨）／②「使う（生徒用）」「作る（指導者用）」／③「練習する」「先生の方へ」。英語 Use／Make か Practice／For teachers。
-3. **表紙へ戻る口**: **左上「‹ 表紙」（推奨）**／下タブの 1 つ目「表紙」（H1）。
-4. **使う › ルーティンの行**: **押すとすぐ鳴る（推奨）**／行を開いて ▶（U2'）。
-5. **「直すのは作るから」の案内**: 一覧の下に 1 行（推奨）／開いた行の中／出さない。文言「ルーティンを直す・消す時は、表紙の「作る」から。」。
-6. **設定の置き場**: **表紙の行（推奨）**／使う側の 3 つ目のタブ。
-7. **S7 の「自分の声を録音する」**: 「作る」へ移す（推奨）／S7 にも残す。
-8. **「作る」の見出し**: 「作る」（推奨）／「先生の方へ」。
-9. （確認）D54 の Ruling 113 を置き換えてよいか（S1 カードの 2 行目・S3 の「受け取る」は作らない）。
+1. **表紙の形**: **C（扉に「続きから」が付く）** — 採用。
+2. **扉の言葉**: **①「使う」「作る」＋（生徒の方）（指導者の方）** — 採用（「先生の方」は「指導者の方」に。§1 (a)）。英語 Use（For students）／Make（For instructors）。
+3. **表紙へ戻る口**: **左上「‹ 表紙」** — 採用。
+4. **使う › ルーティンの行**: **押すとすぐ鳴る** — 採用。
+5. **「直すのは作るから」の案内**: **一覧の下に 1 行**・文言「ルーティンを直す・消す時は、表紙の「作る」から。」 — 採用。
+6. **設定の置き場**: **表紙の行** — 採用。
+7. **S7 の「自分の声を録音する」**: **「作る」へ移す** — 採用。
+8. **「作る」の見出し**: **「作る」** — 採用。
+9. **Ruling 113 の置き換え** — 了承（S1 カードの 2 行目・S3 の「受け取る」は作らない。未実装）。
+10. （追加の合意）下タブ「練習」→ **「フィガー」**（§1 (b)）。
 
 ## 4. 合意の後に計画者がやること（この裁定を計画に落とす時）
 
 - 便は 4 つ（Ruling 118「外れた時」）。各便の終わりに `npm test`・`ui:check`（dev と公開ビルド）・`smoke:*` 緑。実機確認は `device-check-master.md` の D56 の節（Ruling 118-4）。
 - D52（`agent/auto-counts` の自動カウント）と同じ枝で進めてよいが、**D52 の実装者の便が終わってから**（`RoutinesScreen.tsx`・`check-app-ui.js` を両方が触るため。Ruling 112）。
 - 触るファイルの見込み: `router/routes.ts`・`router/resolve.ts`・`components/TabBar.tsx`・`App.tsx`・`screens/HomeScreen.tsx`（U1）・新 `screens/CoverScreen.tsx`・新 `screens/MakeScreen.tsx`・`screens/RoutinesScreen.tsx`（`mode`）・`screens/SettingsScreen.tsx`・`screens/VoicesScreen.tsx`・`screens/ReceiveScreen.tsx`（出口）・`share/instructions.ts`・`i18n/messages.ts`（`coverUse`・`coverUseSub`・`coverMake`・`coverMakeSub`・`coverSettingsSub`・`backToCover`・`continueLast`・`makeTitle`・`makeIntro`・`makeRoutines`・`makeShare`・`voiceStatus*`・`routinesCount`・`editFromMake`・`recordFromMake`・`cannotPlayFixInMake`・`instructionsStep2`）・`styles/base.css`（`.dc-door`・`.dc-doorset`・`.dc-hub`・`.dc-row--play`）・`tools/check-app-ui.js`・`tools/smoke-*.js`・`test/app/router/*`・spec §1・§3・§4・§8。
+
+---
+
+# 「フィガー」タブ — 種目のフィガー一覧から監修済みのカウントを練習する（D57）— 計画前の裁定（Fable・2026-10-13）
+
+作成: 2026-10-13 / 作業ツリー `agent/auto-counts` / 書き手: Fable（裁定だけ。コードには触れていない）。
+前提: D52（Ruling 106〜112。監修表 `REVIEWED_COUNTS`・Ruling 3「未監修は見せない」）・D55（Ruling 114 の帯）・D56（Ruling 115〜118。U1＝`#/use`・下タブ「フィガー」「ルーティン」・表紙 C の「続きから」）はそのまま。この裁定はそれらの上に**足すだけ**で、どれも書き換えない。
+
+## 0. コードで確かめた事実（裁定の根拠）
+
+- **S2 が鳴らす物は「カウントの文字列 1 本」**: `PracticeScreen.tsx` の `optionsFrom` → `PracticeOptions { kind:'counts', counts }` → `session.ts` の `compileProgram` → `compileRhythm({ danceId, counts })`。今の `counts` は `practiceChoice`（`preferences.ts`）が `profile.templates` の中からだけ選ぶ（`chooseTemplate` は templates に無い値を捨てる）。**監修表のカウントも同じ文字列**なので、同じ経路で鳴る。2 小節の値も通る（2026-10-13 に node で確認: ワルツ `123123` → 6 語・5760 tick、`12&3123` → 7 語、タンゴ `SSQQS` → 7680 tick、クイック `SQQSQQ` → 6 語）。`checkCounts` を通った値しか監修表に無い（Ruling 110-2(b)）。
+- **S2 の主要操作数は上限ちょうど**（`check-app-ui.js:69-70`: 初期 5・くわしく開 9）。S2 にフィガーの選択肢を置く余地は無い。
+- **監修表の引き方**: `reviewedCounts(danceId, name)`（`figureIdentity` で 1 件）。種目ごとの一覧を返す関数はまだ無い。登録簿の定義順は `figureNameChoices(danceId, locale)`（`figure-names.ts`。ISTD の並び・五十音順にしない＝Ruling 54-1）。表示名は `display.ja = sourceAliases[0]`・`display.en = englishName`。`FIGURE_CHOICES_MAX` 20（タンゴ 19）。表は今 **0 件**。
+- **英語名は URL に入らない**（“Natural Turn”・“Chasse from PP” に空白）。`routes.ts` の `:name` は `ID_SEGMENT = /^[A-Za-z0-9_-]+$/`。
+- **記憶**: `settings.lastDanceId` だけ（`PracticeScreen` が開いた時に書く＝Ruling 26）。`requestAutoplay({ kind:'dance', id })` は種目 ID だけで照合。`goBack` は履歴が無い時 `replaceRoute({ screen: parent, params: {} })`（親に `params` を渡せない）。`resolveScreen`（`resolve.ts`）に `redirect` の仕組みがある（S5 の鳴らせないルーティン → S3）。
+- D55（Ruling 114-5）の帯は `view.program`（セッションの `compiled`）から語を作り、止まっている間は `choice.counts` を表示のためだけに `compileRhythm` する。つまり「S2 が持つ counts を 1 本にする」だけで帯も付いてくる。
+
+## 1. ひとみうさの決定
+
+- **D57 「フィガー」タブ（2026-10-13）**: 「「練習」では今は各種目それぞれ一つのステップしか入ってないけど、ルーティンリストのステップを項目を反映させたいな。」 追加の答え: 「フィガー」タブで種目を選ぶと**その種目のフィガー一覧**（例: ワルツ → クローズドチェンジ／ナチュラルターン／ウィスク …）が出て、1 つ押すとそのフィガーのカウントで練習する（案「種目のフィガー一覧」）。カウントは **ひとみうさが監修した物だけ**（D52 の監修表 `reviewed-counts.ts`。今は空）。Ruling 3 はそのまま＝未監修のカウントは出さない。**今の基本のカウント（型）は一番上に残す**。監修済みフィガーが無い種目は**今までどおり基本のカウントだけ**。
+
+## 2. 裁定（番号は Ruling 118 の続き）
+
+## Ruling 119（D57）置き場と道筋 — 種目タイル → **F1「種目のフィガー」**（`#/figures/:danceId`・集中画面）→ 行を押すとすぐ鳴って S2。監修済みが 0 件の種目はタイル → S2 のまま。F1 は空では出さない
+
+**決定**:
+1. **新しい画面 F1**（`ScreenId` `'F1'`・`path: '/figures/:danceId'`・`kind: 'focus'`・`parent: 'S1'`（＝U1 `#/use`）・`side: 'use'`・下タブ無し・左上「‹ 戻る」）。S2 の中に選択肢を置かない（S2 は上限ちょうど＝§0）。U1 のタイルの中にも置かない（10 種目 × 最大 19 行は 548 に入らない・タイルは「種目を選ぶ」1 問のまま）。
+2. **タイルの行き先は種目ごとに決まる**: `reviewedFigures(danceId).length >= 1` なら F1、**0 件なら今までどおり S2**（`HomeScreen` の `href` を `buildHash` で振り分ける純粋な判断。描画のたびに引いてよい＝表は定数）。表が空の間は 10 タイル全部が S2 ＝ 今と同じ見た目・同じ動き。
+3. **F1 の中身**（上から。375×548 の初期表示に 1〜4 が入る）:
+   1. 「‹ 戻る」（`data-back`・履歴が無ければ U1）。言語の切替は置かない（U1 で替える。S2 と同じ扱い）。
+   2. 見出し `h1` ＝ 種目名（「ワルツ」／“Waltz”）。
+   3. **「基本のカウント」の行**（主・紺塗り・56px 以上・`.dc-row--play` と同じ型）: 太字「基本のカウント」／“Basic count”・小さく型の文字 `1 2 3`（`formatCounts(danceId, templates[0])`。ワルツで `12&3` を記憶していればその型＝`practiceChoice` の `counts`）・右端に「▶」の札。**ひとみうさの「一番上に残す」**。
+   4. 見出し `h2`「フィガー」／“Figures” → **一覧** `[data-list]`（`ul`。行は `button`・56px・左に名前（表示言語の表記＝`figureNameChoices` と同じ）・名前の下に小さく `formatCounts(danceId, entry.counts)`・右端に「▶」の札）。**行を押すとすぐ鳴る**（D56 §3-4 と同じ型: `unlockAudioInsideTap()` → `requestAutoplay({ kind:'dance', id: danceId })` → `navigate(S2 with figure)`。基本の行も同じ）。開く行・編集・削除・長押しは無い。
+   5. 一覧の下に文は置かない（「準備中」「ほかのフィガーは後で」の類は**書かない**＝Ruling 3・D48 と同じ向き。無い物は無い）。
+4. **並び**: 登録簿の定義順（`figureNameChoices` と同じ。D20 の一覧と同じ順で、生徒が S4 で見る並びと一致）。監修済みの行だけ。五十音順・使った順・レベル順にしない（レベルのデータが無い・並びが日によって変わらない）。
+5. **主要操作数**: 初期 **2**（基本の行 1・一覧 `[data-list]` 1）・全体 2。行数が 19 でも `[data-list]` は 1（Ruling 35）。一覧は縦スクロール（タンゴ 19 行 × 56px ＝ 1064px。548 では 3 行目あたりから下がスクロール。見出しと基本の行は初期表示に必ず入る）。
+6. **空の F1 は存在しない**: `#/figures/<dance>` を直接開いて 0 件なら `resolveScreen` が **S2（基本）へ `redirect`**（`#/practice/<dance>`。履歴を積まない）。知らない種目は U1。これで「表が空の間に F1 が見える経路」は 1 つも無い。
+7. **タップ数**: 表紙 → 使う → 種目 → **基本の行（＝音）** ＝ 4 で、今の 表紙 → 使う → 種目 → ▶ ＝ 4 と同じ（F1 の行は押した時点で鳴るから）。G1「初回は 3 タップ（扉を含む）」（Ruling 118-5）は**そのまま**。G2 は Ruling 121 の「続きから」で 1。
+
+**理由**: 60〜70代には「種目 → フィガー → 鳴る」の 1 本道が、S2 の中の切替より分かりやすい（S2 は「鳴っている画面」で、選ぶ画面ではない）。基本の行を一番上の主ボタンにすれば、フィガーを知らない人・今までの使い方の人は「上を押す」で今までどおり。0 件の種目を S2 直行にするのは、1 行だけの一覧を見せる画面に意味が無いため。
+
+**外れた時の代償**: 種目によってタイルの行き先が違う（監修が進むまでの過渡期に、ワルツは一覧・ルンバは再生）。基本の行が上にあるので迷わないと見るが、ひとみうさの確認 §3-1。監修表が 1 件増えるたびに、その種目のタイルの行き先が変わる（転記のコミットで ui:check の状態も増やす＝Ruling 122-4）。
+
+## Ruling 120（D57）S2 でフィガーを鳴らす — 経路 `/practice/:danceId/:figureSlug`。S2 の counts を 1 か所で決める（フィガーも同じコンパイル経路・第 2 の時間計算を作らない・`src/engine` は触らない）。くわしくの「カウントの型」はフィガーの時は出さない
+
+**決定**:
+1. **経路**: `routes.ts` の `EXTRA_PATHS` に `{ screen:'S2', path:'/practice/:danceId/:figureSlug' }`（S4 の `/edit` と同じ仕組み）。`RouteParams` に `figureSlug?: string`。`buildHash` は `figureSlug` がある時だけ長い形。**`figureSlug`** ＝ 英語名の小文字化・英数以外を `-` に畳み前後の `-` を落とした物（“Chasse from PP” → `chasse-from-pp`・“Natural Turn” → `natural-turn`）。`figure-names.ts` に `figureSlug(englishName)` を置き、**照合済み 108 件で種目内に重複が無い・`ID_SEGMENT` に合う**ことをテストで固定する（重複が出たら登録簿の側の裁定）。
+2. **監修表の API**（`reviewed-counts.ts` に足す。`REVIEWED_COUNTS` の形・`reviewedCounts()`・Ruling 110 の番人は不変）: `reviewedFigures(danceId): readonly ReviewedFigure[]`（登録簿の順・`{ slug, englishName, counts }`）と `reviewedFigureBySlug(danceId, slug): ReviewedFigure | null`。表示名は `figure-names.ts` の新 `figureDisplayName(danceId, englishName, locale)`（engine の `figureDisplayName` を画面から直接 import しない＝境界は今のまま）。
+3. **S2 の counts は 1 か所**: `preferences.ts` に純粋関数 `practiceCounts(profile, settings, figure: ReviewedFigure | null): string`（＝ `figure?.counts ?? practiceChoice(...).counts`）。`PracticeScreen` は `figureSlug` から `figure` を 1 回引き、`optionsFrom`・`idleText`・D55 の帯（止まっている間の表示用 `compileRhythm`）・見出し下の `<small>` の**全部**がこの 1 本を使う。`compileProgram`／`compileRhythm`／`src/engine` は**変えない**。時間はエンジンの tick だけ（AGENTS.md「第 2 の時間計算を作らない」）。
+4. **知らない slug**: `resolveScreen` で `reviewedFigureBySlug` が `null` なら **`#/practice/:danceId`（基本）へ `redirect`**（監修表から訂正で消えた行の古いリンク・打ち間違い。エラーは出さない）。
+5. **S2 の見た目（フィガーの時）**: `h1` は種目名のまま・`<small>` を「**ウィスク · 1 2 3**」／“Whisk · 1 2 3”（名前 ＋ ` · ` ＋ 型の文字。Ruling 114-8 の `<small>` を名前付きにするだけ）。帯（D55）はフィガーの語 1 周（2 小節なら 6 丸・13 語以上は 12 ずつ＝Ruling 114-3 のまま）。大きな語・琥珀・`aria-label`「いま {count}」は不変。
+6. **くわしくの「カウントの型」（`data-group="pattern"`）はフィガーの時は出さない**（型はフィガーが決めている。型を替えたい人は「‹ 戻る」で F1 の基本の行へ）。`lastTemplateByDance` はフィガーの時は**書かない・読まない**。S2 の主要操作は 初期 5・くわしく開 **8**（ワルツ・クイック・サンバ・パソの 4 種目で 1 減る。ほかは 9 のまま）。速さ 3 択・メトロノーム・はじめの合図・繰り返し・声のタイミングは**種目ごとの記憶のまま**（フィガーごとに分けない）。
+7. **声**: 語は同じ語彙（`1 2 3 & a S Q @`）なので、標準の声も先生の録音の声もそのまま鳴る。**フィガーの名前は読み上げない**（名前の音源は無い。作らない）。声チップ・S7 は不変。「繰り返す」はフィガーのカウントを型と同じに繰り返す。
+8. **戻る**: 履歴があれば F1 に戻る（Ruling 17）。深いリンク（履歴無し）は `parent` の U1（`goBack` は `params` を持てない）。`goBack` に `danceId` を持たせて F1 へ戻す改良は**任意**（計画者が安ければやる。やらなくても壊れない）。
+9. **S5・S4 は触らない**（ルーティン側は D52 の自動入力がフィガー → カウントを受け持つ。F1 とルーティンを結ぶ導線は作らない）。
+
+**理由**: 「S2 は counts 文字列を 1 本鳴らす」という今の骨をそのまま使えば、フィガーは「どの文字列か」の違いだけになり、エンジン・帯・声・セッションに手が入らない。型のチップを隠すのは、フィガーの型と手で選んだ型の 2 つが同時にある状態を作らないため。
+
+**外れた時の代償**: 2 小節のフィガーは `<small>` の型の文字が長くなる（`1 2 3 1 2 3`。320 で折り返す可能性 → `.dc-playhead small` は折り返してよい。帯は Ruling 114-2 で 1 行）。深いリンクの戻るが U1 に落ちる（害は小さい）。
+
+## Ruling 121（D57）前回の記憶 — `settings.lastFigure`（slug・`lastDanceId` と組）。前回カード・表紙 C の「続きから」は「ワルツ · ウィスク」で、そのフィガーを鳴らす。表から消えていれば基本
+
+**決定**:
+1. **保存**: `AppSettings` に `lastFigure: string | null`（slug。基本の時は `null`）。`PracticeScreen` が開いた時に `update({ lastDanceId, lastFigure })` を **1 回で**書く（Ruling 26 の行に足す。別々に書かない）。正規化（`settings.ts`）は `ID_SEGMENT` に合う文字列だけ残し、それ以外は `null`。DB の版・IndexedDB・声・ルーティンは触らない（`settings` の JSON に鍵が 1 つ増えるだけ。無ければ `null`）。
+2. **表示**: U1 の前回カード（`.dc-resume`）と表紙 C の「続きから」の段の `<b>` を「**ワルツ · ウィスク**」／“Waltz · Whisk”（種目名 ＋ ` · ` ＋ 表示言語のフィガー名。基本なら種目名だけ＝今のまま）。`small` の「前回」／“Last time” は不変。鍵は増やさない（` · ` で並べるだけ。S5 の副題と同じ型）。
+3. **押した時**: `unlockAudioInsideTap` → `requestAutoplay({ kind:'dance', id: lastDanceId })`（印は**種目だけ**のまま。フィガーは経路が運ぶ）→ `navigate(S2, { danceId, figureSlug })`。S2 の `takeAutoplay` は不変。
+4. **表から消えていた時**（訂正で監修を外した・別の端末の設定を読んだ）: `reviewedFigureBySlug` が `null` なら、カード・段は**種目名だけ**を出し、押すと基本で鳴る（Ruling 120-4 の redirect に任せず、表示の時点で `null` 扱いにする＝「ウィスク」と書いて基本が鳴る食い違いを作らない）。
+5. **表紙 C の判断は不変**: `hints.firstPlaybackDone` が立ってから（Ruling 115-1）。
+
+**理由**: 「前回の続き」が「前回のフィガー」でなければ、フィガーで練習した人にとって G2 が壊れる（1 タップで**違う物**が鳴る）。slug を 1 つ足すだけで済み、autoplay の印は触らない。
+
+**外れた時の代償**: 「ワルツ · ナチュラルスピンターン」は 375 で 1 行に入らないことがある → `<b>` は折り返してよい（カードは高さ可変・548 の初期表示の計算は実装で測る）。
+
+## Ruling 122（D57）表が空の間・文言・検査・仕様
+
+**決定**:
+1. **表が空の間に見える変化は「フィガー」のタブ名だけ**（D56 §1 (b)）。F1 への経路は 1 つも無く（Ruling 119-2・119-6）、S2 の経路の長い形も使われない。**この便はマージしてよい**（Ruling 110-3「表が空でも仕組みは出荷してよい」と同じ）。監修表に 1 件入った種目から、転記のコミットで F1 が現れる。
+2. **文言**（`messages.ts`・禁止語なし・依頼形なし）: `basicCount`「基本のカウント」／“Basic count”、`figuresHeading`「フィガー」／“Figures”（タブと同じ語。鍵を分けるかは計画者）、`backToFigures` は作らない（「‹ 戻る」の既存の鍵）。S2 の `<small>`・前回カードは文字列の連結（` · `）で鍵なし。英語の F1 見出しは種目名（`danceName`）。
+3. **検査**（実装便で。**表が空でも通る物**と、**表に 1 件以上ある時だけ走る物**を分ける）:
+   - `node --test`（空でも通る）: `figure-names`（`figureSlug` が 108 件で種目内ユニーク・`ID_SEGMENT` に合う・`figureDisplayName` の ja/en）、`reviewed-counts`（`reviewedFigures` が登録簿順・**作り物の表を渡せる形**（`buildFigureIdentity` と同じやり方。例: `buildReviewedFigures(entries)`）で 2 件の並び・`reviewedFigureBySlug` の null）、`routes`（`#/practice/waltz/whisk` → S2 `{ danceId, figureSlug }`・`buildHash` の往復・`#/figures/waltz` → F1・`#/figures/bad id` → S1）、`router-resolve`（表が空: F1 → S2 へ redirect・知らない slug → 基本へ redirect。作り物の表で: 1 件以上 → F1）、`settings`（`lastFigure` の正規化）、`preferences`（`practiceCounts`: フィガーが勝つ・無ければ型・`lastTemplateByDance` を書かない）。
+   - `tools/check-app-ui.js`（空でも通る）: U1 の 10 タイルの `href` が全部 `#/practice/<id>`（F1 無し）・「S1 前回あり」の `<b>` が種目名だけ。
+   - `tools/check-app-ui.js`（**表に 1 件以上ある時だけ**。状態に `requires: 'reviewed'` を付け、空の間はその行を「スキップ」と 1 行出して飛ばす。判定の仕方（ビルド前に `reviewed-counts.ts` の件数を読む／dist のタイルの `href` を見る）は計画者）: 「F1 ワルツ」（375×548・320×568: 初期 2・全体 2・`h1` 種目名・基本の行が `firstView`・`[data-list]` の行 ≥1・行の `button` 48px・折り返し ≤2 行）、「S2 フィガー」（`#/practice/waltz/<slug>`: 初期 5・くわしく開 8・`data-group="pattern"` が無い・`<small>` に名前と ` · `・`.dc-beats li` の数 ＝ フィガーの語数）、「S1 前回あり・フィガー」（`prepare: '#/practice/waltz/<slug>'`・`<b>` に ` · `）、表紙 C も同じ。U11（Ruling 116-3）は F1 を集中画面として数える。
+   - `smoke:practice`（1 件以上の時だけ）: U1 → ワルツ → F1 → 2 行目の行をタップ → 音（既存の「3 種類以上変わる」判定）→ S2 の `<small>` に名前 → 「‹ 戻る」で F1 → 「‹ 戻る」で U1。表が空の間は「スキップ」と出す。
+   - 禁止語テスト・axe（Ruling 102）: F1 を全状態の周に足す（`h1` へフォーカス）。
+   - 実機確認表（`device-check-master.md`）に 1 節「D57 フィガー」（転記後に）: (1) ワルツのタイル → 一覧・一番上が基本 (2) 行を押すとすぐ鳴り、見出し下に名前 (3) 「前回: ワルツ · ウィスク」→ 続きから で同じフィガー (4) 0 件の種目はタイル → 再生のまま。
+4. **転記のコミット（Ruling 111-4）の約束を 1 つ足す**: 監修表に行を入れるコミットは、同時に `check-app-ui.js` の `requires:'reviewed'` の状態が走ることを確認する（空の間に書いた期待値が初めて本番の表で検証される）。
+5. **仕様（`design-skeleton.md`）の読み替え**（計画者が実装便と同時に）: §1 画面一覧に F1「種目のフィガー（監修済みのカウント）」（入口 U1 のタイル・監修済みが 1 件以上の種目だけ）。§2 S1（U1）「タイルの行き先: 監修済みフィガーが 1 件以上なら F1、無ければ S2」。新 §2 F1（Ruling 119-3）。§2 S2 に「フィガーの時: 見出し下に名前・型のチップ無し・ほかは同じ」。§3 設定に `lastFigure`。§1 G1・G2 の文は不変。
+
+**理由**: 表が空の今は「何も変わらない」ことを検査で固定し、表が埋まる日に F1 の検査が自動で生きる形にしておけば、転記のコミットが F1 の検収も兼ねる。
+
+**外れた時の代償**: 表が空の間、F1・S2 フィガーの ui:check・smoke は「書いたが走っていない」状態（空の表では走らせようが無い。最初の転記で初めて走るので、その時に期待値の直しが出る可能性あり）。
+
+## 3. ひとみうさに後で見てもらうこと（判断と確認）
+
+1. **タイルの行き先が種目で違う**（監修済みが 1 件以上 → F1、0 件 → S2 直行。Ruling 119-2）。「全種目を F1 に揃えたい（0 件でも基本の行 1 つの一覧）」なら 1 行の変更。
+2. **F1 の行を押すとすぐ鳴る**（Ruling 119-3-4。U2 の行と同じ）／行を開いて ▶。
+3. **フィガーの時「カウントの型」のチップを隠す**（Ruling 120-6）。
+4. **前回カードの書き方「ワルツ · ウィスク」**（Ruling 121-2）。
+5. **フィガーの名前は読み上げない**（Ruling 120-7。画面に出るだけ）。
+6. **表が空の間、タブは「フィガー」だが開くと種目のタイル**（D56 §1 (b) ＋ Ruling 122-1）。監修が進むまでこの状態。タブ名を今は「練習」のままにして転記後に「フィガー」へ替える手もある。
+7. **「基本のカウント」の語**（“Basic count”）。「いつもの」「種目のカウント」などの好み。
+8. 監修シート（`figure-counts-review.md`・Ruling 111）の OK が届かないと F1 は 1 つも出ない。**まずワルツの数行だけ OK** をもらえれば、実機で F1 を見てもらえる。
+
+## 4. 計画者へ（D52 の残り ＋ D55 ＋ D56 ＋ D57 を 1 つの計画にする時）
+
+- **順**: D52 の残り（監修シートの転記待ちを除く）→ D56 の 4 便（Ruling 118「外れた時」）→ D55（Ruling 114。S2・S5 の帯）→ **D57**（D56 の経路表と D55 の「S2 の counts 1 本」の両方に乗るので最後）。D57 は 2 便: ① データと経路（`figureSlug`・`reviewedFigures`・`routes`・`resolve`・`settings.lastFigure`・`practiceCounts`・テスト）② 画面（`FigureListScreen.tsx`（F1）・`HomeScreen` の振り分け・`PracticeScreen` の `<small>`／チップ／counts・前回カード・表紙 C・`messages.ts`・`base.css`・ui:check・smoke・仕様）。
+- **触るファイルの見込み（D57）**: `router/routes.ts`・`router/resolve.ts`・`routines/figure-names.ts`・`routines/reviewed-counts.ts`・`practice/preferences.ts`・`settings/settings.ts`・新 `screens/FigureListScreen.tsx`・`screens/HomeScreen.tsx`・`screens/PracticeScreen.tsx`・新 `screens/CoverScreen.tsx`（D56 の物に「続きから」の文字を足す）・`App.tsx`・`i18n/messages.ts`・`styles/base.css`（F1 の行は D56 の `.dc-row--play` を使い回す）・`tools/check-app-ui.js`・`tools/smoke-practice.js`・`test/app/routes.test.ts`・`test/app/router-resolve.test.ts`・`test/app/settings/*`・`test/app/practice/preferences.test.ts`・`test/app/routines/*`・`design-skeleton.md`・`device-check-master.md`。
+- **触らない**: `src/engine/*`・`practice/session.ts`・`practice/beat-indicator.ts`（D55 の物のまま）・S4・S5・S7〜S13・声のパック・IndexedDB。
