@@ -211,6 +211,8 @@ const STATES = [
     firstView: ['[data-group="distributor"]', '[data-group="share-voice"]', '.dc-consent-row', '.dc-dock .dc-primary'],
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
       { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
+  // 段8 Task 12（D51・final-review m2）: 録音もルーティンも無い時は帯に「先に…と配れます。」の 1 行（操作は増やさない＝名前と主ボタン（押せない）の 2）
+  { name: 'S9 何も無い', hash: '#/share', screen: 'S9', kind: 'focus', ops: 2, total: 2, primaryDisabled: true, textKeys: ['shareNothingYet'], firstView: ['.dc-dock-note'] },
   { name: 'S9 録音なし', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true, texts: ['録音した声はまだありません。'], firstView: ['[data-list]'] },
   // 段8 Task 6 fix 1（レビュー I-1）: S6「ルーティンを配る」から（S9 も読み込み中の形を通る）。フォーカスは上の行の名前（h1）
   { name: 'S9（設定から）', hash: '#/share', via: { hash: '#/settings', screen: 'S6' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], ops: 3, total: 3, primaryDisabled: true,

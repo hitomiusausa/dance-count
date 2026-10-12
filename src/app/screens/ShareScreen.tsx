@@ -9,7 +9,7 @@ import { canShareFile, copyText, downloadFile, shareFile } from '../platform/fil
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
 import { bundleFileName } from '../share/filename.ts';
-import { shareSectionOrder, showChooseNote } from '../share/layout.ts';
+import { shareDockNote, shareSectionOrder } from '../share/layout.ts';
 import { studentInstructions } from '../share/instructions.ts';
 import { BUNDLE_MIME, BUNDLE_ROUTINES_MAX, DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -138,6 +138,7 @@ export function ShareScreen() {
   if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><FocusHeader screen="S9" title={translator.t('shareTitle')} heading /></main>;
 
   const atLimit = chosenRoutines.length >= BUNDLE_ROUTINES_MAX;
+  const dockNote = shareDockNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length });
   const voiceSection = (
     <>
       <h2 class="dc-field-label dc-share-heading" id="dc-s9-voice">{translator.t('shareVoiceHeading')}</h2>
@@ -238,7 +239,7 @@ export function ShareScreen() {
       </div>
       {shareSectionOrder(intent).map(section => <Fragment key={section}>{section === 'voice' ? voiceSection : routineSection}</Fragment>)}
       <div class="dc-dock dc-share-dock">
-        {showChooseNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length }) && <div class="dc-dock-note">{phrased(translator, 'shareChooseSomething')}</div>}
+        {dockNote && <div class="dc-dock-note">{phrased(translator, dockNote === 'nothing' ? 'shareNothingYet' : 'shareChooseSomething')}</div>}
         <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>
           <Icon name="share" /><span>{translator.t('createFile')}</span>
         </button>

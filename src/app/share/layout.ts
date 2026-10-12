@@ -10,8 +10,11 @@ export function shareSectionOrder(intent: ShareIntent | null): ShareSection[] {
   return intent?.voiceId ? ['voice', 'routines'] : ['routines', 'voice'];
 }
 
-// 帯の「声かルーティンを選ぶと、ファイルを作れます。」は、選べる物がある時だけ出す。
-// 録音した声もルーティンも無い時は、上の「…まだありません。」の 2 行で足りる（選べる物が無いのに「選ぶと」と言わない）。
-export function showChooseNote(input: { needsSomething: boolean; voiceCount: number; routineCount: number }): boolean {
-  return input.needsSomething && (input.voiceCount > 0 || input.routineCount > 0);
+// 帯の 1 行（主ボタン「ファイルを作る」が押せない理由）。
+// 'choose'＝「声かルーティンを選ぶと、ファイルを作れます。」: 選べる物がある時だけ（選べる物が無いのに「選ぶと」と言わない）。
+// 'nothing'＝D51（final-review m2・代理決定）「先に声を録音するか、ルーティンを作ると配れます。」: 録音した声もルーティンも無い時（行き止まりにしない。操作は増やさない）。
+export type ShareDockNote = 'choose' | 'nothing' | null;
+export function shareDockNote(input: { needsSomething: boolean; voiceCount: number; routineCount: number }): ShareDockNote {
+  if (input.voiceCount === 0 && input.routineCount === 0) return 'nothing';
+  return input.needsSomething ? 'choose' : null;
 }
