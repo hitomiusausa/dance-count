@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
-import { BundleTooLargeError, readBundleText, takeInboxFile } from '../platform/files.ts';
+import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
@@ -69,7 +69,12 @@ export function ReceiveScreen() {
   };
 
   useEffect(() => {
-    void takeInboxFile().then(file => { if (file && alive.current) void take(file); });
+    // 大きすぎて受け口に入らなかった共有は、選んだ時と同じ「大きすぎ」の枠を選ぶ画面に出す（段7 レビュー M1）
+    void takeInboxFile().then(file => {
+      if (!file || !alive.current) return;
+      if (file === INBOX_TOO_LARGE) setAlert({ kind: 'too-large' });
+      else void take(file);
+    });
     return () => { alive.current = false; };
   }, []);
 

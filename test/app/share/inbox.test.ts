@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { INBOX_CACHE, INBOX_KEY, takeInboxFile } from '../../../src/app/platform/files.ts';
+import { INBOX_CACHE, INBOX_KEY, INBOX_TOO_LARGE, takeInboxFile } from '../../../src/app/platform/files.ts';
+import { BUNDLE_MAX_BYTES } from '../../../src/app/share/limits.ts';
+import { INBOX_TOO_LARGE_HEADER, inboxResponseFor } from '../../../src/share-inbox-contract.ts';
 
 // Cache API の偽物（段7の Service Worker が書く形: Response の本文＝ファイル、X-File-Name＝名前）。
 function fakeCaches() {
@@ -18,6 +20,12 @@ function fakeCaches() {
     }
   };
 }
+// 本物のファイルが来る場面（大きすぎの印ではない）
+async function takeFile(): Promise<File | null> {
+  const taken = await takeInboxFile();
+  assert.notEqual(taken, INBOX_TOO_LARGE);
+  return taken as File | null;
+}
 function withCaches(value: unknown) {
   const before = Object.getOwnPropertyDescriptor(globalThis, 'caches');
   Object.defineProperty(globalThis, 'caches', { value, configurable: true, writable: true });
@@ -31,7 +39,7 @@ test('the Android inbox gives the shared file once, then it is gone (Ruling 79-2
     assert.equal(await takeInboxFile(), null, 'empty inbox');
     const cache = await caches.open(INBOX_CACHE);
     await cache.put(INBOX_KEY, new Response('{"type":"dance-count-bundle"}', { headers: { 'Content-Type': 'text/plain', 'X-File-Name': encodeURIComponent('声-山田-2026-10-12.dancecount.txt') } }));
-    const file = await takeInboxFile();
+    const file = await takeFile();
     assert.equal(file?.name, '声-山田-2026-10-12.dancecount.txt');
     assert.equal(await file?.text(), '{"type":"dance-count-bundle"}');
     assert.equal(caches.stores.get(INBOX_CACHE)?.has(INBOX_KEY), false, 'taken out of the inbox');
@@ -47,7 +55,7 @@ test('without the Cache API, or when it fails, there is no inbox file', async ()
   try {
     const cache = await (globalThis as unknown as { caches: ReturnType<typeof fakeCaches> }).caches.open(INBOX_CACHE);
     await cache.put(INBOX_KEY, new Response('x'));
-    assert.equal((await takeInboxFile())?.name, 'bundle.dancecount.txt', 'a missing name falls back');
+    assert.equal((await takeFile())?.name, 'bundle.dancecount.txt', 'a missing name falls back');
   } finally { restoreNameless(); }
 });
 
@@ -56,6 +64,28 @@ test('the inbox file name loses direction-changing characters (stage-5 review)',
   try {
     const cache = await (globalThis as unknown as { caches: ReturnType<typeof fakeCaches> }).caches.open(INBOX_CACHE);
     await cache.put(INBOX_KEY, new Response('x', { headers: { 'X-File-Name': encodeURIComponent('山田‮txt.dancecount.txt') } }));
-    assert.equal((await takeInboxFile())?.name, '山田txt.dancecount.txt');
+    assert.equal((await takeFile())?.name, '山田txt.dancecount.txt');
+  } finally { restore(); }
+});
+
+test('the service worker puts a shared file as it came, and only a marker for one over 20MB; S10 gets "too-large" (stage-7 review M1)', async () => {
+  const fine = inboxResponseFor(new File(['{"type":"dance-count-bundle"}'], '声-山田.dancecount.txt', { type: 'text/plain' }));
+  assert.equal(await fine.text(), '{"type":"dance-count-bundle"}');
+  assert.equal(fine.headers.get('X-File-Name'), encodeURIComponent('声-山田.dancecount.txt'));
+  assert.equal(fine.headers.get(INBOX_TOO_LARGE_HEADER), null);
+  const big = { size: BUNDLE_MAX_BYTES + 1, name: 'big.dancecount.txt', type: 'text/plain' } as unknown as File;
+  const marker = inboxResponseFor(big);
+  assert.equal(marker.headers.get(INBOX_TOO_LARGE_HEADER), '1');
+  assert.equal(await marker.text(), '', 'the big file itself is not written');
+  const exact = { size: BUNDLE_MAX_BYTES, name: 'edge.txt', type: '' } as unknown as File;
+  assert.equal(inboxResponseFor(exact).headers.get(INBOX_TOO_LARGE_HEADER), null, '20MB exactly is still accepted (same as readBundleText)');
+
+  const caches = fakeCaches();
+  const restore = withCaches(caches);
+  try {
+    await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, marker);
+    assert.equal(await takeInboxFile(), INBOX_TOO_LARGE);
+    assert.equal(caches.stores.get(INBOX_CACHE)?.has(INBOX_KEY), false, 'the marker is taken out too');
+    assert.equal(await takeInboxFile(), null);
   } finally { restore(); }
 });

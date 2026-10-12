@@ -4,13 +4,14 @@
 // 1. precache: 殻・manifest・アイコン・標準の声・アプリの文字が要る書体（Ruling 89）。?v= は無視して当てる（F32）。
 // 2. 書体の残りは一度表示したら端末に残す（CacheFirst）。
 // 3. 更新は「更新する」を押した時だけ（SKIP_WAITING）。自動で切り替えない（Ruling 90）。
-// 4. Android の share_target の POST を受け、段5の受け口（Cache）に置いて S10 へ 303（Ruling 93-3）。
+// 4. Android の share_target の POST を受け、段5の受け口（Cache）に置いて S10 へ 303（Ruling 93-3）。20MB を超えるファイルは書かず印だけ（M1）。
 // ユーザーのデータ（声・ルーティン）はここに入れない（IndexedDB。仕様 §7）。
 import { ExpirationPlugin } from 'workbox-expiration';
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute, type PrecacheEntry } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
-import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY, SHARE_TARGET_FIELD } from './share-inbox-contract.ts';
+import { INBOX_CACHE, INBOX_KEY, SHARE_TARGET_FIELD, inboxResponseFor } from './share-inbox-contract.ts';
+import { appEntryPattern } from './sw-navigation.ts';
 
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<PrecacheEntry | string> };
 
@@ -30,8 +31,9 @@ self.addEventListener('message', event => {
 
 cleanupOutdatedCaches();   // workbox の precache の古い版だけを消す（dance-count-inbox・dance-count-fonts には触れない）
 precacheAndRoute(self.__WB_MANIFEST, { ignoreURLParametersMatching: IGNORED_QUERY });
-// ハッシュルーターなので画面の移動はすべて index.html（#/… は SW に届かない）。
-registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
+// ハッシュルーターなので画面の移動はすべて index.html（#/… は SW に届かない）。index.html を返すのはアプリ自身の入口
+// （scope の直下と index.html。?… は付いていてよい）だけ。それ以外の深いパスは網へ（存在しない URL にアプリを見せない。段7 レビュー M2）。
+registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html'), { allowlist: [appEntryPattern(new URL(self.registration.scope).pathname)] }));
 registerRoute(
   ({ request, url }) => request.method === 'GET' && url.origin === self.location.origin && url.pathname.endsWith('.woff2'),
   new CacheFirst({ cacheName: FONT_CACHE, plugins: [new ExpirationPlugin({ maxEntries: FONT_MAX_ENTRIES, maxAgeSeconds: FONT_MAX_AGE_SECONDS })] })
@@ -42,10 +44,8 @@ registerRoute(
     try {
       const file = (await request.formData()).get(SHARE_TARGET_FIELD);
       if (file instanceof File) {
-        const cache = await caches.open(INBOX_CACHE);
-        await cache.put(INBOX_KEY, new Response(file, {
-          headers: { 'Content-Type': file.type || 'text/plain', [INBOX_FILE_HEADER]: encodeURIComponent(file.name) }
-        }));
+        // 20MB を超えるファイルは書かず、印だけ置く（S10 が「大きすぎ」の枠を出す。段7 レビュー M1）
+        await (await caches.open(INBOX_CACHE)).put(INBOX_KEY, inboxResponseFor(file));
       }
     } catch { /* 読めなくても S10 の「選ぶ」へ（ファイルを選び直せる） */ }
     return Response.redirect(RECEIVE_REDIRECT, SEE_OTHER);

@@ -30,7 +30,8 @@ export function startServer(dir, port) {
       });
       response.end(request.method === 'HEAD' ? undefined : body);
     } catch {
-      response.writeHead(404).end();
+      // 本文つきの 404（本文が空だと Chromium はナビゲーションを失敗にする。smoke:pwa の深いパスの確かめ＝段7 レビュー M2）
+      response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not Found');
     }
   });
   return new Promise((resolve, reject) => {

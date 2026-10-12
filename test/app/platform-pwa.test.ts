@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  UPDATE_CHECK_INTERVAL_MS, UPDATE_WAIT_MS, createPwaUpdater, isStandalone, platformKindFrom,
+  UPDATE_CHECK_INTERVAL_MS, UPDATE_WAIT_MS, createPwaUpdater, createUpdateReadyHub, isStandalone, platformKindFrom,
   type PwaClock, type PwaRegistrationLike, type RegisterSwOptions
 } from '../../src/app/platform/pwa.ts';
 
@@ -146,4 +146,27 @@ test('the app checks for a new version every hour while visible and on coming ba
   time.advance(UPDATE_CHECK_INTERVAL_MS);
   time.tick();
   assert.equal(sw.calls.update, 2);
+});
+
+test('the banner reads the current state when it subscribes, whatever came first (stage-7 review M3)', () => {
+  // 1. 新しい版が描画と購読のあいだに来た: 購読した時にすぐ true を受け取る
+  const early = fakeRegister();
+  const earlyHub = createUpdateReadyHub();
+  earlyHub.attach(createPwaUpdater(early.register, fakeClock().clock, () => assert.fail('no reload')));
+  assert.equal(earlyHub.current(), false, 'the first render sees no update');
+  early.needRefresh();
+  const seen: boolean[] = [];
+  const stop = earlyHub.subscribe(ready => seen.push(ready));
+  assert.deepEqual(seen, [true]);
+  stop();
+
+  // 2. 帯が先に購読し、更新係が後から来る（main.tsx は描画の後に登録する）: 後から来た版も知らされる
+  const late = fakeRegister();
+  const lateHub = createUpdateReadyHub();
+  const told: boolean[] = [];
+  lateHub.subscribe(ready => told.push(ready));
+  lateHub.attach(createPwaUpdater(late.register, fakeClock().clock, () => assert.fail('no reload')));
+  late.needRefresh();
+  assert.deepEqual(told, [false, false, true]);
+  assert.equal(lateHub.current(), true);
 });

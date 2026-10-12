@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { BUNDLE_MAX_BYTES } from '../src/app/share/limits.ts';
 import { readPrecacheList } from './pwa/check-pwa.js';
 import { startServer } from './serve-dist.js';
 
@@ -75,6 +76,14 @@ try {
   await page.reload();   // ここから SW がこのページを受け持つ（clients.claim はしない＝初回は網から読んだまま）
   await page.waitForSelector('[data-screen="S1"]');
   if (!(await page.evaluate(() => Boolean(navigator.serviceWorker.controller)))) errors.push('the page is not controlled by the service worker after a reload');
+  // アプリの入口（scope の直下・index.html）以外の深いパスには index.html を返さない（段7 レビュー M2）。サーバーの 404 がそのまま見える
+  // （別のタブで見る: 404 の「Failed to load resource」をこのタブのコンソールの失敗に数えない）
+  const probe = await context.newPage();
+  const deep = await probe.goto(`${BASE}no/such/page`);
+  if (deep?.status() !== 404 || deep.fromServiceWorker()) errors.push(`a deep path was answered with ${deep?.status()}${deep?.fromServiceWorker() ? ' by the service worker' : ''} (expected the server's 404, not the app)`);
+  const entry = await probe.goto(`${BASE}index.html?from=smoke`);
+  if (!entry?.fromServiceWorker()) errors.push('index.html?… was not answered by the service worker');
+  await probe.close();
 
   // 2. 網を切る（機内モードの代わり）。開き直しても S1 が描け、ワルツとパソドブレが鳴り、網へ出る要求が 0
   const failed = [];
@@ -120,6 +129,19 @@ try {
   await page.goto(`${BASE}#/settings`);
   await page.goto(`${BASE}#/receive`);
   await page.waitForSelector('[data-screen="S10"][data-step="pick"]', { timeout: 5000 }).catch(() => errors.push('share_target without a file: S10 did not start on the pick step'));
+  // 20MB を超えるファイルの共有: 受け口に書かず（印だけ）S10 へ。S10 は「選ぶ」から「大きすぎ」の枠を出す（段7 レビュー M1）
+  const big = await page.evaluate(async size => {
+    const form = new FormData();
+    form.append('bundle', new File([new Uint8Array(size)], 'big.dancecount.txt', { type: 'text/plain' }));
+    return (await fetch('receive', { method: 'POST', body: form, redirect: 'manual' })).type;
+  }, BUNDLE_MAX_BYTES + 1);
+  if (big !== 'opaqueredirect') errors.push(`share_target POST of a too-large file was answered with "${big}", expected a redirect`);
+  const inboxBytes = await page.evaluate(async () => (await (await (await caches.open('dance-count-inbox')).match('./inbox/bundle'))?.arrayBuffer())?.byteLength ?? -1);
+  if (inboxBytes !== 0) errors.push(`share_target: a too-large file was written to the inbox (${inboxBytes} bytes, expected an empty marker)`);
+  await page.goto(`${BASE}#/settings`);
+  await page.goto(`${BASE}#/receive`);
+  await page.waitForSelector('[data-screen="S10"][data-step="pick"] [data-alert="too-large"]', { timeout: 5000 }).catch(() => errors.push('share_target too large: S10 did not show the too-large notice'));
+  if (await page.evaluate(async () => Boolean(await (await caches.open('dance-count-inbox')).match('./inbox/bundle')))) errors.push('share_target: the too-large marker is still in the inbox');
 
   // 4. 新しい版: サーバーを dist-b に入れ替えて確かめる → S6 の帯 →「更新する」→ 新しい版で開き直る
   await stop();
@@ -148,4 +170,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`pwa smoke OK: service worker installed and precached ${precacheUrls.length} files; offline the app opens, the waltz and paso doble play from the cache (six.wav?v= too) and Noto Sans JP shows; a shared file posted to ./receive opens S10 on the confirm step; a new build shows the update banner on S6 and "Update" switches to it`);
+console.log(`pwa smoke OK: service worker installed and precached ${precacheUrls.length} files; offline the app opens, the waltz and paso doble play from the cache (six.wav?v= too) and Noto Sans JP shows; a deep path is not answered with the app; a shared file posted to ./receive opens S10 on the confirm step and one over 20MB is not stored and shows the too-large notice; a new build shows the update banner on S6 and "Update" switches to it`);

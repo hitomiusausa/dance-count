@@ -1,4 +1,4 @@
-import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY } from '../../share-inbox-contract.ts';
+import { INBOX_CACHE, INBOX_FILE_HEADER, INBOX_KEY, INBOX_TOO_LARGE_HEADER } from '../../share-inbox-contract.ts';
 import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename.ts';
 import { BUNDLE_MAX_BYTES } from '../share/limits.ts';
 
@@ -82,12 +82,19 @@ export async function readBundleText(file: File): Promise<string> {
 // 値の正本は src/share-inbox-contract.ts（SW と同じ物を import する。段7）。
 export { INBOX_CACHE, INBOX_KEY };
 
-export async function takeInboxFile(): Promise<File | null> {
+// 共有されたファイルが大きすぎて SW が書かなかった時の印（段7 レビュー M1）。S10 は「大きすぎ」の枠を出す。
+export const INBOX_TOO_LARGE = 'too-large';
+
+export async function takeInboxFile(): Promise<File | typeof INBOX_TOO_LARGE | null> {
   if (typeof caches === 'undefined') return null;
   try {
     const cache = await caches.open(INBOX_CACHE);
     const response = await cache.match(INBOX_KEY);
     if (!response) return null;
+    if (response.headers.get(INBOX_TOO_LARGE_HEADER)) {
+      await cache.delete(INBOX_KEY);
+      return INBOX_TOO_LARGE;
+    }
     const blob = await response.blob();
     await cache.delete(INBOX_KEY);
     const header = response.headers.get(INBOX_FILE_HEADER);

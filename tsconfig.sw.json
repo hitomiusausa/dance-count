@@ -4,5 +4,5 @@
     "lib": ["ES2022", "WebWorker"],
     "types": []
   },
-  "include": ["src/sw.ts", "src/share-inbox-contract.ts"]
+  "include": ["src/sw.ts", "src/sw-navigation.ts", "src/share-inbox-contract.ts"]
 }

@@ -114,3 +114,9 @@ test(`the precache stays under ${PRECACHE_MAX_BYTES} bytes`, async () => {
   assert.equal(problems.length, 1);
   assert.match(problems[0], /^precache is \d+ bytes > 6291456$/);
 });
+
+test('dist must not ship source maps (stage-7 review M6)', async () => {
+  const files = { ...goodFiles(), 'assets/index-AbC.js.map': '{}', 'sw.js.map': '{}' };
+  assert.deepEqual(await check({ files, precache: precached(files).filter(file => !file.endsWith('.map')) }),
+    ['dist must not include source maps (assets/index-AbC.js.map)', 'dist must not include source maps (sw.js.map)']);
+});

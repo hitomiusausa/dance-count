@@ -108,18 +108,50 @@ const browserClock: PwaClock = {
   sleep: ms => new Promise(resolve => setTimeout(resolve, ms))
 };
 
+// 帯（usePwaUpdate）と更新係のあいだの中継（段7 レビュー M3）。購読した時点の値をすぐ渡し、更新係が後から来ても（main.tsx は
+// 描画の後に登録する）知らせる。描画と購読のあいだに新しい版が来ても取りこぼさない。純粋（Node でテストする）。
+export interface UpdateReadyHub {
+  attach(source: PwaUpdater): void;
+  current(): boolean;
+  subscribe(listener: (ready: boolean) => void): () => void;
+}
+
+export function createUpdateReadyHub(): UpdateReadyHub {
+  let source: PwaUpdater | null = null;
+  const listeners = new Set<(ready: boolean) => void>();
+  const current = () => source?.updateReady ?? false;
+  const notify = () => { const ready = current(); for (const listener of listeners) listener(ready); };
+  return {
+    attach(next) {
+      if (source) return;
+      source = next;
+      next.subscribe(notify);
+      notify();
+    },
+    current,
+    subscribe(listener) {
+      listeners.add(listener);
+      listener(current());
+      return () => { listeners.delete(listener); };
+    }
+  };
+}
+
 let updater: PwaUpdater | null = null;
+const updateHub = createUpdateReadyHub();
 
 // 起動時に 1 回（pwa-register.ts が呼ぶ）。dev では SW が無いので登録だけで何も起きない。
 export function startPwa(register: RegisterSw): void {
-  if (!updater) updater = createPwaUpdater(register, browserClock, reloadPage);
+  if (updater) return;
+  updater = createPwaUpdater(register, browserClock, reloadPage);
+  updateHub.attach(updater);
 }
 
 // 更新の帯（UpdateBanner）が使う。?ui-state=update-ready は見た目だけ（押しても何もしない。Ruling 90-7）。
 export function usePwaUpdate(uiState?: string): { updateReady: boolean; applyUpdate(): void } {
   const forced = uiState === 'update-ready';
-  const [ready, setReady] = useState(() => updater?.updateReady ?? false);
-  useEffect(() => updater?.subscribe(() => setReady(updater?.updateReady ?? false)), []);
+  const [ready, setReady] = useState(() => updateHub.current());
+  useEffect(() => updateHub.subscribe(setReady), []);   // 購読した時の値をすぐ受け取る（M3）
   return { updateReady: forced || ready, applyUpdate: () => { if (!forced) void updater?.applyUpdate(); } };
 }
 

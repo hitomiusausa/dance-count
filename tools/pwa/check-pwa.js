@@ -38,9 +38,12 @@ async function exists(file) {
 // dist: dist の絶対パス・files: dist の中の全ファイル（/ 区切り）・standardVoices: standard-voices.json・fontSubsets: neededFontSubsets()
 export async function checkPwaDist({ dist, files, standardVoices, fontSubsets }) {
   const problems = [];
+  // 0. ソースマップを公開しない（段7 レビュー M6。vite の build.sourcemap を誰かが入れたら落とす）
+  for (const file of files) if (file.endsWith('.map')) problems.push(`dist must not include source maps (${file})`);
   // 1. SW と manifest は dist 直下（受け口の鍵 ./inbox/bundle が index.html と同じ URL に解ける。Ruling 93-4）
-  for (const file of ['sw.js', 'manifest.webmanifest']) if (!files.includes(file)) problems.push(`missing ${file} at the root of dist`);
-  if (problems.length) return problems;
+  const missingRoot = ['sw.js', 'manifest.webmanifest'].filter(file => !files.includes(file));
+  for (const file of missingRoot) problems.push(`missing ${file} at the root of dist`);
+  if (missingRoot.length) return problems;
   const html = await fs.readFile(path.join(dist, 'index.html'), 'utf8');
   for (const [pattern, what] of [[/<link rel="manifest" href="\.\/manifest\.webmanifest"/, 'manifest link'], [/<link rel="apple-touch-icon" href="\.\/icons\/apple-touch-icon\.png"/, 'apple-touch-icon link'],
     [/<meta name="apple-mobile-web-app-title" content="Dance Count"/, 'apple-mobile-web-app-title']]) {
