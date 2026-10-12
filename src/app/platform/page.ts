@@ -6,7 +6,7 @@ export function applyDocumentLanguage(locale: string, title: string): void {
   document.title = title;
 }
 
-// 「更新する」（§11 の新しすぎるファイル）。段7で Service Worker の更新に差し替える。
+// 再読み込み。§11 の新しすぎるファイルの「更新する」は段7から platform/pwa.ts の checkForUpdateThenReload（SW が無い時にここへ落ちる）。
 export function reloadPage(): void {
   window.location.reload();
 }
@@ -19,4 +19,16 @@ export function isLineInAppBrowser(): boolean {
 // 今の画面を LINE の外（Safari／Chrome）で開き直す URL（F26。効かなければ同じ画面が開くだけ）。
 export function externalBrowserUrl(): string | null {
   return withExternalBrowser(window.location.href);
+}
+
+// 画面が隠れた（ホーム画面へ戻る・アプリの切り替え・ロック・閉じる）。S4 が開いている行を確定して保存する（段7・Ruling 94-2）。
+// visibilitychange の hidden と pagehide の両方で呼ぶ（2 回呼ばれてよい作りにする）。戻り値で購読をやめる。
+export function onPageHidden(listener: () => void): () => void {
+  const onVisibility = () => { if (document.visibilityState === 'hidden') listener(); };
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('pagehide', listener);
+  return () => {
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('pagehide', listener);
+  };
 }

@@ -46,6 +46,8 @@ test('the three S8 display states are read too (Ruling 63-3)', () => {
     assert.deepEqual(parseHash(`#/voices/record?ui-state=${uiState}`), { screen: 'S8', params: {}, query: { uiState } });
   }
   assert.deepEqual(parseHash('#/voices?ui-state=confirm-delete').query, { uiState: 'confirm-delete' });
+  // 段7（Ruling 90-7）: 更新の帯は S1・S3・S6・S7 で見た目だけ強制できる
+  for (const hash of ['#/', '#/routines', '#/settings', '#/voices']) assert.deepEqual(parseHash(`${hash}?ui-state=update-ready`).query, { uiState: 'update-ready' });
   assert.deepEqual(parseHash('#/voices/record?ui-state=MIC-DENIED').query, {});
 });
 

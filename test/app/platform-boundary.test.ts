@@ -139,3 +139,21 @@ test('platform adapters named in spec §10 exist', async () => {
     assert.ok(files.includes(`platform/${name}`), `missing platform/${name}`);
   }
 });
+
+// 段7（Fable の答え 6・Ruling 88-4）: Service Worker の登録は 1 か所。virtual:pwa-register は platform/pwa-register.ts だけが import し、
+// pwa-register.ts を import するのは main.tsx だけ。navigator.serviceWorker（serviceWorker）は src/app/platform/ の外に現れない
+// （src/sw.ts は SW そのものなので対象外。SW の中から navigator.serviceWorker は使わない）。
+test('the service worker is registered in one place: main.tsx → platform/pwa-register.ts → virtual:pwa-register', async () => {
+  const importers: string[] = [];
+  const virtualImporters: string[] = [];
+  const serviceWorkerOutside: string[] = [];
+  for (const file of await sourceFiles()) {
+    const source = await fs.readFile(path.join(appDir, file), 'utf8');
+    if (/(from\s+|import\s*\(\s*)['"]\.{1,2}\/[^'"]*pwa-register(\.ts)?['"]/.test(source)) importers.push(file);
+    if (/['"]virtual:pwa-register(\/[^'"]*)?['"]/.test(source)) virtualImporters.push(file);
+    if (!file.startsWith('platform/') && /\bserviceWorker\b/.test(source)) serviceWorkerOutside.push(file);
+  }
+  assert.deepEqual(importers, ['main.tsx']);
+  assert.deepEqual(virtualImporters, ['platform/pwa-register.ts']);
+  assert.deepEqual(serviceWorkerOutside, []);
+});
