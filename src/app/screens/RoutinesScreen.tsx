@@ -5,6 +5,7 @@ import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { danceName } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
+import { honorific } from '../lib/honorific.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
 import type { UiState } from '../router/routes.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
@@ -59,7 +60,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
                   <button type="button" class="dc-row-head" aria-expanded={open ? 'true' : 'false'} onClick={() => setOpenId(open ? null : routine.id)}>
                     <span class="dc-row-text">
                       <b>{routine.name}</b>
-                      <small>{summary}{routine.receivedFrom ? ` · ${translator.t('receivedFrom', { name: routine.receivedFrom.distributor })}` : ''}</small>
+                      <small>{summary}{routine.receivedFrom ? ` · ${translator.t('receivedFrom', { name: honorific(routine.receivedFrom.distributor, translator.locale) })}` : ''}</small>
                     </span>
                     <Icon name="chevron" class="dc-row-chev" />
                   </button>

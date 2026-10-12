@@ -6,6 +6,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
+import { honorific } from '../lib/honorific.ts';
 import { beatIndexInBar } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
@@ -130,7 +131,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const playing = view.playing || view.starting;
   const dance = danceName(routine.danceId, locale);
   const subtitle = routine.receivedFrom
-    ? translator.t('madeBy', { dance, name: routine.receivedFrom.distributor })
+    ? translator.t('madeBy', { dance, name: honorific(routine.receivedFrom.distributor, translator.locale) })
     : translator.t('madeByYou', { dance });
   const figureName = (name: string) => figureDisplayName(routine.danceId, name, locale);
 

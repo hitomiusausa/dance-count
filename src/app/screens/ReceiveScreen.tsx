@@ -3,6 +3,7 @@ import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
+import { honorific } from '../lib/honorific.ts';
 import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, returnToInbox, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
@@ -220,15 +221,15 @@ function languageName(translator: AppTranslator, pack: VoicePackRecord): string 
 // 「山田さんの声（日本語）· 12 語」。旧画面の単体パック（名前の無いファイル）は声の名前のまま。
 function voiceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
   const values = { language: languageName(translator, pack), count: packProgress(pack).recorded };
-  return distributor ? phrased(translator, 'fileVoiceFrom', { name: distributor.name, ...values }) : phrased(translator, 'fileVoiceNamed', { name: pack.name, ...values });
+  return distributor ? phrased(translator, 'fileVoiceFrom', { name: honorific(distributor.name, translator.locale), ...values }) : phrased(translator, 'fileVoiceNamed', { name: pack.name, ...values });
 }
 
 function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
-  return distributor ? phrased(translator, 'replaceVoiceFrom', { name: distributor.name }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
+  return distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
 }
 
 function voiceNext(translator: AppTranslator, pack: VoicePackRecord) {
-  return pack.distributor ? phrased(translator, 'receivedVoiceFrom', { name: pack.distributor.name }) : phrased(translator, 'receivedVoiceNamed', { name: pack.name });
+  return pack.distributor ? phrased(translator, 'receivedVoiceFrom', { name: honorific(pack.distributor.name, translator.locale) }) : phrased(translator, 'receivedVoiceNamed', { name: pack.name });
 }
 
 // 「ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ」。3 本目からは「ほか N 本」。

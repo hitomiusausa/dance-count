@@ -110,7 +110,7 @@ export function App() {
   useEffect(() => applyDocumentLanguage(locale, translator.t('documentTitle')), [locale, translator]);
 
   // 見つからない・鳴らせないルーティンは S3 へ置き換え（Ruling 37・40）。ルーティンを読み終える前は判断しない。
-  // 段8（Ruling 101）: 設定を読み終えて最初の画面を描いたら、起動の殻を外す（描く前に外すと白い時間ができる。外す前の 1 フレームは殻が上に重なる）
+  // 段8（Ruling 101）: 設定を読み終えて最初の画面を描いたら、起動の殻を外す（描く前に外すと白い時間ができる。useLayoutEffect なので描く前に外れ、殻と画面が重なるフレームは無い）
   useLayoutEffect(() => { if (settings) removeBootShell(); }, [settings !== null]);
   const resolved = resolveScreen(route, routines);
   // 段8（Ruling 102-2）: 画面が替わったら、その画面の見出し h1（無ければ main）へフォーカスを移す（VoiceOver が新しい画面の名前から読む・

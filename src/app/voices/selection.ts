@@ -1,4 +1,5 @@
 import type { AppTranslator } from '../i18n/index.ts';
+import { honorific } from '../lib/honorific.ts';
 import type { AppStorage } from '../platform/storage.ts';
 import { STANDARD_VOICE_ID, type AppSettings } from '../settings/settings.ts';
 import type { VoiceLocale } from './ids.ts';
@@ -58,6 +59,6 @@ export function voiceDisplayName(translator: AppTranslator, voice: VoiceSelectio
 }
 
 export function packDisplayName(translator: AppTranslator, pack: VoicePackRecord): string {
-  if (pack.origin === 'received' && pack.distributor) return translator.t('distributorVoice', { name: pack.distributor.name });
+  if (pack.origin === 'received' && pack.distributor) return translator.t('distributorVoice', { name: honorific(pack.distributor.name, translator.locale) });
   return pack.name;
 }

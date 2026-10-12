@@ -26,7 +26,8 @@ import { VOICE_LIMITS, isCompletePack, listVoicePacks, packProgress, removeVoice
 // 「ファイルに保存」は作らない（Ruling 82-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
 // 段8（Ruling 100-3）: 試聴で声が読めなかった（オフラインでまだ端末に入っていない）時は §11 の「この声はまだ端末に入っていません。…」の枠。
 // ui-state=voice-missing はその枠を見た目だけ出す（試聴を押すか、別の行を選ぶと消える）。
-// 段8（Ruling 103-2）: 声の一覧の行の上限＝標準 2（英語・日本語）＋自分の声 2（英語・日本語）＋受け取った声 20（VOICE_LIMITS.packs）。
+// 段8（Ruling 103-2）: 声の一覧の行の上限。実際の最大は標準 1 行＋声 20 行（VOICE_LIMITS.packs は自分の声・受け取った声・途中の声を合わせた総数）＝21 行。
+// 上限は 2 + 2 + 20 = 24 のまま（21 行を含み、ゆとりがある。数を詰める意味は無い）。
 // U5（選択肢 10 以下）の例外として ui:check に渡す（data-choices-max）。声が 4 本以上になる生徒は稀で、下の 2 つのボタンはスクロールで届く
 const VOICE_ROWS_MAX = 2 + 2 + VOICE_LIMITS.packs;
 export function VoicesScreen({ uiState }: { uiState?: UiState }) {
