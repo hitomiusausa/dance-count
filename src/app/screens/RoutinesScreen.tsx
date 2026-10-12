@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { danceName } from '../i18n/index.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
@@ -35,6 +36,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
   return (
     <main class="dc-screen" data-screen="S3">
       <h1 class="dc-heading">{translator.t('routinesTitle')}</h1>
+      <UpdateBanner />
       <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
       <button type="button" class="dc-button dc-primary dc-wide" disabled={routines.length >= ROUTINES_MAX}
         onClick={() => navigate({ screen: 'S4', params: {} })}>

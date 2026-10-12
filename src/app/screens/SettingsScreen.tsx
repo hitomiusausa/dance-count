@@ -1,4 +1,5 @@
 import { Icon } from '../components/Icon.tsx';
+import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import type { AppLocale } from '../i18n/index.ts';
 import { buildHash } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -18,6 +19,7 @@ export function SettingsScreen() {
   return (
     <main class="dc-screen" data-screen="S6">
       <h1 class="dc-heading">{translator.t('settingsTitle')}</h1>
+      <UpdateBanner />
       <h2 class="dc-field-label">{translator.t('settingsLanguage')}</h2>
       <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('settingsLanguage')} data-group="language">
         {LANGUAGES.map(item => {

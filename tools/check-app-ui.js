@@ -41,11 +41,15 @@ const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
   { name: 'S1 初回', hash: '#/', screen: 'S1', kind: 'root', ops: 2, teacherAndTiles: true },
   { name: 'S1 前回あり', hash: '#/', screen: 'S1', kind: 'root', ops: 3, teacherAndTiles: true, prepare: '#/practice/waltz' },
+  // 段7（Ruling 90-3・90-7）: 更新の帯は S1 の最下段（種目タイルの下）。「更新する」は [data-alert-action]＝数えない。375×548 の初期表示（U12）は崩れない
+  { name: 'S1 更新あり', hash: '#/?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 2, total: 2, teacherAndTiles: true, alert: true,
+    texts: ['新しい版があります。', '更新する'], bannerAfter: '.dc-tiles' },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   { name: 'S3 0件', hash: '#/routines', screen: 'S3', kind: 'root', ops: 1, total: 1 },
+  { name: 'S3 更新あり', hash: '#/routines?ui-state=update-ready', screen: 'S3', kind: 'root', ops: 1, total: 1, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段5（Ruling 86-4）: 鳴らせる行には「配る」が編集と削除の間に（群は 1 つなので 3 のまま）
   { name: 'S3 2本・1本開', hash: '#/routines', screen: 'S3', kind: 'root', seed: [R.waltz13, R.empty], steps: [{ click: '.dc-row-head >> nth=0' }], total: 3,
     actions: { group: 'routine-actions', labels: ['再生', '編集', '配る', '削除'] } },
@@ -88,8 +92,11 @@ const STATES = [
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   // 段5（Ruling 86-5）: S6 に「ルーティンを配る」＝4
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'root', ops: 4, total: 4 },
+  // 375×548 では帯（1 行・約 50px）のぶん最後の行が初期表示の下へ（スクロールで届く。Ruling 71-6 と同じ扱いの opsSmall）
+  { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'root', ops: 4, opsSmall: 3, total: 4, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
+  { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段5 Task 10b: 600px 未満の高さでは「ファイルから受け取る」「自分の声を録音する」を横 1 行に並べ、声が 3 本でも 375×548 の初期表示に入る
   { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link', '.dc-record-link'] },
@@ -687,6 +694,12 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.actions) {
     const labels = [...document.querySelectorAll(`[data-group="${state.actions.group}"] button`)].filter(visible).map(button => button.textContent.trim());
     if (JSON.stringify(labels) !== JSON.stringify(state.actions.labels)) issues.push(`R86 ${state.actions.group} ${JSON.stringify(labels)}, expected ${JSON.stringify(state.actions.labels)}`);
+  }
+  // 段7（Ruling 90-3）: 更新の帯の置き場（S1 は種目タイルのすぐ下・S3/S6/S7 は見出しのすぐ下）
+  if (state.bannerAfter) {
+    const banner = document.querySelector('[data-alert="update"]');
+    if (!banner) issues.push('R90 the update banner is not shown');
+    else if (!banner.previousElementSibling?.matches(state.bannerAfter)) issues.push(`R90 the update banner is not right after ${state.bannerAfter}`);
   }
   for (const text of state.texts ?? []) {
     if (!document.body.innerText.replace(/\u00a0/g, ' ').includes(text)) issues.push(`R87 the screen does not say "${text}"`);

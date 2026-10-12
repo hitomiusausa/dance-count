@@ -3,7 +3,8 @@ import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { BundleTooLargeError, readBundleText, takeInboxFile } from '../platform/files.ts';
-import { externalBrowserUrl, isLineInAppBrowser, reloadPage } from '../platform/page.ts';
+import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
+import { checkForUpdateThenReload } from '../platform/pwa.ts';
 import { makeId } from '../routines/ids.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { parseBundle } from '../share/bundle.ts';
@@ -188,7 +189,7 @@ function PickNotice({ alert }: { alert: NonNullable<PickAlert> }) {
   return (
     <div class="dc-alert" role="status" data-alert={alert.kind}>
       <div class={`dc-alert-text${alert.kind === 'too-new' ? '' : ' dc-alert-text--solo'}`}><b>{text}</b></div>
-      {alert.kind === 'too-new' && <button type="button" class="dc-alert-action" data-alert-action onClick={reloadPage}>{translator.t('updateApp')}</button>}
+      {alert.kind === 'too-new' && <button type="button" class="dc-alert-action" data-alert-action onClick={() => void checkForUpdateThenReload()}>{translator.t('updateApp')}</button>}
     </div>
   );
 }

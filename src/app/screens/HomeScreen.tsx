@@ -1,5 +1,6 @@
 import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
 import { Icon } from '../components/Icon.tsx';
+import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { danceName } from '../i18n/index.ts';
 import { formatCounts } from '../lib/count-display.ts';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
@@ -11,7 +12,7 @@ import { useSettings } from '../state/settings.ts';
 
 const DANCE_IDS = Object.keys(DANCE_PROFILES);
 
-// S1（仕様 §4・Ruling 16）。上から: アプリ名と言語 → 前回カード → 先生の声カード → 見出し → 種目タイル10個。
+// S1（仕様 §4・Ruling 16）。上から: アプリ名と言語 → 前回カード → 先生の声カード → 見出し → 種目タイル10個 → 更新の帯（段7。最下段＝375×548 の初期表示を崩さない。Ruling 90-3）。
 export function HomeScreen() {
   const { translator, setLocale } = useI18n();
   const { settings } = useSettings();
@@ -62,6 +63,7 @@ export function HomeScreen() {
           </a>
         ))}
       </div>
+      <UpdateBanner />
     </main>
   );
 }

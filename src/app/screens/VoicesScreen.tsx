@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -105,6 +106,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
     <main class="dc-screen" data-screen="S7">
       <BackButton screen="S7" />
       <h1 class="dc-heading">{translator.t('voicesTitle')}</h1>
+      <UpdateBanner />
       <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />
       <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('voicesTitle')} data-group="voice">
         {STANDARD_VOICES.map(voice => radioRow({ kind: 'standard', id: voice.id, locale: voice.locale }, voiceDisplayName(translator, { kind: 'standard', id: voice.id, locale: voice.locale }, 'row')))}

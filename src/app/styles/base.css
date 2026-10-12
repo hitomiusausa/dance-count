@@ -458,3 +458,9 @@ button { cursor: pointer; }
 .dc-dock-note, .dc-backup-tip, .dc-result, .dc-receive .dc-alert-text, .dc-receive-item, .dc-receive-note, .dc-receive .dc-body { word-break: auto-phrase; }
 /* S3 の開いた行（Ruling 86-4）: 「編集」「配る」「削除」の 3 つは語の途中で折らない（320 幅では 2 段に並ぶ） */
 .dc-row-actions .dc-button--secondary { flex: 1 0 auto; white-space: nowrap; }
+
+/* 段7 更新の帯（Ruling 90-2）: [data-alert] の枠。文は 18px の太字と「更新する」（48px・.dc-alert-action）を 1 行に（入らない幅では折り返す）。
+   高さを 1 行ぶんに抑えて、S6 の行が 375×548 の初期表示から落ちないように。S1 は種目タイルの下 */
+.dc-update { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; padding: 0 12px; }
+.dc-update .dc-alert-text { font-size: 18px; }
+.dc-home .dc-update { margin-top: 16px; }
