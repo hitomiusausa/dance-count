@@ -162,8 +162,9 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 
 ### S3 ルーティン一覧（ルート）
 - 「＋ 新しいルーティン / New routine」（横幅いっぱい・56px 以上、0件でも同じ位置）→ ルーティンの行（名前・種目・フィガー数・▶）。受け取ったものには副題「○○さんから / From ○○」。並び順は作った順（新しいものが下。Ruling 44）。
-- 行をタップで展開（同時に1つ）: ▶ 再生（S5 へ遷移してすぐ鳴る。Ruling 40）・「編集」・「配る」（**段5で足す**。Ruling 41）・「削除」。削除は確認ダイアログ（`<dialog>`・質問1つ・ボタン2つ・取り消しが左。Ruling 44）。フィガー0件・保存されていたカウントが通らないルーティンは ▶ の代わりに説明の1行（「フィガーを追加すると再生できます。」「カウントに直す所があります。」）。
+- 行をタップで展開（同時に1つ）: ▶ 再生（S5 へ遷移してすぐ鳴る。Ruling 40）・「編集」・「配る」（**段5で足した**。鳴らせる行だけ・編集と削除の間。Ruling 86-4）・「削除」。削除は確認ダイアログ（`<dialog>`・質問1つ・ボタン2つ・取り消しが左。Ruling 44）。フィガー0件・保存されていたカウントが通らないルーティンは ▶ の代わりに説明の1行（「フィガーを追加すると再生できます。」「カウントに直す所があります。」）。
 - 0件の時: 「まだルーティンはありません」の1行。
+- **段5**: 受け取ったルーティンも編集でき、編集しても「○○さんから」は残る（Ruling 84-3）。期待値 1 本開 3 のまま。
 - 載せない: 旧24本、provenance・レビュー状態の表示。
 
 ### S4 ルーティン編集（集中）
@@ -178,7 +179,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 小節の注意（D16・Ruling 52）: ワルツ・ヴィエニーズワルツで3拍の倍数でないフィガーは、閉じた行に「3拍のカウントではありません」（閉じた行の上から最初の1件だけ「。必要なら編集してください。」つき＝依頼は1画面1つ）、開いた行は入力欄の下に短い形。全種目でルーティン全体が小節の途中で終わる時は、一覧の下に「小節の途中で終わっています。繰り返すと頭がずれます。」の1行（S4 だけ）。どちらも知らせるだけで、入力・保存・再生は止めない。
 - 試聴（Ruling 36-7）: 行の試聴はその行の入力値（確定前でも有効なら）で、はじめの合図なし・繰り返しなし・1回。「全体を試聴」は `routine.countInBars` の合図つき・繰り返しなし・1回。鳴っている行は琥珀の左線＋うす塗り（D10）。
 - 「くわしく」: はじめの合図の小節数（1小節 / 2小節）、速さ指定（「種目の標準（♩=84）」とスライダー。標準と同じ値は空として持つ）、声のタイミング（段4）。
-- 保存: 端末内（§7）。確定のたびに自動保存（保存ボタンなし。Ruling 37）。最初の確定で ID を発行し、ハッシュを `#/routines/<id>/edit` に置き換える。保存に失敗したら §11 の文言を `[data-alert]` に。初回保存時に1回だけ「ファイルに保存（バックアップ）しておくと安心です」の1行（**段5で足す**。Ruling 41）。
+- 保存: 端末内（§7）。確定のたびに自動保存（保存ボタンなし。Ruling 37）。最初の確定で ID を発行し、ハッシュを `#/routines/<id>/edit` に置き換える。保存に失敗したら §11 の文言を `[data-alert]` に。初回保存時に1回だけ「ファイルに保存（バックアップ）しておくと安心です」の1行（**段5の読み替え**: 「ルーティンは「配る」でファイルにして、自分にも送っておけます。」の `[data-alert]`＋「閉じる」。`hints.backupTipShownForRoutine`。保存失敗の枠が出ている時は出さない。Ruling 86-3）。
 - 載せない: 旧カタログ由来の候補カウント、reviewStatus の編集。
 
 ### S5 ルーティン再生（集中）
@@ -189,13 +190,14 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 「くわしく」: 範囲（「はじめ」「おわり」を「‹ 前」「次 ›」で段送り・1グループ。記憶しない）、速さの細かい調整、繰り返す、声のタイミング（段4）。
 
 ### S6 設定（ルート）
-- 項目（上から）: 言語（日本語 / English）、声（→ S7）、ホーム画面に追加する方法（→ S12）、音が鳴らない時（→ S11）、見出し「先生の方へ / For teachers」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9）、プライバシー・アプリについて（→ S13、版番号を併記）。
+- 項目（上から）: 言語（日本語 / English）、声（→ S7）、ホーム画面に追加する方法（→ S12）、音が鳴らない時（→ S11）、見出し「先生の方へ / For teachers」の下に「自分の声を録音する」（→ S8）「ルーティンを配る」（→ S9。**段5で足した**。期待値 4。Ruling 86-5）、プライバシー・アプリについて（→ S13、版番号を併記）。
 - 載せない: 開発者向け項目、キャッシュ操作。「データを全て消す」は S13 の最下部。
 
 ### S7 声（一覧）
 - 大きなラジオ形のリスト（`[data-group="voice"]`）: 「標準の声（英語）」「標準の声（日本語）」（Ruling 5 のゲート通過後のみ＝段6c）「○○さんの声」（受け取った）「自分の声」（録音途中なら「7/12」）。選択中の行に ▶ 試聴（ワルツ1小節）。並びは 標準 → 自分 → 受け取った → 途中（Ruling 60-1）。
 - **途中の声の行（段4・D32・Ruling 60-2 の読み替え・Ruling 73）**: 「自分の声（日本語） · 7 / 12 語」（名前は黒、数だけ灰色）。選べない（`role="button"`）。タップで開き「続きを録音する / Continue recording」（→ S8 の説明の画面をその言語で）→「削除」。
 - 下に2ボタン: 「ファイルから受け取る / Receive from a file」（→ S10。**段5で足す**。Ruling 55-3）「自分の声を録音する / Record your voice」（→ S8）。段4の主要操作は 閉 2・行を開 3。
+- **段5の読み替え（Ruling 86-1・82-3・D37）**: 「ファイルから受け取る」は `.dc-button--secondary dc-wide` で「自分の声を録音する」の上。開いた行は**録音の声＝「配る」「削除」・受け取った声＝「削除」だけ**（受け取った声は配れない）。**「ファイルに保存」は作らない**（バックアップは「配る」で作ったファイルを自分にも送る）。期待値 閉 3・3 本 3・録音の声を開 4・受け取った声を開 4。見える高さ 600px 未満では 2 つのボタンを横 1 行（16px・マイクのアイコン無し。320 幅では縦に積む。Task 10b のコントローラーの裁定）。受け取った声の行は「{name}さんの声」（Ruling 76-1 の注記）。
 - 受け取った声・自分の声の行を展開（1 回目のタップで選ぶ・選んだ行をもう一度タップで開く。Ruling 60-4）: 「配る」（→ S9、この声を入れた状態）「ファイルに保存」（この 2 つは**段5で足す**。Ruling 55-3。`[data-group="voice-actions"]` に）「削除」（確認ダイアログ。消すと標準（英語）が選ばれる）。
 - 声の言語の選択（Ruling 12）はこの画面の選択そのもの（英語の声を選べば英語カウント）。
 
@@ -204,6 +206,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 1〜12（1画面1語、順番は `REQUIRED_VOICE_KEYS`: スロー・クイック・1〜8・アンド・ア）: 進み具合「3 / 12 語」と12マスの棒、語（56px・選んだ言語の語）ともう一方の言語の表記（20px）、「ボタンを押すと 1.5 秒だけ録音します」（**段4で「ボタンを押したら、すぐ「{語}」と言ってください。」に**。D34・Ruling 72。説明と枠は同じ高さ 60 の箱で、枠が出ても丸は動かない）、大きな録音ボタン（直径 144px。押す→1.5秒録る→自動停止、もう一度押すと録り直し）、自動頭出し後の波形ミニ表示と「▶ 聞く」、下固定「次へ」。**段4**: 2 語目からは帯に「‹ 前の語」。語は飛ばせない。完成済みの言語で開くと完成画面から。「‹ 戻る」は S8 を出る（録れた語は 1 語ごとに保存済み）（D25・Ruling 59）。主要操作は 1 語目 2・録れた語（2 語目以降）4。
 - 13 完成: ワルツで試聴（標準の声と聞き比べ）、名前（既定「○○の声」）、「配る」（→ S9）「あとで」。完成時に1回だけ「ファイルに保存（バックアップ）」を勧める1行（Ruling 11）。
   - **段4の読み替え（Ruling 55-3・59-5）**: 「配る」「あとで」→ 段4は下固定の「完了」だけ（S7 へ戻り、この声を選ぶ）。「配る」は段5で足す（主要操作 5＝上限ちょうど）。「ファイルに保存（バックアップ）を勧める1行」も**段5**。名前の既定は「自分の声（英語）／（日本語）」（D23）。「1 語目から見直す」（何も消えない）。主要操作 4。
+  - **段5の読み替え（Ruling 86-2・D39）**: 下固定の帯は左 `.dc-button--secondary`「完了」（S7 へ・この声を選ぶ）・右 `.dc-primary`「配る ›」（この声を選んでから S9 へ置き換え遷移・この声が選ばれた状態）。「あとで」は無い。「1 語目から見直す」の下に `div.dc-hint`（16px）「「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。」（最初に完成の画面を出した時だけ。`hints.backupTipShownForRecording`）。主要操作 **5**（上限ちょうど・以後は足せない）。
 - マイクが使えない時（段4・D30）: 別画面にせず、説明の画面の説明 3 行の場所に枠を出し、言葉の 2 択と「録音をはじめる」は残す（主要操作 2。§11）。非対応のブラウザは枠だけ（主要操作 0）。
 - 載せない: ゲイン・onset の数値、mimeType、正規化のオン／オフ。
 
@@ -213,11 +216,13 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 同意チェック（声を入れる時だけ表示・必須）: 「自分の声をこのファイルに入れて配ることに同意します。配り先は自分で管理します」。
 - 下固定「ファイルを作る / Create file」→ `navigator.share({files})` が使えれば共有シート、使えなければダウンロード（ファイル名を表示）。
 - 同じ画面に「生徒への案内文をコピー / Copy instructions for students」（§8 の定型文）。
+- **段5の読み替え（Ruling 82・Fable の答え 2・4〜6・Task 10b）**: 上から 見出し「配る」→ 名前（見出し「あなたの名前」・40 字・`settings.distributorName` に記憶・空なら主ボタンが押せず「名前を入れると、ファイルを作れます。」）→ 声（「入れない」＋完成した録音の声だけ。受け取った声は出ない＝D37。録音が無ければ「録音した声はまだありません。」・ファイルにできなかった時は「この声はファイルにできませんでした。」）→ 同意（声を選んだ時だけ。四角だけが `role="checkbox"`・文を押しても切り替わる・未チェックなら「同意すると、ファイルを作れます。」）→ ルーティン（鳴らせる物だけ・作った順・0 件は「配れるルーティンはまだありません。」）→ 下固定「ファイルを作る」（何も選んでいない時は押せず上に「声かルーティンを選ぶと、ファイルを作れます。」。録音もルーティンも無い時はこの 1 行を出さない）。**声の指定なしで来た時（S6・S3・直接）は 名前 → ルーティン → 声 の順**。ファイルはタップの前に作っておき、タップの最初の文で同期に共有（Ruling 81-2）。結果は画面の上の `.dc-result` 1 行（共有＝「ファイルを送ったら、下の案内文も送ってください。」・保存＝「「{file}」を保存しました。…」・拒まれた＝「共有できませんでした。下の「ファイルを保存する」で保存できます。」＋「ファイルを保存する」ボタン。自動では保存しない）。**案内文のコピーは作った後に**結果の下へ（初期表示の 5 を超えないため。clipboard が無ければ読み取り専用の欄と「長押しで選んでコピーできます。」）。「ファイルに保存」は無い。主要操作 声あり 5・録音なし（ルーティン 1 本）3・作った後 6。S9 は鳴らさない。
 
 ### S10 受け取る（集中）
 - 「ファイルを選ぶ / Choose a file」大ボタン（`<input type=file accept=".json,application/json">`）、iPhone 向け図解（LINE → 共有 → "ファイル"に保存 → ここで選ぶ）、「最近の項目」から探す案内、ファイル選択が開かない時の「Safari で開いて受け取る」リンク（F3）。
 - 選んだ後: 中身の確認（「○○さんの声・日本語・12/12」「ルーティン 2本」）→「使う / Use」。同名の声があれば「置き換える／両方残す」。
 - Android の share_target から来た時は、確認画面から始まる。
+- **段5の読み替え（Ruling 83・79・D38）**: 3 つの状態。**選ぶ**（主要操作 1）: 「ファイルを選ぶ」（`<button>` が隠した `<input type=file accept=".txt,.json,text/plain,application/json">` を同じタップで `click()`）＋説明は**文字の 2 行**「LINE で届いたファイルは、先に「"ファイル"に保存」しておくと、ここで選べます。」「選ぶ画面では「最近使った項目」にあります。」（図解 SVG は作らない。「最近の項目」は iOS 26.3 の実物に合わせて「最近使った項目」）。**「Safari で開いて受け取る」リンク（F3）は作らない**（F25。段7の実機確認表で見る）。LINE のアプリ内ブラウザで開いた時だけ枠「LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。」＋「Safari で開く」（`?openExternalBrowser=1`）。エラーは同じ画面の枠（§11）。**確認**（主要操作 2）: 中身の一覧（「{name}さんの声（英語）· 12 語」・「ルーティン 2 本: …」・読めなかった本）＋同じ先生の声・同じルーティンは「「使う」で新しい方に置き換わります。」の 1 行。**「両方残す」は作らない**（D38。同じ先生の見分けは D40）。帯「やめる」「使う」。**受け取った**（主要操作 1）: 受け取った声は**その場で選ばれ**、「ホームへ」（声があれば）／「ルーティンを見る」。保存に失敗したら確認の画面に留まり「保存できませんでした。…」。Android の share_target は段7（段5は受け口 `takeInboxFile` の契約だけで、Cache に置かれたファイルがあれば確認から始まる）。
 
 ### S11 音が鳴らない時（集中）
 - 3項目以内: 本体横のスイッチ（マナーモード）を確認／音量を上げる／イヤホン・Bluetooth の接続を確認 → 最後に「もう一度 ▶ を押してください」。技術用語なし。
@@ -324,6 +329,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 5. 一覧 `[data-list]` は閉じた行（行の見出し）をまとめて **1**。開いた行の中身 `[data-row-body]` は 4. の規則で数える。`[data-list]` は `[data-group]`・`[data-list]` の中に置かない（Ruling 35）。一覧の行は `li` にしない（補助文 16px が U1 の本文の規則に当たるため。`div role="list"`）。
 6. 当てはめ（期待値）: S1＝3（初回2）、S2＝5、S3＝1（0件）・3（行を開く）、S4＝1（種目選択）・3（0件）・5（1件以上）・8（行を開く。Ruling 53）・7（くわしく開）・7（追加の行で名前が空＝一覧あり。名前が入れば 6。0件で追加の行は 5。Ruling 54）、S5＝5（くわしく開 8）、S8 ステップ0＝2。
    - **段4で足した期待値**: S2・S5 くわしく開＝9、S4 くわしく開＝8（声のタイミング）。S6＝3。S7＝2（標準だけ）・2（3 本）・3（行を開）。S8＝2（説明）・2（1 語目）・4（録れた語・前の語あり）・4（完成）・2（マイク拒否。D30）・2（声が入っていない）・0（非対応）。
+   - **段5で変えた・足した期待値**（Ruling 82・83・86・87-2）: S3 1 本開＝3（「配る」は `routine-actions` の中）。S4 最初の保存の案内＝3。S6＝**4**。S7＝**3**（標準だけ）・**3**（3 本）・**4**（録音の声を開。「配る」「削除」）・**4**（受け取った声を開。「削除」だけ）。S8 完成＝**5**（上限ちょうど）。S9＝5（声あり）・3（録音なし・ルーティン 1 本）・6（作った後）。S10＝1（選ぶ）・2（確認）・1（受け取った）。`ui:check` は段5の終わりで **262 項目**（dev と公開ビルドの両方）。
 7. **画面の大きさ（段4）**: 375×667・1280×900 に加えて、(a) **320×568 で全状態に横スクロールが出ない**、(b) **375×548（iPhone SE の Safari）でも各画面の主要操作が初期表示に入る**（全状態を同じ規則で検査。例外は S5 の声チップ＝スクロールの下（S5 くわしく閉の 3 状態は期待値 4）と、警告の枠つきの S2/S5＝速さと ▶ だけ。Ruling 71・23）。`ui:check` は段4の終わりで 192 項目。
 
 ### 手動レビュー項目（チェックリスト）
@@ -352,6 +358,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 移行: localStorage の `dance-count-v2-ui-locale` は初回起動時に読み取って IndexedDB へ移し、移せたら消す（段2で済）。`dance-count-v2-routine-draft:*` は旧画面（別オリジン）の旧ルーティン（`legacy-import`）の下書きなので移行しない（Ruling 41）。
 - 初回の保存成功時に `navigator.storage.persist()` を要求（結果は画面に出さない）。**段4で前倒し**: 録音の最初の語を保存した後（Ruling 56）。段7はルーティン側も含めて見直す。
 - 消失対策: 先生の録音完成時（**段5**）とルーティンの初回保存時（**段5**。Ruling 41・55-3）に「ファイルに保存（バックアップ）」を勧める1行を各1回だけ出す。「ファイルに保存」は配布ファイルと同じ形式（§7 配布ファイル）で、同意欄は付けない。
+  - **段5の読み替え（Ruling 86・82-3・D37）**: 「ファイルに保存」のボタンは作らない。1 行は**「配る」で作ったファイルを自分にも送る**ことを言う（S8 完成・S4 の最初の保存）。
 - Service Worker のキャッシュにユーザーデータは入れない。
 
 ### ルーティン（既存形式を拡張。既存キーは変えない）
@@ -359,8 +366,8 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 { id, danceId, name, bpm|null, countInBars:1|2 /* 新規の既定は2（D17） */, source:'user-created', status:'ready',
   figures:[{ id, name, counts }],                // counts は正規化した文字列（例 "123a45a6"）。パーサのトークンは変えない
   provenance:{ sourceKind:'user-created', authority:null,
-               authorityClaimStatus:'not-applicable', reviewStatus:'unreviewed' },   // 'received' は段5で足す
-  receivedFrom?:{ distributor, receivedAt },
+               authorityClaimStatus:'not-applicable', reviewStatus:'unreviewed' },   // 'received' は段5で足した（Ruling 84-2）
+  receivedFrom?:{ distributor, receivedAt, sourceId },   // sourceId は段5（先生の端末のルーティンの id。同じ物の置き換えに使う）
   createdWith:{ app:'dance-count', version },    // version は package.json（ビルド時に埋める）
   createdAt, updatedAt }                         // createdAt が無い古い値は updatedAt で代用
 ```
@@ -371,6 +378,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 ### 声のパック
 - 端末内: 既存 `recorded-voice-pack` schemaVersion 1（語ごとに Blob・onsetMs・gainDb・normalized・sourceOnsetMs・durationMs、`wordOffsetsMs`）。追加フィールド `origin:'recorded'|'received'`、`distributor?`、`consent?`（段4は `recorded` だけを作る。保存は `src/app/voices/store.ts`＝`platform/storage` 経由・DB は v2 のまま。Ruling 56）。録音・受け取った声の「声のタイミング」は `timingAdjustments.globalOffsetMs`（[仕様差] Ruling 62-3。下の「設定」の最後の行の読み替え）。録音は MediaRecorder（iOS `audio/mp4`、Chrome `audio/webm;codecs=opus`）→ `recording-normalizer` で WAV 化して保存（Ruling 15）。
 - 標準音声: `public/audio/<packId>/manifest.json`（schemaVersion 2・words.<key>.onsetMs 実測済み）。英語 `default-en-female-v1`（既存）、日本語 `default-ja-female-v1`（Ruling 5 のゲート通過後）。
+- **段5（Ruling 84-1）**: 受け取った声は `id` を `v-<uuid>` に付け直し、`origin:'received'`・`distributor:{ name }`・`consent`・`sourceId`（先生の端末の `id`）・`sourceUpdatedAt`・`receivedAt` を持つ。`timingAdjustments.globalOffsetMs` は **0**、`wordOffsetsMs` は残す。
 
 ### 設定
 ```
@@ -384,6 +392,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - `voiceLocale` の初期値は UI 言語に関わらず `'en'`（D3）。録音・受け取ったパックを選ぶと `voiceLocale` はそのパックの `locale` に従う（Ruling 25）。言語を別に選べるのは標準音声だけ。
 - 録音・受け取った声の「声のタイミング」はそのパックの `wordOffsetsMs` に12語同じ値で保存（既存の範囲検査 ±1000ms の内側、UI は ±200ms）。**[仕様差] 段4**: `timingAdjustments.globalOffsetMs` に 1 つの値で持つ（Ruling 62-3。`wordOffsetsMs` は使わない。受け取った声の `wordOffsetsMs` の扱いは段5）。
 - **段4**: `selectedVoiceId` は録音・受け取った声の ID も残す（`normalizeSettings` は標準へ戻さない。パックが無い・途中なら再生時に黙って標準（英語）。Ruling 61）。`voiceLocale` は選んだ声から導いて同時に書く（Ruling 60-3）。
+- **段5**: `distributorName`（S9 の名前・既定 `''`・40 字）と `hints.backupTipShownForRecording`・`hints.backupTipShownForRoutine` が入った（Ruling 86-6）。
 
 ### 配布ファイル（Ruling 4）
 ```
@@ -399,6 +408,7 @@ PC（1024px 以上、Ruling 21）: 画面は1カラム・最大幅 640px 中央�
 - 互換（受理するもの）: `dance-count-bundle` schemaVersion 1、既存の単体 `dance-count-recorded-voice-pack`（schemaVersion 1）。
 - 検証: 声は既存 `validateRecordedVoicePack`、ルーティンは `rhythm-parser`＋`rhythm-compiler` でコンパイル。1フィガーでも不正ならそのルーティンだけ除外して名前を表示し、声と他のルーティンは取り込む。`schemaVersion` が知らない値なら取り込まず §11 の「新しいアプリで作られたファイル」。
 - 受け取った声には `origin:'received'`・`distributor`・`consent` を記録し、S7 で「○○さんの声」と表示。削除ボタンを常設。
+- **段5の読み替え（Ruling 80・84・D36・D37・D40）**: 拡張子は **`.dancecount.txt`**・MIME **`text/plain`**（中身は JSON のまま。Chrome／Android が `.json` を `share()` で拒むため）。ファイル名は `声-<名前>-<YYYY-MM-DD>.dancecount.txt`（英語 `voice-…`、声が無ければ `ルーティン-…`／`routines-…`）。1 ファイルに**声 1 つ**（完成した録音の声だけ。受け取った声は入れられない）・**ルーティン 50 本**（鳴らせる物だけ）まで。`distributor.name` は**必須**（無い・空は「読めない」）。読む順は JSON → 種類と版 → 名前 → 声（同意・import・12 語・端末の上限）→ ルーティン（1 本ずつ。外れた本は名前だけ「読めない」に）→ 空なら「読めない」。受け取ったルーティンは `id`・`figures[].id` を付け直し、`receivedFrom.sourceId` を持つ。同じ先生の声（名前＋`sourceId`＋言葉。D40）・同じルーティン（`receivedFrom.sourceId`）は置き換え（新しい物を書けてから古い物を消す）。声は 20・ルーティンは 200 まで。欄を足すだけなら版は上げない（Ruling 80-6）。
 
 ### 曲の口（Ruling 20・型だけ）
 - `TrackProfile { id, danceId, title, file, durationMs, beatsPerBar, tempo:{kind:'constant', bpm, firstBeatMs}|{kind:'beatMap', beatsMs:number[]}, license:{kind:'CC0'|'PD-recording'|'CC-BY', source, url, note}, measuredAt }`。v1 は実データなし。練習セッション状態に `track:null` を予約。
@@ -443,9 +453,23 @@ App: <public URL>
 ```
 `<公開URL>` はビルド時の定数（§16-1 で確定）。
 
+**段5の読み替え（Ruling 82-6・`src/app/share/instructions.ts`）**: 実際の文は次のとおり（段7で share_target が入ったら【Android】の行を書き換える）。
+```
+Dance Count で、私の声のカウントを使えます。          （ルーティンだけなら「Dance Count で、私のルーティンを使えます。」）
+【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」
+2. Dance Count を開き「先生の声で練習」→「ファイルから受け取る」→「ファイルを選ぶ」
+3. 「最近使った項目」からこのファイルを選び「使う」
+【Android】このファイルを保存してから、同じ手順で「ファイルを選ぶ」
+（スマホで受け取るのが便利です）
+アプリ: <PUBLIC_APP_URL>?openExternalBrowser=1      （PUBLIC_APP_URL が空なら行ごと出さない）
+```
+英語は 1 行目 `You can practice with my voice in Dance Count.`（`practise` でなく）、Android は `[Android] Save this file, then follow the same steps and “Choose a file”`。`?openExternalBrowser=1` は LINE のトークから開く時に Safari／Chrome で開くため（F26・推測。実機確認表 A-4）。
+
 ### 技術
 - 書き出し: `navigator.canShare({files:[file]})` が真なら `navigator.share`、偽なら `<a download>`。
 - Android の受け取り: manifest に `share_target`（`method:'POST'`, `enctype:'multipart/form-data'`, `params.files:[{name:'bundle', accept:['application/json','.json']}]`）。Service Worker が POST を受けてファイルを一時保存し `#/receive` へリダイレクト。
+  - **段5の読み替え（Ruling 79-2）**: share_target・SW は**段7**。段5は受け口の契約だけ: Cache `dance-count-inbox` の `./inbox/bundle`（相対。SW はアプリの根に置く）にファイルを `put`・ファイル名はヘッダー `X-File-Name`（`encodeURIComponent`）・`Response.redirect('./#/receive', 303)`。S10 はマウント時に `takeInboxFile()` で読んで消す。`accept` は `['text/plain','.txt','application/json','.json']`（D36）。
+  - 書き出しの細部（段5・Ruling 81）: ファイルはタップの前に作り、`share()` はタップの最初の文で `await` を挟まずに呼ぶ。取り消しは何もしない。拒否（`NotAllowedError` 等）は保存せず「ファイルを保存する」ボタンを出す（次のタップで `<a download>`）。受け取りの `accept` は `.txt,.json,text/plain,application/json`。
 - iOS は share_target 不可（F6）。ファイル選択が全端末共通の正。
 
 ---
@@ -537,13 +561,17 @@ App: <public URL>
 | マイクが使えない（通話中・ほかのアプリ・見つからない） | S8 説明の画面の中の枠（段4・Fable Q2） | マイクを使えませんでした。ほかのアプリや通話を終えてから、もう一度「録音をはじめる」を押してください。 | The microphone couldn't be used. Close other apps or end the call, then tap “Start recording” again. | （枠の中には無し。同じ「録音をはじめる」） |
 | マイク非対応 | S8 | このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。 | This browser can't record. Please open in Safari (iPhone) or Chrome. | 戻る |
 | 録音が無音・短すぎ | S8 の語の画面（説明の 1 行と同じ箱。録音の途中のマイクの失敗も同じ。Task 7 修正便） | 声が入っていませんでした。もう一度録音してください。 | We couldn't hear your voice. Please record again. | 録音する |
-| 保存失敗・容量不足 | 発生画面 | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | ファイルに保存（**段5**。段4は文だけ） |
+| 保存失敗・容量不足 | 発生画面 | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | ファイルに保存（**段5の読み替え**: ボタンは作らない＝文だけ。S10 は確認の画面の枠。Ruling 82-3・83-3） |
 | 壊れたファイル・別の種類 | S10 | このファイルは読めませんでした。先生に送り直してもらってください。（ファイル名） | This file couldn't be read. Ask your teacher to send it again. | ファイルを選ぶ |
 | 20MB 超 | S10 | このファイルは大きすぎて受け取れません。 | This file is too large. | ファイルを選ぶ |
 | 新しすぎる schemaVersion | S10 | 新しいアプリで作られたファイルです。アプリを更新してください。 | This file was made by a newer version. Please update the app. | 更新する（再読み込み） |
 | 一部のルーティンが不正 | S10 取り込み結果 | ルーティン「○○」は読めませんでした。（列挙。声は取り込む） | Routine "○○" couldn't be read. | 使う |
 | オフラインで音声未キャッシュ | S2/S7 | この声はまだ端末に入っていません。インターネットにつないで一度再生してください。 | This voice isn't on your device yet. Connect to the internet and play once. | 戻る |
 | 共有シート不可 | S9 | （案内なし。ダウンロードに切替えてファイル名を表示） | — | — |
+| 共有を拒まれた（段5） | S9 の結果の 1 行 | 共有できませんでした。下の「ファイルを保存する」で保存できます。 | Sharing didn't work. You can save it with “Save the file” below. | ファイルを保存する（自動では保存しない。Fable の答え 2） |
+| 声が 20 を超える（段5） | S10 選ぶ画面の枠 | 声が 20 を超えるため、受け取れません。使わない声を削除してから、もう一度選んでください。 | You already have 20 voices. Delete one you don't use, then choose the file again. | ファイルを選ぶ |
+| ルーティンが 200 を超える（段5） | S10 確認 | ルーティンは 200 本までなので、N 本は受け取れません。 | You can keep up to 200 routines, so N can't be received. | 使う（入る分だけ受け取る） |
+| LINE のアプリ内ブラウザで開いた（段5） | S10 選ぶ画面の枠 | LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。 | This is open inside LINE. Open it in Safari or Chrome so the voice stays on your phone. | Safari で開く（`?openExternalBrowser=1`） |
 | WakeLock 不可 | S2 | 1回だけの案内（§4 S2） | Your screen may dim during practice. A longer Auto-Lock helps. | 閉じる |
 
 ---
@@ -572,7 +600,7 @@ App: <public URL>
 | 2 | 生徒の再生（S1・S2）: タイル、前回・先生カード、戻る／タブ出し分け、PC（1024px 以上）の上部タブ、再生、速さ3択、トグル、現在カウント、くわしく、iOS 解除、WakeLock、警告バナー、`ui:check` 移植 | 1 | 3・6 と並列可（別ディレクトリ） | Opus | G1・G2、`ui:check` で S1/S2 の U1〜U15 通過（S1=3・S2=5・U12）、iPhone 実機でマナーモード時に鳴る |
 | 3 | ルーティン（S3・S4・S5）: IndexedDB の routines、編集、試聴、名前補完、範囲（下書きの移行は不要。Ruling 41） | 1 | 2・6 と並列可 | Sonnet | 作成→保存→再起動で残る、不正カウントの赤枠、`ui:check` 通過 |
 | 4 | 声（S7・S8）: 一覧、録音ウィザード、正規化再利用、試聴・聞き比べ、声のタイミング | 2 | 6 と並列可 | Opus | iPhone/Chrome で12語録音→ワルツが自分の声で鳴る、無音判定、`ui:check` 通過 |
-| 5 | 配る・受け取る（S9・S10）: bundle、share／download、share_target、取り込み検証、案内文 | 3・4 | — | Sonnet | G6、壊れた／大きすぎ／新しすぎるファイルの画面 |
+| 5 | 配る・受け取る（S9・S10）: bundle、share／download、share_target、取り込み検証、案内文 | 3・4 | — | Sonnet | G6、壊れた／大きすぎ／新しすぎるファイルの画面。**完了（実装・レビュー）2026-10-12 — 実機確認待ち**（share_target は段7。段5は受け口の契約だけ。Ruling 79） |
 | 6 | 日本語標準音声: 生成・onset 実測・聴感ゲート・同梱 | 1 | 2〜5 と並列可（tools のみ） | Sonnet＋ひとみうさ試聴 | Ruling 5 のゲート3点 |
 | 7 | PWA: SW precache、更新バナー、S12、オフライン再生、`persist()`、manifest | 2・6 | — | Sonnet | G7、更新バナー、インストール可能（§14） |
 | 8 | 仕上げ: 日英文言の監修、S11・S13、エラー全件、禁止語テスト、アクセシビリティ最終 | 2〜7 | — | Sonnet＋別エージェントのレビュー | G3・G8、実機チェックリスト全項目 |
