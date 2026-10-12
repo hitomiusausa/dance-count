@@ -42,7 +42,7 @@
 | 6b | 生成とゲート（A＝Google の従量課金／B＝ひとみうさの録音）→ 採用 | 6a・**ひとみうさの決定**（`docs/app-v1/stage6-decision-card.md`） | — | Opus（課金の伴う生成はく！ちゃんが打つ）＋ひとみうさ試聴 | Ruling 70-2。**決定カード待ち** |
 | 6c | 接続（S7 に「標準の声（日本語）」） | 4・6b（採用と同じ便） | — | Sonnet | Ruling 70-3（文言キーは段4で足し済み） |
 | 7 | PWA: SW precache、更新バナー、S12、オフライン再生、`persist()`、manifest。**share_target の manifest と SW の POST 受け（段5の契約どおり）**: `share_target: { action:'./receive', method:'POST', enctype:'multipart/form-data', params:{ files:[{ name:'bundle', accept:['text/plain','.txt','application/json','.json'] }] } }`、SW は `formData.get('bundle')` を `caches.open('dance-count-inbox')` の `./inbox/bundle` に `put`（ヘッダー `X-File-Name` に `encodeURIComponent(file.name)`。鍵は相対なので SW はアプリの根）→ `Response.redirect('./#/receive', 303)`。案内文の【Android】の行の書き換え。ホーム画面のアプリで S10「ファイルを選ぶ」が開くか（F3・Ruling 79-3） | 2・6（実際は 5 の後） | — | Sonnet（実際は Task ごとに Sonnet／Opus） | G7、更新バナー、インストール可能（§14）。**完了（実装・レビュー）2026-10-12。実機確認待ち（https の置き場＝ひとみうさの判断）**（`docs/app-v1/stage7-device-check.md`。詳細計画 `2026-10-12-app-v1-stage7.md`・台帳 `docs/app-v1/stage7-ledger.md`。テスト 575（計画 564）・`ui:check` 332（計画 322）・`smoke:pwa`・iOS シミュレーターで 追加 → 全画面 → オフライン → 新しい版。Ruling 88〜95・D41〜D46） |
-| 8 | 仕上げ: 日英文言の監修、S11・S13、エラー全件、禁止語テスト、アクセシビリティ最終 | 2〜7 | — | Sonnet ＋ 別エージェントのレビュー | G3・G8、実機チェックリスト全項目 |
+| 8 | 仕上げ: 日英文言の監修、S11・S13、エラー全件、禁止語テスト、アクセシビリティ最終 | 2〜7 | — | Sonnet ＋ 別エージェントのレビュー | G3・G8、実機チェックリスト全項目。**完了（実装・レビュー）2026-10-12。実機確認待ち・統合レビューは Task 11〜13**（詳細計画 `2026-10-12-app-v1-stage8.md`・台帳 `docs/app-v1/stage8-ledger.md`・テスト 619・`ui:check` 653） |
 
 **全体の統合レビュー**（段8の後）: Opus 総合レビュー → 修正便1回 → 差分再レビュー1回（仕様 §13）。
 
@@ -103,7 +103,7 @@
 | **段6の開始前**（6b の前） | Google Cloud TTS の生成を始めてよいか（課金）。**決定カード `docs/app-v1/stage6-decision-card.md`**（お試し期間が終わった → 推奨 A＝従量課金＋予算アラート／B＝自分で録音） | AGENTS.md・Ruling 69 |
 | **段6の聴感ゲート** | 12語を試聴して「数え言葉として自然」か。不自然なら再生成か人の録音に切替の判断 | Ruling 5 |
 | **段7の終わり** | **先に https の置き場を決める**（F39。`http://<Mac の IP>` では SW が動かない。Cloudflare Pages の検証用（`*.pages.dev`・D4 の許可が要る）／cloudflared の一時トンネル／自己署名。どれもまだ何もしていない）→ ホーム画面に追加→起動して鳴る、機内モードで鳴る（G7）。**`docs/app-v1/stage7-device-check.md`**（A 1〜17・B 代理決定 D41〜D46・C 好み）。Simulator（localhost）では追加・全画面・オフライン・新しい版・ピッカーまで通った | §14・F39 |
-| 段8の終わり | §14 の実機チェックリスト全項目、可能なら 60〜70代の方の初見テスト（G9） | §14・G9 |
+| 段8の終わり | §14 の実機チェックリスト全項目、可能なら 60〜70代の方の初見テスト（G9）。**`docs/app-v1/device-check-master.md` に段8の行がある（実機の ✓ はひとみうさの時間に依る＝Ruling 105-3）**。台本 `first-sight-test.md`・残り 1 枚 `po-checklist.md` | §14・G9 |
 | **push の前（毎回）** | `agent/app-v1` 系ブランチの push 許可 | AGENTS.md |
 | **公開の前** | 公開URL（サブドメイン名）・配信基盤・DNS の許可、`PUBLIC_APP_URL` の確定 | D4・§16-1 |
 
@@ -115,7 +115,7 @@
 |---|---|---|
 | 練習セッション状態の `track: null` | 済（段2） | Ruling 20 の席の予約。セッション状態の型に `track: TrackProfile \| null`（初期 null）を置く。`TrackProfile` の JSDoc 型は段1で `src/engine/tempo-map.js` に定義済み |
 | `ui:check` の移植 | 済（段2） | 段1では `tools/check-ui-accessibility.js` の対象を `legacy/` に向け直しただけ（旧画面用のまま）。段2で新アプリ向けに移植・拡張（§6 U1〜U15・`?ui-state=no-sound`） |
-| 書体の同梱 | 済（段2・段7） | `@fontsource/inter`・`@fontsource/noto-sans-jp`。段1はシステム書体のまま。**段7**: アプリの文字が要るサブセットだけ precache（`tools/fonts/needed-subsets.js`・160 ファイル）。`dist` の `.woff`（29MB の大半）を落とすのは段8以降の任意 |
+| 書体の同梱 | 済（段2・段7・段8） | `@fontsource/inter`・`@fontsource/noto-sans-jp`。段1はシステム書体のまま。**段7**: アプリの文字が要るサブセットだけ precache（`tools/fonts/needed-subsets.js`・160 ファイル）。`dist` の `.woff`（29MB の大半）を落とすのは段8以降の任意 |
 | アイコン | 済（段2） | モックの `<symbol>` を `src/app/components/icons.svg` へ。段1の下タブは文字だけ（アイコン単独は禁止、文字は必須） |
 | 「戻る」の動き | 済（段2） | 段1の `routes.ts` に親画面の表（`parentScreen`）と `platform/hash.ts` の `setHash(…, {replace:true})` は用意済み。履歴の有無で親へ置き換える処理は段2 |
 | エンジンの日本語固定文言の i18n 化 | **不要で閉じた（段4・Ruling 58-5）**（recorded-voice-store/pack のエラー） | 仕様 §10 で `src/engine` を変えてよい数少ない例外。「（コピー）」は段3で不要に（複製は接尾辞なし。Ruling 39） |
@@ -140,8 +140,8 @@
 | `hints.backupTipShownForRecording`・`backupTipShownForRoutine` | **済（段5・Ruling 86）** | 「「配る」で作ったファイルを自分にも送る」1 行（S8 完成・S4 の初回保存）。「ファイルに保存」のボタンは作らない（Ruling 82-3・D37） |
 | S7「ファイルから受け取る」・開いた行の「配る」「ファイルに保存」・S8 完成の「配る」 | **済（段5・Ruling 86）** | 「配る」は録音の声だけ（受け取った声は「削除」だけ。D37）。「ファイルに保存」は作らない。S8 完成の帯は「完了」「配る ›」（D39・主要操作 5＝上限ちょうど） |
 | 受け取った声の ID の付け直し・`VOICE_LIMITS.packs`（20）で拒む・`wordOffsetsMs` の扱い | **済（段5・Ruling 84）** | `v-<uuid>` に付け直し・`sourceId` を残す・20 で受け取らない・`globalOffsetMs` は 0・`wordOffsetsMs` は残す。同じ先生の見分けは 名前＋`sourceId`＋言葉（D40） |
-| S7 の `[data-group="voice"]` の選択肢の数 | 8 | **受け取った声 20 本で U5（10）を超えうる**（段5は上限 20 のまま。超えた時の数え方は段8で） |
-| 英語 UI で録った声の既定名が日本語のまま | 8 | 段5で受け取った声の表示は「{name}さんの声／{name}'s voice」に決まった（Ruling 76-1 の注記）。録音の声の既定名の訳は段8の文言監修で |
+| S7 の `[data-group="voice"]` の選択肢の数 | **済（段8・`data-choices-max`＋24 本の状態）** | **受け取った声 20 本で U5（10）を超えうる**（段5は上限 20 のまま。超えた時の数え方は段8で） |
+| 英語 UI で録った声の既定名が日本語のまま | **済（段8。英語の監修シートへ）** | 段5で受け取った声の表示は「{name}さんの声／{name}'s voice」に決まった（Ruling 76-1 の注記）。録音の声の既定名の訳は段8の文言監修で |
 | 見える高さ 600px 未満の詰めた配置（D33） | 実機・**済（段7）** | iPhone SE の Safari（375×548）用。ホーム画面のアプリ（段7）では当たらない（**段7で確認**: `ui:check` の 375×667 の周がホーム画面のアプリの形・Simulator の追加したアプリで声チップが初期表示）。実機の書体で 1〜2px 落ちたらその画面を 1 段詰める（Ruling 71 の代償） |
 | 受け取ったルーティンの「どのフィガーか」（D22-B） | 8 以降 | 段5は据え置き（Ruling 85）。受け取り側で `figureIdentity` の表示を言語で替えるのは 1 関数で後から足せる |
 | `distributor.id`（同じ姓の先生の声の取り違え） | 8 以降（段7では入れていない） | D40 の代償。束に配る人の端末の ID を足して鍵にする（版は上げない。Ruling 80-6） |
@@ -156,3 +156,7 @@
 3. **日本語 TTS の聴感（段6）**: ゲート不通過なら人の録音に切替。段7（precache 一覧）に影響するので、段6は早めに始める。
 4. **Preact 11**: 2026-09-30 公開と新しすぎるため段1は 10.29.8 を採用（理由は段1計画）。11 への上げは v1 公開後に別作業で。
 5. **TypeScript 6/7**: 段1は 6.0.3（JS 製の tsc。7 は Go 製で別系統）。型チェックだけに使い、ビルドは Vite（oxc）なので、上げ下げの影響は `npm run typecheck` に限られる。
+
+### 段8で済にした持ち越し（Task 10）
+
+- S6 が主要操作 6 になる件 → 3 つの束で 5（375×667 の初期表示は 4）。S7 の U5 → `data-choices-max`＋24 本の状態。英語の既定名 → 英語の監修シート（`stage8-copy-review.md`）。書体の出どころ（段7 M1）→ `src/app/i18n/*.ts` の glob と coverage テスト。Safari の本文の折り返し → 句の境で折る（BudouX。本物の iOS 26 は Simulator で確認・実機は統合表）。英語の共有シートの語 → **“View More”**（“See More” ではない・Simulator の実物）。最初の起動の白 → 原因は書体の `@font-face` が描画を止めていたこと・Task 9b で直した（実機の秒は統合表 2-26）。`dist` の `.woff` を落とすのは公開後の任意のまま。

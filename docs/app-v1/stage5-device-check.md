@@ -1,5 +1,7 @@
 # 段5 実機確認表（配る・受け取る）
 
+> **正本は `device-check-master.md`。ここは記録。**
+
 前提: Mac で `npm run dev -- --host --port 5199`（5173 はひとみうさの開発サーバーのまま）。iPhone の Safari で `http://<Mac の IP>:5199/?r=<時刻>`（同じ Wi‑Fi）。**確かめる前に必ず再読み込み**（Safari が古いコードを持っていることがある）。
 LINE で送る相手は自分の Keep か家族。結果は「OK／気になる（何が）」で。段3 追加便（`stage3-device-check.md` 17〜42）・段4（`stage4-device-check.md`）の確認表と同じ日でよい（段4の録音で作った声を、そのまま A-1 で配れる）。
 

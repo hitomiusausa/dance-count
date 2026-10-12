@@ -2823,8 +2823,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 | F42 | WebKit は 2023-06 に `word-break: auto` を実装したが、`auto-phrase` の日本語の句分割は feature flag の裏で、2024-05 時点でも「flag が ICU の通常の折り返しまで変える」regression が開いている。2026 年の出荷状況を書いた一次資料は見つからず。**0-2 の実測（WebKit 2311 で非対応・iOS 26.3 Simulator で語の途中で折れる＝段7 walk）を正とする** | 実測で確認・出荷状況は不明 | https://bugs.webkit.org/show_bug.cgi?id=258668 ・ https://bugs.webkit.org/show_bug.cgi?id=274628 ・ https://caniuse.com/word-break |
 | F43 | WebKit は `word-break: keep-all` の下で ZWSP（U+200B）で折れないバグを 2022 年に直している（Chrome・Firefox と同じに）。`<wbr>` は仕様上どのモードでも折り返し点 | 確認済み（Bugzilla の resolved）＋0-2 の実測 | https://bugs.webkit.org/show_bug.cgi?id=248201 |
 | F44 | `text-wrap: pretty` は WebKit が 2025 に Technology Preview で実装（段落全体を見て折り返しを選ぶ）。0-2 の WebKit で `supports` が真 | 確認済み（WebKit blog の要約＋実測） | https://gigazine.net/news/20250409-safari-better-typography-text-wrap-pretty/ |
-| F45 | **BudouX（Google・Apache-2.0）** npm 最新 **0.9.3**。純粋 JS・依存なし・`loadDefaultJapaneseParser().parse(text)` が句の配列を返す。Chrome の `auto-phrase` も同じ系統のモデル | 確認済み（`npm install` の現物） | https://www.jsdelivr.com/package/npm/budoux |
-| F46 | **`@axe-core/playwright` 最新 4.13.0**（`axe-core` 4.14.0）。`new AxeBuilder({ page }).withTags([...]).analyze()` で違反の一覧 | 確認済み（`npm view`。2026-10-12） | https://www.npmjs.com/package/@axe-core/playwright |
+| F45 | **BudouX（Google・Apache-2.0）** npm 最新 **0.9.3**。純粋 JS・依存なし・`loadDefaultJapaneseParser().parse(text)` が句の配列を返す。Chrome の `auto-phrase` も同じ系統のモデル | 確認済み（`npm install` の現物） | https://www.jsdelivr.com/package/npm/budoux **（段8 注記: 「依存なし」は誤り。budoux 0.9.3 は `linkedom`・`commander` に依存する。devDependency なので `dist` には出ない＝発見 2）** |
+| F46 | **`@axe-core/playwright` 最新 4.13.0**（`axe-core` 4.14.0）。`new AxeBuilder({ page }).withTags([...]).analyze()` で違反の一覧 | 確認済み（`npm view`。2026-10-12） | https://www.npmjs.com/package/@axe-core/playwright **（段8 注記: `@axe-core/playwright` 4.13.0 が持つ axe-core は 4.13.0（4.14.0 は axe-core 単体の最新）。peer は `playwright-core` で、既存の 1.61.1 の `page` がそのまま使えた＝発見 1）** |
 | F47 | iOS の英語の共有シートで日本語の「もっと見る」に当たるラベルの実物は未確認（“See More”／“More” のどちらか） | **未確認**（Simulator を英語にして見る＝Ruling 103-4） | — |
 | F48 | iOS 15.4 以降、manifest から追加した Web アプリの起動画面は `background_color`・`name`・アイコンから OS が作る（`apple-touch-startup-image` は不要） | 一般知識（**推測**。実機の最初の起動で白い時間が「OS の起動画面の後」か「殻が描けるまで」かを分けて見る＝Ruling 101） | — |
 
@@ -2868,6 +2868,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 
 ## Ruling 97（Q3）折り返し — **ビルド時に BudouX で ja の鍵を句に切った表を生成し、本文の描画で句の境に `<wbr>` を入れ、`word-break: keep-all`（＋`overflow-wrap: anywhere` の安全弁）**。`auto-phrase` は撤去して 1 つの動きにする。文字列そのものには何も入れない
 
+> **段8 注記（計画者の発見・Task 10 で転記。本文は書き換えない）**: 97-1 手で折り方を決めた文は句に切るが、U+00A0／U+2060 の前後では切らない（文ごと 1 句にすると `keep-all` の下で任意の所で折れる＝発見 3）。97-4 `phrased()` を使う所が増えた（S3 の行の注意・S4 の小節の注意・`FigureForm` の補助・空の時の 1 行・S8 の語の画面の 1 行・S6 の行の名前・確認ダイアログの質問と補足。`LabeledText` は削除＝発見 5）。97-5 `keep-all` は本文の型の一覧ではなく `.dc-phrased` の包みにだけ当てる（発見 4）。
+
 **決定**:
 1. **生成物 `src/app/i18n/ja-phrases.json`**（commit する）: `{ "<鍵>": ["句", "句", …] }`。作るのは新規 `tools/i18n/segment-ja.js`（`npm run i18n:phrases`・devDependency **`budoux` 0.9.3 固定**）。規則: `chunks.join('') === 原文`・**`{…}` のプレースホルダは句の途中で切らない**（切れていたら前後の句を結合してから書く。0-2 の実測では 0 件だが番人として）・` `・`⁠` を含む鍵は**そのまま 1 句**（既に手で折り方を決めた文: `voiceInProgressCount`・`recordedUpTo`・`reviewFromFirst`・`receiveHelpLine`）。
 2. **番人 `test/app/i18n-phrases.test.ts`**: 全 ja 鍵について `join === 原文`・プレースホルダが無傷・**JSON が古くない**（`messages.ts` を変えて `i18n:phrases` を忘れたら落ちる。`fixtures.test.ts` と同じ型）。BudouX をテストで動かす（devDependency なので可）。
@@ -2883,6 +2885,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 
 ## Ruling 98（Q4）S6 の並び — 見出しつきの束を S1 の種目タイルと同じ「1 つの判断」として数え、**言語・声・「困った時は」（追加の方法・音が鳴らない時）・「先生の方へ」（録音・配る）・「プライバシー・アプリについて」（版を併記）＝ 5**
 
+> **段8 注記**: 98-2 375×667 の初期表示は 4（見込みの 5 は外れ。「プライバシー・アプリについて」は 673px から＝下タブの上 599px より下）。548 は 3・1280 は 5。生徒が使う 言語・声・「困った時は」の 2 行は 548 でも初期表示に入る（98-1 の条件は満たす）。Fable が許した（答え 2・発見 6）。
+
 **決定**:
 1. S6 の上から: 見出し「設定」→（更新の帯）→ **言語**（radio 群＝1）→ **声 ›**（1）→ 見出し「**困った時は / If something's wrong**」の下に **「ホーム画面に追加する方法 ›」「音が鳴らない時 ›」**（`[data-group="help"]`＝1）→ 見出し「先生の方へ」の下に **「自分の声を録音する ›」「ルーティンを配る ›」**（`[data-group="teacher"]`＝1）→ **「プライバシー・アプリについて ›」**（右端に `small.dc-link-value` で「版 0.3.0 / Version 0.3.0」＝1）。主要操作 **5**（上限ちょうど・段8以後は足せない）。548 の初期表示は 言語・声・「ホーム画面に追加する方法」が**帯があっても入る**（段7 答え 2 の条件を `firstView` で固定したまま。概算 326px＋帯 70px ＜ 480px）。
 2. **数え方の読み替え（Ruling 18 の注記）**: 「見出し（`h2.dc-field-label`）の下に並ぶ**同じ種類の行**」は、S1 の種目タイル（`[data-group="dance"]`＝10 個の `<a>` で 1）と同じく 1 つの判断として `[data-group]` にしてよい。**条件**: (a) 必ず目に見える見出しがある（見出し無しの束は抜け道なので禁止）(b) 行は同じ種類（全部が「› で画面へ行く行」）(c) U5（10 以下）はそのまま当てる。`ui:check` の S6 の期待値: **5／5**・375×548 の初期は **4**（「プライバシー…」が下）・更新あり **5**（548 は 3）。
@@ -2894,6 +2898,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 **外れた時の代償**: S6 は再び上限ちょうど（v1 ではもう足さない。第2弾の「曲」の設定は S2 の「くわしく」側＝Ruling 20）。見出し「困った時は」の語は監修シートに載せる。
 
 ## Ruling 99（Q5）S11・S13 — S11 は今の 3 行＋1 行のまま（文言だけ監修）。S13 は「このアプリについて」＋「プライバシー」＋「データを全て消す」の 1 画面。文は**アプリが実際にすることだけ**を書き、法的な約束は書かない。問い合わせは `mailto:`
+
+> **段8 注記**: 99-4 再読み込みは `reloadAtHome()`（`history.replaceState(null, '', '#/')` してから `reload`）。`reloadPage()` のままだと S13 が開き直る（発見 10）。99-6／D47 D47-2 の文に禁止語「読み込み」があった → 「解析ツール・広告はなく、書体も外部から取り寄せません」に（発見 8。Fable 答え 5 で採用・法務確認待ちは変わらず）。D47-4 のマイクの文は Fable 答え 9 で事実に合わせて書き直し（`TAKE_MS` 1.5 秒）。
 
 **決定（S11）**:
 1. 中身は今のまま（本体横のスイッチ／音量／イヤホン・Bluetooth → もう一度 ▶）。Ruling 97 の本文の型（`li`）に `<wbr>` を入れる。入口は S2/S5 の枠と **S6「困った時は」**（Ruling 98）。主要操作 0。文言は監修シートで（「本体横のスイッチ（マナーモード）を確かめる」の「本体横」は iPhone 15 以降のアクションボタンでも通じる語＝据え置き）。
@@ -2919,6 +2925,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 
 ## Ruling 100（Q6）§11 エラー全件 — 「状況 → 鍵 → 画面 → 強制表示 → 検査」の表を `docs/app-v1/stage8-error-matrix.md` に作り、強制表示できない 7 つの見た目に `ui-state` を足す。`ui:check` が全行を少なくとも 1 周ずつ見る
 
+> **段8 注記**: 100-1 仕様 §11 の表は **18 行**（「21 行」は数え違い。全件表 `stage8-error-matrix.md` は 18＋段8の「データを消せなかった」で 19 行＝発見 13）。100-2 `ui-state` は 4 値（`save-failed`・`stopped`・`voice-missing`・`mic-failed`）＋ S13 の `confirm-delete-all`。`share-refused`・`voice-limit`・`routines-over-limit` は実経路で検査する（発見 14・Fable 答え 1）。
+
 **決定**:
 1. 表の行は仕様 §11 の 21 行＋段8で足す 1 行（データを消せなかった）。列: 状況・鍵（ja／en）・出す画面と型（`[data-alert]`／`.dc-result`／`.dc-hint`）・ボタン・**強制表示の方法**（`ui-state`・seed・スモーク）・**検査**（`ui:check` の状態名／スモークの場面名）・実機でしか見られない物（マナーモード・電話・Bluetooth）。空欄が残る行は違反。
 2. **`UiState` に足す**（見た目だけ・Ruling 43 の「4 つ目以降は裁定」に当たる＝ここで裁定）: `save-failed`（S2・S4・S5・S8・S10 確認）・`stopped`（S2・S5「再生が止まりました」）・`voice-missing`（S2・S5・S7）・`mic-failed`（S8）・`share-refused`（S9・`.dc-result` と「ファイルを保存する」）・`voice-limit`（S10 選ぶ）・`routines-over-limit`（S10 確認・`routinesOverLimit` の行）・`confirm-delete-all`（S13）。`ui:check` に各 1 状態（`alert:true`・`texts` に 1 文目・主要操作の期待値つき。548・320 も既存の周で回る）。
@@ -2930,6 +2938,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 **外れた時の代償**: `ui-state` が 15 値になる（`routes.ts` の配列 1 つ。遷移で消える＝今のまま）。`ui:check` が +8 状態 × 5 周 ≒ +40 項目。
 
 ## Ruling 101（Q7）起動の白い画面 — `index.html` に**静的な殻（アプリ名だけ・インライン CSS ≤ 600B）**を置き、`App` が描いたら消える。OS の起動画面（`background_color`・アイコン）はそのまま。長さは Simulator で測ってから足すかを決めない＝**先に入れる**（安い・害がない）
+
+> **段8 注記**: 101-1 Preact の `render` は `#app` に元からある殻を消さない（殻が `position: fixed` のまま残った）→ `App` が最初の画面を描いた直後（`useLayoutEffect`）に `removeBootShell()` で外す（発見 16）。**さらに Task 9 の実測で、殻は 1 コマも描かれなかった**: 描画を止める CSS が 444,813 B（524 個の `@font-face` が約 415 KB）で、読み終わるまで最初の描画が起きなかった（根本原因）。**Task 9b（`a0be8ad`）**: 書体の CSS を別ファイル（`assets/fonts-*.css`）にして `media="print"`＋`onload` で非ブロッキングに読み、`check-dist`／`check-pwa` に「描画を止める CSS は 60 KB 以下」の番人を足した。Chrome Slow 3G の初回で殻 8.4 秒 → 4.4 秒、SW 後の再訪は約 40 ms。iOS Simulator の再起動の白は約 0.6〜1.1 秒で、大半は iOS がページを要求する前（ページ側では直せない）＝実機で 2 回測る（`device-check-master.md` 2-26）。
 
 **決定**:
 1. `index.html` の `<div id="app">` の中に `<div class="dc-boot" aria-hidden="true"><b>Dance Count</b><small>for Ballroom</small></div>`。`<head>` に `<style>` でその 2 つだけ（白地・紺の文字・画面の上 40% に中央・システム書体・`dc-boot` の外は何も書かない）。Preact の `render` が `#app` の中身を置き換えるので JS 側の変更は不要。文は言語に依らない固有名詞だけ（読み込み中の文は入れない＝言語が決まる前）。`check-dist` の文字列走査に引っかからないことを確認（`index.html` は走査対象）。
@@ -2957,6 +2967,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 **外れた時の代償**: `ui:check` が長くなる（+200 項目・数分）。axe の誤検出は定数で止める（理由を書く）。フォーカスの移動で、キーボードの人は画面が替わるたびに見出しから Tab を始める（意図どおり）。
 
 ## Ruling 103（Q9）書体の出どころ・S7 の U5・置いておいた Minor から拾う物・英語の “See More”
+
+> **段8 注記**: 103-3 の m-3（隠れた時に未完成の行を捨てる）は `f0fc733` で直っていた＝作業なし（発見 15）。103-4 英語の iOS の共有シートのラベルは **“View More”**（“See More” ではない。iOS 26.3 英語の Simulator で実測。同じシートのアプリの列に “More” もある）。`installIosStep3` の英語を直した（Task 9）。
 
 **決定**:
 1. **書体の道具の出どころ**: `TEXT_SOURCES` を「`src/app/i18n/*.ts` の全部（`messages.ts`・`about.ts`・将来の鍵）＋ `src/engine` の 4 ファイル」の **glob** にする（`ja-phrases.json` は原文と同じ字なので入れなくてよいが、入れても害なし）。番人 **`test/tools/fonts-coverage.test.js`**: `APP_MESSAGES` と `about.ts` の**全字**が選んだサブセットの `unicode-range` に入る（入らない字＝端末の書体に化ける字が 1 つでもあれば落ちる）。段7 M1 を閉じる。
@@ -2999,6 +3011,8 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 **外れた時の代償**: Opus の 1 文脈で仕様 675 行＋画面 13 を読むのは重い（報告書の節を分けて複数便にしてよい。順序は上のとおり）。
 
 ## Ruling 105（Q10 後半）実機確認の統合表と初見テスト — `docs/app-v1/device-check-master.md` 1 枚に、順番どおり・番号を引き継いで集約。元の 4 枚は残す（記録）。G9 は 1 枚の台本
+
+> **段8 注記**: 実機確認の統合表は `device-check-master.md`、台本は `first-sight-test.md`、ひとみうさの残りは `po-checklist.md` に作った（Task 10。統合レビューの後に Task 13 で更新）。
 
 **決定**:
 1. **`docs/app-v1/device-check-master.md`（Task 10 で手で書く。道具は作らない）**: 節は**やる順**。
@@ -3098,3 +3112,25 @@ PO 水準の新しい決定は **D46** の 1 件だけ（代理決定・ひと�
 11. **見出しへのフォーカスは最初の表示では動かさない（既定を採る）**。理由: 読み込み直後に焦点を奪うのは Web の常道に反し（VoiceOver はページの頭＝アプリ名から読めばよい）、再読み込み（「データを全て消す」の `reloadAtHome` を含む）のたびに動くことになる。画面が替わった時だけ、が仕様の意図。→ Ruling 102-2 の注記（発見 18）。計画の変更なし。
 
 **ひとみうさに後で見てもらう物（この答えの分）**: 2（S6 の 667 で 4）・5（D47-2 の語）・6（「さん」「様」も付けない）・9（マイクの文の書き直し。法務確認待ち）。
+
+---
+
+# 段8 計画者の発見と Open questions の答え・実行中の裁定（Task 10 の転記・2026-10-12）
+
+Fable の 11 問への答えは**直前の節「段8 計画者の質問への答え（Fable）」が正本**（ここでは繰り返さない）。この節は、計画者の発見（Fable の裁定の範囲で解決済みの物）と、段8の実行中にコントローラーが決めた物の要約。全文は `stage8-ledger.md`。ひとみうさに見てもらうのは Fable の答え 2・5・6・9（`po-checklist.md` A-8）。
+
+## 計画者の発見 1〜27（要約。本文への注記は上の各 Ruling の頭に付けた）
+
+1. axe-core は 4.13.0・peer は `playwright-core`（F46 への注記）。2. budoux は依存を 2 つ持つ（F45 への注記）。3. U+00A0／U+2060 の前後だけ切らない（97-1）。4. `keep-all` は `.dc-phrased` にだけ（97-5）。5. `phrased()` を使う所の追加（97-4）。6. S6 は 375×667 の初期 4（98-2）。7. S11 の行は既存の `alert`・S13 に新しい線画 `info`。8. D47-2 の語（99-6）。9. `#/about` が S1 になる原因は `IMPLEMENTED_SCREENS`。10. `reloadAtHome()`（99-4）。11. ライセンスは配る物ごとの全文（下）。12. 書体の出どころは `src/app/i18n/*.ts` の glob（サブセット 40 → 45）。「⋮」（U+22EE）はどの @fontsource にも無い。13. §11 は 18 行（100-1）。14. `ui-state` は 4 値＋実経路 3 つ（100-2）。15. m-3 は `f0fc733` で済（103-3）。16. `removeBootShell`（101-1）。17. h1 が無かった画面に `FocusHeader`。18. 見出しへのフォーカスは `useLayoutEffect`・最初の表示では動かさない。19. 英語の 320 で崩れた 4 つは見た目だけ直した。20. 320 の英語の周では `firstView` を当てない。21. `ui:check` の増え方。22. S7 の行の上限 24。23. D49 の作り（`honorific`）。24. D50 の誤りは 1 つ。25. 監修シートの手で書く列は 2 つ。26. 起動の殻の番人（インライン `<style>` ≤ 600 B）。27. S7 の試聴の失敗の枠。
+
+## 実行中の裁定（コントローラー・Task 1〜9b）
+
+- **`file://` の実行ガードの不具合（計画のテンプレートの誤り）**: 計画の `import.meta.url` を `file://` ＋ `process.argv[1]` の文字列と比べる書き方 はパスに空白があると偽になり、道具が何も実行しない。`pathToFileURL(process.argv[1]).href` を使う（Task 1 で採用。以後の差分も同じ型を確認）。
+- **ライセンスは 5 ファイル**: Fable の答え 8 は 4 ファイル（Inter・Noto Sans JP の OFL、Preact・Workbox の MIT）。Task 4 のレビューで、アイコン `i-repeat`・`i-gear` が Lucide（ISC）から派生していて表示が無かったと分かり、`licenses/Lucide-ISC.txt` を 5 つ目に足し、S13 に「一部のアイコン：Lucide（ISC License）」を出した。`dist/licenses` は 5 ファイル。
+- **precache は 172 件・2.92 MB**（計画の予想 203 件・3.24 MB は外れ）。経緯: Task 4 で 207 件・3.39 MB（コメントの字からサブセットを拾っていた）→ 書体の出どころの走査がコメントを無視するようにして 175 件・2.96 MB → Task 9b で書体の CSS を分けて 172 件・2.92 MB。出荷する字は 1 つも減っていない（行ごとに確認）。
+- **仕様 §11 は 18 行**（Ruling 100-1 の 21 は数え違い）。
+- **起動の殻**: 上の Ruling 101 の注記（根本原因と Task 9b の直し）。
+- **英語の共有シートのラベル**: “View More”（103-4 の注記）。
+- **マナーモードの文**: S11「本体横のスイッチ（マナーモード）」と S2「本体の消音スイッチ」は文言のまま残す（SE にはスイッチがある）。iPhone 15 Pro 以降にスイッチが無いことは製品判断としてひとみうさへ（`po-checklist.md` C）。アドレス欄の位置を言っていた `installAddressCopiedSafari`（「上の」）は事実の誤りなので位置を言わない文に直した（Task 8 fix）。
+- **Task 5**: S2・S5 の保存失敗の「閉じる」は元の案内に戻す（`closeTarget()`）。**Task 7**: 殻は「描いた後」に外す。**Task 6**: 見出しへのフォーカスは最初の表示では動かさない（Fable 答え 11）。
+- **統合レビュー（Task 11〜13）に持ち越す小さい物**: Task 4 の O-1（コメントを外す正規表現が文字列の中の `//` に弱い）・O-2（lucide 1.17.0 の版を `third_party/lucide/LICENSE` の隣に記録）・設定の読み込み失敗で殻が残る（App.tsx のエラーの出口が無い。段7からの既存）・VoicesScreen のコメントの数字・check-pwa の正規表現が属性の順に依存。

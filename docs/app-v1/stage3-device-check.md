@@ -1,5 +1,7 @@
 # 段3 実機確認（ひとみうさの iPhone・Mac）
 
+> **正本は `device-check-master.md`。ここは記録。**
+
 開き方: Mac で `npm run dev -- --host` → iPhone の Safari で `http://<Mac の IP>:5173/`（同じ Wi‑Fi）。Mac では `http://localhost:5173/`。
 ホーム画面に追加しての確認は段7（PWA）で行う。
 **確かめる前に必ずページを再読み込み**（Safari が古いコードを持っていることがある。シミュレーターでは最初の表示で文言の鍵がそのまま出て、再読み込みで直った）。
