@@ -59,6 +59,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const choose = (voice: VoiceSelection) => {
     setForcedDismissed(true);
     session.stop();
+    session.dismissNotice();
     if (voice.id === selected.id) {
       if (voice.kind === 'pack') setOpenId(openId === voice.id ? null : voice.id);
       return;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { BackButton } from '../components/BackButton.tsx';
@@ -142,7 +143,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             <h1 data-ellipsis title={routine.name} aria-label={routine.name}>{routine.name}</h1>
             <small data-ellipsis>{subtitle}</small>
           </header>
-          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); playback.dismissSaveFailed(); }} />
+          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat}>
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}

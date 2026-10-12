@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
@@ -101,7 +102,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
             <h1>{danceName(danceId, translator.locale)}</h1>
             <small>{formatCounts(danceId, choice.counts)}</small>
           </header>
-          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); session.dismissNotice(); playback.dismissSaveFailed(); }} />
+          <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat} />
         </div>
         <div>
