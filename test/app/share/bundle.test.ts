@@ -122,3 +122,65 @@ test('more than 50 routines, routines that are not a list, or nothing readable i
   assert.equal(problem(JSON.stringify({ ...bundle, routines: [] })), 'broken');
   assert.equal(problem(JSON.stringify({ ...bundle, routines: [{ name: 'x' }] })), 'broken');
 });
+
+test('a received word never keeps the file\'s volume: gainDb 120, -50 or "loud" all come back as 0 (final review I1)', async () => {
+  for (const gainDb of [120, -50, 'loud', null, 1e308]) {
+    const data = JSON.parse(await voiceBundle());
+    for (const word of Object.values(data.voicePack.words) as Array<Record<string, unknown>>) word.gainDb = gainDb;
+    const parsed = ok(JSON.stringify(data));
+    for (const word of Object.values(parsed.voice!.pack.words)) assert.equal(word!.gainDb, 0, String(gainDb));
+  }
+});
+
+test('a received word must be an audio type the app records; anything else is "broken" (final review I1)', async () => {
+  for (const [mimeType, expected] of [['audio/wav', 'audio/wav'], ['Audio/WebM; codecs=opus', 'audio/webm;codecs=opus'], ['audio/mp4', 'audio/mp4'],
+    ['audio/ogg;codecs=opus', 'audio/ogg;codecs=opus'], ['audio/x-wav', 'audio/x-wav']] as const) {
+    const data = JSON.parse(await voiceBundle());
+    data.voicePack.words.one.mimeType = mimeType;
+    assert.equal(ok(JSON.stringify(data)).voice!.pack.words.one!.mimeType, expected, mimeType);
+  }
+  for (const mimeType of [undefined, 42, { a: 1 }, '', 'text/html', 'application/octet-stream', 'audio/wav<script>', `audio/wav;codecs=${'x'.repeat(80)}`]) {
+    const data = JSON.parse(await voiceBundle());
+    data.voicePack.words.one.mimeType = mimeType;
+    assert.equal(problem(JSON.stringify(data)), 'broken', String(mimeType));
+  }
+});
+
+test('received word times outside what the app can make are "broken" (final review I1)', async () => {
+  const cases: Array<[string, unknown]> = [['onsetMs', -1], ['onsetMs', 10_001], ['onsetMs', '40'], ['sourceOnsetMs', 1e9], ['sourceOnsetMs', -5],
+    ['durationMs', 0], ['durationMs', 10_001], ['durationMs', null]];
+  for (const [field, value] of cases) {
+    const data = JSON.parse(await voiceBundle());
+    data.voicePack.words.two[field] = value;
+    assert.equal(problem(JSON.stringify(data)), 'broken', `${field}=${String(value)}`);
+  }
+  const edge = JSON.parse(await voiceBundle());
+  edge.voicePack.words.two.onsetMs = 10_000;
+  edge.voicePack.words.two.durationMs = 10_000;
+  assert.equal(problem(JSON.stringify(edge)), 'ok');
+  // 旧画面の未整形の語は録音の中の開始・長さを持たなくてよい
+  const legacy = JSON.parse(await voiceBundle());
+  Object.assign(legacy.voicePack.words.three, { normalized: false, sourceOnsetMs: undefined, durationMs: undefined });
+  assert.equal(problem(JSON.stringify(legacy)), 'ok');
+});
+
+test('the same routine id twice in one file is read once (final review M1)', () => {
+  const good = waltzRoutine('r-11111111');
+  const bundle = JSON.parse(buildBundle({ distributorName: '山田', voice: null, routines: [good], now: NOW }));
+  bundle.routines.push({ ...bundle.routines[0], name: '二度目' });
+  const parsed = ok(JSON.stringify(bundle));
+  assert.deepEqual(parsed.routines.map(routine => routine.name), [good.name]);
+  assert.deepEqual(parsed.rejected, []);
+});
+
+test('consent and update times are kept only as short ISO times (final review M4)', async () => {
+  const data = JSON.parse(await voiceBundle());
+  data.consent.consentedAt = 'x'.repeat(5000);
+  data.voicePack.updatedAt = `2026-10-12T00:00:00.000Z${'y'.repeat(100)}`;
+  const parsed = ok(JSON.stringify(data));
+  assert.equal(parsed.consent?.consentedAt, '');
+  assert.equal(parsed.voice?.sourceUpdatedAt, null);
+  const fine = ok(await voiceBundle());
+  assert.equal(fine.consent?.consentedAt, NOW);
+  assert.equal(fine.voice?.sourceUpdatedAt, '2026-10-12T00:00:00.000Z');
+});

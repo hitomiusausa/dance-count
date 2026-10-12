@@ -4,7 +4,10 @@ import { USER_PROVENANCE, normalizeRoutine, routinePlayability, type Routine } f
 import { ROUTINE_NAME_MAX } from '../routines/limits.ts';
 import { isCompletePack, normalizeVoicePackRecord, type VoicePackRecord } from '../voices/store.ts';
 import { stripInvisible } from './clean-text.ts';
-import { BUNDLE_ROUTINES_MAX, BUNDLE_SCHEMA_VERSION, BUNDLE_TYPE, DISTRIBUTOR_NAME_MAX } from './limits.ts';
+import {
+  BUNDLE_ROUTINES_MAX, BUNDLE_SCHEMA_VERSION, BUNDLE_TYPE, DISTRIBUTOR_NAME_MAX,
+  RECEIVED_MIME_MAX, RECEIVED_MIME_PATTERN, RECEIVED_TIMESTAMP_MAX, RECEIVED_WORD_MS_MAX
+} from './limits.ts';
 
 // 配布ファイル（仕様 §7・Ruling 80）を作る・読む純粋な部品。端末には触らない（ファイルの共有・保存・読みは platform/files.ts）。
 // 声の形の正本はエンジンの exportRecordedVoicePack／importRecordedVoicePack だけ（アプリ側で base64 の形を書き直さない）。
@@ -101,7 +104,7 @@ export function parseBundle(text: string): ParsedBundle {
     rawRoutines = data.routines;
     if (rawVoice !== null) {
       if (!isRecord(data.consent) || data.consent.voiceDistribution !== true) return BROKEN;
-      consent = { voiceDistribution: true, consentedAt: typeof data.consent.consentedAt === 'string' ? data.consent.consentedAt : '' };
+      consent = { voiceDistribution: true, consentedAt: readTimestamp(data.consent.consentedAt) ?? '' };
     }
   } else if (data.type === LEGACY_VOICE_TYPE) {
     legacy = true;
@@ -120,7 +123,13 @@ export function parseBundle(text: string): ParsedBundle {
   const rejected: Array<{ name: string | null }> = [];
   if (rawRoutines !== undefined) {
     if (!Array.isArray(rawRoutines) || rawRoutines.length > BUNDLE_ROUTINES_MAX) return BROKEN;
+    const seenIds = new Set<unknown>();
     for (const rawRoutine of rawRoutines) {
+      // 同じ ID が 2 度あれば後の方は読まない（アプリは作らない。置き換えの時に片方だけ残って増えていくのを防ぐ。最終レビュー M1）
+      if (isRecord(rawRoutine) && typeof rawRoutine.id === 'string') {
+        if (seenIds.has(rawRoutine.id)) continue;
+        seenIds.add(rawRoutine.id);
+      }
       const raw = withCleanNames(rawRoutine);
       const routine = normalizeRoutine(raw);
       if (routine && routinePlayability(routine) === 'ok') routines.push(routine);
@@ -137,9 +146,48 @@ function readVoice(raw: unknown): ParsedVoice | null {
   let imported: Record<string, unknown>;
   try { imported = importRecordedVoicePack(JSON.stringify(raw)) as Record<string, unknown>; } catch { return null; }
   const name = typeof imported.name === 'string' ? stripInvisible(imported.name) : imported.name;
-  const pack = normalizeVoicePackRecord({ ...imported, name, origin: 'recorded' });
+  const words = readWords(imported.words);
+  if (!words) return null;
+  const pack = normalizeVoicePackRecord({ ...imported, name, words, origin: 'recorded' });
   if (!pack || !isCompletePack(pack)) return null;
-  return { pack, sourceUpdatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null };
+  return { pack, sourceUpdatedAt: readTimestamp(raw.updatedAt) };
+}
+
+// 語の値を確かめる（最終レビュー I1。ファイルの値で音を大きくしたり再生を壊したりさせない）:
+// 音量（gainDb）はファイルの値を捨てて 0（アプリは 0 しか書かない）。形（mimeType）は録音が作る音声の形だけ（でなければ読めない）。
+// 時間（開始・録音の中の開始・長さ）は有限で 0〜RECEIVED_WORD_MS_MAX（長さは 0 より大きい）。外れたら読めない。
+// 未整形の語（旧画面）は録音の中の開始・長さを持たないことがある（無ければ無いまま）。
+function readWords(raw: unknown): Record<string, unknown> | null {
+  if (!isRecord(raw)) return null;
+  const words: Record<string, unknown> = {};
+  for (const [key, word] of Object.entries(raw)) {
+    if (!isRecord(word)) return null;
+    const mimeType = readMimeType(word.mimeType);
+    if (!mimeType) return null;
+    const optional = word.normalized !== true;
+    if (!isMs(word.onsetMs, false)) return null;
+    if (!(optional && word.sourceOnsetMs === undefined) && !isMs(word.sourceOnsetMs, false)) return null;
+    if (!(optional && word.durationMs === undefined) && !isMs(word.durationMs, true)) return null;
+    words[key] = { ...word, mimeType, gainDb: 0 };
+  }
+  return words;
+}
+
+function isMs(value: unknown, positive: boolean): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && (positive ? value > 0 : value >= 0) && value <= RECEIVED_WORD_MS_MAX;
+}
+
+// 受け付ける音声の形なら小文字・空白なしにそろえて返す。文字列でない・長すぎる・知らない形は null。
+export function readMimeType(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > RECEIVED_MIME_MAX) return null;
+  const canonical = value.toLowerCase().replace(/\s+/g, '');
+  return RECEIVED_MIME_PATTERN.test(canonical) ? canonical : null;
+}
+
+// 時刻の文字列（同意の時刻・先生の声の更新時刻）。画面には出さないが、長い文字列を端末に保存しない（最終レビュー M4）。
+export function readTimestamp(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > RECEIVED_TIMESTAMP_MAX) return null;
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:?\d{2})$/.test(value) ? value : null;
 }
 
 // ルーティンとフィガーの名前から見えない文字を除いてから形を確かめる（除いて空になった名前は「読めない」）。

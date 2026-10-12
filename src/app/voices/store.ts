@@ -61,7 +61,7 @@ export function normalizeVoicePackRecord(raw: unknown): VoicePackRecord | null {
   if (total > VOICE_LIMITS.packBytes) return null;
   const origin = raw.origin === 'received' ? 'received' : 'recorded';
   const distributor = isRecord(raw.distributor) && typeof raw.distributor.name === 'string' && raw.distributor.name.trim()
-    ? { name: raw.distributor.name.trim().slice(0, VOICE_LIMITS.nameLength) } : undefined;
+    ? { name: [...raw.distributor.name.trim()].slice(0, VOICE_LIMITS.nameLength).join('') } : undefined;   // 文字（コードポイント）で切る（bundle.ts と同じ。最終レビュー M2）
   const locale = toVoiceLocale(raw.locale);
   const { distributor: _drop, ...rest } = raw;
   return {

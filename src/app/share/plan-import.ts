@@ -1,7 +1,8 @@
 import { ROUTINES_MAX } from '../routines/limits.ts';
 import { USER_PROVENANCE, type Routine } from '../routines/routine.ts';
 import { VOICE_KEYS, VOICE_LIMITS, type VoicePackRecord } from '../voices/store.ts';
-import type { ParsedBundle } from './bundle.ts';
+import { readTimestamp, type ParsedBundle } from './bundle.ts';
+import { RECEIVED_WORD_OFFSET_MAX_MS } from './limits.ts';
 
 // 受け取る前の計画（S10 の「確認」の中身。Ruling 83-2・84。純粋）: ID を付け直し、同じ物は置き換え、上限で止める。
 type ParsedOk = Extract<ParsedBundle, { ok: true }>;
@@ -53,10 +54,13 @@ function receivedPack(parsed: ParsedOk, now: string, id: string): VoicePackRecor
   const wordOffsetsMs: Record<string, number> = {};
   for (const key of VOICE_KEYS) {
     const value = source.timingAdjustments?.wordOffsetsMs?.[key];
-    if (typeof value === 'number' && value !== 0) wordOffsetsMs[key] = value;
+    // ずれはアプリが作れる幅に収める（最終レビュー I1）
+    const clamped = typeof value === 'number' && Number.isFinite(value)
+      ? Math.max(-RECEIVED_WORD_OFFSET_MAX_MS, Math.min(RECEIVED_WORD_OFFSET_MAX_MS, value)) : 0;
+    if (clamped !== 0) wordOffsetsMs[key] = clamped;
   }
   const keepWords = Object.keys(wordOffsetsMs).length > 0;
-  const adjustedAt = typeof source.timingAdjustments?.adjustedAt === 'string' ? source.timingAdjustments.adjustedAt : now;
+  const adjustedAt = readTimestamp(source.timingAdjustments?.adjustedAt) ?? now;
   return {
     schemaVersion: 1,
     type: 'dance-count-recorded-voice-pack',
@@ -81,8 +85,9 @@ function receivedWords(words: VoicePackRecord['words']): VoicePackRecord['words'
   for (const key of VOICE_KEYS) {
     const word = words[key];
     if (!word) continue;
-    const { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized, gainDb } = word;
-    clean[key] = { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized, gainDb };
+    const { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized } = word;
+    // 音量はファイルの値を使わない（アプリは 0 しか書かない。gainDb:120 のファイルで耳元に爆音を出させない。最終レビュー I1）
+    clean[key] = { blob, mimeType, onsetMs, sourceOnsetMs, durationMs, normalized, gainDb: 0 };
   }
   return clean;
 }

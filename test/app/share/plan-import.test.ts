@@ -147,3 +147,27 @@ test('only known fields of a received voice are kept; unknown keys in the file a
   assert.deepEqual(pack.timingAdjustments, { globalOffsetMs: 0, wordOffsetsMs: { two: 10 }, adjustedAt: NOW });
   assert.deepEqual(normalizeVoicePackRecord(structuredClone(pack)), pack);
 });
+
+test('a crafted gainDb:120 file is planned at the app\'s own volume (0 dB) and per-word offsets stay within ±300ms (final review I1)', async () => {
+  const text = buildBundle({ distributorName: '山田', voice: await exportVoiceForBundle(packFixture('ja-JP', 12)), routines: [], now: NOW });
+  const data = JSON.parse(text);
+  for (const word of Object.values(data.voicePack.words) as Array<Record<string, unknown>>) word.gainDb = 120;
+  data.voicePack.words.one.gainDb = 'loud';
+  data.voicePack.timingAdjustments = { globalOffsetMs: 0, wordOffsetsMs: { one: 900, two: -1000, three: 12 }, adjustedAt: 'z'.repeat(500) };
+  const parsed = parseBundle(JSON.stringify(data));
+  assert.ok(parsed.ok);
+  const pack = received(planImport(parsed, [], [], { now: LATER, newId: ids() }));
+  for (const word of Object.values(pack.words)) assert.equal(word!.gainDb, 0);
+  assert.deepEqual(pack.timingAdjustments, { globalOffsetMs: 0, wordOffsetsMs: { one: 300, two: -300, three: 12 }, adjustedAt: LATER });
+  assert.deepEqual(normalizeVoicePackRecord(structuredClone(pack)), pack);
+});
+
+test('a distributor name with emoji is cut by characters on load, the same as on parse, so the same teacher still replaces (final review M2)', async () => {
+  const name = '😀'.repeat(39) + 'あ';
+  const parsed = await parsedFor({ name });
+  const first = received(planImport(parsed, [], [], { now: NOW, newId: ids() }));
+  const stored = normalizeVoicePackRecord(structuredClone(first))!;
+  assert.equal(stored.distributor?.name, name);
+  const again = planImport(parsed, [stored], [], { now: LATER, newId: ids() });
+  assert.equal(again.voice!.replaces?.id, stored.id);
+});
