@@ -18,7 +18,8 @@ import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
 import { beatsPerBar, offBarIndexes, routineEndsMidBar } from '../routines/bar-check.ts';
-import { RoutineEditor } from '../routines/editor.ts';
+import { autoCounts } from '../routines/auto-counts.ts';
+import { RoutineEditor, type RoutineEditorOptions } from '../routines/editor.ts';
 import { useReorderDrag } from '../routines/useReorderDrag.ts';
 import { FigureForm } from '../routines/FigureForm.tsx';
 import { makeId } from '../routines/ids.ts';
@@ -43,6 +44,15 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
   const locale = translator.locale;
   const [, rerender] = useReducer((count: number) => count + 1, 0);
   const editor = useRef<RoutineEditor | null>(null);
+  // 名前を選んだらカウントを自動で入れる（D52・Ruling 106・107-7）。端末の全ルーティン（最新）と今のルーティンの ID・種目を閉じ込めて渡す。
+  const latestRoutines = useRef(routines);
+  latestRoutines.current = routines;
+  const editorOptions: RoutineEditorOptions = {
+    autoCounts: name => {
+      const routine = editor.current?.routine;
+      return routine ? autoCounts({ danceId: routine.danceId, name, routines: latestRoutines.current, excludeRoutineId: routine.id }) : null;
+    }
+  };
   const saved = useRef(false);   // 端末に1回でも保存したか（新規は最初の確定まで false）
   const [saveFailed, setSaveFailed] = useState(uiState === 'save-failed');   // ui-state=save-failed は枠を見た目だけ（段8 Ruling 100-2）
   const [backupTip, setBackupTip] = useState(false);   // 最初の保存の後に 1 回だけの「配るで自分にも送れる」（Ruling 86-3）
@@ -85,7 +95,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
   if (routineId && editor.current?.routine.id !== routineId) {
     const routine = routines.find(item => item.id === routineId);
     if (routine) {
-      editor.current = new RoutineEditor(routine, () => makeId('f'));
+      editor.current = new RoutineEditor(routine, () => makeId('f'), editorOptions);
       saved.current = true;
     }
   }
@@ -173,7 +183,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
     setChoosingDance(false);
     if (!existing) {
       const now = new Date().toISOString();
-      editor.current = new RoutineEditor(createRoutine({ id: makeId('r'), danceId, name: defaultName(danceId, routines), now }), () => makeId('f'));
+      editor.current = new RoutineEditor(createRoutine({ id: makeId('r'), danceId, name: defaultName(danceId, routines), now }), () => makeId('f'), editorOptions);
       rerender(0);
       return;
     }
@@ -341,7 +351,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
               </div>
               <div class="dc-row-body" data-row-body>
                 <FigureForm idPrefix="dc-fnew" kind="add" danceId={routine.danceId} draft={open.draft} check={current.check()}
-                  onDraft={patch => { current.setDraft(patch); rerender(0); }} onPrimary={primaryAction} />
+                  autoNote={current.autoNote()} onDraft={patch => { current.setDraft(patch); rerender(0); }} onPrimary={primaryAction} />
               </div>
             </div>
           )}

@@ -11,6 +11,7 @@ import { beatsPerBar } from './bar-check.ts';
 import { countPatterns, pressedPattern } from './count-patterns.ts';
 import { allowedSymbols } from './counts.ts';
 import type { IconName } from '../components/icon-names.ts';
+import type { AutoCountsFrom } from './auto-counts.ts';
 import { formLayout, type DraftAction, type DraftCheck, type DraftReason, type FigureDraft, type OpenRow } from './editor.ts';
 import { figureNameChoices, figureNameSuggestions, hasFigureNameSuggestions } from './figure-names.ts';
 import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
@@ -32,6 +33,10 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // カウントの形は出さない。タップで名前だけ入れる（counts は触らない・行は閉じない・フォーカスは動かさない）。autofocus は付けない
 // （キーボードが出て一覧が隠れるため）。すでにルーティンにある名前の印は付けない（タップすれば複製の形で分かる）。
 // 同じ名前（sameName）の注意は理由の行ではなく名前の欄の下（sameText）に出すので、ここには持たない。
+// 自動で入れたカウント（D52・Ruling 108）: 追加の行で自動入力の値に手を付けていない間だけ（autoNote＝editor.autoNote()）、
+// カウント欄 → 使える文字 → 理由／知らせ → の最後に 1 行（.dc-hint・アイコンなし・操作は増やさない）。aria-describedby は hint reason auto の順。
+// キーは文字列で書く（裸の history は platform-boundary の検査が端末の口と見なす）
+const AUTO_TEXT: Record<AutoCountsFrom, MessageKey> = { 'history': 'countsFromHistory', 'reviewed': 'countsFromReviewed' };
 const REASON_TEXT: Record<Exclude<DraftReason, 'symbols' | 'sameName' | null>, MessageKey> = {
   leading: 'startWithBeat', invalid: 'countsInvalid', name: 'nameNeeded'
 };
@@ -41,8 +46,8 @@ const PRIMARY: Record<DraftAction, { text: MessageKey; icon: IconName | null }> 
 };
 
 // onPrimary は主ボタン（画面が check.action で処理を選ぶ）。Enter は有効な時だけ（＝確定の働きの時だけ）。
-export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onPrimary }: {
-  idPrefix: string; kind: OpenRow['kind']; danceId: string; draft: FigureDraft; check: DraftCheck;
+export function FigureForm({ idPrefix, kind, danceId, draft, check, autoNote = null, onDraft, onPrimary }: {
+  idPrefix: string; kind: OpenRow['kind']; danceId: string; draft: FigureDraft; check: DraftCheck; autoNote?: AutoCountsFrom | null;
   onDraft(patch: Partial<FigureDraft>): void; onPrimary(): void;
 }) {
   const { translator } = useI18n();
@@ -51,6 +56,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onP
   const countsBad = check.reason === 'symbols' || check.reason === 'leading' || check.reason === 'invalid';
   const hintId = `${idPrefix}-hint`;
   const reasonId = `${idPrefix}-reason`;
+  const autoId = `${idPrefix}-auto`;
   const symbolsBad = check.reason === 'symbols';
   const others = check.same?.others ?? 0;
   const layout = formLayout(check, { kind, nameEmpty: draft.name.trim() === '', hasCatalog });
@@ -122,7 +128,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onP
           <div class="dc-field">
             <div class="dc-field-label" id={`${idPrefix}-counts-label`}>{translator.t('counts')}</div>
             <input class={`dc-input dc-input--counts${countsBad ? ' dc-input--bad' : ''}`} type="text" aria-labelledby={`${idPrefix}-counts-label`}
-              aria-invalid={countsBad ? 'true' : undefined} aria-describedby={reasonText ? `${hintId} ${reasonId}` : hintId}
+              aria-invalid={countsBad ? 'true' : undefined} aria-describedby={[hintId, reasonText ? reasonId : '', autoNote ? autoId : ''].filter(Boolean).join(' ')}
               value={draft.counts} maxLength={COUNTS_MAX} autocomplete="off" autocapitalize="characters" spellcheck={false}
               onInput={event => onDraft({ counts: (event.currentTarget as HTMLInputElement).value })}
               onKeyDown={event => { if (event.key === 'Enter' && check.valid) onPrimary(); }} />
@@ -136,6 +142,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onP
                 <span>{reasonText}</span>
               </div>
             )}
+            {autoNote && <div class="dc-hint" id={autoId} data-auto-counts={autoNote}>{phrased(translator, AUTO_TEXT[autoNote])}</div>}
           </div>
         )}
       </div>

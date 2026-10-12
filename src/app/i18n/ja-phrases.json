@@ -65,6 +65,8 @@
   "figureChoices": ["{dance}の","フィガー","（{count}）"],
   "commonCounts": ["カウントの","形"],
   "allowedSymbols": ["使える","文字：{symbols}"],
+  "countsFromHistory": ["前に","使った","カウントです"],
+  "countsFromReviewed": ["目安の","カウントです"],
   "sameNameExists": ["同じ","名前が","あります","（{counts}）"],
   "sameNameCopy": ["同じ","名前が","あります：{name}","（{counts}）"],
   "renameForOtherCount": ["名前を","変えると、","違う","カウントに","できます"],
