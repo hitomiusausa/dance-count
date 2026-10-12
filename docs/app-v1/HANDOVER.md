@@ -431,7 +431,7 @@ npm run smoke:routines    # 段3の完了条件（dev 起動中に）
 npm run smoke:voice       # 段4の完了条件（dev 起動中に。Chrome の偽マイクで 12 語 → 自分の声で鳴る・無音は止める）
 npm run smoke:share       # 段5の完了条件（dev 起動中に。先生の Chrome でファイルを作る → 別の Chrome が受け取る → 受け取った声で鳴る）
 npm run fixtures:share    # 固定の配布ファイル（test/fixtures/share/）を作り直す（= node tools/make-share-fixtures.js。同じバイト列になる）
-PUBLIC_APP_URL=https://… npm run build   # 案内文の最後の行に公開の URL が入る（付けないビルドには入らない。公開前にひとみうさが名前を決める）
+RELEASE=1 PUBLIC_APP_URL=https://… npm run build   # 公開ビルド。案内文の最後の行に公開の URL が入る（RELEASE=1 で URL が空なら失敗＝final-review I2。check-dist の最後の行に app url が出る。URL はひとみうさが決める）
 npx vite preview --port 4199 --strictPort   # 公開ビルド（SW つき）の確認（DC_BASE_URL=http://localhost:4199/ で ui:check・smoke:share。段7の計画は 5198 と書いたが、実際は 4199 を使った＝下の「番号の決まり」）
 npm run smoke:pwa         # 段7の完了条件（npm run build の後。DC_PWA_PORT 既定 4176。dist-b を作って最後に消す。1〜2 分）
 node tools/serve-dist.js dist 4176   # 公開ビルドをそのまま配る（止めればオフライン。Simulator の確認にも使える）

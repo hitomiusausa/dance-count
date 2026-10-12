@@ -1,10 +1,11 @@
 // 公開ビルド（dist/）に開発用ページ・未監修データが混ざっていないことを確かめる（Ruling 10）。
-// 使い方: npm run build（vite build のあとに自動で実行される）
+// 使い方: npm run build（vite build のあとに自動で実行される）。公開ビルドは RELEASE=1 PUBLIC_APP_URL=https://… npm run build（URL が空なら失敗）
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { neededFontSubsets } from './fonts/needed-subsets.js';
 import { LICENSE_FILES } from './licenses.js';
 import { checkPwaDist, precacheSummary } from './pwa/check-pwa.js';
+import { appUrlLine, isRelease, releaseAppUrlProblem } from './release/app-url.js';
 import { checkDistAudio, findSecrets, loadStandardVoices } from './voices/check-pack.js';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -49,10 +50,14 @@ for (const file of files) {
 for (const problem of await checkDistAudio(dist, standardVoices)) if (!problems.includes(problem)) problems.push(problem);
 // 段7: Service Worker・manifest・precache（Ruling 89・93）
 for (const problem of await checkPwaDist({ dist, files, standardVoices, fontSubsets: neededFontSubsets(root) })) if (!problems.includes(problem)) problems.push(problem);
+// 段8 Task 12（final-review I2）: 公開ビルド（RELEASE=1）は案内文の URL が要る（vite.config.ts と同じ環境変数を見る）
+const appUrl = process.env.PUBLIC_APP_URL ?? '';
+const urlProblem = releaseAppUrlProblem({ release: isRelease(process.env.RELEASE), url: appUrl });
+if (urlProblem) problems.push(urlProblem);
 if (problems.length) {
   console.error(problems.join('\n'));
   process.exit(1);
 }
 const precache = await precacheSummary(dist);
 console.log(`dist OK: ${files.length} files, no legacy pages or unreviewed data, voices: ${standardVoices.map(voice => voice.id).join(', ')}, `
-  + `precache ${precache.entries} entries ${(precache.bytes / 1024 / 1024).toFixed(2)} MB`);
+  + `precache ${precache.entries} entries ${(precache.bytes / 1024 / 1024).toFixed(2)} MB, ${appUrlLine(appUrl)}`);

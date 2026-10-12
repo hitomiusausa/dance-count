@@ -80,7 +80,7 @@ export default defineConfig({
     })
   ],
   // ルーティンの createdWith.version（仕様 §7・Ruling 37）。src/app/app-version.ts が読む。
-  // 案内文の公開 URL（§16-1・Ruling 82-7）。src/app/app-url.ts が読む。公開前に PUBLIC_APP_URL=https://… npm run build。
+  // 案内文の公開 URL（§16-1・Ruling 82-7）。src/app/app-url.ts が読む。公開ビルドは RELEASE=1 PUBLIC_APP_URL=https://… npm run build（空なら check-dist が失敗＝final-review I2）。
   define: { __APP_VERSION__: JSON.stringify(pkg.version), __PUBLIC_APP_URL__: JSON.stringify(process.env.PUBLIC_APP_URL ?? '') },
   optimizeDeps: { entries: ['index.html'], include: ['preact', 'preact/hooks', 'preact/jsx-runtime'] },
   server: { port: 5173, strictPort: true },
