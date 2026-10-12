@@ -5,7 +5,7 @@ import { TabBar } from './components/TabBar.tsx';
 import { createAppTranslator, resolveAppLocale, type AppLocale } from './i18n/index.ts';
 import { forgetLegacyUiLocale, readLegacyUiLocale } from './platform/legacy-locale.ts';
 import { deviceLanguages } from './platform/locale.ts';
-import { applyDocumentLanguage } from './platform/page.ts';
+import { applyDocumentLanguage, removeBootShell } from './platform/page.ts';
 import { isStandalone } from './platform/pwa.ts';
 import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
 import { resolveScreen } from './router/resolve.ts';
@@ -110,6 +110,8 @@ export function App() {
   useEffect(() => applyDocumentLanguage(locale, translator.t('documentTitle')), [locale, translator]);
 
   // 見つからない・鳴らせないルーティンは S3 へ置き換え（Ruling 37・40）。ルーティンを読み終える前は判断しない。
+  // 段8（Ruling 101）: 設定を読み終えて最初の画面を描いたら、起動の殻を外す（描く前に外すと白い時間ができる。外す前の 1 フレームは殻が上に重なる）
+  useLayoutEffect(() => { if (settings) removeBootShell(); }, [settings !== null]);
   const resolved = resolveScreen(route, routines);
   // 段8（Ruling 102-2）: 画面が替わったら、その画面の見出し h1（無ければ main）へフォーカスを移す（VoiceOver が新しい画面の名前から読む・
   // キーボードの人は見出しから Tab を始める）。最初の表示では動かさない。スクロールさせない（preventScroll）。音には関係しない

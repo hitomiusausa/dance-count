@@ -146,6 +146,8 @@ const STATES = [
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）: S7 は 一覧 1＋「ファイルから受け取る」1＋「自分の声を録音する」1。行を開くと voice-actions が足される。
   { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'list', ops: 3, total: 3, voiceRows: ['標準の声（英語）'] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
+  // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下の 2 つのボタンはスクロールで届く（初期表示は固定しない）
+  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'list', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 3, rows: 23 },
   // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
   { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'list', ops: 3, total: 3, alert: true,
     texts: ['この声はまだ端末に入っていません。'] },
@@ -576,7 +578,8 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 照合済みの名前の一覧（[data-catalog]）は選択肢でなく一覧なので 10 を当てず、黙って増えないよう catalogChoices を当てる（Ruling 54-4）
   for (const group of document.querySelectorAll('[data-group]')) {
     const choices = [...group.querySelectorAll(OPS)].filter(visible).length;
-    const limit = group.hasAttribute('data-catalog') ? LIMITS.catalogChoices : LIMITS.groupChoices;
+    // 段8（Ruling 103-2）: 上限が仕様で決まっている一覧（S7 の声＝24）は data-choices-max の値（それより多ければ違反）
+    const limit = group.hasAttribute('data-choices-max') ? Number(group.dataset.choicesMax) : group.hasAttribute('data-catalog') ? LIMITS.catalogChoices : LIMITS.groupChoices;
     if (choices > limit) issues.push(`U5 group "${group.dataset.group}" has ${choices} choices > ${limit}`);
   }
   for (const select of document.querySelectorAll('select')) {
@@ -717,6 +720,9 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!visible(graphic) || graphic.closest('[aria-hidden="true"]')) continue;
     if (!graphic.getAttribute('aria-label') && !graphic.getAttribute('alt')) issues.push(`U16 ${graphic.tagName.toLowerCase()} is neither hidden nor named ${describe(graphic.parentElement ?? graphic)}`);
   }
+
+  // 段8（Ruling 101）: 起動の殻は最初の画面を描いたら消えている
+  if (document.querySelector('.dc-boot')) issues.push('R101 the boot shell is still on the page');
 
   // U11 下タブと戻る（種別の表と照合）
   const nav = document.querySelector('[data-nav]');
@@ -881,6 +887,10 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (value !== state.voiceOffset) issues.push(`R62 voice timing reads "${value}", expected "${state.voiceOffset}"`);
   }
   // 段4（Ruling 60）: S7 の行の並び・選ばれているのは 1 つ・途中の声は選べない
+  if (state.rows !== undefined) {
+    const count = document.querySelectorAll('[data-group="voice"] .dc-voice-row').length;
+    if (count !== state.rows) issues.push(`R103 ${count} voice rows, expected ${state.rows}`);
+  }
   if (state.voiceRows) {
     const rows = [...document.querySelectorAll('[data-group="voice"] .dc-voice-name')].map(row => row.textContent.replace(/\s+/g, ' ').trim());   // 「7 / 12 語」の改行しない空白も 1 つの空白として
     if (JSON.stringify(rows) !== JSON.stringify(state.voiceRows)) issues.push(`R60 voice rows ${JSON.stringify(rows)}, expected ${JSON.stringify(state.voiceRows)}`);

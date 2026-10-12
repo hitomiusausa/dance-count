@@ -16,7 +16,7 @@ import { useStorage } from '../state/storage.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packDisplayName, packSelection, standardSelection, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { STANDARD_VOICES } from '../voices/standard.ts';
-import { isCompletePack, listVoicePacks, packProgress, removeVoicePack, type VoicePackRecord } from '../voices/store.ts';
+import { VOICE_LIMITS, isCompletePack, listVoicePacks, packProgress, removeVoicePack, type VoicePackRecord } from '../voices/store.ts';
 
 // S7 声（仕様 §4 S7・Ruling 60・61）。一覧 [data-group="voice"]（role="radiogroup"）: 標準 → 自分の声（完成）→ 受け取った声 → 途中の声。
 // 1 回目のタップで選ぶ（selectedVoiceId と voiceLocale を一緒に書く）。選んだ行には「▶ 試聴」（ワルツ 1 小節）。
@@ -26,6 +26,9 @@ import { isCompletePack, listVoicePacks, packProgress, removeVoicePack, type Voi
 // 「ファイルに保存」は作らない（Ruling 82-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
 // 段8（Ruling 100-3）: 試聴で声が読めなかった（オフラインでまだ端末に入っていない）時は §11 の「この声はまだ端末に入っていません。…」の枠。
 // ui-state=voice-missing はその枠を見た目だけ出す（試聴を押すか、別の行を選ぶと消える）。
+// 段8（Ruling 103-2）: 声の一覧の行の上限＝標準 2（英語・日本語）＋自分の声 2（英語・日本語）＋受け取った声 20（VOICE_LIMITS.packs）。
+// U5（選択肢 10 以下）の例外として ui:check に渡す（data-choices-max）。声が 4 本以上になる生徒は稀で、下の 2 つのボタンはスクロールで届く
+const VOICE_ROWS_MAX = 2 + 2 + VOICE_LIMITS.packs;
 export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();
@@ -116,7 +119,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
       {/* 枠は同時に 1 つ（Ruling 30）: 知らせが出ている間は更新の帯を引っ込め、閉じたら戻す（段7 最終レビュー m2） */}
       {notice === 'none' && <UpdateBanner />}
       <NoticeBox notice={notice} onClose={() => setDeleteFailed(false)} />
-      <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('voicesTitle')} data-group="voice">
+      <div class="dc-radiogroup" role="radiogroup" aria-label={translator.t('voicesTitle')} data-group="voice" data-choices-max={VOICE_ROWS_MAX}>
         {STANDARD_VOICES.map(voice => radioRow({ kind: 'standard', id: voice.id, locale: voice.locale }, voiceDisplayName(translator, { kind: 'standard', id: voice.id, locale: voice.locale }, 'row')))}
         {complete.filter(pack => pack.origin === 'recorded').map(pack => radioRow(packSelection(pack), packDisplayName(translator, pack)))}
         {complete.filter(pack => pack.origin === 'received').map(pack => radioRow(packSelection(pack), packDisplayName(translator, pack)))}

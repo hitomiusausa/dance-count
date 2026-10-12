@@ -35,6 +35,9 @@ async function exists(file) {
   try { await fs.access(file); return true; } catch { return false; }
 }
 
+// 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限
+export const BOOT_STYLE_MAX_BYTES = 600;
+
 // dist: dist の絶対パス・files: dist の中の全ファイル（/ 区切り）・standardVoices: standard-voices.json・fontSubsets: neededFontSubsets()
 export async function checkPwaDist({ dist, files, standardVoices, fontSubsets }) {
   const problems = [];
@@ -50,6 +53,10 @@ export async function checkPwaDist({ dist, files, standardVoices, fontSubsets })
     if (!pattern.test(html)) problems.push(`index.html has no ${what}`);
   }
   if (!files.includes('icons/apple-touch-icon.png')) problems.push('missing icons/apple-touch-icon.png');
+  // 1b. 起動の殻（段8・Ruling 101）: アプリが描くまでアプリの名前だけを出す。インラインの CSS は殻の分だけ（BOOT_STYLE_MAX_BYTES 以下）
+  if (!/<div id="app"><div class="dc-boot" aria-hidden="true">/.test(html)) problems.push('index.html has no boot shell inside #app');
+  const style = html.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
+  if (Buffer.byteLength(style) > BOOT_STYLE_MAX_BYTES) problems.push(`index.html boot style is ${Buffer.byteLength(style)} bytes > ${BOOT_STYLE_MAX_BYTES}`);
 
   // 2. manifest（Ruling 93-1・93-3・93-6）
   let manifest = null;

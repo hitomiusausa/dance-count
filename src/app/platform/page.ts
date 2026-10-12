@@ -17,6 +17,11 @@ export function reloadAtHome(): void {
   window.location.reload();
 }
 
+// 起動の殻（index.html の .dc-boot。段8・Ruling 101）を外す。最初の画面を描いた時に 1 回（Preact は #app に元からある殻を消さないため）
+export function removeBootShell(): void {
+  document.querySelector('.dc-boot')?.remove();
+}
+
 // 今の画面のアドレス（S12 の「アドレスをコピー」。Safari・スマホで開き直すと、そのまま同じ手順の画面が出る）。
 export function currentAddress(): string {
   return window.location.href;

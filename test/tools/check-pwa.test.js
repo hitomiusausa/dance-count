@@ -4,13 +4,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { PRECACHE_MAX_BYTES, checkPwaDist, readPrecacheList } from '../../tools/pwa/check-pwa.js';
+import { BOOT_STYLE_MAX_BYTES, PRECACHE_MAX_BYTES, checkPwaDist, readPrecacheList } from '../../tools/pwa/check-pwa.js';
 
 const VOICES = [{ id: 'default-en-female-v1', locale: 'en' }];
 const SUBSETS = ['noto-sans-jp-59', 'inter-latin'];
 const WORDS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
 const HTML = '<head><meta name="apple-mobile-web-app-title" content="Dance Count"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">'
-  + '<link rel="manifest" href="./manifest.webmanifest"></head>';
+  + '<link rel="manifest" href="./manifest.webmanifest"><style>.dc-boot{color:#1B2A4A}</style></head>'
+  + '<body><div id="app"><div class="dc-boot" aria-hidden="true"><b>Dance Count</b></div></div></body>';
 const MANIFEST = {
   name: 'Dance Count', short_name: 'Dance Count', start_url: './', scope: './', display: 'standalone',
   icons: [{ src: 'icons/icon-192.png' }, { src: 'icons/icon-512-maskable.png', purpose: 'maskable' }],
@@ -80,7 +81,13 @@ test('the manifest keeps the name, standalone, relative scope and the share_targ
 test('index.html links the manifest and the iPhone icon and names the app', async () => {
   const files = { ...goodFiles(), 'index.html': '<head></head>' };
   const problems = await check({ files, precache: precached(files) });
-  assert.deepEqual(problems, ['index.html has no manifest link', 'index.html has no apple-touch-icon link', 'index.html has no apple-mobile-web-app-title']);
+  assert.deepEqual(problems, ['index.html has no manifest link', 'index.html has no apple-touch-icon link', 'index.html has no apple-mobile-web-app-title',
+    'index.html has no boot shell inside #app']);
+});
+
+test('the boot shell sits inside #app and its inline style stays small (段8 Ruling 101)', async () => {
+  const big = { ...goodFiles(), 'index.html': HTML.replace('.dc-boot{color:#1B2A4A}', `.dc-boot{color:#1B2A4A}${'.x{}'.repeat(BOOT_STYLE_MAX_BYTES)}`) };
+  assert.deepEqual(await check({ files: big, precache: precached(big) }), [`index.html boot style is ${'.dc-boot{color:#1B2A4A}'.length + 4 * BOOT_STYLE_MAX_BYTES} bytes > ${BOOT_STYLE_MAX_BYTES}`]);
 });
 
 test('every standard voice is precached with its manifest and 12 words (Ruling 89-2: a Japanese pack is required the day it ships)', async () => {
