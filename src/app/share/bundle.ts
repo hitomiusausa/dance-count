@@ -31,8 +31,9 @@ export async function exportVoiceForBundle(pack: VoicePackRecord): Promise<Expor
   return JSON.parse(await exportRecordedVoicePack(pack)) as ExportedVoice;
 }
 
+// 40 字で切った後にもう一度空白を落とす（切れ目が空白だと「山田 」になり、同じ先生の声の鍵（D40）がずれる。段5 最終レビューの持ち越し）
 export function cleanDistributorName(name: string): string {
-  return [...stripInvisible(name).trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('');
+  return [...stripInvisible(name).trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('').trim();
 }
 
 // 束の JSON 文字列。名前が空・何も入っていない・上限を超える時は投げる（S9 は主ボタンを押せなくしているので、ここに来ない）。

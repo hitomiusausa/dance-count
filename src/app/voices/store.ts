@@ -4,12 +4,23 @@ import { isVoiceId, recordedPackIdFor, toVoiceLocale, type VoiceLocale } from '.
 
 // 声の保存（Ruling 56）。IndexedDB `dance-count-v2` v2 の voice-packs ストアに platform/storage 経由で読み書きする。
 // エンジンの recorded-voice-store.js（v1 を直接開く）は使わない。形の検査はエンジンの validateRecordedVoicePack。
+// 語の音量（dB）の範囲。アプリ・旧画面の録音は 0 しか書かない。保存されていた値を信用せず、この範囲に収める
+// （0 を超えない＝録った時より大きくしない・−24 は消え入る声を防ぐ安全弁。段7・段5 最終レビューの持ち越し・Fable 回答 #7）
+export const GAIN_DB_MIN = -24;
+export const GAIN_DB_MAX = 0;
+
 export const VOICE_LIMITS = Object.freeze({
   packs: 20,                       // 声の数（受け取りが増える段5で効く）
   nameLength: 40,                  // 名前（ルーティンと同じ）
   wordBytes: 2 * 1024 * 1024,      // 1 語の WAV（録音は 1 語 ≒ 70KB）
-  packBytes: 20 * 1024 * 1024      // 1 つの声の合計
+  packBytes: 20 * 1024 * 1024,     // 1 つの声の合計
+  gainDbMin: GAIN_DB_MIN,          // 語の音量（dB）の下限・上限（上の定数）
+  gainDbMax: GAIN_DB_MAX
 });
+
+export function clampGainDb(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.min(Math.max(value, GAIN_DB_MIN), GAIN_DB_MAX) : 0;
+}
 
 export type VoiceKey = 'slow' | 'quick' | 'one' | 'two' | 'three' | 'four' | 'five' | 'six' | 'seven' | 'eight' | 'and' | 'ah';
 // S8 の語の順（仕様 §4 S8: スロー・クイック・1〜8・アンド・ア）
@@ -52,7 +63,7 @@ export function normalizeVoicePackRecord(raw: unknown): VoicePackRecord | null {
   try { validateRecordedVoicePack(raw, { requireComplete: false }); } catch { return null; }
   if (!isVoiceId(raw.id)) return null;
   if (typeof raw.name !== 'string' || raw.name.trim().length === 0 || [...raw.name].length > VOICE_LIMITS.nameLength) return null;
-  const words = raw.words as Record<string, { blob: Blob }>;
+  const words = raw.words as Record<string, RecordedWord>;
   let total = 0;
   for (const word of Object.values(words)) {
     if (word.blob.size > VOICE_LIMITS.wordBytes) return null;
@@ -66,6 +77,7 @@ export function normalizeVoicePackRecord(raw: unknown): VoicePackRecord | null {
   const { distributor: _drop, ...rest } = raw;
   return {
     ...(rest as unknown as VoicePackRecord),
+    words: Object.fromEntries(Object.entries(words).map(([key, word]) => [key, { ...word, gainDb: clampGainDb(word.gainDb) }])),
     locale,
     vocabularyId: toVoiceLocale(raw.vocabularyId ?? locale),
     origin,

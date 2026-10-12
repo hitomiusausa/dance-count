@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { exportRecordedVoicePack } from '../../../src/engine/recorded-voice-pack.js';
-import { buildBundle, exportVoiceForBundle, parseBundle } from '../../../src/app/share/bundle.ts';
+import { buildBundle, cleanDistributorName, exportVoiceForBundle, parseBundle } from '../../../src/app/share/bundle.ts';
 import { BUNDLE_ROUTINES_MAX } from '../../../src/app/share/limits.ts';
 import { VOICE_LIMITS, withWord, type VoicePackRecord } from '../../../src/app/voices/store.ts';
 import { packFixture, wordFixture } from '../helpers/voice-fixtures.ts';
@@ -183,4 +183,11 @@ test('consent and update times are kept only as short ISO times (final review M4
   const fine = ok(await voiceBundle());
   assert.equal(fine.consent?.consentedAt, NOW);
   assert.equal(fine.voice?.sourceUpdatedAt, '2026-10-12T00:00:00.000Z');
+});
+
+test('a name cut at 40 characters does not end in a space (stage-5 carry-over: the same teacher key, D40)', () => {
+  const name = `${'山'.repeat(39)} 田`;
+  assert.equal(cleanDistributorName(name), '山'.repeat(39));
+  assert.equal(cleanDistributorName('  山田  '), '山田');
+  assert.equal(cleanDistributorName('\u202e山田\u202c'), '山田');
 });

@@ -6,7 +6,7 @@ import { RECORDED_PACK_IDS, isVoiceId, toVoiceLocale } from '../../../src/app/vo
 import { STANDARD_VOICES, findStandardVoice } from '../../../src/app/voices/standard.ts';
 import { STANDARD_VOICE_ID } from '../../../src/app/settings/settings.ts';
 import {
-  VOICE_KEYS, VOICE_LIMITS, deleteVoicePack, isCompletePack, listVoicePacks, loadVoicePack, newRecordedPack, normalizeVoicePackRecord,
+  GAIN_DB_MAX, GAIN_DB_MIN, VOICE_KEYS, VOICE_LIMITS, clampGainDb, deleteVoicePack, isCompletePack, listVoicePacks, loadVoicePack, newRecordedPack, normalizeVoicePackRecord,
   packProgress, removeVoicePack, renamePack, saveVoicePack, withWord
 } from '../../../src/app/voices/store.ts';
 import { withPackOffset } from '../../../src/app/practice/voice-offset.ts';
@@ -165,4 +165,21 @@ test('a received voice keeps its source id, source time and received time throug
   assert.equal(loaded?.sourceUpdatedAt, '2026-10-01T00:00:00.000Z');
   assert.equal(loaded?.receivedAt, NOW);
   assert.deepEqual(loaded?.consent, { voiceDistribution: true, consentedAt: NOW });
+});
+
+test('a stored word never plays louder than recorded: gainDb is kept within -24..0 dB, anything else reads as 0 (stage-5 carry-over)', () => {
+  assert.deepEqual([GAIN_DB_MIN, GAIN_DB_MAX], [-24, 0]);
+  assert.deepEqual([VOICE_LIMITS.gainDbMin, VOICE_LIMITS.gainDbMax], [GAIN_DB_MIN, GAIN_DB_MAX]);
+  assert.equal(clampGainDb(0), 0);
+  assert.equal(clampGainDb(-6), -6);
+  assert.equal(clampGainDb(120), VOICE_LIMITS.gainDbMax);
+  assert.equal(clampGainDb(-100), VOICE_LIMITS.gainDbMin);
+  for (const bad of ['loud', NaN, Infinity, null, undefined]) assert.equal(clampGainDb(bad), 0, String(bad));
+  const pack = packFixture('en', 12);
+  const loud = { ...pack, words: { ...pack.words, six: { ...pack.words.six!, gainDb: 120 }, one: { ...pack.words.one!, gainDb: 'loud' } } };
+  const read = normalizeVoicePackRecord(loud)!;
+  assert.equal(read.words.six!.gainDb, 0);
+  assert.equal(read.words.one!.gainDb, 0);
+  assert.equal(read.words.two!.gainDb, 0);
+  assert.equal(read.words.six!.blob, pack.words.six!.blob, 'the sound itself is kept');
 });
