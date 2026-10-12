@@ -2,6 +2,7 @@ import { figureRangeTicks } from '../../engine/practice-range.js';
 import { compileRhythm, compileRoutine } from '../../engine/rhythm-compiler.js';
 import type { TrackProfile } from '../../engine/tempo-map.js';
 import { wordOffsetsFor, type VoiceSelection } from '../voices/selection.ts';
+import type { StripEvent, StripProgram } from './beat-indicator.ts';
 
 // 再生セッション（S2）。音・WakeLock・2秒判定・中断の検知をまとめ、画面には SessionView だけを渡す。
 // 端末に触る処理は deps で受け取る（本物は practice/session-deps.ts、テストは偽物）。
@@ -28,6 +29,16 @@ export type PracticeOptions =
 
 export interface CompiledProgram { compiled: unknown; rangeStartTick?: number; rangeEndTick?: number }
 
+// エンジンに渡した compiled を、画面の帯（D55・Ruling 114-5）に見せる形にする（写すだけ。第 2 のコンパイルはしない）
+export function programView(compiled: unknown): StripProgram {
+  const source = compiled as { events: readonly StripEvent[]; figures?: readonly { startTick: number; endTick: number }[]; durationTicks: number };
+  return {
+    events: source.events,
+    ...(source.figures ? { figures: source.figures.map(({ startTick, endTick }) => ({ startTick, endTick })) } : {}),
+    endTick: source.durationTicks
+  };
+}
+
 // カウントをエンジンに渡す形にする。範囲は小節の位相を保つため、ルーティン全体をコンパイルしてから切り出す。
 export function compileProgram(options: PracticeOptions): CompiledProgram {
   if (options.kind === 'counts') return { compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }) };
@@ -48,6 +59,7 @@ export interface SessionView {
   originalTick: number | null;
   figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
   notice: SessionNotice;
+  program: StripProgram | null; // 鳴らしている型（エンジンに渡した compiled の写し。止まっている間は null。D55・Ruling 114-5）
 }
 
 export interface AudioLike { state: string; currentTime: number }
@@ -85,7 +97,7 @@ export interface SessionHints {
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
-  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none'
+  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none', program: null
 }) as SessionView;
 
 export class PracticeSession<A extends AudioLike, V> {
@@ -170,11 +182,14 @@ export class PracticeSession<A extends AudioLike, V> {
       return;
     }
     const startedAt = audio.currentTime;
+    let program: StripProgram;
     try {
       this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
       this.engine.setVoicePack(voicePack);
+      const compiled = compileProgram(options);
+      program = programView(compiled.compiled);
       this.engine.start({
-        ...compileProgram(options),
+        ...compiled,
         bpm: options.bpm,
         loop: options.loop,
         metronome: options.metronome,
@@ -187,7 +202,7 @@ export class PracticeSession<A extends AudioLike, V> {
       if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'stopped' });
       return;
     }
-    this.update({ ...IDLE_VIEW, playing: true, countIn: options.countInBars > 0 });
+    this.update({ ...IDLE_VIEW, playing: true, countIn: options.countInBars > 0, program });
     if (!this.hints.firstPlaybackDone()) this.hints.markFirstPlayback();
     let lockOutcome: 'pending' | 'held' | 'unavailable' = 'pending';
     this.cancelSoundCheck = this.deps.setTimer(() => this.checkSound(generation, audio, startedAt, lockOutcome === 'unavailable'), SOUND_CHECK_DELAY_MS);

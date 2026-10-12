@@ -12,6 +12,11 @@ export function scrollPageBy(dy: number): void {
   window.scrollBy(0, dy);
 }
 
+// 進む画面替えで新しい画面を上端に（Fable 答え 2026-10-13 §2-1）。即時（smooth は使わない＝reduced-motion・遷移 300ms 以下）
+export function scrollPageToTop(): void {
+  window.scrollTo(0, 0);
+}
+
 // 次の描画の前に1回。戻り値で取り消し。
 export function nextFrame(callback: () => void): () => void {
   const id = requestAnimationFrame(callback);

@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
 import { buildHash, type UiState } from '../router/routes.ts';
+import type { StripView } from './beat-indicator.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
@@ -11,9 +12,11 @@ import { canStep, formatVoiceOffset } from './voice-offset.ts';
 // S2・S5 が共通で組む部品（Ruling 42）。記憶の単位（種目ごと・ルーティンごと）は各画面が持ち、部品は値と操作だけを受け取る。
 const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standard: 'speedStandard', fast: 'speedFast' };
 
-// 大きな現在カウント＋拍インジケータ（操作ではない）。children は拍の下に置く（S5 の「3 / 13 …」の1行）。
-export function CountBox({ playing, countIn, nowText, idleText, beatsPerBar, beat, children }: {
-  playing: boolean; countIn: boolean; nowText: string; idleText: string; beatsPerBar: number; beat: number | null; children?: ComponentChildren;
+// 大きな現在カウント＋カウントの型の帯（操作ではない。D55・Ruling 114）。children は帯の下に置く（S5 の「3 / 13 …」の1行）。
+// 帯は型 1 周の語を 1 語 1 丸（幅は語の長さに比例＝flex-grow に拍数）。鳴っている語の丸だけ琥珀（aria-current）。読み上げは「いま {count}」で足りる（aria-hidden）
+const DENSE_STRIP = 9;   // 丸が 9 個以上は文字を 15px に（data-dense）
+export function CountBox({ playing, countIn, nowText, idleText, strip, children }: {
+  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; children?: ComponentChildren;
 }) {
   const { translator } = useI18n();
   return (
@@ -21,9 +24,10 @@ export function CountBox({ playing, countIn, nowText, idleText, beatsPerBar, bea
       {playing && countIn
         ? <div class="dc-now dc-now--lead">{translator.t('leadInNow')}</div>
         : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
-      <ol class="dc-beats" aria-hidden="true">
-        {Array.from({ length: beatsPerBar }, (_, index) => (
-          <li key={index} aria-current={beat === index ? 'true' : undefined}>{index + 1}</li>
+      <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined}>
+        {strip.cells.map((cell, index) => (
+          <li key={`${index}-${cell.tick}`} data-cell={cell.kind} style={{ '--beats': cell.beats }}
+            data-fineprint={cell.kind === 'sub' || strip.cells.length >= DENSE_STRIP ? '' : undefined} aria-current={strip.lit === index ? 'true' : undefined}>{cell.label}</li>
         ))}
       </ol>
       {children}
@@ -40,7 +44,7 @@ export function SpeedChoices({ presets, selected, onChoose }: {
   return (
     <>
       <div class="dc-field-label"><Icon name="gauge" /><span>{translator.t('speed')}</span></div>
-      <div class="dc-seg" role="radiogroup" aria-label={translator.t('speed')} data-group="speed" style={{ gridTemplateColumns: `repeat(${shown.length}, 1fr)` }}>
+      <div class="dc-seg" role="radiogroup" aria-label={translator.t('speed')} data-group="speed" style={{ '--seg-cols': shown.length }}>
         {shown.map(preset => {
           const checked = selected === preset;
           return (

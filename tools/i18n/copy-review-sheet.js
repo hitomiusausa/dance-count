@@ -12,9 +12,12 @@ export const SHEET_PATH = 'docs/app-v1/stage8-copy-review.md';
 
 // 鍵を参照するファイル → 画面（Ruling 96-1。画面の部品はその画面に数える）
 export const SCREEN_FILES = Object.freeze({
+  'src/app/screens/CoverScreen.tsx': 'S0',
   'src/app/screens/HomeScreen.tsx': 'S1',
+  'src/app/screens/MakeScreen.tsx': 'M0',
+  'src/app/screens/FigureListScreen.tsx': 'F1',
   'src/app/screens/PracticeScreen.tsx': 'S2',
-  'src/app/screens/RoutinesScreen.tsx': 'S3',
+  'src/app/screens/RoutinesScreen.tsx': 'U2',
   'src/app/screens/RoutineEditScreen.tsx': 'S4',
   'src/app/routines/FigureForm.tsx': 'S4',
   'src/app/screens/RoutinePlayScreen.tsx': 'S5',
@@ -30,7 +33,7 @@ export const SCREEN_FILES = Object.freeze({
 export const INSTRUCTION_FILES = Object.freeze(['src/app/share/instructions.ts']);
 
 export const GROUPS = Object.freeze([
-  ['S1', 'S1 ホーム'], ['S2', 'S2 再生'], ['S3', 'S3 ルーティン一覧'], ['S4', 'S4 ルーティン編集'], ['S5', 'S5 ルーティン再生'],
+  ['S0', 'S0 表紙'], ['S1', 'S1 使う › フィガー（種目）'], ['F1', 'F1 種目のフィガー'], ['S2', 'S2 再生'], ['U2', 'U2・M1 ルーティン（使う・作る）'], ['M0', 'M0 作る'], ['S4', 'S4 ルーティン編集'], ['S5', 'S5 ルーティン再生'],
   ['S6', 'S6 設定'], ['S7', 'S7 声'], ['S8', 'S8 自分の声を録音'], ['S9', 'S9 配る'], ['S10', 'S10 受け取る'],
   ['S11', 'S11 音が鳴らない時'], ['S12', 'S12 ホーム画面に追加する方法'], ['S13', 'S13 プライバシー・アプリについて'],
   ['common', '共通（複数の画面・部品）'], ['instructions', '生徒への案内文（S9 でコピーされる）'], ['errors', 'エラー・知らせ（仕様 §11）']

@@ -3,6 +3,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
+import { phrased } from '../i18n/phrased.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -21,7 +22,7 @@ import { VOICE_LIMITS, isCompletePack, listVoicePacks, packProgress, removeVoice
 // S7 声（仕様 §4 S7・Ruling 60・61）。一覧 [data-group="voice"]（role="radiogroup"）: 標準 → 自分の声（完成）→ 受け取った声 → 途中の声。
 // 1 回目のタップで選ぶ（selectedVoiceId と voiceLocale を一緒に書く）。選んだ行には「▶ 試聴」（ワルツ 1 小節）。
 // 選んでいる自分の声・受け取った声をもう一度タップすると行が開き「削除」（同時に 1 つ）。途中の声は選べない行（role="button"）で、
-// タップすると開いて「続きを録音する」と「削除」（計画 Open question 1）。下に「自分の声を録音する」（→ S8）。
+// タップすると開いて「続きを録音する」と「削除」（計画 Open question 1）。D56（Ruling 115-5）: 「自分の声を録音する」のボタンは表紙の「作る」へ移し、1 行の案内に。
 // 段5（Ruling 86-1・D37）: 下に「ファイルから受け取る」（→ S10）。開いた録音の声に「配る」（→ S9 にこの声を選んだ状態で）。受け取った声は「削除」だけ。
 // 「ファイルに保存」は作らない（Ruling 82-3）。ui-state=confirm-delete は最初の録音の声の削除確認を見た目だけ出す。
 // 段8（Ruling 100-3）: 試聴で声が読めなかった（オフラインでまだ端末に入っていない）時は §11 の「この声はまだ端末に入っていません。…」の枠。
@@ -144,15 +145,12 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
           );
         })}
       </div>
-      {/* 600px 未満の高さでは 2 つを横 1 行に並べる（段5 Task 10b・CSS の .dc-voice-entry）。600px 以上は縦のまま */}
       <div class="dc-voice-entry">
         <a class="dc-button dc-button--secondary dc-wide dc-receive-link" href={buildHash({ screen: 'S10', params: {} })}>
           <span>{translator.t('receiveFromFile')}</span>
         </a>
-        <a class="dc-button dc-primary dc-wide dc-record-link" href={buildHash({ screen: 'S8', params: {} })}>
-          <Icon name="mic" /><span>{translator.t('recordVoice')}</span>
-        </a>
       </div>
+      <div class="dc-hint dc-record-in-make">{phrased(translator, 'recordFromMake')}</div>
       {deleting && (
         <ConfirmDialog title={translator.t('confirmDeleteVoiceTitle')} detail={packDisplayName(translator, deleting)} confirmLabel={translator.t('confirmDelete')}
           onCancel={() => setDeleting(null)} onConfirm={() => confirmDelete(deleting)} />

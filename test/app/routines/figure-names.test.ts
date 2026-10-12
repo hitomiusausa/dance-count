@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FIGURE_CHOICES_MAX, FIGURE_SUGGESTIONS_MAX, buildFigureIdentity, figureIdentity, figureNameChoices, figureNameSuggestions, foldFigureName, hasFigureNameSuggestions, hiraganaToKatakana, spellingKey
+  FIGURE_CHOICES_MAX, FIGURE_SUGGESTIONS_MAX, buildFigureIdentity, figureDisplayName, figureIdentity, figureNameChoices, figureNameSuggestions, figureSlug,
+  foldFigureName, hasFigureNameSuggestions, hiraganaToKatakana, isFigureSlug, spellingKey
 } from '../../../src/app/routines/figure-names.ts';
+import { DANCE_PROFILES } from '../../../src/engine/dance-profiles.js';
 
 test('suggestions match Japanese aliases and English names, shown in the UI language', () => {
   assert.deepEqual(figureNameSuggestions('waltz', 'ウィ', 'ja-JP'), ['ウィスク', 'バックウィスク', 'ウィーブ フロム PP']);
@@ -140,4 +142,31 @@ test('the real registry has no name shared by two figures in one dance (D22)', (
       for (const name of figureNameChoices(danceId, locale)) assert.ok(!figureIdentity(danceId, name).startsWith('text:'), `${danceId} "${name}"`);
     }
   }
+});
+
+// D57（Ruling 120-1・120-2・122-3）: 経路のフィガーの印と表示名
+test('figureSlug folds an English name into a path segment', () => {
+  assert.equal(figureSlug('Chasse from PP'), 'chasse-from-pp');
+  assert.equal(figureSlug('Natural Turn'), 'natural-turn');
+  assert.equal(figureSlug('Fallaway Reverse and Slip Pivot'), 'fallaway-reverse-and-slip-pivot');
+  assert.equal(figureSlug(' Back  Lock! '), 'back-lock');
+  assert.ok(isFigureSlug('whisk') && !isFigureSlug('Whisk') && !isFigureSlug('a b') && !isFigureSlug('') && !isFigureSlug('-x') && !isFigureSlug(3));
+});
+
+test('every verified figure has a slug that fits a route segment and is unique within its dance (Ruling 120-1)', () => {
+  let count = 0;
+  for (const danceId of Object.keys(DANCE_PROFILES)) {
+    const slugs = figureNameChoices(danceId, 'en').map(figureSlug);
+    count += slugs.length;
+    for (const slug of slugs) assert.ok(isFigureSlug(slug) && /^[A-Za-z0-9_-]+$/.test(slug), `${danceId} ${slug}`);
+    assert.equal(new Set(slugs).size, slugs.length, `${danceId} has a duplicate slug`);
+  }
+  assert.ok(count > 0);
+});
+
+test('figureDisplayName shows the verified name in the UI language (the same spelling as the S4 list)', () => {
+  assert.equal(figureDisplayName('waltz', 'Whisk', 'ja-JP'), 'ウィスク');
+  assert.equal(figureDisplayName('waltz', 'Whisk', 'en'), 'Whisk');
+  assert.equal(figureDisplayName('waltz', 'Chasse from PP', 'ja-JP'), 'シャッセ フロム PP');
+  assert.equal(figureDisplayName('waltz', 'Not A Figure', 'ja-JP'), 'Not A Figure');
 });

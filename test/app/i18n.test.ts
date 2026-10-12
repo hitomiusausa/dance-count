@@ -47,9 +47,9 @@ test('device languages resolve to ja-JP only for Japanese, English otherwise', (
 });
 
 test('translator returns the locale string and falls back to English then the key', () => {
-  assert.equal(createAppTranslator('ja-JP').t('tabPractice'), '練習');
-  assert.equal(createAppTranslator('en').t('tabPractice'), 'Practice');
-  assert.equal(createAppTranslator('de').t('tabPractice'), 'Practice');
+  assert.equal(createAppTranslator('ja-JP').t('tabFigures'), 'フィガー');
+  assert.equal(createAppTranslator('en').t('tabFigures'), 'Figures');
+  assert.equal(createAppTranslator('de').t('tabFigures'), 'Figures');
 });
 
 test('every dance has a display name in both locales (dance-profiles name is not used for display)', () => {

@@ -1,15 +1,18 @@
 import { buildHash, type ScreenId, type TabId } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
+import { replaceRoute } from '../state/route.ts';
 import type { IconName } from './icon-names.ts';
 import { Icon } from './Icon.tsx';
 
-const TABS: Array<{ id: TabId; screen: ScreenId; icon: IconName; label: 'tabPractice' | 'tabRoutines' | 'tabSettings' }> = [
-  { id: 'practice', screen: 'S1', icon: 'home', label: 'tabPractice' },
-  { id: 'routines', screen: 'S3', icon: 'list', label: 'tabRoutines' },
-  { id: 'settings', screen: 'S6', icon: 'gear', label: 'tabSettings' }
+// D56（Ruling 116-1）: 下タブは「使う」の 2 つ（フィガー＝U1・ルーティン＝U2）だけ。「フィガー」の語は D56 §1 (b)。
+const TABS: Array<{ id: TabId; screen: ScreenId; icon: IconName; label: 'tabFigures' | 'tabRoutines' }> = [
+  { id: 'practice', screen: 'S1', icon: 'home', label: 'tabFigures' },
+  { id: 'routines', screen: 'U2', icon: 'list', label: 'tabRoutines' }
 ];
 
 // 下タブ（仕様 §3・Ruling 17）。アイコン＋文字。1024px 以上は CSS だけで上部に移る（Ruling 21）。
+// タブの切替は履歴を積まない（置き換え）: 「‹ 表紙」（履歴があれば 1 つ戻る）と iPhone の戻るスワイプが、どちらのタブからでも表紙に着く
+// （積むと U1 → U2 の後の「‹ 表紙」が U1 に戻ってしまう。Ruling 116-2 の読み替え＝計画者の発見）。
 export function TabBar({ current }: { current: TabId }) {
   const { translator } = useI18n();
   return (
@@ -20,6 +23,7 @@ export function TabBar({ current }: { current: TabId }) {
           class="dc-tab"
           href={buildHash({ screen: tab.screen, params: {} })}
           aria-current={tab.id === current ? 'page' : undefined}
+          onClick={event => { event.preventDefault(); if (tab.id !== current) replaceRoute({ screen: tab.screen, params: {} }); }}
         >
           <Icon name={tab.icon} />
           <span>{translator.t(tab.label)}</span>

@@ -1,6 +1,7 @@
 import { DANCE_PROFILES } from '../../engine/dance-profiles.js';
 import type { AppLocale } from '../i18n/index.ts';
 import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
+import { isFigureSlug } from '../routines/figure-names.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
 import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
@@ -20,6 +21,7 @@ export interface AppSettings {
   selectedVoiceId: string;                  // 声の ID（標準・録音・受け取り）。見つからない・未完成なら再生時に標準（英語）へ落とす（Ruling 61-2）
   voiceOffsetMsByVoiceId: Record<string, number>;   // 標準の声のタイミング（ms・±200・0 は持たない）
   lastDanceId: string | null;               // 「前回」カード（無ければ出さない）
+  lastFigure: string | null;                // 前回のフィガー（D57・Ruling 121。監修表の slug。基本のカウントなら null。lastDanceId と組）
   lastTemplateByDance: Record<string, string>;
   speedPresetByDance: Record<string, SpeedChoice>;
   customBpmByDance: Record<string, number>;
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   selectedVoiceId: STANDARD_VOICE_ID,
   voiceOffsetMsByVoiceId: {},
   lastDanceId: null,
+  lastFigure: null,
   lastTemplateByDance: {},
   speedPresetByDance: {},
   customBpmByDance: {},
@@ -66,6 +69,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
     selectedVoiceId: isVoiceId(source.selectedVoiceId) ? source.selectedVoiceId : STANDARD_VOICE_ID,
     voiceOffsetMsByVoiceId: pickVoiceOffsets(source.voiceOffsetMsByVoiceId),
     lastDanceId: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) ? source.lastDanceId : null,
+    lastFigure: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) && isFigureSlug(source.lastFigure) ? source.lastFigure : null,
     lastTemplateByDance: pickByDance(source.lastTemplateByDance, (danceId, value) =>
       typeof value === 'string' && DANCES[danceId]!.templates.includes(value) ? value : undefined),
     speedPresetByDance: pickByDance(source.speedPresetByDance, (_danceId, value) =>

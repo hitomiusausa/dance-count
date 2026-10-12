@@ -1,4 +1,5 @@
 import { APP_VERSION } from '../app-version.ts';
+import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { IconName } from '../components/icon-names.ts';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
@@ -6,8 +7,6 @@ import type { AppLocale, MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
 import { buildHash, type ScreenId } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
-import { DEFAULT_VOICE, voiceDisplayName } from '../voices/selection.ts';
-import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 const LANGUAGES: Array<{ locale: AppLocale; label: string; lang: string }> = [
   { locale: 'ja-JP', label: '日本語', lang: 'ja' },
@@ -20,20 +19,17 @@ const GROUPS: Array<{ group: string; heading: MessageKey; rows: Array<{ screen: 
   { group: 'help', heading: 'settingsHelpHeading', rows: [
     { screen: 'S12', icon: 'plus-square', label: 'settingsInstall' },
     { screen: 'S11', icon: 'alert', label: 'soundHelpTitle' }
-  ] },
-  { group: 'teacher', heading: 'forTeachers', rows: [
-    { screen: 'S8', icon: 'mic', label: 'recordVoice' },
-    { screen: 'S9', icon: 'share', label: 'shareRoutines' }
   ] }
 ];
 
-// S6 設定（仕様 §4 S6・Ruling 60-8・98）。上から: 言語（切替は即保存。Ruling 26）・声（→ S7。今の声の名前を右に）・
-// 「困った時は」（S12・S11）・「先生の方へ」（S8・S9）・「プライバシー・アプリについて」（→ S13。版を右に）＝主要操作 5（上限ちょうど。v1 ではもう足さない）
+// S6 設定（仕様 §4 S6・Ruling 60-8・98・D56 Ruling 115-4）。表紙の行から来る（左上「‹ 表紙」・下タブ無し）。上から: 言語（切替は即保存。Ruling 26）・
+// 「困った時は」（S12・S11）・「プライバシー・アプリについて」（→ S13。版を右に）＝主要操作 3。
+// 「声」は再生画面の声チップから（D56-(3)）、「先生の方へ」（録音・配る）は表紙の「作る」へ移した（Ruling 115-4）
 export function SettingsScreen() {
   const { translator, setLocale } = useI18n();
-  const { voice } = usePlaybackVoice();
   return (
     <main class="dc-screen" data-screen="S6">
+      <BackButton screen="S6" />
       <h1 class="dc-heading">{translator.t('settingsTitle')}</h1>
       <UpdateBanner />
       <h2 class="dc-field-label">{translator.t('settingsLanguage')}</h2>
@@ -49,12 +45,6 @@ export function SettingsScreen() {
           );
         })}
       </div>
-      <a class="dc-link-row" href={buildHash({ screen: 'S7', params: {} })}>
-        <Icon name="voice" />
-        <span class="dc-link-label">{translator.t('voicesTitle')}</span>
-        <small class="dc-link-value">{voiceDisplayName(translator, voice ?? DEFAULT_VOICE, 'chip')}</small>
-        <Icon name="chev-r" />
-      </a>
       {GROUPS.map(({ group, heading, rows }) => (
         <div key={group} class="dc-settings-group" role="group" aria-labelledby={`dc-s6-${group}`} data-group={group}>
           <h2 class="dc-field-label dc-settings-section" id={`dc-s6-${group}`}>{translator.t(heading)}</h2>

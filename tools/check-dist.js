@@ -21,7 +21,9 @@ const DATA_MARKERS = {
   'legacy-routines-report.json': ['legacy-routines-report', 'mechanically-valid-unreviewed', 'issueCounts'],
   'imported-routine-sources.json': ['imported-routine-sources', 'printedCounts', 'printedName']
 };
-const FORBIDDEN_CONTENT = Object.values(DATA_MARKERS).flat();
+// 監修シート（docs/app-v1/figure-counts-review.md・D52・Ruling 110-2）の見出しの目印。シートや未監修の案を誰かが import したら落とす。
+const REVIEW_SHEET_MARKER = 'FIGURE-COUNTS-DRAFT';
+const FORBIDDEN_CONTENT = [...Object.values(DATA_MARKERS).flat(), REVIEW_SHEET_MARKER];
 // 音声などの実バイナリ以外は拡張子を問わず（.map・.webmanifest・.txt も含め）すべて走査する。
 const BINARY_EXT = /\.(wav|mp3|ogg|m4a|png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i;
 

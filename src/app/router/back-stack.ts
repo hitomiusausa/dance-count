@@ -15,6 +15,12 @@ export function replaceTop(stack: readonly string[], hash: string): string[] {
   return [...stack.slice(0, -1), hashPath(hash)];
 }
 
+// 画面替えの向き（Fable 答え 2026-10-13 §2-1）: 列が縮んだ＝戻った。置き換え（replaceTop）・同じ長さ＝進む扱い。
+// 進む時だけ新しい画面を上端にし、戻る時はブラウザのスクロールの復元を残す（App.tsx）。
+export function wentBack(before: readonly string[], after: readonly string[]): boolean {
+  return after.length < before.length;
+}
+
 export function canGoBackInHistory(stack: readonly string[]): boolean {
   return stack.length > 1;
 }
@@ -23,4 +29,36 @@ export function canGoBackInHistory(stack: readonly string[]): boolean {
 function hashPath(hash: string): string {
   const path = hash.split('?')[0] ?? '';
   return path === '' || path === '#' ? '#/' : path;
+}
+
+// 「‹ 表紙」（親が表紙の画面＝U1・U2・M0・S6）は 1 回で表紙に着く（Fable 答え §1-1・Task 1 修正 1）。
+// 見てきた列の中で一番近い表紙（'#/'）まで何個戻るか。末尾（今の画面）は数えない。無ければ null（表紙へ置き換える）。
+export function stepsBackTo(stack: readonly string[], hash: string): number | null {
+  const target = hashPath(hash);
+  for (let index = stack.length - 2; index >= 0; index -= 1) {
+    if (stack[index] === target) return stack.length - 1 - index;
+  }
+  return null;
+}
+
+// 履歴を n 個戻った後の列（戻った先が末尾。その後の hashchange では recordVisit が何も変えない）。
+export function dropLast(stack: readonly string[], steps: number): string[] {
+  return stack.slice(0, Math.max(1, stack.length - steps));
+}
+
+// 「出口」（S10 の受け取った → U1／U2 など）: 1 つ前が行き先と同じ画面なら、置き換えずに 1 つ戻る。
+// 置き換えると同じ画面が 2 つ続き、「‹」や戻るスワイプの 1 回目が何も起きないように見える（Task 1 修正 1・Repro A）。
+export function exitByBack(stack: readonly string[], hash: string): boolean {
+  return stack.length >= 2 && stack[stack.length - 2] === hashPath(hash);
+}
+
+// 履歴を積まない画面替え（replaceRoute）の段取り（最終レビュー I1・T1）。
+// 1 つ前が行き先と同じなら 'back'（1 つ戻る。後の hashchange で recordVisit が末尾を落とし、見てきた列＝本当の履歴のまま）。
+// 違えば 'replace'（末尾を置き換えた列。直後の合成 hashchange では recordVisit が何も変えない＝二重に落とさない）。
+// 置き換えで [.., X, X] を作ると、本当の履歴は 2 つ並ぶのに列は 1 つ落ちて、次の「‹」の 1 回目が同じ画面へ戻るだけになる。
+export type ReplacePlan = { kind: 'back' } | { kind: 'replace'; stack: string[] };
+
+export function planReplace(stack: readonly string[], hash: string): ReplacePlan {
+  if (exitByBack(stack, hash)) return { kind: 'back' };
+  return { kind: 'replace', stack: replaceTop(stack, hash) };
 }

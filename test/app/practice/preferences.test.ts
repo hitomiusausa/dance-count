@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DANCE_PROFILES } from '../../../src/engine/dance-profiles.js';
 import { DEFAULT_SETTINGS, type AppSettings } from '../../../src/app/settings/settings.ts';
-import { LEAD_IN_BARS, chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars } from '../../../src/app/practice/preferences.ts';
+import { LEAD_IN_BARS, chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars } from '../../../src/app/practice/preferences.ts';
 
 const waltz = DANCE_PROFILES.waltz;
 const apply = (settings: AppSettings, patch: Partial<AppSettings>): AppSettings => ({ ...settings, ...patch });
@@ -53,4 +53,11 @@ test('lead-in switch: off = 0, on = LEAD_IN_BARS (2 bars, D17); stored 0|1 needs
   assert.equal(practiceLeadInBars({ ...DEFAULT_SETTINGS, countInBars: 1 }), 2);
   assert.equal(practiceLeadInBars({ ...DEFAULT_SETTINGS, countInBars: 0 }), 0);
   assert.equal(practiceLeadInBars(DEFAULT_SETTINGS), 2);
+});
+
+test('a reviewed figure decides the counts; without one the remembered pattern does (D57・Ruling 120-3)', () => {
+  const remembered = apply(DEFAULT_SETTINGS, { lastTemplateByDance: { waltz: '12&3' } });
+  assert.equal(practiceCounts(waltz, remembered, { counts: '123123' }), '123123', 'two-bar figures are counts too');
+  assert.equal(practiceCounts(waltz, remembered, null), '12&3');
+  assert.equal(practiceCounts(waltz, DEFAULT_SETTINGS, null), waltz.templates[0]);
 });

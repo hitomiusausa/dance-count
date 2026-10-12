@@ -11,7 +11,7 @@ test('the Japanese instructions are the spec §8 text with the stage-7 Android l
   assert.equal(studentInstructions(ja, { hasVoice: true, appUrl: 'https://count.dancemap.jp/' }), [
     'Dance Count で、私の声のカウントを使えます。',
     '【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」',
-    '2. Dance Count を開き「先生の声で練習」→「ファイルから受け取る」→「ファイルを選ぶ」',
+    '2. Dance Count を開き「使う」→ 下の「ルーティン」→「ファイルから受け取る」→「ファイルを選ぶ」',   // D56（Ruling 115-7）: 声あり・ルーティンだけとも同じ 1 通り
     '3. 「最近使った項目」からこのファイルを選び「使う」',
     '【Android】このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」）',
     '（スマホで受け取るのが便利です）',
@@ -24,7 +24,9 @@ test('English mirrors it; routines-only files change the first line; no URL mean
   const lines = text.split('\n');
   assert.equal(lines[0], 'You can use my routines in Dance Count.');
   assert.equal(lines[4], '[Android] Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”)');
+  assert.equal(lines[2], '2. Open Dance Count → “Use” → “Routines” (bottom tab) → “Receive from a file” → “Choose a file”');
   assert.equal(lines.length, 6);
+  assert.equal(studentInstructions(ja, { hasVoice: false, appUrl: '' }).split('\n')[2], studentInstructions(ja, { hasVoice: true, appUrl: '' }).split('\n')[2], 'step 2 is the same for routines-only files (D56)');
   assert.ok(!text.includes('App:'));
   assert.equal(studentInstructions(ja, { hasVoice: false, appUrl: '' }).split('\n')[0], 'Dance Count で、私のルーティンを使えます。');
   assert.equal(studentInstructions(en, { hasVoice: true, appUrl: 'not a url' }).split('\n').length, 6);

@@ -9,6 +9,7 @@
 // 同じ名前の行で形をタップ →「3件まとめて決定」→ 3 行とも変わり、1 回の元に戻すで 3 行とも戻る（最終レビュー M4）→
 // 名前が空の追加の行は種目のフィガーの一覧（D20・Ruling 54）→ ひらがなで打ってもカタカナの候補（D21）→
 // 英語表示で一覧の "Whisk" は日本語の「ウィスク」の行と同じフィガー＝複製の形（D22）→
+// 前に使ったカウントが名前のタップで入る・打ち替えたら印が消える（D52）→
 // キーボードを開いたままのドラッグで画面が流れない・鳴らしている間は帯が残る（最終レビュー2 I1・M4）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。失敗があれば終了コード1。
 import { chromium, webkit } from 'playwright-core';
@@ -68,20 +69,21 @@ try {
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 
-  await page.goto(`${BASE}#/routines`);
-  await page.waitForSelector('[data-screen="S3"]');
-  if (await page.locator('[data-row]').count()) errors.push('S3 should start empty');
+  // D56: 作る側の一覧は M1（#/make/routines）
+  await page.goto(`${BASE}#/make/routines`);
+  await page.waitForSelector('[data-screen="M1"]');
+  if (await page.locator('[data-row]').count()) errors.push('M1 should start empty');
 
-  // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず S3 に着く・名前は残る
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず M1 に着く・名前は残る
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.locator('[data-group="dance"] button').first().click();
   await page.locator('[data-screen="S4"] .dc-field input').fill('金曜クラス');
   await page.goBack();
-  await page.waitForSelector('[data-screen="S3"]');
-  if (!page.url().endsWith('#/routines')) errors.push(`back after typing a name should land on the list (url ${page.url()})`);
+  await page.waitForSelector('[data-screen="M1"]');
+  if (!page.url().endsWith('#/make/routines')) errors.push(`back after typing a name should land on the list (url ${page.url()})`);
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   const typed = await page.locator('[data-row] .dc-row-head').allTextContents();
   if (typed.length !== 1 || !typed[0]?.includes('金曜クラス')) errors.push(`a name typed before going back was not kept: ${JSON.stringify(typed)}`);
   await page.locator('[data-row] .dc-row-head').first().click();
@@ -90,7 +92,7 @@ try {
   await page.waitForSelector('.dc-empty');
 
   // 作る: 新しいルーティン → 種目（ワルツ）→ 0件の下固定「＋ フィガーを追加」
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.waitForSelector('[data-screen="S4"] [data-group="dance"]');
   await page.locator('[data-group="dance"] button').first().click();
   if (!page.url().endsWith('#/routines/new')) errors.push(`choosing a dance must not save yet (url ${page.url()})`);
@@ -158,10 +160,10 @@ try {
 
   // 戻る → 一覧 → 再読み込みしても残る
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"] [data-row]');
+  await page.waitForSelector('[data-screen="M1"] [data-row]');
   const rows = await page.locator('[data-row] .dc-row-head').allTextContents();
   if (rows.length !== 1 || !rows[0]?.includes('3 フィガー')) errors.push(`after reload the list shows ${JSON.stringify(rows)}`);
   await page.locator('[data-row] .dc-row-head').first().click();
@@ -170,9 +172,9 @@ try {
   const firstCounts = (await page.locator('.dc-figure-head small').first().textContent())?.trim();
   if (firstCounts !== '1 2 3 1 2 3') errors.push(`back with a valid open row should commit it (first figure shows "${firstCounts}")`);
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
 
-  // 鳴らす: 行を開いて ▶（タブ → 行 → ▶ の3タップ目）→ S5 ですぐ鳴る
+  // 鳴らす（作る側の試聴）: 行を開いて ▶ 試聴 → S5 ですぐ鳴る
   await page.locator('[data-row] .dc-row-head').first().click();
   await page.locator('[data-row-body] .dc-primary').click();
   await page.waitForSelector('[data-screen="S5"]');
@@ -180,18 +182,18 @@ try {
 
   // 消す: 戻る → 行を開いて削除 → 確認の「削除する」→ 0件
   await page.locator('[data-back]').click();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
   await page.locator('[data-row] .dc-row-head').first().click();
   await page.locator('[data-row-body] .dc-button--secondary').last().click();
   await page.locator('dialog[open] .dc-primary').click();
   await page.waitForSelector('.dc-empty');
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
-  await page.waitForSelector('[data-screen="S3"]');
+  await page.waitForSelector('[data-screen="M1"]');
   if (await page.locator('[data-row]').count()) errors.push('the deleted routine came back after reload');
 
   // 使える文字はいつも見える（Ruling 50 D14）: 空欄でも「使える文字：1・2・3・&」。12a3 はその行が赤く理由の行は無し。&123 は灰のまま下に理由。
-  await page.locator('[data-screen="S3"] .dc-primary').click();
+  await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.locator('[data-group="dance"] button').first().click();
   await page.locator('.dc-dock .dc-primary').click();
   await addFigure(page, 'ウィスク', '123');
@@ -336,6 +338,38 @@ try {
   if ((await kanaForm.locator('.dc-primary').textContent())?.trim() !== COPY) errors.push(`the katakana name should switch to "${COPY}" ("${await kanaForm.locator('.dc-primary').textContent()}")`);
   await context.close();
 
+  // フィガーを選んだらカウントを自動で入れる（D52・Ruling 106〜108・112-3）: ウィスク（12&3）を持つ waltz13 が端末にある所で、
+  // 2 本目のワルツ（waltzAuto）の追加の行 → 一覧の「ウィスク」をタップ → 欄に 12&3・下に「前に使ったカウントです」→「追加する」の 2 タップで行が増える。
+  // 次の追加の行で「ナチュラルターン」→ 自動で入った欄を打ち替えると印の行が消え、名前を変えても打った値は置き換わらない
+  const autoContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'ja-JP' });
+  const autoPage = await autoContext.newPage();
+  autoPage.on('pageerror', error => errors.push(`pageerror (auto counts): ${error.message}`));
+  await autoPage.goto(`${BASE}#/`);
+  await autoPage.waitForSelector('[data-screen]');
+  await autoPage.evaluate(seedRoutinesInPage, [R.waltz13, R.waltzAuto]);
+  await openAfterSeed(autoPage, `${BASE}#/routines/${R.waltzAuto.id}/edit`);
+  await autoPage.waitForSelector('[data-screen="S4"]');
+  const usedWhisk = R.waltz13.figures.find(figure => figure.name === 'ウィスク');
+  await autoPage.locator('.dc-add-tail').click();
+  const autoForm = autoPage.locator('.dc-figure-form').last();
+  await autoForm.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ウィスク$/ }).click();
+  if ((await autoForm.locator('.dc-input--counts').inputValue()) !== usedWhisk?.counts) errors.push(`auto counts: tapping ウィスク should fill ${usedWhisk?.counts} ("${await autoForm.locator('.dc-input--counts').inputValue()}")`);
+  const autoNote = (await autoForm.locator('[data-auto-counts="history"]').textContent().catch(() => null))?.trim();
+  if (autoNote !== '前に使ったカウントです') errors.push(`auto counts: the note under the counts should read 前に使ったカウントです ("${autoNote}")`);
+  await autoForm.locator('.dc-primary').click();   // 2 タップ目
+  const autoRows = await autoPage.locator('.dc-figure-head').allTextContents();
+  if (autoRows.length !== 2 || !autoRows[1].includes('ウィスク') || !autoRows[1].includes([...usedWhisk.counts].join(' '))) errors.push(`auto counts: "Add" should add ウィスク ${usedWhisk?.counts} as the 2nd row (${JSON.stringify(autoRows)})`);
+  await autoPage.locator('.dc-add-tail').click();
+  const autoForm2 = autoPage.locator('.dc-figure-form').last();
+  await autoForm2.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ナチュラルターン$/ }).click();
+  if (await autoForm2.locator('[data-auto-counts]').count() !== 1) errors.push('auto counts: tapping ナチュラルターン should fill the counts with the note');
+  await autoForm2.locator('.dc-input--counts').fill('123123');
+  if (await autoForm2.locator('[data-auto-counts]').count()) errors.push('auto counts: typing over the filled counts should remove the note');
+  await autoForm2.locator('input').nth(0).fill('ウィスク');   // 同じルーティンにあるので複製の形（D19）。打った値は残る
+  await autoForm2.locator('input').nth(0).fill('リバースターン');
+  if ((await autoForm2.locator('.dc-input--counts').inputValue()) !== '123123') errors.push(`auto counts: typed counts must not be replaced by a name change ("${await autoForm2.locator('.dc-input--counts').inputValue()}")`);
+  await autoContext.close();
+
   // 同じフィガーなら同じ名前（D22）: 英語表示で、日本語の「ウィスク」が入っているルーティン（waltz13 の 4 行目）の追加の行 →
   // 一覧の "Whisk" をタップ → 複製の形（注意は保存した名前を英語の表示で "Whisk"・カウントの欄なし・"Add a copy (…)"）→ 押すと 14 行目が足される
   const enContext = await browser.newContext({ viewport: { width: 375, height: 667 }, locale: 'en-US' });
@@ -470,7 +504,7 @@ try {
   await clearPage.waitForSelector('[data-screen="S13"]');
   await clearPage.locator('.dc-about-delete').click();
   await clearPage.locator('dialog[open] .dc-primary').click();
-  await clearPage.waitForFunction(() => location.hash === '#/' && document.querySelector('[data-screen="S1"]'));
+  await clearPage.waitForFunction(() => location.hash === '#/' && document.querySelector('[data-screen="S0"]'));
   const left = await clearPage.evaluate(() => new Promise(resolve => {
     const request = indexedDB.open('dance-count-v2');
     request.onsuccess = () => {
@@ -482,7 +516,7 @@ try {
     };
   }));
   if (Object.values(left).some(count => count !== 0)) errors.push(`Ruling 99-4: data left after "Delete all data" ${JSON.stringify(left)}`);
-  if (await clearPage.locator('[data-resume]').count()) errors.push('Ruling 99-4: S1 still shows "Last time" after "Delete all data"');
+  if (await clearPage.locator('[data-resume]').count()) errors.push('Ruling 99-4: the cover still shows "Last practice" after "Delete all data"');
   await clearContext.close();
 } finally {
   await browser.close();
@@ -529,4 +563,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);

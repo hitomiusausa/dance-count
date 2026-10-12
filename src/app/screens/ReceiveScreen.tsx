@@ -16,14 +16,14 @@ import { RECEIVED_FILE_FALLBACK, cleanReceivedFileName } from '../share/filename
 import { BUNDLE_ACCEPT } from '../share/limits.ts';
 import { commitImport, planImport, type ImportPlan } from '../share/plan-import.ts';
 import { useI18n } from '../state/i18n.ts';
-import { replaceRoute } from '../state/route.ts';
+import { exitTo } from '../state/route.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 import { useStorage } from '../state/storage.ts';
 import { chooseVoice, packSelection } from '../voices/selection.ts';
 import { VOICE_LIMITS, deleteVoicePack, listVoicePacks, packProgress, saveVoicePack, type VoicePackRecord } from '../voices/store.ts';
 
-// S10 受け取る（仕様 §4 S10・Ruling 83）。集中画面。選ぶ → 確認 → 受け取った の 3 つ。生徒の操作は「ファイルを選ぶ → 使う → ホームへ」の 3 タップ。
+// S10 受け取る（仕様 §4 S10・Ruling 83）。集中画面。選ぶ → 確認 → 受け取った の 3 つ。生徒の操作は「ファイルを選ぶ → 使う → 種目を選ぶ」の 3 タップ。
 // 枠（[data-alert]）は選ぶ画面に 1 つだけ（読めない・大きすぎ・新しすぎ・声が 20・LINE の中）。確認の画面の枠は「保存できませんでした」だけ。
 // 同じ先生の声・同じルーティンは「使う」で置き換える（D38）。受け取った声はその場で選ばれる（Ruling 83-3）。
 // Android の共有（段7の Service Worker）から来た時は受け口（inbox）のファイルで「確認」から始まる（Ruling 79-2）。
@@ -131,9 +131,11 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
         <p class="dc-body">
           {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
+        {/* Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束は、出口（種目を選ぶ）は 1 つのまま、ルーティンの在りかを 1 文で */}
+        {voice && plan.routines.length > 0 && <p class="dc-body">{phrased(translator, 'receivedRoutinesToo')}</p>}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
-            onClick={() => replaceRoute({ screen: voice ? 'S1' : 'S3', params: {} })}>
+            onClick={() => exitTo({ screen: voice ? 'S1' : 'U2', params: {} })}>
             <span>{translator.t(voice ? 'goHome' : 'seeRoutines')}</span><Icon name="chev-r" />
           </button>
         </div>

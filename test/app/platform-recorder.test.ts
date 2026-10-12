@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MIME_TYPES, RecorderError, TAKE_MS, pickMimeType, recordTake, recorderErrorKind, recorderSupported, requestMicrophone } from '../../src/app/platform/recorder.ts';
+import { MIME_TYPES, RecorderError, TAKE_MS, pickMimeType, recordTake, recorderErrorKind, recorderNeedsHttps, recorderSupported, requestMicrophone } from '../../src/app/platform/recorder.ts';
 import { playBuffer, withRecordingSession } from '../../src/app/platform/audio-context.ts';
 
 test('1.5 s takes and the legacy mime order (Ruling 57-1)', () => {
@@ -10,6 +10,14 @@ test('1.5 s takes and the legacy mime order (Ruling 57-1)', () => {
   assert.equal(pickMimeType(() => true), 'audio/webm;codecs=opus', 'Chrome');
   assert.equal(pickMimeType(() => false), undefined, 'browser default');
   assert.equal(pickMimeType(() => { throw new Error('x'); }), undefined);
+});
+
+test('an insecure context (http on a LAN IP) needs https to record (D53)', () => {
+  assert.equal(recorderNeedsHttps({ isSecureContext: false }), true);
+  assert.equal(recorderNeedsHttps({ isSecureContext: true }), false);
+  assert.equal(recorderNeedsHttps({}), false, 'no isSecureContext: keep the usual message');
+  assert.equal(recorderNeedsHttps(undefined), false, 'no window (node)');
+  assert.equal(recorderNeedsHttps(), false, 'default context in node');
 });
 
 test('getUserMedia failures map to denied or failed (Ruling 57-1)', () => {

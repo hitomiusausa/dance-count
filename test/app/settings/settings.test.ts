@@ -102,3 +102,11 @@ test('the first-playback and Home Screen card hints start false and only true co
   assert.equal(broken.hints.firstPlaybackDone, false);
   assert.equal(broken.hints.homeScreenCardDismissed, false);
 });
+
+test('the last figure is a slug kept with the last dance; anything else is null (D57・Ruling 121-1)', () => {
+  assert.equal(DEFAULT_SETTINGS.lastFigure, null);
+  assert.equal(normalizeSettings({ lastDanceId: 'waltz', lastFigure: 'chasse-from-pp' }).lastFigure, 'chasse-from-pp');
+  for (const lastFigure of ['Whisk', 'a b', '', 3, null, '../x']) assert.equal(normalizeSettings({ lastDanceId: 'waltz', lastFigure }).lastFigure, null, String(lastFigure));
+  assert.equal(normalizeSettings({ lastDanceId: 'hiphop', lastFigure: 'whisk' }).lastFigure, null, 'no dance, no figure');
+  assert.equal(normalizeSettings({ lastFigure: 'whisk' }).lastFigure, null);
+});

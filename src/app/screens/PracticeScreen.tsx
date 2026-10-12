@@ -4,14 +4,16 @@ import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
-import { beatIndexInBar } from '../practice/beat-indicator.ts';
+import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
-import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
+import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
+import { figureDisplayName } from '../routines/figure-names.ts';
+import { reviewedFigureBySlug } from '../routines/reviewed-counts.ts';
 import type { AppSettings } from '../settings/settings.ts';
 import { takeAutoplay } from '../state/autoplay.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -19,14 +21,16 @@ import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
-type Profile = DanceProfileLike & { beatsPerBar: number };
-
 // S2 再生（仕様 §4・Ruling 13・18・19・21・23・28〜32・42）。部品は practice/controls.tsx（S5 と共通）。
-export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?: UiState }) {
+// D57（Ruling 120）: figureSlug があれば監修済みのフィガーのカウントを鳴らす（S2 の counts は practiceCounts の 1 本だけ。エンジン・セッションは同じ経路）。
+// その時は見出しの下に「ウィスク · 1 2 3」、くわしくの「カウントの型」は出さない（型はフィガーが決めている）。速さ・メトロノーム・合図・繰り返しは種目ごとの記憶のまま
+export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: string; figureSlug?: string; uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();
-  const profile = getDanceProfile(danceId) as Profile;
+  const profile = getDanceProfile(danceId) as DanceProfileLike;
   const choice = practiceChoice(profile, settings);
+  const figure = reviewedFigureBySlug(danceId, figureSlug);   // resolve.ts が表に無い slug を基本へ置き換えるので、figureSlug があれば必ずある
+  const counts = practiceCounts(profile, settings, figure);
   const { session, view } = usePracticeSession(danceId);
   const playback = usePlaybackVoice();
   // クリック処理は描画を待たずに続けて来ることがある（連打）。常に最新の設定・再生状態・声を読む（Ruling 42）。
@@ -40,13 +44,13 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: nextChoice.counts, bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
 
-  // 開いた時点で「前回」を書く（Ruling 26）。
-  useEffect(() => { update({ lastDanceId: danceId }); }, [session]);
+  // 開いた時点で「前回」を書く（Ruling 26）。フィガーも同じ 1 回で（D57・Ruling 121-1。基本なら null）
+  useEffect(() => { update({ lastDanceId: danceId, lastFigure: figure?.slug ?? null }); }, [session]);
   // 前回カードの印があれば、声が決まった時点ですぐ鳴らす（Ruling 32・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
     if (autoplayChecked.current || !playback.voice) return;
@@ -87,10 +91,11 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
   const current = () => latest.current.settings;
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
   const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
-  const beat = view.playing && !view.countIn ? beatIndexInBar(view.originalTick, profile.beatsPerBar) : null;
+  // D55: 帯は鳴っている型（セッションの program）。止まっている間は今の型を表示のためだけに語にする。はじめの合図の間は点けない
+  const strip = stripView(stripCells(view.program ?? idleProgram(danceId, counts)), view.playing && !view.countIn ? view.originalTick : null);
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。
-  const idleText = view.playing ? '' : formatCounts(danceId, choice.counts).split(' ')[0] ?? '';
+  const idleText = view.playing ? '' : formatCounts(danceId, counts).split(' ')[0] ?? '';
   const playing = view.playing || view.starting;
 
   return (
@@ -100,10 +105,10 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
         <div>
           <header class="dc-playhead">
             <h1>{danceName(danceId, translator.locale)}</h1>
-            <small>{formatCounts(danceId, choice.counts)}</small>
+            <small>{figure ? `${figureDisplayName(danceId, figure.englishName, translator.locale)} · ${formatCounts(danceId, counts)}` : formatCounts(danceId, counts)}</small>
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} beatsPerBar={profile.beatsPerBar} beat={beat} />
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} />
         </div>
         <div>
           <SpeedChoices presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
@@ -112,7 +117,7 @@ export function PracticeScreen({ danceId, uiState }: { danceId: string; uiState?
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
           <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
-            {profile.templates.length > 1 && (
+            {!figure && profile.templates.length > 1 && (
               <div>
                 <div class="dc-field-label"><span>{translator.t('countPattern')}</span></div>
                 <div class="dc-chips" role="radiogroup" aria-label={translator.t('countPattern')} data-group="pattern">

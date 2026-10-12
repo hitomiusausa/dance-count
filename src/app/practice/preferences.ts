@@ -24,6 +24,12 @@ export function practiceChoice(profile: DanceProfileLike, settings: AppSettings)
   return { counts, speed: effective, bpm, customBpm: effective === 'custom' ? bpm : null };
 }
 
+// D57（Ruling 120-3）: S2 が鳴らすカウントは 1 か所で決める。フィガー（監修済み）の時はそのカウント、無ければ種目の型（practiceChoice）。
+// 鳴らす・止まっている間の 1 語目・帯・見出し下の型の文字はすべてこの 1 本を使う（フィガーの時は lastTemplateByDance を読まない）
+export function practiceCounts(profile: DanceProfileLike, settings: AppSettings, figure: { counts: string } | null): string {
+  return figure?.counts ?? practiceChoice(profile, settings).counts;
+}
+
 // S2 の設定をエンジンへ渡す小節数にする（オフ=0、オン=LEAD_IN_BARS）。
 export function practiceLeadInBars(settings: Pick<AppSettings, 'countInBars'>): 0 | 2 {
   return settings.countInBars === 1 ? LEAD_IN_BARS : 0;

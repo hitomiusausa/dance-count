@@ -42,8 +42,23 @@ export const UI_CHECK_ROUTINES = {
   empty: routine('r-uicheck-empty00', 'tango', 'タンゴの練習', 0, 1),
   longJa: routine('r-uicheck-longja40', 'waltz', LONG_JA, 3, 2, LONG_FIGURE),
   longEn: routine('r-uicheck-longen40', 'jive', LONG_EN, 3, 3),
-  waltzOffBar: offBarRoutine()
+  waltzOffBar: offBarRoutine(),
+  waltzAuto: autoCountsRoutine(),
+  waltzLongFigure: longFigureRoutine()
 };
+
+// D55・Ruling 114-3: 13 語以上のフィガー（15 語）を持つワルツ。S5 の帯は 12 語ずつの頁（li は 12 まで）。名前は照合済みの語、カウントは型 123 の 5 回（打った値の見本・正しいカウントを名乗らない）
+function longFigureRoutine() {
+  const base = routine('r-uicheck-waltzlong', 'waltz', 'ワルツの長いフィガー', 0, 6);
+  return { ...base, figures: [{ id: 'f-uicheck-0000', name: 'ナチュラルターン', counts: '123123123123123' }, { id: 'f-uicheck-0001', name: 'リバースターン', counts: '123' }] };
+}
+
+// D52・Ruling 112-3: 「前に使ったカウント」の検査用の 2 本目のワルツ。waltz13 に無い一覧の 17 番目のフィガーを templates[1]（12&3）で持つ。
+// S4 の waltz13 の追加の行でこの名前をタップすると、欄に 12&3 が入り、形のチップが 1 つ押され、「前に使ったカウントです」の行が出る。
+function autoCountsRoutine() {
+  const base = routine('r-uicheck-waltzauto', 'waltz', 'ワルツの自動入力の確認', 0, 5);
+  return { ...base, figures: [{ id: 'f-uicheck-0000', name: 'フォーラウェイリバース＆スリップピボット', counts: DANCE_PROFILES.waltz.templates[1] }] };
+}
 
 // 小節の注意（D16・Ruling 52-5）の検査用。わざと 3 拍の倍数でないカウント（12）を 2 件入れる＝行の注意 2 件（全文 1・短い形 1）、
 // 全体は 6+2+2=10 拍で小節の途中で終わる。templates の外のカウントだが、注意を出すための「打ち間違い」の見本で、正しいカウントを名乗らない。

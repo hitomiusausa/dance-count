@@ -4,6 +4,7 @@ import { PUBLIC_APP_URL } from '../app-url.ts';
 import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
+import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
 import { canShareFile, copyText, downloadFile, shareFile } from '../platform/files.ts';
 import { routinePlayability, type Routine } from '../routines/routine.ts';
@@ -18,7 +19,7 @@ import { useSettings } from '../state/settings.ts';
 import { takeShareIntent } from '../state/share-intent.ts';
 import { useStorage } from '../state/storage.ts';
 import { packDisplayName } from '../voices/selection.ts';
-import { isCompletePack, listVoicePacks, type VoicePackRecord } from '../voices/store.ts';
+import { isCompletePack, listVoicePacks, packProgress, type VoicePackRecord } from '../voices/store.ts';
 
 // S9 配る（仕様 §4 S9・Ruling 82）。集中画面。上から 名前 → 声（入れない／録音した完成の声）→ 同意（声を選んだ時だけ）→ ルーティン → 下固定「ファイルを作る」。
 // 声の指定なしで来た時（S6・S3 から）は 名前 → ルーティン → 声 → 同意（段5 Task 10b・share/layout.ts）。
@@ -35,6 +36,8 @@ export function ShareScreen() {
   const locale = translator.locale;
   const [intent] = useState(() => takeShareIntent());
   const [voices, setVoices] = useState<VoicePackRecord[] | null>(null);
+  // 録音が途中の自分の声（録れた語が一番多い 1 本。同数なら新しい方）。配れる声が無い時の 1 行に使う（Fable 答え 2026-10-13 §2-3）
+  const [inProgress, setInProgress] = useState<VoicePackRecord | null>(null);
   const [name, setName] = useState(settings.distributorName);
   const [voiceId, setVoiceId] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
@@ -52,6 +55,9 @@ export function ShareScreen() {
       if (!alive) return;
       const recorded = list.filter(pack => pack.origin === 'recorded' && isCompletePack(pack));
       setVoices(recorded);
+      const partial = list.filter(pack => pack.origin === 'recorded' && !isCompletePack(pack) && packProgress(pack).recorded > 0)
+        .sort((a, b) => packProgress(b).recorded - packProgress(a).recorded || b.updatedAt.localeCompare(a.updatedAt));
+      setInProgress(partial[0] ?? null);
       if (intent?.voiceId && recorded.some(pack => pack.id === intent.voiceId)) setVoiceId(intent.voiceId);
     });
     return () => { alive = false; };
@@ -143,7 +149,7 @@ export function ShareScreen() {
     <>
       <h2 class="dc-field-label dc-share-heading" id="dc-s9-voice">{translator.t('shareVoiceHeading')}</h2>
       {voices.length === 0
-        ? <p class="dc-share-empty">{phrased(translator, 'shareNoRecordedVoice')}</p>
+        ? <p class="dc-share-empty">{inProgress ? inProgressText(translator, inProgress) : phrased(translator, 'shareNoRecordedVoice')}</p>
         : (
           <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s9-voice" data-group="share-voice">
             {[null, ...voices].map(pack => {
@@ -246,4 +252,11 @@ export function ShareScreen() {
       </div>
     </main>
   );
+}
+
+// 途中の声の 1 行（「日本語の声は 7 / 12 語まで録音ずみです。12 語そろうと配れます。」）。依頼の形にしない（S9 の依頼は「あなたの名前」の 1 つ）
+function inProgressText(translator: AppTranslator, pack: VoicePackRecord) {
+  const { recorded, total } = packProgress(pack);
+  const language = translator.t(pack.locale === 'ja-JP' ? 'languageJapanese' : 'languageEnglish');
+  return phrased(translator, 'shareVoiceInProgress', { language, count: recorded, total });
 }

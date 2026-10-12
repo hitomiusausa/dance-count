@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dance Count — 表紙で「使う／作る」に分ける案（D56・比較モック）</title>
+<style>
+/* 色・寸法は src/app/styles/base.css（B Studio Navy）と同じ値。書体は同梱前提なので外部リンクは張らない（自己完結） */
+:root{--font:"Inter","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;--page:#F2F3F6;--bg:#FFFFFF;--surface:#FFFFFF;--ink:#14213D;--ink2:#4A5670;
+ --primary:#1B2A4A;--on-primary:#FFFFFF;--soft:#EEF0F5;--line:#8790A3;--line-on-soft:#7D8699;--frame:#1B2A4A;--focus:#B45309;
+ --count-ink:#A54D06;--now-bg:#FBEBDD;--warn-ink:#7A3A05;--warn-line:#A54D06;--icon-circle:#14213D;
+ --r:6px;--r-s:4px;--tabh:68px;--track:-0.015em}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.5}
+button,a{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.fill{fill:currentColor;stroke:none}
+/* 台紙 */
+.wrap{max-width:1280px;margin:0 auto;padding:24px 16px 64px}
+h2.sec{margin:48px 0 8px;font-size:28px;line-height:1.25;letter-spacing:var(--track)}
+h2.sec:first-of-type{margin-top:8px}
+.lead{margin:0 0 16px;max-width:64em;font-size:16px;color:var(--ink2)}
+.lead b{color:var(--ink)}
+.frames{display:flex;flex-wrap:wrap;gap:28px 24px;align-items:flex-start}
+.frames figure{margin:0}
+.frames figcaption{margin:0 0 8px;max-width:391px;font-size:16px;font-weight:700;color:var(--ink2);line-height:1.35}
+.frames figcaption .n{display:inline-grid;place-items:center;min-width:24px;height:24px;margin-right:6px;padding:0 6px;border-radius:12px;background:var(--primary);color:#fff;font-size:14px}
+.frames figcaption .rec{display:inline-block;margin-left:6px;padding:0 8px;border-radius:12px;background:var(--count-ink);color:#fff;font-size:14px;line-height:24px}
+.frames figcaption .ops{display:block;margin-top:2px;font-weight:400}
+.phone{position:relative;display:flex;flex-direction:column;width:375px;height:548px;box-sizing:content-box;border:8px solid var(--frame);border-radius:36px;background:var(--bg);overflow:hidden}
+.phone.se{width:320px;height:568px}
+.scr{flex:1;overflow-y:auto;padding:8px 16px 24px;scrollbar-width:none}.scr::-webkit-scrollbar{display:none}
+.scr.tabbed{padding-bottom:calc(var(--tabh) + 16px)}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;height:var(--tabh);padding:0 8px;border-top:1px solid var(--line);background:var(--surface)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;text-decoration:none;font-size:16px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.tab[aria-current=page]{color:var(--primary);font-weight:800}
+/* 共通部品（アプリと同じ型） */
+.hdr{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:48px;margin-bottom:4px}
+.back{display:inline-flex;align-items:center;gap:2px;min-height:48px;min-width:48px;padding:0 8px 0 0;border:none;background:none;text-decoration:none;font-size:18px;font-weight:700;color:var(--primary);white-space:nowrap}
+.util{display:inline-flex;align-items:center;gap:6px;min-height:48px;min-width:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface);font-size:16px;font-weight:700;color:var(--primary);white-space:nowrap}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.appname{margin:0;font-size:22px;font-weight:800;letter-spacing:var(--track)}
+.appsub{font-size:16px;color:var(--ink2)}
+.h1{margin:8px 0 8px;font-size:20px;font-weight:700;line-height:1.2;letter-spacing:var(--track)}
+.h1.big{font-size:22px;margin:16px 0 12px}
+.lbl{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:16px;font-weight:700;color:var(--ink2)}
+.hint{margin:8px 0 0;font-size:16px;color:var(--ink2);line-height:1.4}
+.hint.q{padding-left:1.2em;text-indent:-1.2em}
+.primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:none;border-radius:var(--r);background:var(--primary);color:var(--on-primary);font-size:20px;font-weight:800}
+.secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 14px;border:1px solid var(--primary);border-radius:var(--r-s);background:var(--surface);color:var(--primary);font-size:18px;font-weight:700;text-decoration:none}
+.wide{width:100%}
+.resume{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;margin-top:8px;padding:4px 12px 4px 20px;border:none;border-radius:var(--r);background:var(--primary);color:var(--on-primary);text-align:left}
+.resume .t{display:flex;flex-direction:column;line-height:1.2}.resume small{font-size:16px}.resume b{font-size:24px}
+.resume .go{display:inline-flex;align-items:center;gap:6px;min-height:48px;padding:0 16px;border-radius:var(--r-s);background:var(--on-primary);color:var(--primary);font-size:18px;font-weight:800;white-space:nowrap}
+.linkrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin-top:8px;padding:0 2px;border:none;border-bottom:1px solid var(--line);background:none;text-decoration:none;font-size:18px;font-weight:700;text-align:left}
+.linkrow .lab{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.linkrow .lab small{font-size:16px;font-weight:400;color:var(--ink2)}
+.linkrow .val{font-size:16px;font-weight:400;color:var(--ink2);white-space:nowrap}
+.linkrow > .ic:last-child{color:var(--ink2)}
+.group{margin-top:16px}.group .lbl{margin:0 0 2px}
+.radio{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 2px;border:none;border-bottom:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;text-align:left}
+.radio[aria-checked=true]{color:var(--primary)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.tile{display:flex;flex-direction:column;justify-content:center;gap:0;min-height:48px;padding:2px;border-bottom:1px solid var(--line);text-decoration:none}
+.tile b{font-size:18px;line-height:1.15;letter-spacing:-0.01em}.tile small{font-size:16px;line-height:1.15;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 表紙の扉 */
+.door{display:flex;align-items:center;gap:12px;width:100%;min-height:104px;margin-top:12px;padding:10px 12px 10px 16px;border:1px solid var(--primary);border-radius:var(--r);background:var(--surface);color:var(--primary);text-align:left;text-decoration:none}
+.door.main{background:var(--primary);color:var(--on-primary)}
+.door .circ{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:999px;background:var(--icon-circle);color:#fff}
+.door.main .circ{background:var(--on-primary);color:var(--primary)}
+.door .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.door .t b{font-size:26px;font-weight:800;letter-spacing:var(--track)}
+.door .t small{margin-top:2px;font-size:16px;font-weight:400;line-height:1.3}
+.door.main .t small{color:#E4E7EE}
+.door:not(.main) .t small{color:var(--ink2)}
+.door.sm{min-height:72px}
+/* C 案: 扉に付いた「続きから」 */
+.doorset{margin-top:12px;border:1px solid var(--primary);border-radius:var(--r);overflow:hidden}
+.doorset .door{margin:0;border:none;border-radius:0}
+.doorset .cont{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:56px;padding:4px 12px 4px 16px;border:none;border-top:1px solid var(--line-on-soft);background:var(--soft);color:var(--ink);text-align:left}
+.doorset .cont .t{display:flex;flex-direction:column;line-height:1.2}.doorset .cont small{font-size:16px;color:var(--ink2)}.doorset .cont b{font-size:20px}
+.doorset .cont .go{display:inline-flex;align-items:center;gap:6px;min-height:48px;padding:0 14px;border-radius:var(--r-s);background:var(--primary);color:var(--on-primary);font-size:18px;font-weight:800;white-space:nowrap}
+/* 一覧 */
+.rlist{margin-top:12px;border-top:1px solid var(--line)}
+.rrow{border-bottom:1px solid var(--line);padding:4px 0}
+.rhead{display:flex;align-items:center;gap:10px;width:100%;min-height:64px;padding:6px 2px;border:none;background:none;text-align:left;color:var(--ink)}
+.rhead .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}.rhead b{font-size:18px}.rhead small{font-size:16px;color:var(--ink2)}
+.rhead .pl{display:inline-flex;align-items:center;gap:4px;flex:none;min-height:48px;padding:0 10px 0 8px;border-radius:var(--r-s);background:var(--primary);color:var(--on-primary);font-size:16px;font-weight:800}
+.rrow.open{--line:var(--line-on-soft);background:var(--soft)}
+.rrow.open .rhead .ic.chev{transform:rotate(180deg)}
+.racts{display:flex;flex-wrap:wrap;gap:8px;padding:4px 10px 10px}
+.racts .primary{flex:1 1 100%}.racts .secondary{flex:1 0 auto;white-space:nowrap}
+.rrow.off .rhead{color:var(--ink2)}
+.rhead .note{display:flex;align-items:center;gap:6px;font-size:16px;color:var(--warn-ink)}
+.empty{margin:16px 0 0;color:var(--ink2)}
+/* 作る の行 */
+.hub{display:flex;align-items:center;gap:14px;width:100%;min-height:80px;margin-top:0;padding:8px 2px;border:none;border-bottom:1px solid var(--line);background:none;text-align:left;text-decoration:none;color:var(--ink)}
+.hub .circ{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:999px;background:var(--icon-circle);color:#fff}
+.hub .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}.hub b{font-size:18px}.hub small{font-size:16px;color:var(--ink2)}
+.hub > .ic:last-child{color:var(--ink2)}
+.hublist{margin-top:4px;border-top:1px solid var(--line)}
+.alert{margin:0 0 8px;padding:6px 12px;border:1px solid var(--warn-line);border-left-width:4px;border-radius:var(--r-s);font-size:16px;color:var(--warn-ink)}
+/* 表 */
+table{border-collapse:collapse;width:100%;max-width:980px;font-size:16px;background:var(--surface)}
+th,td{padding:8px 10px;border:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--soft)}
+td.ok{color:var(--primary);font-weight:700}
+.map{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:980px;margin-top:8px}
+.map .box{padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font-size:16px}
+.map .box h3{margin:0 0 6px;font-size:18px}
+.map .box ul{margin:0;padding-left:1.2em}
+.map .box li{margin:2px 0}
+.ask{max-width:980px;padding:12px 16px 12px 36px;border-left:4px solid var(--primary);background:var(--surface);font-size:16px}
+.ask li{margin:6px 0}
+@media (max-width:700px){.map{grid-template-columns:1fr}}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="play" viewBox="0 0 24 24"><polygon points="7,4 20,12 7,20"/></symbol>
+ <symbol id="chev-l" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+ <symbol id="chev-r" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+ <symbol id="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+ <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+ <symbol id="mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+ <symbol id="list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+ <symbol id="home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+ <symbol id="book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+ <symbol id="share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></symbol>
+ <symbol id="receive" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+ <symbol id="edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+ <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+ <symbol id="plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+ <symbol id="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+ <symbol id="trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></symbol>
+ <symbol id="plus-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></symbol>
+ <symbol id="alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+ <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+ <symbol id="voice" viewBox="0 0 24 24"><path d="M3 10v4"/><path d="M7 6v12"/><path d="M11 3v18"/><path d="M15 7v10"/><path d="M19 9v6"/></symbol>
+</svg>
+<div class="wrap">
+
+<h2 class="sec">表紙で「使う／作る」に分ける（D56）— 比較モック</h2>
+<p class="lead">ひとみうさの依頼: 表紙に「使う（生徒用）」「作る（指導者用）」の入口。<b>使う</b>＝今の練習（種目）とルーティン（完成した物を鳴らすだけ。中に「受け取る」）。<b>作る</b>＝先生の画面＝声の録音・ルーティン作成・書き出し（配る）。
+補足の答え: 受け取ったルーティンも生徒が直せる（ただし「使う」の中では鳴らすだけ。直すのは「作る」から、と小さく案内）／表紙は毎回出す（側を覚えない）／声の選択は練習・再生画面の中（声チップ → 声の一覧）。
+枠は <b>375×548（iPhone SE の Safari）</b> と <b>320×568</b>。数値は主要操作数（Ruling 18: 初期表示 5 以下・画面全体 9 以下。言語の切替・戻る・下タブは数えない）。<span style="color:var(--count-ink);font-weight:700">推奨</span> の印は Fable の推し。最後に「選んでもらうこと」。</p>
+
+<!-- ============ §1 表紙 ============ -->
+<h2 class="sec">1. 表紙（S0・毎回の起動で出る画面）— A／B／C</h2>
+<p class="lead">3 案とも同じ骨: アプリ名＋言語（右上）→ 扉 2 つ → 下に「設定」の行（言語・困った時は・アプリについて）。違いは <b>「前回の練習をすぐ鳴らす」の口をどう置くか</b>（成功条件 G2「2 回目以降は 1 タップで音」をどこで守るか）。</p>
+<div class="frames">
+
+<figure><figcaption><span class="n">A</span>扉 2 つだけ（説明 1 行つき）<span class="ops">主要操作 3 / 3（扉 2・設定 1）。2 回目以降に音が出るまで 2 タップ（使う → 続きから）</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><div class="brand"><h1 class="appname">Dance Count</h1><span class="appsub">for Ballroom</span></div><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <a class="door main" href="#"><span class="circ"><svg class="ic fill"><use href="#play"/></svg></span><span class="t"><b>使う</b><small>種目のカウントで練習する・先生のルーティンを鳴らす（生徒の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="door" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>作る</b><small>自分の声を録音する・ルーティンを作る・生徒に配る（先生の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="linkrow" href="#" style="margin-top:24px"><svg class="ic"><use href="#gear"/></svg><span class="lab">設定<small>言語・困った時は・アプリについて</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+</div></div></figure>
+
+<figure><figcaption><span class="n">B</span>扉 2 つ＋「前回」カード（S1 と同じ紺のカード）<span class="ops">主要操作 4 / 4。1 タップで音。ただし先生にも毎回「前回: ワルツ」が見え、扉と同じ強さで並ぶ</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><div class="brand"><h1 class="appname">Dance Count</h1><span class="appsub">for Ballroom</span></div><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <button class="resume"><span class="t"><small>前回</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ <a class="door main" href="#"><span class="circ"><svg class="ic fill"><use href="#play"/></svg></span><span class="t"><b>使う</b><small>種目のカウントで練習する・先生のルーティンを鳴らす（生徒の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="door" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>作る</b><small>自分の声を録音する・ルーティンを作る・生徒に配る（先生の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="linkrow" href="#" style="margin-top:20px"><svg class="ic"><use href="#gear"/></svg><span class="lab">設定<small>言語・困った時は・アプリについて</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+</div></div></figure>
+
+<figure><figcaption><span class="n">C</span>扉 2 つ＋「続きから」を<b>「使う」の扉にくっつける</b><span class="rec">推奨</span><span class="ops">主要操作 4 / 4（初回は 3）。1 タップで音。「前回」が「使う」の一部だと目で分かり、「作る」の扉は汚れない</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><div class="brand"><h1 class="appname">Dance Count</h1><span class="appsub">for Ballroom</span></div><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <div class="doorset">
+  <a class="door main" href="#"><span class="circ"><svg class="ic fill"><use href="#play"/></svg></span><span class="t"><b>使う</b><small>種目のカウントで練習する・先生のルーティンを鳴らす（生徒の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <button class="cont"><span class="t"><small>前回の練習</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ </div>
+ <a class="door" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>作る</b><small>自分の声を録音する・ルーティンを作る・生徒に配る（先生の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="linkrow" href="#" style="margin-top:20px"><svg class="ic"><use href="#gear"/></svg><span class="lab">設定<small>言語・困った時は・アプリについて</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+</div></div></figure>
+
+<figure><figcaption><span class="n">C</span>同じ C 案を 320×568 で（横スクロール無し・扉の説明は 2 行）<span class="ops">主要操作 4 / 4</span></figcaption>
+<div class="phone se"><div class="scr">
+ <div class="hdr"><div class="brand"><h1 class="appname">Dance Count</h1><span class="appsub">for Ballroom</span></div><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <div class="doorset">
+  <a class="door main" href="#"><span class="circ"><svg class="ic fill"><use href="#play"/></svg></span><span class="t"><b>使う</b><small>種目のカウントで練習する・先生のルーティンを鳴らす（生徒の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <button class="cont"><span class="t"><small>前回の練習</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ </div>
+ <a class="door" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>作る</b><small>自分の声を録音する・ルーティンを作る・生徒に配る（先生の方）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ <a class="linkrow" href="#" style="margin-top:20px"><svg class="ic"><use href="#gear"/></svg><span class="lab">設定<small>言語・困った時は・アプリについて</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+</div></div></figure>
+
+</div>
+<p class="lead" style="margin-top:16px"><b>扉の言葉の候補</b>（ひとみうさが選ぶ）: ① 「使う」「作る」＋小さく「（生徒の方）」「（先生の方）」（上のモック） ② 「使う（生徒用）」「作る（指導者用）」（依頼の言葉そのまま。見出しが長くなり 320 で 2 行） ③ 「練習する」「先生の方へ」（動詞と呼びかけ。S1 の「先生の声で練習」の語と連続する）。英語は Use / Make（または Practice / For teachers）。</p>
+
+<!-- ============ §2 使う ============ -->
+<h2 class="sec">2. 「使う」の側 — 練習（種目）とルーティン（鳴らすだけ）</h2>
+<p class="lead">下タブは <b>「練習」「ルーティン」の 2 つ</b>（今の「設定」タブは表紙の「設定」の行へ）。表紙へは <b>左上の「‹ 表紙」</b>（戻ると同じ型・履歴でも戻れる）。「先生の声で練習」カードは無くなり（声は S2・S5 の声チップから選ぶ）、そのぶん 548 でも 10 種目に余裕が出る。</p>
+<div class="frames">
+
+<figure><figcaption><span class="n">U1</span>使う › 練習（今の S1 から「先生の声」カードを外した形）<span class="rec">推奨</span><span class="ops">主要操作 2 / 2（初回 1）。案内カード（初めて鳴らした後）が付いても全体 4</span></figcaption>
+<div class="phone"><div class="scr tabbed">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <button class="resume" style="margin-top:0"><span class="t"><small>前回</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ <h1 class="h1">種目を選んでください</h1>
+ <div class="tiles">
+  <a class="tile" href="#"><b>ワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>タンゴ</b><small>S S Q Q S</small></a>
+  <a class="tile" href="#"><b>スローフォックス</b><small>S Q Q</small></a><a class="tile" href="#"><b>クイックステップ</b><small>S Q Q</small></a>
+  <a class="tile" href="#"><b>ヴィエニーズワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>ルンバ</b><small>2 3 4 1</small></a>
+  <a class="tile" href="#"><b>チャチャチャ</b><small>2 3 4 & 1</small></a><a class="tile" href="#"><b>サンバ</b><small>1 a 2</small></a>
+  <a class="tile" href="#"><b>パソドブレ</b><small>1 2 3 4</small></a><a class="tile" href="#"><b>ジャイブ</b><small>1 2 3 a 4 5 a 6</small></a>
+ </div>
+</div>
+<nav class="tabs"><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+<figure><figcaption><span class="n">U1</span>同じ画面を 320×568 で<span class="ops">主要操作 2 / 2</span></figcaption>
+<div class="phone se"><div class="scr tabbed">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <button class="resume" style="margin-top:0"><span class="t"><small>前回</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ <h1 class="h1">種目を選んでください</h1>
+ <div class="tiles">
+  <a class="tile" href="#"><b>ワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>タンゴ</b><small>S S Q Q S</small></a>
+  <a class="tile" href="#"><b>スローフォックス</b><small>S Q Q</small></a><a class="tile" href="#"><b>クイックステップ</b><small>S Q Q</small></a>
+  <a class="tile" href="#"><b>ヴィエニーズワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>ルンバ</b><small>2 3 4 1</small></a>
+  <a class="tile" href="#"><b>チャチャチャ</b><small>2 3 4 & 1</small></a><a class="tile" href="#"><b>サンバ</b><small>1 a 2</small></a>
+  <a class="tile" href="#"><b>パソドブレ</b><small>1 2 3 4</small></a><a class="tile" href="#"><b>ジャイブ</b><small>1 2 3 a 4 5 a 6</small></a>
+ </div>
+</div>
+<nav class="tabs"><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+<figure><figcaption><span class="n">U2</span>使う › ルーティン（鳴らすだけ。上に「ファイルから受け取る」・行を押すとすぐ鳴る）<span class="rec">推奨</span><span class="ops">主要操作 2 / 2（受け取る 1・一覧 1）。0 件は 1</span></figcaption>
+<div class="phone"><div class="scr tabbed">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">ルーティン</h1>
+ <a class="secondary wide" href="#"><svg class="ic"><use href="#receive"/></svg>ファイルから受け取る</a>
+ <div class="rlist">
+  <div class="rrow"><button class="rhead"><span class="t"><b>ワルツのルーティン</b><small>ワルツ · 6 フィガー · 山田先生から</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>タンゴ 前半</b><small>タンゴ · 4 フィガー · 山田先生から</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>ルンバのルーティン</b><small>ルンバ · 5 フィガー</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+  <div class="rrow off"><div class="rhead"><span class="t"><b>チャチャチャ 練習用</b><small>チャチャチャ · 0 フィガー</small><span class="note"><svg class="ic" style="width:20px;height:20px"><use href="#alert"/></svg>フィガーがありません。「作る」で直せます。</span></span></div></div>
+ </div>
+ <p class="hint">ルーティンを直す・消す時は、表紙の「作る」から。</p>
+</div>
+<nav class="tabs"><a class="tab" href="#"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+<figure><figcaption><span class="n">U2</span>同じ画面を 320×568 で（「再生」の札は折れない・名前は 2 行になれる）<span class="ops">主要操作 2 / 2</span></figcaption>
+<div class="phone se"><div class="scr tabbed">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">ルーティン</h1>
+ <a class="secondary wide" href="#"><svg class="ic"><use href="#receive"/></svg>ファイルから受け取る</a>
+ <div class="rlist">
+  <div class="rrow"><button class="rhead"><span class="t"><b>ワルツのルーティン</b><small>ワルツ · 6 フィガー · 山田先生から</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>タンゴ 前半</b><small>タンゴ · 4 フィガー · 山田先生から</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>ルンバのルーティン</b><small>ルンバ · 5 フィガー</small></span><span class="pl"><svg class="ic fill"><use href="#play"/></svg>再生</span></button></div>
+ </div>
+ <p class="hint">ルーティンを直す・消す時は、表紙の「作る」から。</p>
+</div>
+<nav class="tabs"><a class="tab" href="#"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+<figure><figcaption><span class="n">U2'</span>代案: 行を開いて「▶ 再生」（今の S3 と同じ型・鳴らすまで 2 タップ）<span class="ops">主要操作 2 / 3（行を開くと 3）</span></figcaption>
+<div class="phone se"><div class="scr tabbed">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">ルーティン</h1>
+ <a class="secondary wide" href="#"><svg class="ic"><use href="#receive"/></svg>ファイルから受け取る</a>
+ <div class="rlist">
+  <div class="rrow open"><button class="rhead"><span class="t"><b>ワルツのルーティン</b><small>ワルツ · 6 フィガー · 山田先生から</small></span><svg class="ic chev"><use href="#chevron"/></svg></button>
+   <div class="racts"><button class="primary"><svg class="ic fill"><use href="#play"/></svg>再生</button><p class="hint" style="margin:0;flex:1 1 100%">直す時は、表紙の「作る」から。</p></div></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>タンゴ 前半</b><small>タンゴ · 4 フィガー · 山田先生から</small></span><svg class="ic chev"><use href="#chevron"/></svg></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>ルンバのルーティン</b><small>ルンバ · 5 フィガー</small></span><svg class="ic chev"><use href="#chevron"/></svg></button></div>
+ </div>
+</div>
+<nav class="tabs"><a class="tab" href="#"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+<figure><figcaption><span class="n">H1</span>代案: 表紙へ戻る口を<b>下タブの 1 つ目</b>にする（「‹ 表紙」の代わり）<span class="ops">主要操作 2 / 2。3 タブ。320 で「ルーティン」が 76px の枠に収まるか際どい</span></figcaption>
+<div class="phone se"><div class="scr tabbed">
+ <div class="hdr"><div class="brand"><h1 class="appname">Dance Count</h1></div><button class="util" lang="en"><svg class="ic"><use href="#globe"/></svg>English</button></div>
+ <button class="resume" style="margin-top:0"><span class="t"><small>前回</small><b>ワルツ</b></span><span class="go"><svg class="ic fill"><use href="#play"/></svg>続きから</span></button>
+ <h1 class="h1">種目を選んでください</h1>
+ <div class="tiles">
+  <a class="tile" href="#"><b>ワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>タンゴ</b><small>S S Q Q S</small></a>
+  <a class="tile" href="#"><b>スローフォックス</b><small>S Q Q</small></a><a class="tile" href="#"><b>クイックステップ</b><small>S Q Q</small></a>
+  <a class="tile" href="#"><b>ヴィエニーズワルツ</b><small>1 2 3</small></a><a class="tile" href="#"><b>ルンバ</b><small>2 3 4 1</small></a>
+  <a class="tile" href="#"><b>チャチャチャ</b><small>2 3 4 & 1</small></a><a class="tile" href="#"><b>サンバ</b><small>1 a 2</small></a>
+  <a class="tile" href="#"><b>パソドブレ</b><small>1 2 3 4</small></a><a class="tile" href="#"><b>ジャイブ</b><small>1 2 3 a 4 5 a 6</small></a>
+ </div>
+</div>
+<nav class="tabs"><a class="tab" href="#"><svg class="ic"><use href="#book"/></svg><span>表紙</span></a><a class="tab" href="#" aria-current="page"><svg class="ic"><use href="#home"/></svg><span>練習</span></a><a class="tab" href="#"><svg class="ic"><use href="#list"/></svg><span>ルーティン</span></a></nav>
+</div></figure>
+
+</div>
+<p class="lead" style="margin-top:16px"><b>声の選択</b>は変えない: S2（種目の再生）・S5（ルーティンの再生）の声チップ「声: 山田先生の声」→ 声の一覧（S7）。S7 は「標準（英語）／標準（日本語）／受け取った声／自分の声」の一覧＋「ファイルから受け取る」のまま。S7 の「自分の声を録音する」ボタンは「作る」へ移し、代わりに 1 行「自分の声の録音は、表紙の「作る」から。」（§4）。</p>
+
+<!-- ============ §3 作る ============ -->
+<h2 class="sec">3. 「作る」の側 — 先生の画面（録音・ルーティン・配る）</h2>
+<p class="lead">「作る」は <b>1 枚の入口（M0）</b> に 3 つの行。下タブは無く、左上「‹ 表紙」。行の下の小さな文字で「今どこまでできているか」（録音済みの語数・ルーティンの本数）が分かる。録音（S8）・ルーティン編集（S4）・配る（S9）の中身は今のまま。</p>
+<div class="frames">
+
+<figure><figcaption><span class="n">M0</span>作る（入口）<span class="rec">推奨</span><span class="ops">主要操作 3 / 3</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">作る</h1>
+ <p class="hint" style="margin:0 0 8px">先生の方へ。作った物は「配る」でファイルにして生徒に送れます。</p>
+ <div class="hublist">
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>自分の声を録音する</b><small>日本語 · 12 / 12 語 · 録音済み</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#edit"/></svg></span><span class="t"><b>ルーティンを作る・直す</b><small>4 本（受け取った物も直せます）</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#share"/></svg></span><span class="t"><b>配る（ファイルを作る）</b><small>声とルーティンを 1 つのファイルに</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ </div>
+</div></div></figure>
+
+<figure><figcaption><span class="n">M0</span>同じ画面を 320×568 で（まだ録音していない先生の例）<span class="ops">主要操作 3 / 3</span></figcaption>
+<div class="phone se"><div class="scr">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">作る</h1>
+ <p class="hint" style="margin:0 0 8px">先生の方へ。作った物は「配る」でファイルにして生徒に送れます。</p>
+ <div class="hublist">
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#mic"/></svg></span><span class="t"><b>自分の声を録音する</b><small>まだ録音していません</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#edit"/></svg></span><span class="t"><b>ルーティンを作る・直す</b><small>まだありません</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <a class="hub" href="#"><span class="circ"><svg class="ic"><use href="#share"/></svg></span><span class="t"><b>配る（ファイルを作る）</b><small>声とルーティンを 1 つのファイルに</small></span><svg class="ic"><use href="#chev-r"/></svg></a>
+ </div>
+</div></div></figure>
+
+<figure><figcaption><span class="n">M1</span>作る › ルーティン（今の S3 の「編集の形」。受け取った物も並び、直せる）<span class="ops">主要操作 2 / 3（新規 1・一覧 1・行を開くと＋1）</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>戻る</a></div>
+ <h1 class="h1 big" style="margin-top:0">ルーティンを作る・直す</h1>
+ <button class="primary"><svg class="ic"><use href="#plus"/></svg>新しいルーティン</button>
+ <div class="rlist">
+  <div class="rrow open"><button class="rhead"><span class="t"><b>ワルツのルーティン</b><small>ワルツ · 6 フィガー · 山田先生から</small></span><svg class="ic chev"><use href="#chevron"/></svg></button>
+   <div class="racts"><button class="primary"><svg class="ic fill"><use href="#play"/></svg>試聴</button><button class="secondary"><svg class="ic"><use href="#edit"/></svg>編集</button><button class="secondary"><svg class="ic"><use href="#share"/></svg>配る</button><button class="secondary"><svg class="ic"><use href="#trash"/></svg>削除</button></div></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>タンゴ 前半</b><small>タンゴ · 4 フィガー · 山田先生から</small></span><svg class="ic chev"><use href="#chevron"/></svg></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>ルンバのルーティン</b><small>ルンバ · 5 フィガー</small></span><svg class="ic chev"><use href="#chevron"/></svg></button></div>
+  <div class="rrow"><button class="rhead"><span class="t"><b>チャチャチャ 練習用</b><small>チャチャチャ · 0 フィガー</small></span><svg class="ic chev"><use href="#chevron"/></svg></button></div>
+ </div>
+</div></div></figure>
+
+</div>
+
+<!-- ============ §4 設定・声 ============ -->
+<h2 class="sec">4. 設定（縮める）と 声の一覧（S7）</h2>
+<p class="lead">「設定」は表紙の行から。中身は <b>言語・困った時は・プライバシー</b> だけ（「声」は再生画面の声チップへ、「先生の方へ」は「作る」へ）。548 でも全部が初期表示に入る。</p>
+<div class="frames">
+
+<figure><figcaption><span class="n">S6</span>設定（縮小）<span class="ops">主要操作 3 / 3（言語 1・困った時は 1・プライバシー 1）</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>表紙</a></div>
+ <h1 class="h1 big" style="margin-top:0">設定</h1>
+ <div class="group"><div class="lbl">言語</div>
+  <button class="radio" aria-checked="true"><svg class="ic"><use href="#check"/></svg><span>日本語</span></button>
+  <button class="radio" aria-checked="false" lang="en"><span class="ic"></span><span>English</span></button></div>
+ <div class="group"><div class="lbl">困った時は</div>
+  <a class="linkrow" href="#" style="margin-top:0"><svg class="ic"><use href="#plus-square"/></svg><span class="lab">ホーム画面に追加する方法</span><svg class="ic"><use href="#chev-r"/></svg></a>
+  <a class="linkrow" href="#" style="margin-top:0"><svg class="ic"><use href="#alert"/></svg><span class="lab">音が鳴らない時</span><svg class="ic"><use href="#chev-r"/></svg></a></div>
+ <a class="linkrow" href="#" style="margin-top:24px"><svg class="ic"><use href="#info"/></svg><span class="lab">プライバシー・アプリについて</span><span class="val">版 0.3.0</span><svg class="ic"><use href="#chev-r"/></svg></a>
+</div></div></figure>
+
+<figure><figcaption><span class="n">S7</span>声の一覧（S2・S5 の声チップから。録音ボタンは「作る」へ・1 行で案内）<span class="ops">主要操作 2 / 2（一覧 1・受け取る 1）。行を開くと 3</span></figcaption>
+<div class="phone"><div class="scr">
+ <div class="hdr"><a class="back" href="#"><svg class="ic"><use href="#chev-l"/></svg>戻る</a></div>
+ <h1 class="h1 big" style="margin-top:0">声</h1>
+ <button class="radio" aria-checked="false"><span class="ic"></span><span>標準の声（英語）</span></button>
+ <button class="radio" aria-checked="false"><span class="ic"></span><span>標準の声（日本語）</span></button>
+ <button class="radio" aria-checked="true"><svg class="ic"><use href="#check"/></svg><span>山田先生の声（日本語）</span></button>
+ <a class="secondary wide" href="#" style="margin-top:24px"><svg class="ic"><use href="#receive"/></svg>ファイルから受け取る</a>
+ <p class="hint">自分の声の録音は、表紙の「作る」から。</p>
+</div></div></figure>
+
+</div>
+
+<!-- ============ §5 道筋と数 ============ -->
+<h2 class="sec">5. 道筋（どこから どこへ）と 主要操作数</h2>
+<div class="map">
+ <div class="box"><h3>表紙 S0（#/）— 毎回の起動・ホーム画面のアプリも</h3><ul>
+  <li>使う → U1 練習（#/use）／（C 案）続きから → S2 すぐ鳴る</li>
+  <li>作る → M0（#/make）</li>
+  <li>設定 → S6（#/settings）→ S12・S11・S13</li>
+  <li>言語（右上）は表紙と U1 の両方に</li></ul></div>
+ <div class="box"><h3>使う（下タブ 2 つ・左上「‹ 表紙」）</h3><ul>
+  <li>U1 練習（#/use）: 前回 → S2／種目 → S2（#/practice/:dance）。声チップ → S7 → 受け取る S10</li>
+  <li>U2 ルーティン（#/use/routines）: 受け取る → S10／行 → S5 すぐ鳴る（#/routines/:id/play）</li>
+  <li>S10 受け取った後: 声あり →「ホームへ」＝U1／ルーティンだけ →「ルーティンを見る」＝U2</li></ul></div>
+ <div class="box"><h3>作る（タブ無し・「‹ 表紙」「‹ 戻る」の積み重ね）</h3><ul>
+  <li>M0（#/make）→ 録音 S8（#/voices/record）／ルーティン M1（#/make/routines）／配る S9（#/share）</li>
+  <li>M1 → 新規・編集 S4（#/routines/new・/:id/edit）／試聴 S5／配る S9（この本を選んだ状態）／削除</li>
+  <li>S8 完成の「配る」→ S9（この声を選んだ状態）。今のまま</li></ul></div>
+ <div class="box"><h3>変わらない物</h3><ul>
+  <li>S2・S4・S5・S8・S9・S10・S11・S12・S13 の中身と主要操作数</li>
+  <li>保存している物（ルーティン・声・設定）は 1 つも変わらない。古いリンク #/routines は U2 へ、#/ は表紙へ</li>
+  <li>Android の共有（share_target）→ #/receive ＝ S10。D52（自動カウント）・D55（カウントの帯）はそのまま</li></ul></div>
+</div>
+
+<table style="margin-top:24px"><thead><tr><th>画面</th><th>初期表示（375×548）</th><th>画面全体</th><th>今（参考）</th><th>備考</th></tr></thead><tbody>
+<tr><td>S0 表紙 A／B／C</td><td class="ok">3／4／4（C の初回 3）</td><td class="ok">3／4／4</td><td>—</td><td>言語は数えない。更新の帯は表紙（ルート）に</td></tr>
+<tr><td>U1 使う › 練習</td><td class="ok">2（初回 1）</td><td class="ok">4（案内カードつき）</td><td>S1: 3／5</td><td>先生カードが無くなり 1 減</td></tr>
+<tr><td>U2 使う › ルーティン</td><td class="ok">2（0 件 1）</td><td class="ok">2（代案 U2' は行を開くと 3）</td><td>S3: 2／4（D54）</td><td>行は押すとすぐ鳴る</td></tr>
+<tr><td>M0 作る</td><td class="ok">3</td><td class="ok">3</td><td>—</td><td>S6「先生の方へ」の 2 行がここへ</td></tr>
+<tr><td>M1 作る › ルーティン</td><td class="ok">2</td><td class="ok">3（行を開く）</td><td>S3: 2／4</td><td>「受け取る」は U2 へ移る</td></tr>
+<tr><td>S6 設定</td><td class="ok">3</td><td class="ok">3</td><td>5（上限）</td><td>「声」「先生の方へ」が抜ける</td></tr>
+<tr><td>S7 声</td><td class="ok">2</td><td class="ok">3（行を開く）</td><td>3／4</td><td>録音ボタンが抜け、1 行の案内</td></tr>
+<tr><td>S2・S5・S4・S8・S9・S10</td><td class="ok">変わらない</td><td class="ok">変わらない</td><td>5・5・5・2〜5・3〜6・1〜2</td><td>中身は触らない</td></tr>
+</tbody></table>
+
+<h2 class="sec">6. ひとみうさに選んでもらうこと</h2>
+<p class="lead"><b>ひとみうさの合意 2026-10-13: 全部「推奨」で決まり。</b>言葉の変更 2 つ — 「作る」の扉の副題「（先生の方）」→「（指導者の方）」（英 “For instructors”）、「使う」の下タブ「練習」→「フィガー」（英 “Figures”）。フィガー一覧は rulings.md の D57（Ruling 119〜122）。</p>
+<ol class="ask">
+ <li><b>表紙の形</b>: A（扉だけ）／B（扉＋前回カード）／<b>C（扉に続きからが付く・推奨）</b>。C なら「続きから」は初めて鳴らした後だけ出ます。</li>
+ <li><b>扉の言葉</b>: ①「使う」「作る」＋（生徒の方）（先生の方）／②「使う（生徒用）」「作る（指導者用）」／③「練習する」「先生の方へ」。英語は Use／Make か Practice／For teachers。</li>
+ <li><b>表紙へ戻る口</b>: <b>左上「‹ 表紙」（推奨。戻ると同じ場所・両側で同じ）</b>／H1 下タブの 1 つ目「表紙」（使う側だけ 3 タブ）。</li>
+ <li><b>使う › ルーティンの行</b>: <b>押すとすぐ鳴る（推奨・1 タップ）</b>／U2' 行を開いて「▶ 再生」（今と同じ型・2 タップ）。</li>
+ <li><b>「直すのは作るから」の案内</b>: 一覧の下に 1 行（推奨）／開いた行の中（U2'）／出さない。言い方「ルーティンを直す・消す時は、表紙の「作る」から。」でよいか。</li>
+ <li><b>設定の置き場</b>: <b>表紙の行（推奨。両側から 1 タップ・使うのタブは 2 つ）</b>／使う側の 3 つ目のタブ「設定」（先生側からは表紙経由）。</li>
+ <li><b>S7（声の一覧）の「自分の声を録音する」ボタン</b>: 「作る」へ移して 1 行の案内に替える（推奨）／S7 にも残す。</li>
+ <li><b>「作る」の見出し</b>: 「作る」（推奨・扉と同じ語）／「先生の方へ」（S6 の今の見出し）。</li>
+</ol>
+</div>
+</body></html>

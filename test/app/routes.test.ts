@@ -1,12 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseHash, buildHash, SCREENS, showsTabs, parentScreen, tabOf, type ScreenId } from '../../src/app/router/routes.ts';
+import { parseHash, buildHash, buildHashWithQuery, SCREENS, showsTabs, parentScreen, tabOf, type ScreenId } from '../../src/app/router/routes.ts';
 
 test('every screen hash from spec §3 parses to its screen and params', () => {
   const cases: Array<[string, ScreenId, Record<string, string>]> = [
-    ['#/', 'S1', {}],
+    ['#/', 'S0', {}],
+    ['#/use', 'S1', {}],
+    ['#/use/routines', 'U2', {}],
+    ['#/make', 'M0', {}],
+    ['#/make/routines', 'M1', {}],
     ['#/practice/waltz', 'S2', { danceId: 'waltz' }],
-    ['#/routines', 'S3', {}],
     ['#/routines/new', 'S4', {}],
     ['#/routines/r-123/edit', 'S4', { routineId: 'r-123' }],
     ['#/routines/r-123/play', 'S5', { routineId: 'r-123' }],
@@ -25,10 +28,19 @@ test('every screen hash from spec §3 parses to its screen and params', () => {
   }
 });
 
-test('empty, malformed and unknown hashes fall back to home instead of throwing', () => {
-  for (const hash of ['', '#', '#/nope', '#/practice', '#/practice/', '#/practice/a/b', '#/routines/x/delete', 'garbage', '#/practice/%E3%81%82', '#/practice/<script>']) {
-    assert.deepEqual(parseHash(hash), { screen: 'S1', params: {}, query: {} }, JSON.stringify(hash));
+test('empty, malformed and unknown hashes fall back to the cover instead of throwing (D56)', () => {
+  for (const hash of ['', '#', '#/nope', '#/practice', '#/practice/', '#/practice/a/b/c', '#/routines/x/delete', 'garbage', '#/practice/%E3%81%82', '#/practice/<script>', '#/use/x', '#/make/x']) {
+    assert.deepEqual(parseHash(hash), { screen: 'S0', params: {}, query: {} }, JSON.stringify(hash));
   }
+});
+
+test('the old #/routines is read as U2 and marked as an alias; building U2 gives the new path (D56・Ruling 116-1)', () => {
+  assert.deepEqual(parseHash('#/routines'), { screen: 'U2', params: {}, query: {}, alias: true });
+  assert.deepEqual(parseHash('#/routines?ui-state=update-ready'), { screen: 'U2', params: {}, query: { uiState: 'update-ready' }, alias: true });
+  assert.equal(buildHash({ screen: 'U2', params: {} }), '#/use/routines');
+  assert.equal(parseHash('#/use/routines').alias, undefined);
+  assert.equal(buildHashWithQuery({ screen: 'U2', params: {}, query: { uiState: 'update-ready' } }), '#/use/routines?ui-state=update-ready');
+  assert.equal(buildHashWithQuery({ screen: 'U2', params: {} }), '#/use/routines');
 });
 
 test('trailing slash is ignored', () => {
@@ -38,16 +50,16 @@ test('trailing slash is ignored', () => {
 test('known ui-state values are read from the hash query (Ruling 33)', () => {
   assert.deepEqual(parseHash('#/practice/jive?ui-state=no-sound'), { screen: 'S2', params: { danceId: 'jive' }, query: { uiState: 'no-sound' } });
   assert.deepEqual(parseHash('#/practice/waltz?x=1&ui-state=wakelock-tip').query, { uiState: 'wakelock-tip' });
-  assert.deepEqual(parseHash('#/routines?ui-state=confirm-delete'), { screen: 'S3', params: {}, query: { uiState: 'confirm-delete' } });
+  assert.deepEqual(parseHash('#/make/routines?ui-state=confirm-delete'), { screen: 'M1', params: {}, query: { uiState: 'confirm-delete' } });
 });
 
 test('the three S8 display states are read too (Ruling 63-3)', () => {
-  for (const uiState of ['mic-denied', 'no-voice', 'no-recorder'] as const) {
+  for (const uiState of ['mic-denied', 'no-voice', 'no-recorder', 'no-https'] as const) {   // no-https は D53
     assert.deepEqual(parseHash(`#/voices/record?ui-state=${uiState}`), { screen: 'S8', params: {}, query: { uiState } });
   }
   assert.deepEqual(parseHash('#/voices?ui-state=confirm-delete').query, { uiState: 'confirm-delete' });
-  // 段7（Ruling 90-7）: 更新の帯は S1・S3・S6・S7 で見た目だけ強制できる
-  for (const hash of ['#/', '#/routines', '#/settings', '#/voices']) assert.deepEqual(parseHash(`${hash}?ui-state=update-ready`).query, { uiState: 'update-ready' });
+  // 段7（Ruling 90-7）: 更新の帯は見た目だけ強制できる（D56: 表紙・U1・U2・M1・S6・S7）
+  for (const hash of ['#/', '#/use', '#/use/routines', '#/make/routines', '#/settings', '#/voices']) assert.deepEqual(parseHash(`${hash}?ui-state=update-ready`).query, { uiState: 'update-ready' });
   assert.deepEqual(parseHash('#/voices/record?ui-state=MIC-DENIED').query, {});
 });
 
@@ -74,23 +86,36 @@ test('buildHash never writes the query, so navigating clears ui-state', () => {
   assert.equal(buildHash(route), '#/practice/waltz');
 });
 
-test('tabs show on root and list screens only (Ruling 17)', () => {
+test('tabs show on the two "Use" roots only (D56・Ruling 116-1)', () => {
   const visible = (Object.keys(SCREENS) as ScreenId[]).filter(showsTabs).sort();
-  assert.deepEqual(visible, ['S1', 'S12', 'S13', 'S3', 'S6', 'S7']);
+  assert.deepEqual(visible, ['S1', 'U2']);
+  assert.equal(tabOf('S1'), 'practice');
+  assert.equal(tabOf('U2'), 'routines');
+  assert.equal(tabOf('M0'), null);
 });
 
-test('back without history goes to the parent from spec §3', () => {
+test('back without history goes to the parent from the D56 route table (Ruling 116-1)', () => {
   const expected: Record<ScreenId, ScreenId | null> = {
-    S1: null, S2: 'S1', S3: null, S4: 'S3', S5: 'S3', S6: null, S7: 'S6',
-    S8: 'S7', S9: 'S7', S10: 'S7', S11: 'S6', S12: 'S6', S13: 'S6'
+    S0: null, S1: 'S0', U2: 'S0', M0: 'S0', M1: 'M0', F1: 'S1', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
+    S8: 'M0', S9: 'M0', S10: 'U2', S11: 'S6', S12: 'S6', S13: 'S6'
   };
   for (const screen of Object.keys(expected) as ScreenId[]) assert.equal(parentScreen(screen), expected[screen], screen);
 });
 
-test('each screen belongs to exactly one of the three tabs', () => {
-  assert.equal(tabOf('S1'), 'practice');
-  assert.equal(tabOf('S2'), 'practice');
-  assert.equal(tabOf('S5'), 'routines');
-  assert.equal(tabOf('S7'), 'settings');
-  assert.equal(tabOf('S13'), 'settings');
+test('only the cover has no back button; the screens under the cover say "Cover" (D56・Ruling 116-2・116-3)', () => {
+  const kinds = Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map(screen => [screen, SCREENS[screen].kind]));
+  assert.deepEqual(Object.entries(kinds).filter(([, kind]) => kind === 'cover').map(([screen]) => screen), ['S0']);
+  assert.deepEqual((Object.keys(SCREENS) as ScreenId[]).filter(screen => parentScreen(screen) === 'S0').sort(), ['M0', 'S1', 'S6', 'U2']);
+});
+
+test('D57: F1 is #/figures/:danceId and S2 has a figure form #/practice/:danceId/:figureSlug (Ruling 119-1・120-1)', () => {
+  assert.deepEqual(parseHash('#/figures/waltz'), { screen: 'F1', params: { danceId: 'waltz' }, query: {} });
+  assert.equal(buildHash({ screen: 'F1', params: { danceId: 'waltz' } }), '#/figures/waltz');
+  assert.deepEqual(parseHash('#/practice/waltz/whisk'), { screen: 'S2', params: { danceId: 'waltz', figureSlug: 'whisk' }, query: {} });
+  assert.equal(buildHash({ screen: 'S2', params: { danceId: 'waltz', figureSlug: 'chasse-from-pp' } }), '#/practice/waltz/chasse-from-pp');
+  assert.equal(buildHash({ screen: 'S2', params: { danceId: 'waltz' } }), '#/practice/waltz');
+  assert.equal(parseHash('#/figures/bad id').screen, 'S0');
+  assert.equal(parseHash('#/practice/waltz/a/b').screen, 'S0');
+  assert.equal(SCREENS.F1.kind, 'focus');
+  assert.equal(showsTabs('F1'), false);
 });
