@@ -4,6 +4,7 @@ import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { formatCounts } from '../lib/count-display.ts';
 import { hidesDock, isKeyboardOpen } from '../lib/keyboard.ts';
 import { onPageHidden } from '../platform/page.ts';
@@ -267,7 +268,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
           </button>
         </div>
       )}
-      {count === 0 && open?.kind !== 'add' && <p class="dc-empty" data-body>{translator.t('noFigures')}</p>}
+      {count === 0 && open?.kind !== 'add' && <p class="dc-empty" data-body>{phrased(translator, 'noFigures')}</p>}
       {(count > 0 || open?.kind === 'add') && (
         <div ref={list} class="dc-list dc-figures" role="list" data-list data-dragging={drag.view ? '' : undefined}>
           {routine.figures.map((figure, index) => {
@@ -340,7 +341,7 @@ export function RoutineEditScreen({ routineId }: { routineId?: string }) {
           )}
         </div>
       )}
-      {endsMidBar && <div class="dc-bar-note">{translator.t('routineEndsMidBar')}</div>}
+      {endsMidBar && <div class="dc-bar-note">{phrased(translator, 'routineEndsMidBar')}</div>}
       {count > 0 && open?.kind !== 'add' && (
         <button type="button" class="dc-button dc-button--secondary dc-wide dc-add-tail" disabled={!current.canAdd} onClick={() => act(editor => editor.openAdd())}>
           <Icon name="plus" /><span>{translator.t('addFigure')}</span>

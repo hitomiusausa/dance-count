@@ -4,6 +4,7 @@ import { PUBLIC_APP_URL } from '../app-url.ts';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { canShareFile, copyText, downloadFile, shareFile } from '../platform/files.ts';
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
@@ -140,7 +141,7 @@ export function ShareScreen() {
     <>
       <h2 class="dc-field-label dc-share-heading" id="dc-s9-voice">{translator.t('shareVoiceHeading')}</h2>
       {voices.length === 0
-        ? <p class="dc-share-empty">{translator.t('shareNoRecordedVoice')}</p>
+        ? <p class="dc-share-empty">{phrased(translator, 'shareNoRecordedVoice')}</p>
         : (
           <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s9-voice" data-group="share-voice">
             {[null, ...voices].map(pack => {
@@ -155,7 +156,7 @@ export function ShareScreen() {
             })}
           </div>
         )}
-      {prepFailed && <div class="dc-hint" role="status">{translator.t('shareVoicePrepFailed')}</div>}
+      {prepFailed && <div class="dc-hint" role="status">{phrased(translator, 'shareVoicePrepFailed')}</div>}
       {voiceId !== null && (
         // 同意の文は 2 文と長いので、ボタン（四角）の外に置き、文を押しても切り替わる（ボタン文言は 2 行まで・U10）。
         <div class="dc-consent" data-group="consent">
@@ -164,9 +165,9 @@ export function ShareScreen() {
               onClick={() => setConsent(!consent)}>
               <span class="dc-checkbox" aria-hidden="true">{consent && <Icon name="check" />}</span>
             </button>
-            <div class="dc-consent-text" id="dc-s9-consent" onClick={() => setConsent(!consent)}>{translator.t('shareConsent')}</div>
+            <div class="dc-consent-text" id="dc-s9-consent" onClick={() => setConsent(!consent)}>{phrased(translator, 'shareConsent')}</div>
           </div>
-          {needsConsent && <div class="dc-hint">{translator.t('shareConsentNeeded')}</div>}
+          {needsConsent && <div class="dc-hint">{phrased(translator, 'shareConsentNeeded')}</div>}
         </div>
       )}
     </>
@@ -175,7 +176,7 @@ export function ShareScreen() {
     <>
       <h2 class="dc-field-label dc-share-heading" id="dc-s9-routines">{translator.t('shareRoutinesHeading')}</h2>
       {shareable.length === 0
-        ? <p class="dc-share-empty">{translator.t('shareNoRoutines')}</p>
+        ? <p class="dc-share-empty">{phrased(translator, 'shareNoRoutines')}</p>
         : (
           <div class="dc-share-list" role="list" aria-labelledby="dc-s9-routines" data-list>
             {shareable.map(routine => {
@@ -205,10 +206,10 @@ export function ShareScreen() {
       {result && (
         <div class="dc-share-done" ref={resultRef}>
           <div class="dc-result" role="status">
-            <div>{result.kind === 'sent' ? translator.t('shareAfterSend')
-              : result.kind === 'refused' ? translator.t('shareRefused')
-              : translator.t('shareSaved', { file: result.file.name })}</div>
-            {copy === 'copied' && <div class="dc-result-sub">{translator.t('instructionsCopied')}</div>}
+            <div>{result.kind === 'sent' ? phrased(translator, 'shareAfterSend')
+              : result.kind === 'refused' ? phrased(translator, 'shareRefused')
+              : phrased(translator, 'shareSaved', { file: result.file.name })}</div>
+            {copy === 'copied' && <div class="dc-result-sub">{phrased(translator, 'instructionsCopied')}</div>}
           </div>
           {result.kind === 'refused' && (
             <button type="button" class="dc-button dc-button--secondary dc-wide" onClick={saveRefused}>
@@ -221,7 +222,7 @@ export function ShareScreen() {
           {copy === 'manual' && (
             <div class="dc-field">
               <textarea class="dc-input dc-instructions" readOnly rows={8} value={instructions} aria-label={translator.t('instructionsLabel')} />
-              <div class="dc-hint">{translator.t('instructionsCopyByHand')}</div>
+              <div class="dc-hint">{phrased(translator, 'instructionsCopyByHand')}</div>
             </div>
           )}
         </div>
@@ -232,11 +233,11 @@ export function ShareScreen() {
           onInput={event => setName((event.currentTarget as HTMLInputElement).value)}
           onBlur={event => saveName(event.currentTarget as HTMLInputElement)}
           onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
-        {needsName && <div class="dc-hint">{translator.t('shareNameNeeded')}</div>}
+        {needsName && <div class="dc-hint">{phrased(translator, 'shareNameNeeded')}</div>}
       </div>
       {shareSectionOrder(intent).map(section => <Fragment key={section}>{section === 'voice' ? voiceSection : routineSection}</Fragment>)}
       <div class="dc-dock dc-share-dock">
-        {showChooseNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length }) && <div class="dc-dock-note">{translator.t('shareChooseSomething')}</div>}
+        {showChooseNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length }) && <div class="dc-dock-note">{phrased(translator, 'shareChooseSomething')}</div>}
         <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>
           <Icon name="share" /><span>{translator.t('createFile')}</span>
         </button>

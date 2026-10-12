@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
-import { LabeledText } from '../components/LabeledText.tsx';
+import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
 import { playBuffer, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
@@ -233,7 +233,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-record" data-screen="S8" data-step="unsupported">
         {header}
-        <div class="dc-alert" role="status" data-alert="no-recorder"><div class="dc-alert-text dc-alert-text--solo"><b>{translator.t('noRecorder')}</b></div></div>
+        <div class="dc-alert" role="status" data-alert="no-recorder"><div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'noRecorder')}</b></div></div>
       </main>
     );
   }
@@ -251,24 +251,24 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         {blocked === 'denied' ? (
           // マイクが使えない設定（Ruling 57-6・D30）: 説明 3 行の場所に枠。「設定の開き方」は同じ枠の中で 3 行に替わる。
           <div class="dc-alert" role="status" data-alert="mic-denied">
-            <div class="dc-alert-text"><b>{translator.t('micDenied')}</b></div>
+            <div class="dc-alert-text"><b>{phrased(translator, 'micDenied')}</b></div>
             {howTo
-              ? <div class="dc-alert-text dc-howto"><div>{translator.t('micHowToIphone')}</div><div>{translator.t('micHowToOther')}</div><div>{translator.t('micHowToThen')}</div></div>
+              ? <div class="dc-alert-text dc-howto"><div>{phrased(translator, 'micHowToIphone')}</div><div>{phrased(translator, 'micHowToOther')}</div><div>{phrased(translator, 'micHowToThen')}</div></div>
               : <button type="button" class="dc-alert-action" data-alert-action onClick={() => setHowTo(true)}>{translator.t('micHowTo')}</button>}
           </div>
         ) : blocked === 'failed' ? (
           // マイクが見つからない・ほかのアプリや通話が使用中（Fable Q2）: 設定ではなく、終えてからもう一度。
           <div class="dc-alert" role="status" data-alert="mic-failed">
-            <div class="dc-alert-text dc-alert-text--solo"><b>{translator.t('micFailed')}</b></div>
+            <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'micFailed')}</b></div>
           </div>
         ) : (
           <div class="dc-record-intro" data-body>
-            <div>{translator.t('recordIntro1')}</div>
-            <div>{translator.t('recordIntro2')}</div>
-            <div>{translator.t('recordIntro3')}</div>
+            <div>{phrased(translator, 'recordIntro1')}</div>
+            <div>{phrased(translator, 'recordIntro2')}</div>
+            <div>{phrased(translator, 'recordIntro3')}</div>
           </div>
         )}
-        {!micProblem && addFirst && <div class="dc-hint dc-record-add-first"><LabeledText text={translator.t('recordAddFirst')} /></div>}
+        {!micProblem && addFirst && <div class="dc-hint dc-record-add-first">{phrased(translator, 'recordAddFirst')}</div>}
         <h2 class="dc-field-label" id="dc-s8-language">{translator.t('recordLanguage')}</h2>
         <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s8-language" data-group="record-language">
           {LANGUAGES.map(locale => {
@@ -323,7 +323,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
         <button type="button" class="dc-button dc-button--secondary dc-wide dc-record-again" onClick={() => goTo({ kind: 'word', index: 0 })}>
           <Icon name="mic" /><span>{translator.t('reviewFromFirst')}</span>
         </button>
-        {backupTip && <div class="dc-hint dc-backup-tip">{translator.t('backupTipRecording')}</div>}
+        {backupTip && <div class="dc-hint dc-backup-tip">{phrased(translator, 'backupTipRecording')}</div>}
         <div class="dc-dock dc-record-dock">
           <button type="button" class="dc-button dc-button--secondary" onClick={finish}>
             <Icon name="check" /><span>{translator.t('finishDone')}</span>
@@ -360,7 +360,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
       <div class="dc-record-slot" data-slot={alert !== 'none' ? 'alert' : 'hint'}>
         {alert !== 'none'
           ? <NoticeLine alert={alert} />
-          : <p class="dc-record-hint">{translator.t('recordHint', { word: prompts.main })}</p>}
+          : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
       </div>
       <div class="dc-rec-ring" style={{ '--p': String(progress) }}>
         <button type="button" class="dc-rec" disabled={recording} onClick={record}>
@@ -399,7 +399,7 @@ function NoticeLine({ alert }: { alert: Alert }) {
   if (alert === 'none') return null;
   return (
     <div class="dc-alert" role="status" data-alert={alert}>
-      <div class="dc-alert-text dc-alert-text--solo"><b>{translator.t(alert === 'no-voice' ? 'noVoiceHeard' : 'saveFailed')}</b></div>
+      <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, alert === 'no-voice' ? 'noVoiceHeard' : 'saveFailed')}</b></div>
     </div>
   );
 }

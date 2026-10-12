@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
-import { LabeledText } from '../components/LabeledText.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { BundleTooLargeError, INBOX_TOO_LARGE, readBundleText, returnToInbox, takeInboxFile } from '../platform/files.ts';
 import { externalBrowserUrl, isLineInAppBrowser } from '../platform/page.ts';
 import { checkForUpdateThenReload } from '../platform/pwa.ts';
@@ -127,7 +127,7 @@ export function ReceiveScreen() {
         {header}
         <h1 class="dc-heading">{translator.t('receivedTitle')}</h1>
         <p class="dc-body">
-          {voice ? voiceNext(translator, voice) : translator.t('receivedRoutines')}
+          {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
@@ -149,19 +149,19 @@ export function ReceiveScreen() {
         <h1 class="dc-heading">{translator.t('inThisFile')}</h1>
         {saveFailed && (
           <div class="dc-alert" role="status" data-alert="save-failed">
-            <div class="dc-alert-text dc-alert-text--solo"><b>{translator.t('saveFailed')}</b></div>
+            <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'saveFailed')}</b></div>
           </div>
         )}
         <div class="dc-receive-list" data-body>
           {voice && <div class="dc-receive-item"><Icon name="voice" /><span>{voiceLine(translator, voice.pack, plan.distributor)}</span></div>}
           {names.length > 0 && <div class="dc-receive-item"><Icon name="list" /><span>{routinesLine(translator, names)}</span></div>}
           {plan.rejected.slice(0, NAMES_SHOWN).map((item, index) => (
-            <div key={index} class="dc-receive-note">{translator.t('routineUnreadable', { name: item.name ?? translator.t('routineNoName') })}</div>
+            <div key={index} class="dc-receive-note">{phrased(translator, 'routineUnreadable', { name: item.name ?? translator.t('routineNoName') })}</div>
           ))}
-          {plan.rejected.length > NAMES_SHOWN && <div class="dc-receive-note">{translator.t('routinesUnreadableMore', { count: plan.rejected.length - NAMES_SHOWN })}</div>}
+          {plan.rejected.length > NAMES_SHOWN && <div class="dc-receive-note">{phrased(translator, 'routinesUnreadableMore', { count: plan.rejected.length - NAMES_SHOWN })}</div>}
           {voice?.replaces && <div class="dc-receive-note">{replaceLine(translator, voice.pack, plan.distributor)}</div>}
-          {replacesRoutines && <div class="dc-receive-note">{translator.t('replaceRoutines')}</div>}
-          {plan.routinesOverLimit > 0 && <div class="dc-receive-note">{translator.t('routinesOverLimit', { max: ROUTINES_MAX, count: plan.routinesOverLimit })}</div>}
+          {replacesRoutines && <div class="dc-receive-note">{phrased(translator, 'replaceRoutines')}</div>}
+          {plan.routinesOverLimit > 0 && <div class="dc-receive-note">{phrased(translator, 'routinesOverLimit', { max: ROUTINES_MAX, count: plan.routinesOverLimit })}</div>}
         </div>
         <div class="dc-dock dc-receive-dock">
           <button type="button" class="dc-button dc-button--secondary" disabled={busy} onClick={() => { setPlan(null); setStep('pick'); }}>
@@ -181,7 +181,7 @@ export function ReceiveScreen() {
       {header}
       {alert ? <PickNotice alert={alert} onUpdate={() => void updateKeepingFile()} /> : inLine && (
         <div class="dc-alert" role="status" data-alert="in-line">
-          <div class="dc-alert-text">{translator.t('openedInLine')}</div>
+          <div class="dc-alert-text">{phrased(translator, 'openedInLine')}</div>
           {lineUrl && <a class="dc-alert-action" data-alert-action href={lineUrl}><span>{translator.t('openInSafari')}</span><Icon name="chev-r" /></a>}
         </div>
       )}
@@ -190,9 +190,9 @@ export function ReceiveScreen() {
         <span>{translator.t(busy ? 'readingFile' : 'chooseFile')}</span>
       </button>
       <div class="dc-receive-help" data-body>
-        {/* iOS の画面の語（「"ファイル"に保存」「最近使った項目」）は WebKit でも途中で折らない（段7 Task 12・S12 と同じ型） */}
-        <div><LabeledText text={translator.t('receiveHelpLine')} /></div>
-        <div><LabeledText text={translator.t('receiveHelpRecents')} /></div>
+        {/* iOS の画面の語（「"ファイル"に保存」「最近使った項目」）は折らない塊・ほかは句の境で折る（段7 Task 12・段8 Ruling 97） */}
+        <div>{phrased(translator, 'receiveHelpLine')}</div>
+        <div>{phrased(translator, 'receiveHelpRecents')}</div>
       </div>
     </main>
   );
@@ -200,10 +200,10 @@ export function ReceiveScreen() {
 
 function PickNotice({ alert, onUpdate }: { alert: NonNullable<PickAlert>; onUpdate(): void }) {
   const { translator } = useI18n();
-  const text = alert.kind === 'broken' ? translator.t('fileBroken', { file: alert.file })
-    : alert.kind === 'too-large' ? translator.t('fileTooLarge')
-    : alert.kind === 'too-new' ? translator.t('fileTooNew')
-    : translator.t('voiceLimitReached', { count: VOICE_LIMITS.packs });
+  const text = alert.kind === 'broken' ? phrased(translator, 'fileBroken', { file: alert.file })
+    : alert.kind === 'too-large' ? phrased(translator, 'fileTooLarge')
+    : alert.kind === 'too-new' ? phrased(translator, 'fileTooNew')
+    : phrased(translator, 'voiceLimitReached', { count: VOICE_LIMITS.packs });
   return (
     <div class="dc-alert" role="status" data-alert={alert.kind}>
       <div class={`dc-alert-text${alert.kind === 'too-new' ? '' : ' dc-alert-text--solo'}`}><b>{text}</b></div>
@@ -217,23 +217,23 @@ function languageName(translator: AppTranslator, pack: VoicePackRecord): string 
 }
 
 // 「山田さんの声（日本語）· 12 語」。旧画面の単体パック（名前の無いファイル）は声の名前のまま。
-function voiceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null): string {
+function voiceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
   const values = { language: languageName(translator, pack), count: packProgress(pack).recorded };
-  return distributor ? translator.t('fileVoiceFrom', { name: distributor.name, ...values }) : translator.t('fileVoiceNamed', { name: pack.name, ...values });
+  return distributor ? phrased(translator, 'fileVoiceFrom', { name: distributor.name, ...values }) : phrased(translator, 'fileVoiceNamed', { name: pack.name, ...values });
 }
 
-function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null): string {
-  return distributor ? translator.t('replaceVoiceFrom', { name: distributor.name }) : translator.t('replaceVoiceNamed', { name: pack.name });
+function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
+  return distributor ? phrased(translator, 'replaceVoiceFrom', { name: distributor.name }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
 }
 
-function voiceNext(translator: AppTranslator, pack: VoicePackRecord): string {
-  return pack.distributor ? translator.t('receivedVoiceFrom', { name: pack.distributor.name }) : translator.t('receivedVoiceNamed', { name: pack.name });
+function voiceNext(translator: AppTranslator, pack: VoicePackRecord) {
+  return pack.distributor ? phrased(translator, 'receivedVoiceFrom', { name: pack.distributor.name }) : phrased(translator, 'receivedVoiceNamed', { name: pack.name });
 }
 
 // 「ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ」。3 本目からは「ほか N 本」。
-function routinesLine(translator: AppTranslator, names: string[]): string {
+function routinesLine(translator: AppTranslator, names: string[]) {
   const separator = translator.locale === 'ja-JP' ? '、' : ', ';
   const shown = names.slice(0, NAMES_SHOWN).join(separator);
   const list = names.length > NAMES_SHOWN ? translator.t('namesAndMore', { names: shown, count: names.length - NAMES_SHOWN }) : shown;
-  return names.length === 1 ? translator.t('fileRoutinesOne', { names: list }) : translator.t('fileRoutines', { count: names.length, names: list });
+  return names.length === 1 ? phrased(translator, 'fileRoutinesOne', { names: list }) : phrased(translator, 'fileRoutines', { count: names.length, names: list });
 }

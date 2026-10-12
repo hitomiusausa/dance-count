@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'preact/hooks';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
-import { LabeledText } from '../components/LabeledText.tsx';
 import type { IconName } from '../components/icon-names.ts';
 import type { MessageKey } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { installGuideFor } from '../lib/install-card.ts';
 import { copyText } from '../platform/files.ts';
 import { currentAddress } from '../platform/page.ts';
@@ -36,11 +36,11 @@ export function InstallHelpScreen() {
         <Icon name="copy" /><span>{translator.t('installCopyAddress')}</span>
       </button>
       {/* コピーの後に何をするかを 1 行で（Fable 答え 5）: iPhone の他のブラウザ→Safari に貼る・PC→スマホに送る */}
-      {copy === 'copied' && <div class="dc-hint" role="status">{translator.t(guide === 'desktop' ? 'installAddressCopiedPhone' : 'installAddressCopiedSafari')}</div>}
+      {copy === 'copied' && <div class="dc-hint" role="status">{phrased(translator, guide === 'desktop' ? 'installAddressCopiedPhone' : 'installAddressCopiedSafari')}</div>}
       {copy === 'manual' && (
         <>
           <input class="dc-input dc-install-address" readOnly value={address} aria-label={translator.t('installCopyAddress')} />
-          <div class="dc-hint">{translator.t('instructionsCopyByHand')}</div>
+          <div class="dc-hint">{phrased(translator, 'instructionsCopyByHand')}</div>
         </>
       )}
     </>
@@ -50,28 +50,28 @@ export function InstallHelpScreen() {
     <main class="dc-screen dc-install" data-screen="S12" data-guide={guide}>
       <BackButton screen="S12" />
       <h1 class="dc-heading">{translator.t('installTitle')}</h1>
-      {guide === 'done' ? <p class="dc-body" data-body>{translator.t('installDone')}</p> : (
+      {guide === 'done' ? <p class="dc-body" data-body>{phrased(translator, 'installDone')}</p> : (
         <>
-          <p class="dc-body" data-body>{translator.t('installIntro')}</p>
+          <p class="dc-body" data-body>{phrased(translator, 'installIntro')}</p>
           {guide === 'ios-safari' && (
             <>
               <ol class="dc-steps dc-install-steps">
                 {IOS_STEPS.map(step => (
                   <li key={step.key}>
-                    <span class="dc-install-step">{step.icon ? <Icon name={step.icon} /> : <span class="dc-ic" aria-hidden="true" />}<span><LabeledText text={translator.t(step.key)} /></span></span>
+                    <span class="dc-install-step">{step.icon ? <Icon name={step.icon} /> : <span class="dc-ic" aria-hidden="true" />}<span>{phrased(translator, step.key)}</span></span>
                   </li>
                 ))}
               </ol>
-              <div class="dc-hint dc-install-note">{translator.t('installNotCarried')}</div>
+              <div class="dc-hint dc-install-note">{phrased(translator, 'installNotCarried')}</div>
             </>
           )}
-          {guide === 'ios-other' && <><p class="dc-body" data-body>{translator.t('installOpenInSafari')}</p>{copyBlock}</>}
-          {guide === 'desktop' && <><p class="dc-body" data-body>{translator.t('installOnPhone')}</p>{copyBlock}</>}
+          {guide === 'ios-other' && <><p class="dc-body" data-body>{phrased(translator, 'installOpenInSafari')}</p>{copyBlock}</>}
+          {guide === 'desktop' && <><p class="dc-body" data-body>{phrased(translator, 'installOnPhone')}</p>{copyBlock}</>}
           {guide === 'android' && (promptAvailable
             ? <button type="button" class="dc-button dc-primary dc-wide" onClick={() => { void showInstallPrompt(); }}>
                 <Icon name="plus-square" /><span>{translator.t('installAndroidButton')}</span>
               </button>
-            : <ol class="dc-steps">{ANDROID_STEPS.map(key => <li key={key}><LabeledText text={translator.t(key)} /></li>)}</ol>)}
+            : <ol class="dc-steps">{ANDROID_STEPS.map(key => <li key={key}>{phrased(translator, key)}</li>)}</ol>)}
         </>
       )}
     </main>

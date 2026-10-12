@@ -550,6 +550,39 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!reported && wraps > 1) issues.push(`U10 button text wraps ${wraps} times > 1 ${describe(button)}`);
   }
 
+  // 段8（Ruling 97-6・U10 の読み替え）: 本文の最終行が「1 字＋句読点」だけにならない（「す。」だけの行）。
+  // 2 行以上に折れる日本語の本文は句の境（phrased() の .dc-phrased）を持つ（句の境の無い文が keep-all なしで語の途中で折れていないか）
+  const BODY_TEXT = 'p, li, .dc-hint, .dc-alert-text, .dc-dock-note, .dc-result, .dc-receive-help > div, .dc-receive-item, .dc-receive-note, '
+    + '.dc-record-intro > div, .dc-consent-text, .dc-bar-note, .dc-dialog-title';
+  const textLines = element => {
+    const tops = new Map();
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      for (let i = 0; i < node.textContent.length; i += 1) {
+        const range = document.createRange();
+        range.setStart(node, i);
+        range.setEnd(node, i + 1);
+        const rect = [...range.getClientRects()].find(item => item.width > 0);
+        if (!rect) continue;
+        const top = Math.round(rect.top);
+        const line = [...tops.keys()].find(key => Math.abs(key - top) <= 2) ?? top;
+        tops.set(line, (tops.get(line) ?? '') + node.textContent[i]);
+      }
+    }
+    return [...tops.entries()].sort((a, b) => a[0] - b[0]).map(([, text]) => text);
+  };
+  for (const element of document.querySelectorAll(BODY_TEXT)) {
+    if (!visible(element) || element.closest('button, a, [data-ellipsis]')) continue;
+    const lines = textLines(element);
+    if (lines.length < 2) continue;
+    const last = [...lines.at(-1).trim()];
+    if (last.length === 1 || (last.length === 2 && /[。、．.,!?！？」）)]/.test(last[1]))) issues.push(`R97 orphan last line "${last.join('')}" ${describe(element)}`);
+    if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(element.textContent) && !element.querySelector('.dc-phrased') && !element.closest('.dc-phrased')) {
+      issues.push(`R97 wrapped Japanese text has no phrase breaks ${describe(element)}`);
+    }
+  }
+
   // U11 下タブと戻る（種別の表と照合）
   const nav = document.querySelector('[data-nav]');
   const back = document.querySelector('[data-back]');

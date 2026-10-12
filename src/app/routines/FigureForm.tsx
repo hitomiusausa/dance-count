@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { Icon } from '../components/Icon.tsx';
 import { danceName, type MessageKey } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { formatCounts } from '../lib/count-display.ts';
 import { revealScrollBy, throttleToFrame } from '../lib/reveal.ts';
 import { nextFrame, onVisibleViewportChange, scrollPageBy, visibleViewport } from '../platform/viewport.ts';
@@ -110,7 +111,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onP
               <Icon name="alert" /><span>{sameText}</span>
             </div>
           )}
-          {layout.sameName === 'copy' && <div class="dc-hint" id={renameId}>{translator.t('renameForOtherCount')}</div>}
+          {layout.sameName === 'copy' && <div class="dc-hint" id={renameId}>{phrased(translator, 'renameForOtherCount')}</div>}
           {suggestions.length > 0 && (
             <div class="dc-suggestions" role="group" aria-label={translator.t('figureSuggestions')}>
               {suggestions.map(name => <button key={name} type="button" class="dc-suggestion" onClick={() => onDraft({ name })}>{name}</button>)}
@@ -127,7 +128,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, onDraft, onP
               onKeyDown={event => { if (event.key === 'Enter' && check.valid) onPrimary(); }} />
             <div class={`dc-hint${symbolsBad ? ' dc-hint--bad' : ''}`} id={hintId} data-allowed-symbols>
               {symbolsBad && <Icon name="alert" />}
-              <span>{translator.t('allowedSymbols', { symbols: allowedSymbols(danceId, translator.locale) })}</span>
+              <span>{phrased(translator, 'allowedSymbols', { symbols: allowedSymbols(danceId, translator.locale) })}</span>
             </div>
             {reasonText && (
               <div class="dc-reason" id={reasonId}>

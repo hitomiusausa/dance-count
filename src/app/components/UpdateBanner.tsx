@@ -1,4 +1,5 @@
 import { usePwaUpdate } from '../platform/pwa.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { useI18n } from '../state/i18n.ts';
 import { useRoute } from '../state/route.ts';
 
@@ -11,7 +12,7 @@ export function UpdateBanner() {
   if (!updateReady) return null;
   return (
     <div class="dc-alert dc-update" role="status" data-alert="update">
-      <div class="dc-alert-text"><b>{translator.t('updateReady')}</b></div>
+      <div class="dc-alert-text"><b>{phrased(translator, 'updateReady')}</b></div>
       <button type="button" class="dc-alert-action" data-alert-action onClick={applyUpdate}>{translator.t('updateApp')}</button>
     </div>
   );

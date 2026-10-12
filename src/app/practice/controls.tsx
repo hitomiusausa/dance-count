@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { buildHash, type UiState } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
@@ -194,24 +195,24 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
     <div class="dc-alert" role="status" data-alert={notice}>
       {notice === 'no-sound' && (
         <>
-          <div class="dc-alert-text"><b>{translator.t('noSoundTitle')}</b>{translator.locale === 'ja-JP' ? '' : ' '}{translator.t('noSoundBody')}</div>
+          <div class="dc-alert-text"><b>{phrased(translator, 'noSoundTitle')}</b>{translator.locale === 'ja-JP' ? '' : ' '}{phrased(translator, 'noSoundBody')}</div>
           <a class="dc-alert-action" data-alert-action href={buildHash({ screen: 'S11', params: {} })}>
             <span>{translator.t('noSoundLink')}</span><Icon name="chev-r" />
           </a>
         </>
       )}
-      {notice === 'stopped' && <div class="dc-alert-text"><b>{translator.t('playbackStopped')}</b></div>}
-      {notice === 'voice-missing' && <div class="dc-alert-text"><b>{translator.t('voiceMissing')}</b></div>}
-      {notice === 'save-failed' && <div class="dc-alert-text"><b>{translator.t('saveFailed')}</b></div>}
+      {notice === 'stopped' && <div class="dc-alert-text"><b>{phrased(translator, 'playbackStopped')}</b></div>}
+      {notice === 'voice-missing' && <div class="dc-alert-text"><b>{phrased(translator, 'voiceMissing')}</b></div>}
+      {notice === 'save-failed' && <div class="dc-alert-text"><b>{phrased(translator, 'saveFailed')}</b></div>}
       {notice === 'backup-tip' && (
         <>
-          <div class="dc-alert-text">{translator.t('backupTipRoutine')}</div>
+          <div class="dc-alert-text">{phrased(translator, 'backupTipRoutine')}</div>
           <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
         </>
       )}
       {notice === 'wake-tip' && (
         <>
-          <div class="dc-alert-text">{translator.t('wakeLockTip')}</div>
+          <div class="dc-alert-text">{phrased(translator, 'wakeLockTip')}</div>
           <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
         </>
       )}

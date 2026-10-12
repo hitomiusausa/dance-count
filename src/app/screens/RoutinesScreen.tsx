@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { danceName } from '../i18n/index.ts';
+import { phrased } from '../i18n/phrased.tsx';
 import { unlockAudioInsideTap } from '../platform/audio-context.ts';
 import type { UiState } from '../router/routes.ts';
 import { ROUTINES_MAX } from '../routines/limits.ts';
@@ -44,7 +45,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
         <Icon name="plus" /><span>{translator.t('newRoutine')}</span>
       </button>
       {routines.length === 0
-        ? <p class="dc-empty" data-body>{translator.t('routinesEmpty')}</p>
+        ? <p class="dc-empty" data-body>{phrased(translator, 'routinesEmpty')}</p>
         : (
           <div class="dc-list" role="list" data-list>
             {routines.map(routine => {
@@ -64,7 +65,7 @@ export function RoutinesScreen({ uiState }: { uiState?: UiState }) {
                   </button>
                   {open && (
                     <div class="dc-row-body" data-row-body>
-                      {playability !== 'ok' && <p class="dc-row-note">{translator.t(playability === 'empty' ? 'needsFigures' : 'needsFix')}</p>}
+                      {playability !== 'ok' && <p class="dc-row-note">{phrased(translator, playability === 'empty' ? 'needsFigures' : 'needsFix')}</p>}
                       <div class="dc-row-actions" data-group="routine-actions">
                         {playability === 'ok' && (
                           <button type="button" class="dc-button dc-primary dc-wide" onClick={() => play(routine)}>

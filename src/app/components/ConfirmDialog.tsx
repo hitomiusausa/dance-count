@@ -1,10 +1,11 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { useI18n } from '../state/i18n.ts';
 
 // 確認ダイアログ（仕様 §6 手動レビュー・Ruling 44）。質問1つ・ボタン2つ・取り消しが左。
 // ブラウザの confirm() は文言とボタン順を決められないので使わない。Esc は「やめる」と同じ。
 export function ConfirmDialog({ title, detail, confirmLabel, onCancel, onConfirm }: {
-  title: string; detail?: string; confirmLabel: string; onCancel(): void; onConfirm(): void;
+  title: ComponentChildren; detail?: ComponentChildren; confirmLabel: string; onCancel(): void; onConfirm(): void;
 }) {
   const { translator } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
