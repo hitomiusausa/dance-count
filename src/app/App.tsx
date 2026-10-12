@@ -25,6 +25,7 @@ import { RecordVoiceScreen } from './screens/RecordVoiceScreen.tsx';
 import { VoicesScreen } from './screens/VoicesScreen.tsx';
 import type { Routine } from './routines/routine.ts';
 import { deleteRoutine, loadRoutines, saveRoutine, sortRoutines } from './routines/store.ts';
+import { bootLoad } from './settings/boot-load.ts';
 import { DEFAULT_SETTINGS, forgetRoutineSettings, type AppSettings } from './settings/settings.ts';
 import { loadSettings, saveSettings } from './settings/store.ts';
 import { I18nContext } from './state/i18n.ts';
@@ -66,12 +67,14 @@ export function App() {
   // 設定とルーティンを読み終えてから描画する（前回カードのちらつき防止。Ruling 26）。開けなければ既定値で続行。
   useEffect(() => {
     let alive = true;
-    openStorageWithin(STORAGE_OPEN_TIMEOUT_MS)
-      .then(opened => {
+    // 段8 Task 12（final-review m1）: どこかが reject しても既定値で描く（bootLoad は reject しない）
+    void bootLoad<AppStorage, Routine>({
+      open: () => openStorageWithin(STORAGE_OPEN_TIMEOUT_MS),
+      loadSettings: opened => loadSettings(opened, { read: readLegacyUiLocale, forget: forgetLegacyUiLocale }),
+      loadRoutines
+    })
+      .then(({ storage: opened, settings: loaded, routines: savedRoutines }) => {
         storage.current = opened;
-        return Promise.all([loadSettings(opened, { read: readLegacyUiLocale, forget: forgetLegacyUiLocale }), loadRoutines(opened)]);
-      })
-      .then(([loaded, savedRoutines]) => {
         if (!alive) return;
         current.current = loaded;
         currentRoutines.current = savedRoutines;
