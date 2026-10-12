@@ -1,4 +1,5 @@
 import { RoutineEditorState } from '../../engine/routine-editor-state.js';
+import type { AutoCounts, AutoCountsFrom } from './auto-counts.ts';
 import { isOffBar } from './bar-check.ts';
 import { checkCounts, normalizeCounts, type CountsProblem } from './counts.ts';
 import { figureIdentity } from './figure-names.ts';
@@ -12,7 +13,11 @@ import type { Routine, RoutineFigure } from './routine.ts';
 // - 変更（確定）は元に戻す／やり直すの対象。入力途中の文字は対象外。
 // 変更した操作は true を返す（画面はその時だけ保存する）。
 export interface FigureDraft { name: string; counts: string }
-export type OpenRow = { kind: 'edit'; index: number; draft: FigureDraft } | { kind: 'add'; draft: FigureDraft };
+// 追加の行の auto（D52・Ruling 107-2）: 最後に自動で入れたカウント（手を付けていなければ draft.counts と同じ）。autoFrom はその出どころ（印の文言）。
+// setDraft({ counts }) が来たら null（手打ちも形のチップも「自分で決めた」）。編集の行には無い（自動入力しない）。
+export type OpenRow = { kind: 'edit'; index: number; draft: FigureDraft } | { kind: 'add'; draft: FigureDraft; auto: string | null; autoFrom: AutoCountsFrom | null };
+// 画面が RoutineEditor に渡す口（D52・Ruling 107-7）。画面が端末のルーティンと今のルーティンの ID を閉じ込めて渡す（editor は routines を知らない）。
+export interface RoutineEditorOptions { autoCounts?: (name: string) => AutoCounts | null }
 export type DraftReason = CountsProblem | 'sameName' | 'name' | null;
 // 主ボタンの働き（Ruling 50-7）。画面はこれで文字・アイコン・押した時の処理を選ぶ（画面に判定を書かない）。
 // add/done＝普通の確定、addCopy＝同じ名前の代表を複製して追加、matchCounts＝欄を代表にそろえる、updateAll＝同じ名前の全行をまとめて確定。
@@ -47,14 +52,16 @@ export class RoutineEditor {
   private readonly edits: RoutineEditorState;
   private readonly meta: Meta;
   private readonly newFigureId: () => string;
+  private readonly lookupAutoCounts: ((name: string) => AutoCounts | null) | null;
   open: OpenRow | null = null;
   moreOpen = false;
 
-  constructor(routine: Routine, newFigureId: () => string) {
+  constructor(routine: Routine, newFigureId: () => string, options: RoutineEditorOptions = {}) {
     const { id: _id, danceId: _danceId, name: _name, bpm: _bpm, countInBars: _bars, source: _source, status: _status, figures: _figures, ...meta } = routine;
     this.meta = meta;
     this.edits = new RoutineEditorState(routine);
     this.newFigureId = newFigureId;
+    this.lookupAutoCounts = options.autoCounts ?? null;
   }
 
   get routine(): Routine {
@@ -114,16 +121,43 @@ export class RoutineEditor {
     if (this.open?.kind === 'add') return false;
     const changed = this.close();
     if (!this.canAdd) return changed;
-    this.open = { kind: 'add', draft: { name: '', counts: '' } };
+    this.open = { kind: 'add', draft: { name: '', counts: '' }, auto: null, autoFrom: null };
     this.moreOpen = false;
     return changed;
   }
 
   setDraft(patch: Partial<FigureDraft>): void {
     if (!this.open) return;
-    const draft = { ...this.open.draft, ...patch };
+    const previous = this.open;
+    const draft = { ...previous.draft, ...patch };
     draft.name = draft.name.slice(0, FIGURE_NAME_MAX);
-    this.open = { ...this.open, draft };
+    if (previous.kind === 'edit') { this.open = { ...previous, draft }; return; }
+    // 追加の行（D52・Ruling 107）: カウントを触ったら以後この行では自動入力しない（空に戻せばまた入る）。
+    if (patch.counts !== undefined) { this.open = { ...previous, draft, auto: null, autoFrom: null }; return; }
+    let { auto, autoFrom } = previous;
+    const renamed = patch.name !== undefined && this.identity(draft.name) !== this.identity(previous.draft.name);
+    const untouched = draft.counts.trim() === '' || (auto !== null && draft.counts === auto);
+    // 同じルーティンに同じフィガーがあれば D19 の「複製して追加」が受け持つ（カウントは触らない）。
+    if (renamed && untouched && this.lookupAutoCounts && !(draft.name.trim() !== '' && this.sameName(draft.name, null))) {
+      const found = draft.name.trim() === '' ? null : this.lookupAutoCounts(draft.name);
+      if (found) {
+        draft.counts = found.counts;
+        auto = found.counts;
+        autoFrom = found.from;
+      } else if (auto !== null) {
+        draft.counts = '';   // 前の自動値は別のフィガーの値なので残さない（打った文字ではない）
+        auto = null;
+        autoFrom = null;
+      }
+    }
+    this.open = { ...previous, draft, auto, autoFrom };
+  }
+
+  // カウント欄の下の印（D52・Ruling 108-3）。追加の行で自動入力した値に手を付けていない間だけ、その出どころ。
+  autoNote(): AutoCountsFrom | null {
+    const open = this.open;
+    if (open?.kind !== 'add' || open.auto === null || open.draft.counts !== open.auto) return null;
+    return open.autoFrom;
   }
 
   // 「決定」「追加する」。無効なら何もしない（ボタンは押せない見た目）。

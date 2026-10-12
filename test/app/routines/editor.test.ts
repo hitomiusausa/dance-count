@@ -64,7 +64,7 @@ test('page hidden: only a valid open row is committed; an incomplete row stays o
   e.openAdd();
   e.setDraft({ name: 'クローズドチェンジ' });   // 名前だけ（LINE へカウントを見に行く）
   assert.equal(e.closeIfValid(), false);
-  assert.deepEqual(e.open, { kind: 'add', draft: { name: 'クローズドチェンジ', counts: '' } });
+  assert.deepEqual(e.open, { kind: 'add', draft: { name: 'クローズドチェンジ', counts: '' }, auto: null, autoFrom: null });
   assert.equal(e.routine.figures.length, 2);
   e.setDraft({ counts: '12a' });                // カウントの途中（無効な文字）
   assert.equal(e.closeIfValid(), false);
@@ -557,4 +557,132 @@ test('editing a received routine keeps it received and keeps who it came from (R
   assert.equal(e.routine.source, 'received');
   assert.equal(e.routine.provenance.sourceKind, 'received');
   assert.deepEqual(e.routine.receivedFrom, receivedFrom);
+});
+
+// --- D52・Ruling 107: 追加の行で名前が変わったら、空欄か前の自動入力のままの時だけカウントを入れる ---
+type Lookup = (name: string) => { counts: string; from: 'history' | 'reviewed' } | null;
+const TABLE: Record<string, { counts: string; from: 'history' | 'reviewed' }> = {
+  ウィスク: { counts: '12&3', from: 'history' },
+  シャッセフロムPP: { counts: '12&3', from: 'reviewed' },
+  ナチュラルターン: { counts: '123123', from: 'history' },
+  クローズドチェンジ: { counts: '123', from: 'reviewed' }
+};
+function autoEditor(figures: Array<[string, string]> = [['ナチュラルターン', '123']], lookup: Lookup = name => TABLE[name.trim()] ?? null) {
+  let next = 0;
+  const calls: string[] = [];
+  const routine: Routine = {
+    ...createRoutine({ id: 'r-aaaaaaaa', danceId: 'waltz', name: 'ワルツの練習', now: NOW }),
+    figures: figures.map(([name, counts], index) => ({ id: `f-0000000${index}`, name, counts }))
+  };
+  const e = new RoutineEditor(routine, () => `f-new0000${next++}`, { autoCounts: name => { calls.push(name); return lookup(name); } });
+  return { e, calls };
+}
+const autoOf = (e: RoutineEditor) => (e.open?.kind === 'add' ? e.open.auto : undefined);
+
+test('auto counts: picking a name into an empty add row fills the counts and shows the note; "Add" works', () => {
+  const { e } = autoEditor();
+  e.openAdd();
+  assert.equal(e.autoNote(), null);
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '12&3');
+  assert.equal(autoOf(e), '12&3');
+  assert.equal(e.autoNote(), 'history');
+  assert.equal(e.check().valid, true);
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'ウィスク:12&3']);
+  assert.equal(e.open, null);   // auto は確定後に残らない
+  e.openAdd();
+  assert.equal(autoOf(e), null);
+  assert.equal(e.autoNote(), null);
+});
+
+test('auto counts: the reviewed table gives the other note', () => {
+  const { e } = autoEditor();
+  e.openAdd();
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.equal(e.open?.draft.counts, '123');
+  assert.equal(e.autoNote(), 'reviewed');
+});
+
+test('auto counts: typed counts are never replaced', () => {
+  const { e, calls } = autoEditor();
+  e.openAdd();
+  e.setDraft({ counts: '1&23' });
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '1&23');
+  assert.equal(e.autoNote(), null);
+  assert.deepEqual(calls, []);   // 打った欄では引きもしない
+});
+
+test('auto counts: a previous auto value is replaced when the name changes', () => {
+  const { e } = autoEditor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.equal(e.open?.draft.counts, '123');
+  assert.equal(e.autoNote(), 'reviewed');
+  // 自動入力のない名前に変えると、前の自動値（別のフィガーの値）は残さない
+  e.setDraft({ name: '私のステップ' });
+  assert.equal(e.open?.draft.counts, '');
+  assert.equal(autoOf(e), null);
+  assert.equal(e.autoNote(), null);
+});
+
+test('auto counts: once the counts are touched (typed or a pattern chip), the row never auto-fills again until emptied', () => {
+  const { e } = autoEditor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  e.setDraft({ counts: '123' });          // 形のチップも手打ちも setDraft({ counts })
+  assert.equal(autoOf(e), null);
+  assert.equal(e.autoNote(), null);
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.equal(e.open?.draft.counts, '123');
+  assert.equal(e.autoNote(), null);
+  e.setDraft({ counts: '12&3' });         // 前の自動値と同じ文字を打っても「自分で決めた」
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '12&3');
+  assert.equal(e.autoNote(), null);
+  e.setDraft({ counts: '' });             // 空に戻せば次の名前の変更でまた入る
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.equal(e.open?.draft.counts, '123');
+  assert.equal(e.autoNote(), 'reviewed');
+});
+
+test('auto counts: only when the figure identity changes (spacing or the same figure in another spelling does not refill)', () => {
+  const { e, calls } = autoEditor();
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  e.setDraft({ name: 'ウィスク ' });
+  e.setDraft({ name: 'Whisk' });
+  assert.deepEqual(calls, ['ウィスク']);
+  assert.equal(e.open?.draft.counts, '12&3');
+  assert.equal(e.autoNote(), 'history');
+});
+
+test('auto counts: a figure already in this routine is left to "Duplicate and add" (D19 wins; counts untouched)', () => {
+  const { e, calls } = autoEditor([['ナチュラルターン', '123']]);
+  e.openAdd();
+  e.setDraft({ name: 'ナチュラルターン' });
+  assert.equal(e.open?.draft.counts, '');
+  assert.equal(e.check().action, 'addCopy');
+  assert.deepEqual(calls, []);
+  assert.equal(e.autoNote(), null);
+});
+
+test('auto counts: edit rows never auto-fill (Ruling 107-1)', () => {
+  const { e, calls } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '123']]);
+  e.openRow(1);
+  e.setDraft({ counts: '' });
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '');
+  assert.equal(e.autoNote(), null);
+  assert.deepEqual(calls, []);
+});
+
+test('auto counts: without the option the editor behaves as before', () => {
+  const e = editor([]);
+  e.openAdd();
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.open?.draft.counts, '');
+  assert.equal(e.autoNote(), null);
 });
