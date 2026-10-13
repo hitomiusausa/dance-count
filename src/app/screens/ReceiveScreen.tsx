@@ -124,6 +124,13 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
 
   if (step === 'done' && plan) {
     const voice = plan.voice?.pack;
+    // 夜間便 B-2（Ruling 124・監査 #3・po-checklist A-15 の読み替え）: 束にルーティンが入っていたら主ボタンはルーティン（1 本ならその S5 へ・自動では鳴らさない／
+    // 2 本以上は U2 へ）。声も入っていれば「種目を選ぶ ›」は 2 番目の行。声だけの束は今のまま（種目を選ぶ）。ルーティンの在りかの 1 文（A-2）はボタンが答えなので出さない
+    const received = plan.routines.map(item => item.routine);
+    const only = received.length === 1 ? received[0]! : null;
+    const exit = received.length === 0 ? { screen: voice ? 'S1' as const : 'U2' as const, label: voice ? 'goHome' as const : 'seeRoutines' as const }
+      : only ? { screen: 'S5' as const, label: 'playRoutine' as const }
+      : { screen: 'U2' as const, label: 'seeRoutines' as const };
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="done">
         {header}
@@ -131,12 +138,15 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
         <p class="dc-body">
           {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
-        {/* Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束は、出口（種目を選ぶ）は 1 つのまま、ルーティンの在りかを 1 文で */}
-        {voice && plan.routines.length > 0 && <p class="dc-body">{phrased(translator, 'receivedRoutinesToo')}</p>}
+        {voice && received.length > 0 && (
+          <button type="button" class="dc-link-row dc-receive-second" data-second-exit onClick={() => exitTo({ screen: 'S1', params: {} })}>
+            <span class="dc-link-label">{translator.t('goHome')}</span><Icon name="chev-r" />
+          </button>
+        )}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
-            onClick={() => exitTo({ screen: voice ? 'S1' : 'U2', params: {} })}>
-            <span>{translator.t(voice ? 'goHome' : 'seeRoutines')}</span><Icon name="chev-r" />
+            onClick={() => exitTo(exit.screen === 'S5' && only ? { screen: 'S5', params: { routineId: only.id } } : { screen: exit.screen, params: {} })}>
+            <span>{translator.t(exit.label)}</span><Icon name="chev-r" />
           </button>
         </div>
       </main>

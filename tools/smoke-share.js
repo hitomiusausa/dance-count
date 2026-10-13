@@ -210,8 +210,10 @@ try {
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
   await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
-  await expectText(s, 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
-  await s.locator('.dc-dock .dc-primary').click();
+  // 夜間便 B-2（Ruling 124）: ルーティンが 1 本入っていたら主ボタンは「ルーティンを鳴らす」・「種目を選ぶ」は 2 番目の行（在りかの 1 文は出さない）
+  if ((await s.locator('.dc-dock .dc-primary').textContent())?.trim() !== 'ルーティンを鳴らす') errors.push(`S10 done: the main button reads "${(await s.locator('.dc-dock .dc-primary').textContent())?.trim()}", expected "ルーティンを鳴らす" (B-2)`);
+  if ((await s.locator('main').textContent())?.includes('ルーティンは、「使う」の下のタブ「ルーティン」にあります。')) errors.push('S10 done: the routines sentence is shown next to the routine button (B-2)');
+  await s.locator('[data-second-exit]').click();
   await s.waitForSelector('[data-screen="S1"]');
   if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
   await s.waitForTimeout(WRITE_SETTLE_MS);
@@ -326,9 +328,14 @@ try {
   await s.waitForSelector('[data-step="confirm"]');
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
+  // 夜間便 B-2: ルーティン 1 本だけの束は「ルーティンを鳴らす」→ その S5（自動では鳴らさない）→ 戻ると U2 →「‹ 表紙」1 回で表紙
   await s.locator('.dc-dock .dc-primary').click();
+  await s.waitForSelector('[data-screen="S5"]');
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  if ((await s.locator('[data-screen="S5"]').getAttribute('data-playing')) !== 'false') errors.push('S10 "Play the routine" started playing by itself (B-2: only after ▶)');
+  await s.locator('[data-back]').click();
   await s.waitForSelector('[data-screen="U2"]');
-  if (!s.url().endsWith('#/use/routines')) errors.push(`S10 "See routines" should land on U2 (url ${s.url()})`);
+  if (!s.url().endsWith('#/use/routines')) errors.push(`back from S5 after receiving should land on U2 (url ${s.url()})`);
   await s.locator('[data-back]').click();
   await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 

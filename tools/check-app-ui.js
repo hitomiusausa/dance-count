@@ -393,12 +393,18 @@ const STATES = [
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
   // Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束はルーティンの在りかを 1 文で（出口は 1 つのまま・375×548 でも初期表示）
   // 夜間便 A-2（Ruling 123・監査 #3）: S10 にタブは無いので、文は「「使う」の下のタブ「ルーティン」」＝次の画面の場所を指す（鍵で ja/en とも見る）
-  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1,
-    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['receivedRoutinesToo'], firstView: ['.dc-dock .dc-primary'],
+  // 夜間便 B-2（Ruling 124・po-checklist A-15 の読み替え）: ルーティンが入っていたら主ボタンはルーティン（2 本以上は「ルーティンを見る」で U2）・「種目を選ぶ」は 2 番目の行。
+  // A-2 の在りかの 1 文はボタンが答えなので出さない
+  { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2,
+    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['seeRoutines', 'goHome'], firstView: ['.dc-dock .dc-primary', '[data-second-exit]'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
-  { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
-    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
+  { name: 'S10 受け取った・声とルーティン 1 本', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2, textKeys: ['playRoutine', 'goHome'], firstView: ['.dc-dock .dc-primary', '[data-second-exit]'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-one-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
+      { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
+  { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['goHome'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'], absent: ['[data-second-exit]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-only.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },

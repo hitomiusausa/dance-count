@@ -305,7 +305,8 @@ export const APP_MESSAGES = {
     receivedRoutines: 'They are in “Routines”.',
     receivedRoutinesToo: 'The routines are under the “Routines” tab at the bottom of “Use”.',
     goHome: 'Choose a dance',
-    seeRoutines: 'See routines'
+    seeRoutines: 'See routines',
+    playRoutine: 'Play the routine'   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
   },
   'ja-JP': {
     appName: 'Dance Count',
@@ -606,7 +607,8 @@ export const APP_MESSAGES = {
     receivedRoutines: '「ルーティン」に入っています。',
     receivedRoutinesToo: 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。',
     goHome: '種目を選ぶ',
-    seeRoutines: 'ルーティンを見る'
+    seeRoutines: 'ルーティンを見る',
+    playRoutine: 'ルーティンを鳴らす'   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
   }
 } as const satisfies Record<string, Record<string, string>>;
 
