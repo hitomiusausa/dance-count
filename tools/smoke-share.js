@@ -149,9 +149,11 @@ try {
   await page.waitForSelector('.dc-result-sub, textarea.dc-instructions');
   if (await page.locator('textarea.dc-instructions').count()) {
     if (!(await page.locator('textarea.dc-instructions').inputValue()).includes('【iPhone】')) errors.push('S9: the instructions box does not hold the instructions');
+    if (!(await page.locator('textarea.dc-instructions').inputValue()).split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   } else {
     const copied = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
     if (!copied.includes('【iPhone】')) errors.push('S9: the copied text is not the instructions');
+    else if (!copied.split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   }
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();

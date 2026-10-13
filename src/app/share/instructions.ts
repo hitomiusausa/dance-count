@@ -6,9 +6,11 @@ import type { AppTranslator } from '../i18n/index.ts';
 export function studentInstructions(translator: AppTranslator, { hasVoice, appUrl }: { hasVoice: boolean; appUrl: string }): string {
   const lines = [
     translator.t(hasVoice ? 'instructionsVoiceLead' : 'instructionsRoutinesLead'),
-    translator.t('instructionsIphone'),
+    translator.t('instructionsIphoneHead'),   // 夜間便 A-6（Ruling 123・監査 #9d）: 【iPhone】・【Android】は見出しだけの 1 行
+    translator.t('instructionsStep1'),
     translator.t('instructionsStep2'),
     translator.t('instructionsStep3'),
+    translator.t('instructionsAndroidHead'),
     translator.t('instructionsAndroid'),
     translator.t('instructionsPhone')
   ];
