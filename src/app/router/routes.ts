@@ -13,9 +13,10 @@ export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: s
 // confirm-delete-all は S13 の「データを全て消す」の確認（段8・Ruling 99-3・100-2。見た目だけで、消さない）。
 // 段8（Ruling 100-2・§11 の全件）: save-failed（S2・S4・S5・S8・S10 確認の「保存できませんでした」）・stopped（S2・S5「再生が止まりました」）・
 // voice-missing（S2・S5・S7「この声はまだ端末に入っていません」）・mic-failed（S8「マイクを使えませんでした」）。
+// D59（2026-10-14）: rec-countdown（S8 の合図「3」の見た目）・rec-capture（S8 の「● 録音中」と縮む棒の見た目）。マイクは開かない。
 // 設定・hints・再生状態・声・マイク・Service Worker には書かない。以後の追加は裁定が要る。
 export type UiState = 'no-sound' | 'wakelock-tip' | 'confirm-delete' | 'mic-denied' | 'no-voice' | 'no-recorder' | 'update-ready' | 'confirm-delete-all'
-  | 'save-failed' | 'stopped' | 'voice-missing' | 'mic-failed' | 'no-https';
+  | 'save-failed' | 'stopped' | 'voice-missing' | 'mic-failed' | 'no-https' | 'rec-countdown' | 'rec-capture';
 export type RouteQuery = { uiState?: UiState };
 // alias: 古い経路（#/routines）で来た。resolve.ts がハッシュを今の経路へ置き換える（Ruling 116-1）
 export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery; alias?: true }
@@ -58,7 +59,7 @@ const ALIAS_PATHS: Array<{ screen: ScreenId; path: string }> = [{ screen: 'U2', 
 
 const ID_SEGMENT = /^[A-Za-z0-9_-]+$/;
 const UI_STATES: readonly UiState[] = ['no-sound', 'wakelock-tip', 'confirm-delete', 'mic-denied', 'no-voice', 'no-recorder', 'update-ready', 'confirm-delete-all',
-  'save-failed', 'stopped', 'voice-missing', 'mic-failed', 'no-https'];
+  'save-failed', 'stopped', 'voice-missing', 'mic-failed', 'no-https', 'rec-countdown', 'rec-capture'];
 
 const toPattern = ({ screen, path }: { screen: ScreenId; path: string }) => ({ screen, segments: path.split('/').filter(Boolean) });
 const PATTERNS = [

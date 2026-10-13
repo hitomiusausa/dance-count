@@ -23,11 +23,20 @@ test('next only after the word is recorded, 12th leads to done; previous from th
   assert.deepEqual(previousStep(3), { kind: 'word', index: 2 });
 });
 
-test('prompts: the chosen vocabulary big, the other one small (Ruling 59-2)', () => {
-  assert.deepEqual(wordPrompts('en', 'slow'), { main: 'Slow', other: 'スロー' });
-  assert.deepEqual(wordPrompts('ja-JP', 'slow'), { main: 'スロー', other: 'Slow' });
-  assert.deepEqual(wordPrompts('ja-JP', 'four'), { main: 'よん', other: 'Four' }, 'never the 「し」でも可 note');
-  assert.deepEqual(wordPrompts('en', 'ah'), { main: 'a', other: 'ア' });
+test('prompts: the chosen vocabulary big, the other one small in the Japanese UI (Ruling 59-2)', () => {
+  assert.deepEqual(wordPrompts('en', 'slow', 'ja-JP'), { main: 'Slow', other: 'スロー' });
+  assert.deepEqual(wordPrompts('ja-JP', 'slow', 'ja-JP'), { main: 'スロー', other: 'Slow' });
+  assert.deepEqual(wordPrompts('ja-JP', 'four', 'ja-JP'), { main: 'よん', other: 'Four' }, 'never the 「し」でも可 note');
+  assert.deepEqual(wordPrompts('en', 'ah', 'ja-JP'), { main: 'a', other: 'ア' });
+});
+
+test('prompts: the English UI shows only the word to say, never a Japanese reading (D60)', () => {
+  assert.deepEqual(wordPrompts('en', 'one', 'en'), { main: 'One', other: null }, 'no 「いち」 under One');
+  assert.deepEqual(wordPrompts('en', 'two', 'en'), { main: 'Two', other: null }, 'no 「に」 under Two');
+  assert.deepEqual(wordPrompts('ja-JP', 'one', 'en'), { main: 'いち', other: null }, 'the Japanese word once, as the word to say');
+  const english = createAppTranslator('en');
+  assert.equal(/[\u3040-\u30ff\u4e00-\u9fff]/.test(english.t('countInJapanese')), false, 'the language choice in English has no kana/kanji');
+  assert.equal(/[\u3040-\u30ff\u4e00-\u9fff]/.test(english.t('recordHint', { word: 'One' })), false);
 });
 
 test('default names follow D23', () => {

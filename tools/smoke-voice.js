@@ -15,7 +15,8 @@ import { chromium } from 'playwright-core';
 const BASE = process.env.DC_BASE_URL ?? 'http://localhost:5173/';
 const FIXTURES = path.resolve(import.meta.dirname, '../test/fixtures/voice');
 const SOUND_TIMEOUT_MS = 10000;
-const TAKE_TIMEOUT_MS = 8000;      // getUserMedia（〜0.3 秒）＋ 1.5 秒の録音 ＋ 正規化と保存
+const TAKE_TIMEOUT_MS = 12000;     // getUserMedia（〜0.3 秒）＋ 合図 3.3 秒（D59）＋ 2 秒の録音 ＋ 正規化と保存
+const CUE_GUARD_S = 0.1;           // 録音の開始は合図の最後の音の終わり＋この秒より後（設計は 0.15 秒。D59）
 const WRITE_SETTLE_MS = 500;       // 書き込みの確定を待ってから再読み込み（smoke-routines.js と同じ理由）
 const STANDARD_AUDIO = '/audio/default-en-female-v1/';
 const PREVIEW_MS = 2500;           // 試聴を鳴らして指紋を集める時間
@@ -43,6 +44,21 @@ async function openPage(browser) {
       }
       return start.apply(this, args);
     };
+    // D59: 合図の音（OscillatorNode）の終わりの予約時刻と、MediaRecorder.start の時の音の時計。合図が録音に入らない証拠。
+    window.__cues = [];
+    window.__recStarts = [];
+    const stop = OscillatorNode.prototype.stop;
+    OscillatorNode.prototype.stop = function (when) {
+      window.__cue = this.context;
+      if (when !== undefined) window.__cues.push(when);
+      else window.__cues.push(this.context.currentTime);
+      return stop.call(this, when);
+    };
+    const recStart = MediaRecorder.prototype.start;
+    MediaRecorder.prototype.start = function (...args) {
+      window.__recStarts.push(window.__cue ? window.__cue.currentTime : null);
+      return recStart.apply(this, args);
+    };
   });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
@@ -67,10 +83,19 @@ async function chipText(page) {
   return (await page.locator('[data-voice-chip]').textContent())?.trim();
 }
 
-// 今の語を録る: 「録音する」→ 録音中は押せない → 波形と「聞く」が出て、ボタンが「録り直す」に戻る。
+// 今の語を録る: 「録音する」→ 合図（3・2・1・今。D59）→ 録音中は押せない → 波形と「聞く」が出て、ボタンが「録り直す」に戻る。
+// 録音の開始（MediaRecorder.start）は、合図の最後の音の終わり（音の時計）＋余白より後（合図の音が録音に入らない）。
 async function recordWord(page, label) {
+  await page.evaluate(() => { window.__cues = []; window.__recStarts = []; });
   await page.locator('.dc-rec').click();
   try {
+    await page.waitForSelector('[data-phase="countdown"] .dc-rec-count', { timeout: 2000 });
+    await page.waitForSelector('[data-phase="capture"] .dc-rec:disabled', { timeout: TAKE_TIMEOUT_MS });
+    const { cues, starts } = await page.evaluate(() => ({ cues: window.__cues, starts: window.__recStarts }));
+    if (cues.length !== 4) errors.push(`${label}: ${cues.length} cue sounds, expected 4 (pi pi pi pōn)`);
+    else if (starts.length !== 1 || starts[0] === null || starts[0] < Math.max(...cues) + CUE_GUARD_S) {
+      errors.push(`${label}: recording started at ${starts[0]} s, the last cue ends at ${Math.max(...cues)} s (needs +${CUE_GUARD_S} s)`);
+    }
     await page.waitForSelector('.dc-take', { timeout: TAKE_TIMEOUT_MS });
     await page.waitForSelector('.dc-rec:not([disabled])', { timeout: TAKE_TIMEOUT_MS });
   } catch {
@@ -133,6 +158,18 @@ try {
   if ((await page.locator('[data-group="record-language"] [role="radio"]').first().getAttribute('aria-checked')) !== 'true') errors.push('S8: English is not the first choice');
   await page.locator('.dc-dock .dc-primary').click();
   await page.waitForSelector('[data-step="word"]');
+
+  // D59: 合図の間にもう一度押すと「やめる」＝何も保存しない・録音は始まらない・波形は出ない
+  await page.evaluate(() => { window.__recStarts = []; });
+  await page.locator('.dc-rec').click();
+  await page.waitForSelector('[data-phase="countdown"]');
+  await page.waitForTimeout(1200);
+  await page.locator('.dc-rec').click();
+  await page.waitForSelector('[data-phase="idle"]', { timeout: 2000 }).catch(() => errors.push('cancel: the countdown did not stop'));
+  await page.waitForTimeout(3000);   // やめなければ録音が始まっていた時刻を過ぎるまで待つ
+  if ((await page.evaluate(() => window.__recStarts.length)) !== 0) errors.push('cancel: a recording started after "Cancel"');
+  if (await page.locator('.dc-take').count()) errors.push('cancel: a take is shown');
+  if ((await readPacks(page)).some(pack => pack.words > 0)) errors.push('cancel: a word was saved');
 
   // 3 語録って戻る（Ruling 59-2: 1 語ごとに保存済み）
   for (let word = 1; word <= 3; word += 1) {

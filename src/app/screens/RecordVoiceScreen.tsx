@@ -3,7 +3,7 @@ import { FocusHeader } from '../components/FocusHeader.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
-import { playBuffer, unlockAudioInsideTap } from '../platform/audio-context.ts';
+import { outputLatencySeconds, playBuffer, scheduleTone, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
 import { RecorderError, TAKE_MS, recordTake, recorderNeedsHttps, recorderSupported, requestMicrophone } from '../platform/recorder.ts';
 import { requestPersistentStorage } from '../platform/storage.ts';
@@ -16,6 +16,7 @@ import { replaceRoute } from '../state/route.ts';
 import { useSettings } from '../state/settings.ts';
 import { useStorage } from '../state/storage.ts';
 import { recordedPackIdFor, type VoiceLocale } from '../voices/ids.ts';
+import { captureWaitMs, countdownPlan, type CountMark } from '../voices/countdown.ts';
 import { processTake, type DecodeContext } from '../voices/normalize.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
@@ -29,11 +30,14 @@ import { defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, s
 // 言葉の 2 択と「録音をはじめる」は残す＝もう一度は同じボタン（D30・Fable Q2/Q4）。
 // ui-state: mic-denied（説明の画面に拒否の枠）・no-voice（1 語目に「声が入っていませんでした」）・no-recorder（非対応の枠）。見た目だけ（Ruling 63-3）。
 // 段8（Ruling 100-2）: mic-failed（説明の画面に「マイクを使えませんでした」）・save-failed（1 語目に「保存できませんでした」）。
+// D59: rec-countdown（1 語目の合図「3」で止まった見た目）・rec-capture（1 語目の「● 録音中」で止まった見た目）。マイクは開かず、音も鳴らさない。
 // ui-state の時は録っても名前を変えても端末の声・設定に書かない（画面の中だけ。最終レビュー M5）。no-voice は英語の声があればその写しから。
-const PROGRESS_TICK_MS = 100;   // 録音中の輪を描き直す間隔（1.5 秒の動きは transition ではなく描画の更新で。U8）
+const PROGRESS_TICK_MS = 100;   // 録音中の棒を描き直す間隔（2 秒の動きは transition ではなく描画の更新で。U8）
 const LANGUAGES: readonly VoiceLocale[] = ['en', 'ja-JP'];
 
 type Alert = 'none' | 'no-voice' | 'save-failed';
+// 「録音する」の後（D59）: idle → countdown（3・2・1・今。マイクは開いている・録音はまだ）→ capture（録音中）→ idle
+type Phase = 'idle' | 'countdown' | 'capture';
 type Blocked = 'none' | 'denied' | 'failed' | 'unsupported';
 
 // 段8 Task 9（通し確認）: 数える言葉の行は括弧の前でだけ折る（iOS 26 で「スロー／…）」、Chrome で「に、／スロー…）」と括弧の中で折れた）。
@@ -43,6 +47,32 @@ function countLabel(label: string) {
   if (open <= 0) return label;
   const cut = label[open] === ' ' ? open + 1 : open;   // 英語は空白の後で（空白が折れ目）
   return <>{label.slice(0, cut)}<wbr /><span class="dc-nowrap">{label.slice(cut)}</span></>;
+}
+
+// 合図（D59）: 3・2・1 の「ピ」と今の「ポーン」を音の時計に予約し、数字を画面に出し、録音を始めてよい時に resolve する。
+// 合図の音が録音に入らない仕組み: (1) 録音の開始は表（countdownPlan）の captureAtMs＝ポーンの終わり＋出力の遅れ＋余白 150ms。
+// (2) その時に音の時計でもう一度確かめ、まだ鳴り終わっていなければ（時計のずれ）残りを止めて、届き終わるまで待つ（captureWaitMs）。
+// (3) AudioContext が動いていない時は音を鳴らさない（数字だけで進む。止まっていた時計が後から鳴らすのを防ぐ）。
+// signal（「やめる」・語を移った・画面を離れた）で予約した音を止めて reject。
+function runCountdown(audio: AudioContext | null, signal: AbortSignal, onMark: (mark: CountMark) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const sounding = audio !== null && audio.state === 'running';
+    const latencyMs = audio && sounding ? outputLatencySeconds(audio) * 1000 : 0;
+    const plan = countdownPlan(latencyMs);
+    const audioStart = audio && sounding ? audio.currentTime : 0;
+    const stops = audio && sounding ? plan.cues.map(cue => scheduleTone(audio, audioStart + cue.atMs / 1000, cue.hz, cue.ms)) : [];
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const cleanup = () => { timers.forEach(clearTimeout); signal.removeEventListener('abort', onAbort); };
+    function onAbort() { cleanup(); stops.forEach(stop => stop()); reject(new RecorderError('failed')); }
+    if (signal.aborted) { onAbort(); return; }
+    signal.addEventListener('abort', onAbort);
+    for (const { atMs, mark } of plan.marks) timers.push(setTimeout(() => onMark(mark), atMs));
+    timers.push(setTimeout(() => {
+      const wait = captureWaitMs(plan, audio && sounding ? (audio.currentTime - audioStart) * 1000 : null, latencyMs);
+      if (wait > 0) stops.forEach(stop => stop());
+      timers.push(setTimeout(() => { cleanup(); resolve(); }, wait));
+    }, plan.captureAtMs));
+  });
 }
 
 function blockedBy(error: unknown): Blocked {
@@ -59,13 +89,15 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const [language, setLanguage] = useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en');
   const [saved, setSaved] = useState<Record<VoiceLocale, VoicePackRecord | null> | null>(null);
   const [pack, setPack] = useState<VoicePackRecord | null>(null);
-  const forcedWord = uiState === 'no-voice' || uiState === 'save-failed';
+  const forcedWord = uiState === 'no-voice' || uiState === 'save-failed' || uiState === 'rec-countdown' || uiState === 'rec-capture';
   const [step, setStep] = useState<RecordStep>(() => (forcedWord ? { kind: 'word', index: 0 } : { kind: 'intro' }));
   const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'mic-failed' ? 'failed' : uiState === 'no-recorder' || uiState === 'no-https' || !recorderSupported() ? 'unsupported' : 'none'));
   const [alert, setAlert] = useState<Alert>(uiState === 'no-voice' ? 'no-voice' : uiState === 'save-failed' ? 'save-failed' : 'none');
   const [howTo, setHowTo] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<Phase>(uiState === 'rec-countdown' ? 'countdown' : uiState === 'rec-capture' ? 'capture' : 'idle');
+  const [mark, setMark] = useState<CountMark>(3);
+  const recording = phase !== 'idle';   // 合図と録音のあいだ（マイクが開いている）
+  const [progress, setProgress] = useState(uiState === 'rec-capture' ? 0.4 : 0);
   const [peaks, setPeaks] = useState<number[]>([]);
   const [listening, setListening] = useState(false);
   const generation = useRef(0);          // 画面を離れた・語を移った後に届いた録音の結果は捨てる（Ruling 57-7）
@@ -109,9 +141,17 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     abortTake.current?.abort();
     abortTake.current = null;
     stopListening.current?.();
-    setRecording(false);
+    setPhase('idle');
     setProgress(0);
     setAlert('none');   // 枠は語を移ったら消す（Fable Q5）
+  };
+  // 合図の間の「やめる」（D59）: 何も保存しない・枠もそのまま。届く結果は generation で捨てる。マイクはすぐ閉じる。
+  const cancelTake = () => {
+    generation.current += 1;
+    abortTake.current?.abort();
+    abortTake.current = null;
+    setPhase('idle');
+    setProgress(0);
   };
   const goTo = (next: RecordStep | null) => {
     if (!next) return;
@@ -133,23 +173,28 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     });
   };
 
-  // 「録音する」: タップの中で音を解除し（decode に使う）、マイクを開いて 1.5 秒（Ruling 57・58）。
-  // 前の枠（声が入っていない等）は結果が出るまで残す（録音中にボタンの位置が動かないように）。成功で消える（Fable Q5）。
+  // 「録音する」: タップの中で音を解除し（合図と decode に使う）、マイクを開いて、合図（3・2・1・今）の後 2 秒（Ruling 57・58・D59）。
+  // 合図の間にもう一度押すと「やめる」。前の枠（声が入っていない等）は結果が出るまで残す（録音中にボタンの位置が動かないように）。成功で消える（Fable Q5）。
   const record = () => {
-    if (!pack || !word || recording) return;
+    if (!pack || !word) return;
+    if (phase === 'countdown') { cancelTake(); return; }
+    if (recording) return;
     stopListening.current?.();
     let audio: AudioContext | null = null;
     try { audio = unlockAudioInsideTap(); } catch { audio = null; }
     const mine = ++generation.current;
     const controller = new AbortController();
     abortTake.current = controller;
-    setRecording(true);
+    setPhase('countdown');
+    setMark(3);
     setProgress(0);
     let timer: ReturnType<typeof setInterval> | null = null;
     const startedAt = { at: 0 };
     recordTake({
       signal: controller.signal,
+      prepare: () => runCountdown(audio, controller.signal, next => { if (mine === generation.current) setMark(next); }),
       onStart: () => {
+        if (mine === generation.current) setPhase('capture');
         startedAt.at = Date.now();
         timer = setInterval(() => setProgress(Math.min(1, (Date.now() - startedAt.at) / TAKE_MS)), PROGRESS_TICK_MS);
       }
@@ -184,7 +229,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
       .finally(() => {
         if (timer) clearInterval(timer);
         if (abortTake.current === controller) abortTake.current = null;
-        if (mine === generation.current) { setRecording(false); setProgress(0); }
+        if (mine === generation.current) { setPhase('idle'); setProgress(0); }
       });
   };
 
@@ -351,10 +396,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   }
 
   const index = step.index;
-  const prompts = wordPrompts(pack.locale, word!);
+  const prompts = wordPrompts(pack.locale, word!, translator.locale);
   const onsetAt = take ? Math.min(1, take.onsetMs / take.durationMs) : 0;
   return (
-    <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'}
+    <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'} data-phase={phase}
       data-taken={take ? 'true' : 'false'} data-notice={alert !== 'none' ? alert : undefined}>
       {header}
       <div class="dc-record-progress" role="progressbar" aria-valuemin={0} aria-valuemax={VOICE_KEYS.length} aria-valuenow={index + 1}
@@ -368,18 +413,38 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
       </div>
       <div class="dc-record-word">
         <div class="dc-record-main" lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>{prompts.main}</div>
-        <div class="dc-record-other" lang={pack.locale === 'ja-JP' ? 'en' : 'ja'}>{prompts.other}</div>
+        {prompts.other !== null && <div class="dc-record-other" lang={pack.locale === 'ja-JP' ? 'en' : 'ja'}>{prompts.other}</div>}
       </div>
       {/* 説明の 1 行と枠は同じ高さの箱（枠が出ても丸が動かない。Ruling 72-2） */}
-      <div class="dc-record-slot" data-slot={alert !== 'none' ? 'alert' : 'hint'}>
-        {alert !== 'none'
-          ? <NoticeLine alert={alert} />
-          : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
+      {/* 録音中（D59）は同じ箱に「約 2 秒で自動で止まります」（箱の高さは同じ＝丸は動かない） */}
+      <div class="dc-record-slot" data-slot={phase === 'capture' ? 'capture' : alert !== 'none' ? 'alert' : 'hint'}>
+        {phase === 'capture'
+          ? <p class="dc-record-hint dc-record-autostop">{phrased(translator, 'recordAutoStop')}</p>
+          : alert !== 'none'
+            ? <NoticeLine alert={alert} />
+            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
       </div>
-      <div class="dc-rec-ring" style={{ '--p': String(progress) }}>
-        <button type="button" class="dc-rec" disabled={recording} onClick={record}>
-          <Icon name="mic" />
-          <span>{recording ? translator.t('recordingNow') : take ? translator.t('recordAgain') : translator.t('recordWord')}</span>
+      <div class="dc-rec-ring">
+        {/* 合図（3・2・1・今）の間は押すと「やめる」。録音中だけ押せない（D59） */}
+        <button type="button" class="dc-rec" disabled={phase === 'capture'} onClick={record} data-mark={phase === 'countdown' ? String(mark) : undefined}>
+          {phase === 'countdown' ? (
+            <>
+              <span key={String(mark)} class={`dc-rec-count${mark === 'now' ? ' dc-rec-count--now' : ''}`} aria-live="assertive">
+                {mark === 'now' ? translator.t('recordCueNow') : mark}
+              </span>
+              <span class="dc-rec-cancel">{translator.t('recordCancel')}</span>
+            </>
+          ) : phase === 'capture' ? (
+            <>
+              <span class="dc-rec-live"><span class="dc-rec-dot" aria-hidden="true" />{translator.t('recordingNow')}</span>
+              <span class="dc-rec-bar" aria-hidden="true" style={{ '--p': String(progress) }}><span /></span>
+            </>
+          ) : (
+            <>
+              <Icon name="mic" />
+              <span>{take ? translator.t('recordAgain') : translator.t('recordWord')}</span>
+            </>
+          )}
         </button>
       </div>
       {take && (

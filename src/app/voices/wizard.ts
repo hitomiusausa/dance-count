@@ -36,10 +36,12 @@ export function previousStep(index: number): RecordStep | null {
 }
 
 // 見出しの語（56px）＝選んだ言葉の語彙の第一表記、下の小さい語（20px）＝もう一方の語彙の第一表記（Ruling 0-1 の訂正）。
-export function wordPrompts(locale: VoiceLocale, key: VoiceKey): { main: string; other: string } {
+// D60（2026-10-14）: 下の小さい語は日本語の画面だけ。英語の画面では出さない（英語の声に「いち」、日本語の声に「One」と
+// 2 つ並ぶと、どちらを言うのか迷う）。英語の画面で日本語の声を録る時は、言う語（いち）が見出しに 1 回だけ出る。
+export function wordPrompts(locale: VoiceLocale, key: VoiceKey, uiLocale: string): { main: string; other: string | null } {
   const vocabularies = COUNT_VOCABULARIES as Record<VoiceLocale, { prompts: Record<string, readonly string[]> }>;
   const other: VoiceLocale = locale === 'ja-JP' ? 'en' : 'ja-JP';
-  return { main: vocabularies[locale].prompts[key]![0]!, other: vocabularies[other].prompts[key]![0]! };
+  return { main: vocabularies[locale].prompts[key]![0]!, other: uiLocale === 'ja-JP' ? vocabularies[other].prompts[key]![0]! : null };
 }
 
 // 既定名（D23）「自分の声（英語）」「自分の声（日本語）」。録り始めた時の表示言語で付ける。

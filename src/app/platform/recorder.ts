@@ -1,9 +1,10 @@
 import { withRecordingSession } from './audio-context.ts';
 
 // 録音の面（仕様 §7・Ruling 15・57）。getUserMedia・MediaRecorder はここだけ（test/app/platform-boundary.test.ts）。
-// 1 回の呼び出しでマイクを開き、1.5 秒録り、必ず閉じる（マイクを開いたままにしない＝iOS の音声セッションの罠と
+// 1 回の呼び出しでマイクを開き、（合図＝prepare の後）2 秒録り、必ず閉じる（マイクを開いたままにしない＝iOS の音声セッションの罠と
 // 「録っていない間もマイクの印が点く」不安を消す。Ruling 57-4）。呼ぶのはタップの処理の中・最初の await より前（Ruling 8）。
-export const TAKE_MS = 1500;                 // 仕様 §4 S8「1.5 秒だけ録音」
+// D59（2026-10-14）: 「今！」の合図の後に言う＝人は約 0.3 秒遅れて言い始めるので、窓を 1.5 → 2 秒に（保存する長さ＝正規化は変えない）。
+export const TAKE_MS = 2000;
 const STOP_GRACE_MS = 3000;                  // stop の後 'stop' が来ない時に諦めるまで
 // legacy/voice-recorder.html と同じ順（iOS は audio/mp4、Chrome は webm/opus。2026-10-12 実測: macOS の Chrome・Playwright WebKit とも先頭が通る）
 export const MIME_TYPES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'] as const;
@@ -54,15 +55,19 @@ export function requestMicrophone(): Promise<void> {
   });
 }
 
-// 1 語を録る: 開く → 録音開始（onStart）→ ms 後に止める → 閉じる。timeslice は使わない（iOS の MP4 を 1 つの Blob で受ける）。
-// signal で途中でやめる（S8 を離れた・語を移った）: すぐ止めてマイクを閉じ、音声セッションを戻して 'failed' で終わる（結果は呼び出し側が捨てる）。
-export function recordTake({ ms = TAKE_MS, onStart, signal }: { ms?: number; onStart?: () => void; signal?: AbortSignal } = {}): Promise<WordRecording> {
+// 1 語を録る: 開く → prepare（合図。D59）→ 録音開始（onStart）→ ms 後に止める → 閉じる。timeslice は使わない（iOS の MP4 を 1 つの Blob で受ける）。
+// マイクは合図の前に開く: getUserMedia をタップの中で出す（Ruling 8）・音声セッションの切り替え（play-and-record）を合図の音より前に済ませる
+// （鳴っている途中で切り替えると iOS は出力が途切れうる）。MediaRecorder を start するのは prepare が終わった後だけ＝合図の音は録音に入らない。
+// signal で途中でやめる（S8 を離れた・語を移った・合図の途中の「やめる」）: すぐ止めてマイクを閉じ、音声セッションを戻して 'failed' で終わる（結果は呼び出し側が捨てる）。
+export function recordTake({ ms = TAKE_MS, prepare, onStart, signal }: { ms?: number; prepare?: () => Promise<void>; onStart?: () => void; signal?: AbortSignal } = {}): Promise<WordRecording> {
   if (!recorderSupported()) return Promise.reject(new RecorderError('unsupported'));
   if (signal?.aborted) return Promise.reject(new RecorderError('failed'));
   return withRecordingSession(async () => {
     const stream = await openMicrophone();
     try {
       if (signal?.aborted) throw new RecorderError('failed');   // 許可を待つ間に離れた
+      if (prepare) { try { await prepare(); } catch { throw new RecorderError('failed'); } }
+      if (signal?.aborted) throw new RecorderError('failed');   // 合図の間にやめた・離れた
       return await capture(stream, ms, onStart, signal);
     } finally {
       stopStream(stream);

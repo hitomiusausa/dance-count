@@ -13,7 +13,7 @@ export const BUNDLE_ACCEPT = '.txt,.json,text/plain,application/json';
 
 // 受け取った声の語の値（段5 最終レビュー I1）。ファイルの値は信用しない: 音量（gainDb）は捨てて 0（アプリは 0 しか書かない）、
 // 形（mimeType）は録音・旧画面が作る音声の形だけ、時間（ms）は 0〜この値の外なら「読めない」。
-// 今の録音は開始 ≤80ms・長さ ≤745ms・録音の中の開始 ≤1000ms（LATE_ONSET_MS）。旧画面の未整形の録音も入るよう余裕を持たせる。
+// 今の録音は開始 ≤80ms・長さ ≤745ms・録音の中の開始 ≤1500ms（LATE_ONSET_MS。D59 で 1000 → 1500）。旧画面の未整形の録音も入るよう余裕を持たせる。
 export const RECEIVED_WORD_MS_MAX = 10_000;
 // 語ごとのずれ（wordOffsetsMs）はこの幅に収める（旧画面の補正 ±300ms が最大。エンジンの検査 ±1000ms より狭い）。
 export const RECEIVED_WORD_OFFSET_MAX_MS = 300;

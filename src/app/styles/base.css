@@ -388,13 +388,22 @@ button { cursor: pointer; }
 .dc-record[data-step="word"] .dc-alert { margin: 0; }
 .dc-record .dc-alert { margin: 4px 0 12px; }
 .dc-record[data-step="denied"] .dc-alert { margin: 16px 0 8px; }  /* 説明 3 行の場所（D30） */
-/* 録音中の輪（Ruling 59-2）: --p（0〜1）を 100ms ごとに書く。transition・animation は使わない（U8）。reduced-motion では輪を描かない */
-.dc-rec-ring { display: grid; place-items: center; width: 162px; height: 162px; margin: 0 auto; border-radius: 50%;
-  background: conic-gradient(var(--primary) calc(var(--p, 0) * 1turn), var(--rec-ring) 0); }
+/* 録音の丸の外輪（Ruling 59-2）。D59 で録音中の進み具合は丸の中の縮む棒に移した（輪は塗らない） */
+.dc-rec-ring { display: grid; place-items: center; width: 162px; height: 162px; margin: 0 auto; border-radius: 50%; background: var(--rec-ring); }
 .dc-rec { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 144px; height: 144px;
   border: none; border-radius: 50%; background: var(--rec); color: #FFFFFF; font-size: 20px; font-weight: 800; line-height: 1.2; text-align: center; }
 .dc-rec .dc-ic { width: 44px; height: 44px; }
 .dc-rec:disabled { cursor: default; }
+/* 合図（D59）: 3・2・1・今 を丸の中に大きく。数字が替わるたびに少し大きい所から戻る（reduced-motion では動かさず数字だけ替わる）。
+   下に小さく「やめる」（丸を押すとやめる）。録音中は「● 録音中」と、残りの時間を示す縮む棒（--p を 100ms ごとに書く・transition なし＝U8） */
+.dc-rec-count { font-size: 72px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; animation: dc-count-pop 280ms ease-out; }
+.dc-rec-count--now { font-size: 40px; letter-spacing: 0; white-space: nowrap; }
+.dc-rec-cancel { font-size: 16px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.dc-rec-live { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.dc-rec-dot { width: 14px; height: 14px; border-radius: 50%; background: #FF6B6B; box-shadow: 0 0 0 2px #FFFFFF; }
+.dc-rec-bar { display: block; width: 96px; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.35); overflow: hidden; }
+.dc-rec-bar > span { display: block; height: 100%; width: calc((1 - var(--p, 0)) * 100%); background: #FFFFFF; }
+@keyframes dc-count-pop { from { transform: scale(1.3); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
 .dc-take { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 0; border-top: var(--bw) solid var(--line); border-bottom: var(--bw) solid var(--line); }
 .dc-wave { flex: 1; min-width: 0; height: 40px; fill: var(--line); }
 .dc-wave-onset { fill: var(--count-ink); }
@@ -407,7 +416,7 @@ button { cursor: pointer; }
 .dc-compare .dc-button[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-record-again { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) {
-  .dc-rec-ring { background: var(--rec-ring); }
+  .dc-rec-count { animation: none; }
 }
 
 /* PC（Ruling 21）: タブは上部、S2 は2領域（最大 960px）。他は1カラム 640px のまま */
@@ -478,6 +487,10 @@ button { cursor: pointer; }
   .dc-record[data-step="word"][data-taken="true"][data-notice] { position: relative; }
   .dc-record[data-taken="true"][data-notice] .dc-record-progress { visibility: hidden; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 0; margin: 0; }
+  /* 録れた語の録り直しの録音中（D59）: 「約 2 秒で…」も同じく進み具合の行に重ねる（丸を動かさない） */
+  .dc-record[data-step="word"][data-taken="true"][data-phase="capture"] { position: relative; }
+  .dc-record[data-taken="true"][data-phase="capture"] .dc-record-progress { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
   .dc-take { margin-top: 8px; padding: 4px 0; }
 }
 /* S9 配る（Ruling 82）: 名前 → 声 → 同意 → ルーティン → 下固定「ファイルを作る」。押せない理由は近くに 1 行（.dc-hint・.dc-dock-note） */

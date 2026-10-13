@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { MIME_TYPES, RecorderError, TAKE_MS, pickMimeType, recordTake, recorderErrorKind, recorderNeedsHttps, recorderSupported, requestMicrophone } from '../../src/app/platform/recorder.ts';
 import { playBuffer, withRecordingSession } from '../../src/app/platform/audio-context.ts';
 
-test('1.5 s takes and the legacy mime order (Ruling 57-1)', () => {
-  assert.equal(TAKE_MS, 1500);
+test('2 s takes (D59: 1.5 → 2 for a late start after “Now!”) and the legacy mime order (Ruling 57-1)', () => {
+  assert.equal(TAKE_MS, 2000);
   assert.deepEqual(MIME_TYPES, ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']);
   assert.equal(pickMimeType(type => type === 'audio/mp4'), 'audio/mp4', 'iOS Safari');
   assert.equal(pickMimeType(() => true), 'audio/webm;codecs=opus', 'Chrome');

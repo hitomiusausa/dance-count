@@ -54,7 +54,7 @@ test('known ui-state values are read from the hash query (Ruling 33)', () => {
 });
 
 test('the three S8 display states are read too (Ruling 63-3)', () => {
-  for (const uiState of ['mic-denied', 'no-voice', 'no-recorder', 'no-https'] as const) {   // no-https は D53
+  for (const uiState of ['mic-denied', 'no-voice', 'no-recorder', 'no-https', 'rec-countdown', 'rec-capture'] as const) {   // no-https は D53・rec-* は D59
     assert.deepEqual(parseHash(`#/voices/record?ui-state=${uiState}`), { screen: 'S8', params: {}, query: { uiState } });
   }
   assert.deepEqual(parseHash('#/voices?ui-state=confirm-delete').query, { uiState: 'confirm-delete' });

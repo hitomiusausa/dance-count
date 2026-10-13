@@ -190,16 +190,19 @@ export const APP_MESSAGES = {
     recordIntro3: 'You can delete them at any time.',
     recordLanguage: 'Count in',
     countInEnglish: 'Count in English (One, Two, Slow…)',
-    countInJapanese: 'Count in Japanese (いち, に, スロー…)',
+    countInJapanese: 'Count in Japanese (ichi, ni, san…)',   // D60: 英語の画面に日本語の文字を出さない
     recordedUpTo: '{count}\u00A0/\u00A012\u00A0words recorded',
     recordedAll: 'Recorded (12 words)',
     startRecording: 'Start recording',
     wordProgress: '{index} / 12 words',
-    recordHint: 'Tap the button, then say “{word}” right away.',   // {word}＝その語の画面の大きい語（Ruling 72・D34）
+    recordHint: 'At “Now!”, say “{word}”.',   // {word}＝その語の画面の大きい語（Ruling 72・D34 → D59 の合図に合わせて）
     recordWord: 'Record',
     recordAgain: 'Record again',
     reviewFromFirst: 'Review from word 1',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
-    recordingNow: 'Recording…',
+    recordingNow: 'Recording',   // 前に赤い ● を描く（D59）
+    recordCancel: 'Cancel',   // 合図（3・2・1）の間の丸の下（D59）
+    recordCueNow: 'Now!',   // 合図の最後（D59）
+    recordAutoStop: 'Stops automatically in about 2 seconds',   // 2 秒＝TAKE_MS（platform/recorder.ts）
     listenTake: 'Play',
     previousWord: 'Previous',
     nextWord: 'Next',
@@ -487,11 +490,14 @@ export const APP_MESSAGES = {
     recordedAll: '録音済み（12 語）',
     startRecording: '録音をはじめる',
     wordProgress: '{index} / 12 語',
-    recordHint: 'ボタンを押したら、すぐ「{word}」と言ってください。',   // {word}＝その語の画面の大きい語（Ruling 72・D34）
+    recordHint: '「今！」の合図で「{word}」と言ってください。',   // {word}＝その語の画面の大きい語（Ruling 72・D34 → D59 の合図に合わせて）
     recordWord: '録音する',
     recordAgain: '録り直す',
     reviewFromFirst: '1\u00A0語目から見直す',   // 完成画面: 1 語目へ戻るだけで何も消えない（M-1）
-    recordingNow: '録音中…',
+    recordingNow: '録音中',   // 前に赤い ● を描く（D59）
+    recordCancel: 'やめる',   // 合図（3・2・1）の間の丸の下（D59）
+    recordCueNow: '今！',   // 合図の最後（D59）
+    recordAutoStop: '約\u00A02\u00A0秒で自動で止まります',   // 2 秒＝TAKE_MS（platform/recorder.ts）
     listenTake: '聞く',
     previousWord: '前の語',
     nextWord: '次へ',

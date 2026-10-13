@@ -283,6 +283,12 @@ const STATES = [
     texts: ['「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。'],
     firstView: ['#dc-s8-name', '[data-group="compare"]', '.dc-record-again', '.dc-record-dock .dc-button--secondary', '.dc-record-dock .dc-primary'],
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
+  // D59: 合図（3・2・1・今）の間は丸の中に大きい数字と「やめる」（丸は押せる＝やめる）。録音中は「● 録音中」と縮む棒・箱に「約 2 秒で…」（丸は押せない）
+  { name: 'S8 合図の間', hash: '#/voices/record?ui-state=rec-countdown', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordSlot: 60, recordPhase: 'countdown', recordHintWord: 'Slow' },
+  { name: 'S8 録音中', hash: '#/voices/record?ui-state=rec-capture', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordSlot: 60, recordPhase: 'capture' },
+  // D60: 英語の画面では語の下の小さい語（いち・に）を出さない。日本語の画面では出す（英語の声を録る時の「スロー」など）
+  { name: 'S8 1 語目・日本語の声', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordOther: true,
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
   { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
   { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60 },
   // 最終レビュー M3: 録れた語で枠が出ても、丸と波形・「聞く」は初期表示に入ったまま（375×548 では枠を進み具合の行に重ねる）。ui-state は声を書かない（M5）
@@ -1249,6 +1255,32 @@ function audit({ state, LIMITS, reducedMotion }) {
     const hint = document.querySelector('.dc-record-hint');
     if (!hint || !visible(hint)) issues.push('R72 the record hint is not shown');
     else if (!hint.textContent.includes(state.recordHintWord)) issues.push(`R72 the record hint "${hint.textContent.trim()}" does not include "${state.recordHintWord}"`);
+  }
+  // D60: 語の下の小さい語は日本語の画面だけ（英語の画面に日本語の読みを出さない）
+  if (state.recordOther || state.recordHintWord) {
+    const other = document.querySelector('.dc-record-other');
+    if (state.english && other) issues.push(`D60 the English screen shows the other reading "${other.textContent.trim()}"`);
+    if (!state.english && !other) issues.push('D60 the Japanese screen lost the small other-language word');
+  }
+  if (state.english && document.querySelector('[data-screen="S8"][data-step="word"], [data-screen="S8"][data-step="intro"]')) {   // 完成画面の声の名前は打った名前のまま（対象外）
+    const said = document.querySelector('main')?.innerText ?? '';
+    if (/[\u3040-\u30ff]/.test(said) && !document.querySelector('[data-step="word"] .dc-record-main[lang="ja"]')) issues.push(`D60 the English S8 shows kana: "${said.match(/[^\n]*[\u3040-\u30ff][^\n]*/)?.[0]}"`);
+  }
+  // D59: 合図の間・録音中の見た目
+  if (state.recordPhase === 'countdown') {
+    const count = document.querySelector('.dc-rec-count');
+    const cancel = document.querySelector('.dc-rec-cancel');
+    if (!count || !visible(count) || count.textContent.trim() !== '3') issues.push(`D59 the countdown number is ${count ? `"${count.textContent.trim()}"` : 'missing'}, expected 3`);
+    if (!cancel || !visible(cancel)) issues.push('D59 "Cancel" is not shown under the countdown');
+    if (document.querySelector('.dc-rec')?.disabled) issues.push('D59 the record button must stay tappable (to cancel) during the countdown');
+  }
+  if (state.recordPhase === 'capture') {
+    const bar = document.querySelector('.dc-rec-bar > span');
+    const note = document.querySelector('.dc-record-slot[data-slot="capture"] .dc-record-autostop');
+    if (!bar || !visible(bar.parentElement)) issues.push('D59 the shrinking bar is not shown while recording');
+    else if (Math.round(bar.getBoundingClientRect().width) !== Math.round(bar.parentElement.getBoundingClientRect().width * 0.6)) issues.push(`D59 the bar is ${Math.round(bar.getBoundingClientRect().width)}px, expected 60% left`);
+    if (!note || !visible(note)) issues.push('D59 "Stops automatically in about 2 seconds" is not shown while recording');
+    if (!document.querySelector('.dc-rec')?.disabled) issues.push('D59 the record button must not be tappable while recording');
   }
   if (state.recordSlot !== undefined) {
     const slot = document.querySelector('.dc-record-slot');

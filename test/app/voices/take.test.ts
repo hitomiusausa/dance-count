@@ -8,7 +8,7 @@ import { APP_MESSAGES } from '../../../src/app/i18n/messages.ts';
 
 test('thresholds are the Ruling 58 values', () => {
   assert.equal(SILENCE_PEAK_RMS, 0.01);
-  assert.equal(LATE_ONSET_MS, 1000);
+  assert.equal(LATE_ONSET_MS, 1500, 'D59: 2 s window, same 0.5 s spare as before');
   assert.equal(MIN_TAKE_MS, 600);
 });
 
@@ -29,8 +29,9 @@ test('a voice from 200 ms passes with its onset', () => {
   assert.ok(result.peakRms > 0.3);
 });
 
-test('a voice that starts after 1 s is late, a 0.4 s take is short', () => {
-  assert.equal(checkTake(fakeBuffer([tone({ startMs: 1200, lengthMs: 300 })])).problem, 'late');
+test('a voice that starts after 1.5 s is late, a 0.4 s take is short', () => {
+  assert.equal(checkTake(fakeBuffer([tone({ totalMs: 2000, startMs: 1600, lengthMs: 300 })])).problem, 'late');
+  assert.equal(checkTake(fakeBuffer([tone({ totalMs: 2000, startMs: 1200, lengthMs: 600 })])).problem, null, 'a late start (1.2 s) still fits in the 2 s window');
   assert.equal(checkTake(fakeBuffer([tone({ totalMs: 400, startMs: 50, lengthMs: 200 })])).problem, 'short');
 });
 
@@ -60,7 +61,7 @@ test('processTake cuts a stereo take to the reference length as mono 16-bit WAV 
 test('processTake turns every failure into a kind, never an engine message (Ruling 58-5)', async () => {
   assert.deepEqual(await processTake(decodingTo(new Error('EncodingError: x')), new Blob(['x']), 'one'), { ok: false, problem: 'failed' });
   assert.deepEqual(await processTake(decodingTo(fakeBuffer([new Float32Array(72000)])), new Blob(['x']), 'one'), { ok: false, problem: 'silent' });
-  assert.deepEqual(await processTake(decodingTo(fakeBuffer([tone({ startMs: 1200, lengthMs: 300 })])), new Blob(['x']), 'one'), { ok: false, problem: 'late' });
+  assert.deepEqual(await processTake(decodingTo(fakeBuffer([tone({ totalMs: 2000, startMs: 1600, lengthMs: 300 })])), new Blob(['x']), 'one'), { ok: false, problem: 'late' });
   const allText = JSON.stringify(APP_MESSAGES);
   for (const engineText of ['No sustained voice onset detected', '録音データが正しくありません', '基準音声がありません', '録音音声パック']) {
     assert.equal(allText.includes(engineText), false, `UI strings must not carry the engine message "${engineText}"`);

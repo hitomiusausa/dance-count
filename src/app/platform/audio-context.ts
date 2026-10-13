@@ -87,3 +87,33 @@ export function playBuffer(audio: AudioContext, buffer: AudioBuffer, onEnded: ()
     onEnded();
   };
 }
+
+// S8 の合図の音（D59）: 1 つの短い音を音の時計の atSeconds に予約する（ファイルは使わない＝その場で作る正弦波）。
+// 立ち上がり 5ms・指数で減衰して ms で 0（プツッという音を作らない）。戻り値で止める（やめた・録音を始める直前の後始末）。
+const CUE_ATTACK_SECONDS = 0.005;
+const CUE_GAIN = 0.35;
+export function scheduleTone(audio: AudioContext, atSeconds: number, hz: number, ms: number): () => void {
+  const oscillator = audio.createOscillator();
+  const gain = audio.createGain();
+  const end = atSeconds + ms / 1000;
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(hz, atSeconds);
+  gain.gain.setValueAtTime(0, atSeconds);
+  gain.gain.linearRampToValueAtTime(CUE_GAIN, atSeconds + CUE_ATTACK_SECONDS);
+  gain.gain.exponentialRampToValueAtTime(0.001, end - 0.002);
+  gain.gain.linearRampToValueAtTime(0, end);
+  oscillator.connect(gain);
+  gain.connect(audio.destination);
+  let stopped = false;
+  try {
+    oscillator.start(atSeconds);
+    oscillator.stop(end);
+  } catch {
+    stopped = true;   // 閉じた AudioContext など（鳴らない。数字の合図だけで進む）
+  }
+  return () => {
+    if (stopped) return;
+    stopped = true;
+    try { gain.gain.cancelScheduledValues(0); gain.gain.setValueAtTime(0, audio.currentTime); oscillator.stop(); } catch { /* もう止まっている */ }
+  };
+}
