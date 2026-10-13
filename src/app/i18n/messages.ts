@@ -297,7 +297,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: "Choose a dance in “Use” and press ▶ to hear {name}'s voice.",
     receivedVoiceNamed: 'Choose a dance in “Use” and press ▶ to hear “{name}”.',
     receivedRoutines: 'They are in “Routines”.',
-    receivedRoutinesToo: 'The routines are under “Routines” at the bottom.',
+    receivedRoutinesToo: 'The routines are under the “Routines” tab at the bottom of “Use”.',
     goHome: 'Choose a dance',
     seeRoutines: 'See routines'
   },
@@ -592,7 +592,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: '「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。',
     receivedVoiceNamed: '「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。',
     receivedRoutines: '「ルーティン」に入っています。',
-    receivedRoutinesToo: 'ルーティンは、下の「ルーティン」にあります。',
+    receivedRoutinesToo: 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。',
     goHome: '種目を選ぶ',
     seeRoutines: 'ルーティンを見る'
   }

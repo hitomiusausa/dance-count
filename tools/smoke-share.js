@@ -206,7 +206,7 @@ try {
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
   await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
-  await expectText(s, 'ルーティンは、下の「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
+  await expectText(s, 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
   await s.locator('.dc-dock .dc-primary').click();
   await s.waitForSelector('[data-screen="S1"]');
   if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);

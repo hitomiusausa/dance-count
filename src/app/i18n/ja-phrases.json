@@ -195,7 +195,7 @@
   "receivedVoiceFrom": ["「使う」で","種目を","選んで"," ▶ を","押すと、","{name}の","声で","鳴ります。"],
   "receivedVoiceNamed": ["「使う」で","種目を","選んで"," ▶ を","押すと、","「{name}」で","鳴ります。"],
   "receivedRoutines": ["「ルーティン」に","入っています。"],
-  "receivedRoutinesToo": ["ルーティンは、","下の","「ルーティン」に","あります。"],
+  "receivedRoutinesToo": ["ルーティンは、","「使う」の","下の","タブ「ルーティン」に","あります。"],
   "goHome": ["種目を","選ぶ"],
   "seeRoutines": ["ルーティンを","見る"],
   "aboutTitle": ["Dance Count に","ついて"],

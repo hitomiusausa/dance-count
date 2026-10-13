@@ -369,12 +369,13 @@ const STATES = [
     texts: ['ルーティン「こわれたルーティン」は読めませんでした。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
   // Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束はルーティンの在りかを 1 文で（出口は 1 つのまま・375×548 でも初期表示）
+  // 夜間便 A-2（Ruling 123・監査 #3）: S10 にタブは無いので、文は「「使う」の下のタブ「ルーティン」」＝次の画面の場所を指す（鍵で ja/en とも見る）
   { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1,
-    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'ルーティンは、下の「ルーティン」にあります。'], firstView: ['.dc-dock .dc-primary'],
+    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['receivedRoutinesToo'], firstView: ['.dc-dock .dc-primary'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
-    absentTexts: ['ルーティンは、下の「ルーティン」にあります。'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-only.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },
