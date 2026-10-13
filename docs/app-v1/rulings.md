@@ -3808,3 +3808,13 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
 2. Task 1 のレビューで「‹ 表紙」が `replaceRoute` だけでは表紙に着かない（二重タップ・U2 や S7 に着く）と分かり、`historyGo(-n)` で最も近い `#/` まで戻す形に直した（Fable §1-1）。残り: visited と実際の履歴のずれ。今後 U1・U2 に出る経路は `exitTo` を通すこと。
 3. 帯の中央ぞろえと a・& の最小幅（20px／300px 未満は 16px）は、計画に無かった好みの決め（po-checklist 17）。
 4. 監修シート S10 の「AI の一次案」の列に古い「Practice screen／タブは「練習」」が残っていたのを、Fable の新しい文言に直した（`npm run copy:sheet` で残ることを確認済み）。
+
+---
+
+# 「表紙」→「トップ」と扉の見出しの「（生徒の方）」（D58）— ひとみうさの決定（2026-10-13）
+
+- **D58 画面の文言の「表紙」を「トップ」に、扉の対象者を見出しの横へ**（ひとみうさの決定 2026-10-13。count.dancemap.jp 公開後の見直し）
+  - **「表紙」→「トップ」**: 画面に出る文だけ。`backToCover`「‹ 表紙」→「‹ トップ」／“Cover” → “Home”（英語は “Top” より自然な “Home”）。`editFromMake`「…、トップの「作る」⁠から。」／“…on the home screen.”・`recordFromMake` 同様。内部の名前（`backToCover`・`CoverScreen`・`coverUse` など）とコードの注釈・裁定の文の「表紙」は変えない。
+  - **扉の見出し**: 「使う（生徒の方）」「作る（指導者の方）」。括弧は新しい鍵 `coverUseFor`／`coverMakeFor`（M0 の見出し「作る」は `coverMake` のまま）で、説明（`coverUseSub`／`coverMakeSub`）の末尾からは消した。英語は “Use (students)” “Make (teachers)”（“(for instructors)” は 320 幅で見出しと 1 行に入らないため短くした）。
+  - **見た目**: 括弧は見出し（26px 800）と同じ行に 17px 600（`.dc-door-for`。360px 未満は 16px＝ui:check の文字の下限＋`palt` で括弧の空きを詰める）。300px 未満（Safari 150%）だけ括弧の中でも折る（ページを横に動かさない）。320・375・1280 の日英で 1 行を計測で確認。
+  - 文の分け方は `tools/i18n/segment-ja.js` の OVERRIDES を合わせて直し、`ja-phrases.json`・監修シート（`stage8-copy-review.md`）を作り直した。検査は `ui:check` の S0 の `textKeys` と `smoke-app-shell.js` の扉の文。

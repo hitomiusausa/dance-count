@@ -25,8 +25,8 @@ const expectEqual = (label, actual, expected) => {
 try {
   for (const [width, height] of [[375, 667], [1280, 900]]) {
     for (const [locale, tabs, heading, door] of [
-      ['ja-JP', ['フィガー', 'ルーティン'], '種目を選んでください', '使う'],
-      ['en-US', ['Figures', 'Routines'], 'Choose a dance', 'Use']
+      ['ja-JP', ['フィガー', 'ルーティン'], '種目を選んでください', '使う（生徒の方）'],
+      ['en-US', ['Figures', 'Routines'], 'Choose a dance', 'Use(students)']
     ]) {
       const label = `${width} ${locale}`;
       const context = await browser.newContext({ viewport: { width, height }, locale });
@@ -58,7 +58,7 @@ try {
       await page.waitForSelector('[data-screen="S0"]');
       expectEqual(`${label} cover door`, (await page.locator('[data-door="use"] b').textContent())?.trim(), door);
       await page.locator('[data-utility]').click();
-      expectEqual(`${label} language toggled`, (await page.locator('[data-door="use"] b').textContent())?.trim(), locale === 'ja-JP' ? 'Use' : '使う');
+      expectEqual(`${label} language toggled`, (await page.locator('[data-door="use"] b').textContent())?.trim(), locale === 'ja-JP' ? 'Use(students)' : '使う（生徒の方）');   // D58: 見出しの横に「（生徒の方）」
       await context.close();
     }
   }

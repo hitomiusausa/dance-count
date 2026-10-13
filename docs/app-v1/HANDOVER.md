@@ -7,6 +7,8 @@
 
 ## 0. ひとみうさへ — 役割分け（D55〜D57）と自動カウント（D52）は枝 `agent/auto-counts` に載っている（2026-10-13）
 
+- **2026-10-13 D58（文言）**: 画面の「表紙」→「トップ」（英語 “Home”）・扉の見出しを「使う（生徒の方）」「作る（指導者の方）」に（英語 “Use (students)” “Make (teachers)”）。枝 `agent/cloudflare` で commit・push・`npm run deploy:cf` で count.dancemap.jp に反映。入れてある端末は次に開いた時の更新の帯で新しい版になる。裁定は `rulings.md` 末尾 D58。
+
 **場所と状態**
 - 新しい作業は**すべて枝 `agent/auto-counts`**（worktree `/Users/usausagi/Documents/AI_Playground/Dance Count auto-counts`）にある。**`agent/app-v1` にはマージしていない**。**push もしていない**。
 - 載っている物: D52（自動カウント・監修表 20 件）・D53・D55（カウントの型の帯）・D56（表紙 S0 ＋「使う」「作る」・下タブ・受け取ったルーティン）・D57（フィガータブ F1・前回の「ワルツ · ウィスク」）・通し確認の直し便（Fable 答え 2026-10-13）。

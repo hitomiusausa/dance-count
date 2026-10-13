@@ -75,6 +75,11 @@ button { cursor: pointer; }
 .dc-door--main .dc-door-icon { background: var(--on-primary); color: var(--primary); }
 .dc-door-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .dc-door-text b { font-size: 26px; font-weight: 800; letter-spacing: var(--track); }
+/* D58: 見出しの横の「（生徒の方）」「（指導者の方）」。同じ行に小さく・軽く（320 でも 1 行に入る）。入らない幅（300px 未満）では括弧ごと次の行へ */
+.dc-door-text b { display: flex; flex-wrap: wrap; align-items: baseline; }
+.dc-door-for { font-size: 17px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+@media (max-width: 359px) { .dc-door-for { font-size: 16px; font-feature-settings: "palt"; } }   /* 320 幅で「作る（指導者の方）」を 1 行に（16px は ui:check の下限。palt で括弧の空きを詰める） */
+:lang(en) .dc-door-for { margin-left: 0.3em; }
 .dc-door-text small { margin-top: 2px; font-size: 16px; font-weight: 400; line-height: 1.3; color: var(--ink2); }
 .dc-door--main .dc-door-text small { color: #E4E7EE; }
 .dc-doorset { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; border: var(--bw) solid var(--primary); border-radius: var(--r); overflow: hidden;
@@ -579,6 +584,7 @@ button { cursor: pointer; }
 /* Fable 答え 2026-10-13 §2-4: 300px 未満（iPhone SE の Safari 150%＝250px 相当）。守るのは「ページが横に動かない・文字が切れない・主要ボタンが押せる」の 3 つだけ
    （48px・2 行・初期表示の数は 320 以上の約束）。前回の行は 2 段（名前の下・右寄せに「▶ 続きから」）・言語ボタンは自分の幅を保つ・速さは詰める */
 @media (max-width: 299px) {
+  .dc-door-for { white-space: normal; }   /* D58: 250 幅では括弧の中でも折る（ページを横に動かさない） */
   .dc-door-resume, .dc-resume { flex-wrap: wrap; }
   .dc-door-resume .dc-resume-text, .dc-resume .dc-resume-text { flex: 1 1 100%; }
   .dc-door-resume .dc-resume-go, .dc-resume .dc-resume-go { margin-left: auto; }

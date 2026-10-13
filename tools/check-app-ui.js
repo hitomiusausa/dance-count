@@ -79,7 +79,7 @@ const S5_13 = `#/routines/${R.waltz13.id}/play`;
 const STATES = [
   // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
   // 言語は [data-utility]、更新の帯の「更新する」は [data-alert-action]（数えない）。戻る・下タブは無い（U11）
-  { name: 'S0 初回', hash: '#/', screen: 'S0', kind: 'cover', ops: 3, total: 3, absent: ['[data-resume]'], textKeys: ['coverUse', 'coverMake', 'coverUseSub', 'coverMakeSub'] },
+  { name: 'S0 初回', hash: '#/', screen: 'S0', kind: 'cover', ops: 3, total: 3, absent: ['[data-resume]'], textKeys: ['coverUse', 'coverUseFor', 'coverMake', 'coverMakeFor', 'coverUseSub', 'coverMakeSub'] },
   { name: 'S0 前回あり', hash: '#/', screen: 'S0', kind: 'cover', settingsSeed: PLAYED, ops: 4, total: 4, firstView: ['[data-door="use"]', '[data-resume]', '[data-door="make"]', '.dc-cover-settings'],
     placed: [['[data-resume]', '[data-door="use"]']], textKeys: ['continueLast'] },
   // S2 を開いただけ（まだ鳴らしていない）では「続きから」は出さない（hints.firstPlaybackDone が立ってから。Ruling 115-1）
