@@ -139,6 +139,10 @@ const STATES = [
   { name: 'S2 2 小節のフィガー', hash: REVIEWED ? `#/practice/waltz/${W_TWO_BARS.slug}` : '#/practice/waltz', screen: 'S2', kind: 'focus', requires: 'reviewed', speedAndPlay: true,
     strip: REVIEWED ? { labels: spaced(W_TWO_BARS.counts) } : undefined },
   // 表に無い slug は S2 の基本へ置き換え（Ruling 120-4）
+  // 夜間便 B-5（Ruling 124・監査 #8）: はじめの合図の間は帯の丸が灰で 1 語ずつ進む（数字は出さない＝「はじめの合図…」のまま）。WakeLock の偽物は B-4 と同じ
+  { name: 'S2 合図の間', hash: '#/practice/tango', screen: 'S2', kind: 'focus', speedAndPlay: true, wakeLock: true, textKeys: ['leadInNow'],
+    present: ['.dc-beats[data-lead] li[aria-current="true"]', '.dc-now--lead'],
+    steps: [{ click: '[data-play]' }, { wait: '.dc-now--lead' }, { wait: '.dc-beats[data-lead] li[aria-current="true"]' }] },
   { name: 'S2 表に無いフィガー', hash: '#/practice/waltz/no-such-figure', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, landsOn: '#/practice/waltz', strip: { labels: '1 2 3' } },
   { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' } },
   // D55（Ruling 114）: カウントの型の帯。ジャイブは 6 拍の型の 8 語（a も丸）・タンゴは S が Q の 2 倍の幅・320 でも 1 行

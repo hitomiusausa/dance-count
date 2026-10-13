@@ -11,7 +11,7 @@ const SUB_TOKENS = new Set(['a', '&', 'e']);
 export interface StripEvent { token?: string; voiceKey?: string | null; absoluteTick: number; figureIndex?: number }
 export interface StripProgram { events: readonly StripEvent[]; figures?: readonly { startTick: number; endTick: number }[]; endTick: number }
 export interface StripCell { label: string; kind: 'beat' | 'sub' | 'rest'; beats: number; tick: number }
-export interface StripView { cells: StripCell[]; lit: number | null }
+export interface StripView { cells: StripCell[]; lit: number | null; lead?: boolean }   // lead: はじめの合図の間の灰の丸（夜間便 B-5）
 
 // 型（S2）またはルーティンの 1 フィガー（S5。figureIndex で絞る）の語を 1 語 1 丸に。beats＝次の語までの拍数（最後は型・フィガーの終わりまで）
 export function stripCells(program: StripProgram, figureIndex: number | null = null): StripCell[] {
@@ -39,6 +39,23 @@ export function stripView(cells: readonly StripCell[], originalTick: number | nu
   const page = index === null ? 0 : Math.floor(index / MAX_STRIP_CELLS);
   const start = page * MAX_STRIP_CELLS;
   return { cells: cells.slice(start, start + MAX_STRIP_CELLS), lit: index === null ? null : index - start };
+}
+
+// 夜間便 B-5（Ruling 124・監査 #8）: はじめの合図の間、帯の丸を灰で 1 語ずつ進める。leadTick はエンジンの同じ frame の「最初の語までの tick」（負の数。
+// 第 2 の時間計算はしない）。型の拍の合計で後ろから回す＝合図の最後は型の最後の語で、鳴り始めの最初の語へ続く（合図と型の長さが違うジャイブ等でも）。数字は出さない（Ruling 28）
+export function leadStripView(cells: readonly StripCell[], leadTick: number | null | undefined): StripView {
+  const total = cells.reduce((sum, cell) => sum + cell.beats, 0);
+  if (typeof leadTick !== 'number' || !Number.isFinite(leadTick) || !(total > 0)) return stripView(cells, null);
+  const position = (((leadTick / TICKS_PER_BEAT) % total) + total) % total;
+  let index = 0;
+  let start = 0;
+  for (let i = 0; i < cells.length; i += 1) {
+    if (position >= start) index = i;
+    start += cells[i]!.beats;
+  }
+  const page = Math.floor(index / MAX_STRIP_CELLS);
+  const first = page * MAX_STRIP_CELLS;
+  return { cells: cells.slice(first, first + MAX_STRIP_CELLS), lit: index - first, lead: true };
 }
 
 // 止まっている間の帯（表示のためだけ。時間の計算ではない）: カウントの文字列を compileRhythm で語にする

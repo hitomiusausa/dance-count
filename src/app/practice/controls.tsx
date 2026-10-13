@@ -29,7 +29,7 @@ export function CountBox({ playing, countIn, nowText, idleText, strip, preparing
         : preparing && !playing
           ? <div class="dc-now dc-now--idle dc-now--wait" aria-hidden="true" data-preparing><WaltzSpinner /></div>
           : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
-      <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined}>
+      <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined} data-lead={strip.lead ? '' : undefined}>
         {strip.cells.map((cell, index) => (
           <li key={`${index}-${cell.tick}`} data-cell={cell.kind} style={{ '--beats': cell.beats }}
             data-fineprint={cell.kind === 'sub' || strip.cells.length >= DENSE_STRIP ? '' : undefined} aria-current={strip.lit === index ? 'true' : undefined}>{cell.label}</li>

@@ -175,6 +175,8 @@ button { cursor: pointer; }
 .dc-beats[data-dense] li:not([data-cell="sub"]) { font-size: 15px; }
 @media (max-width: 359px) { .dc-beats { gap: 4px; } }
 .dc-beats li[aria-current="true"] { color: var(--beat-on); border-bottom: 6px solid var(--beat-on); font-weight: 800; }
+/* 夜間便 B-5: はじめの合図の間は灰で進む（琥珀は鳴っている語だけ） */
+.dc-beats[data-lead] li[aria-current="true"] { color: var(--ink2); border-bottom-color: var(--ink2); }
 .dc-field-label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-seg { display: grid; grid-template-columns: repeat(var(--seg-cols, 3), 1fr); gap: 8px; }   /* 列数は controls.tsx の --seg-cols（出ている速さの数） */
 .dc-opt { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; padding: 4px;

@@ -4,7 +4,7 @@ import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
-import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
+import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
@@ -92,7 +92,9 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
   const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
   // D55: 帯は鳴っている型（セッションの program）。止まっている間は今の型を表示のためだけに語にする。はじめの合図の間は点けない
-  const strip = stripView(stripCells(view.program ?? idleProgram(danceId, counts)), view.playing && !view.countIn ? view.originalTick : null);
+  // 夜間便 B-5: はじめの合図の間は丸を灰で 1 語ずつ（leadStripView）。数字は出さない
+  const cells = stripCells(view.program ?? idleProgram(danceId, counts));
+  const strip = view.playing && view.countIn ? leadStripView(cells, view.leadTick) : stripView(cells, view.playing && !view.countIn ? view.originalTick : null);
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。
   const idleText = view.playing ? '' : formatCounts(danceId, counts).split(' ')[0] ?? '';

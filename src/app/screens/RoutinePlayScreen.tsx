@@ -7,7 +7,7 @@ import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { honorific } from '../lib/honorific.ts';
-import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
+import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
 import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
@@ -143,10 +143,12 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const idleText = view.playing ? '' : formatCounts(routine.danceId, startCounts).split(' ')[0] ?? '';
   // D55: 帯は鳴っているフィガーの型（figureIndex で絞り、ルーティン全体の tick で点ける）。止まっている間・はじめの合図の間は始めのフィガーの型を表示だけ
   // 止まっている間の帯は種目と始めのフィガーのカウントが替わった時だけ作る（はじめの合図の間に毎コマ compileRhythm しない。最終レビュー m1）
-  const idleStrip = useMemo(() => stripView(stripCells(idleProgram(routine.danceId, startCounts)), null), [routine.danceId, startCounts]);
+  const idleCells = useMemo(() => stripCells(idleProgram(routine.danceId, startCounts)), [routine.danceId, startCounts]);
+  const idleStrip = useMemo(() => stripView(idleCells, null), [idleCells]);
+  // 夜間便 B-5: はじめの合図の間は始めのフィガーの型の丸を灰で 1 語ずつ（leadStripView。数字は出さない）
   const strip = view.program && sounding !== null
     ? stripView(stripCells(view.program, sounding), view.originalTick)
-    : idleStrip;
+    : view.playing && view.countIn ? leadStripView(idleCells, view.leadTick) : idleStrip;
   const playing = view.playing || view.starting;
   const dance = danceName(routine.danceId, locale);
   const subtitle = routine.receivedFrom

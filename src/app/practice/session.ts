@@ -58,6 +58,7 @@ export interface SessionView {
   voiceKey: string | null;     // 鳴っている語（表示は lib/count-display.ts）
   originalTick: number | null;
   figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
+  leadTick: number | null;     // 夜間便 B-5: はじめの合図の間だけ、最初の語までの tick（負の数。帯の丸を灰で 1 語ずつ進める＝beat-indicator.ts leadStripView。数字は出さない＝Ruling 28）
   notice: SessionNotice;
   program: StripProgram | null; // 鳴らしている型（エンジンに渡した compiled の写し。止まっている間は null。D55・Ruling 114-5）
 }
@@ -69,6 +70,7 @@ export interface EngineFrame {
   event?: { voiceKey?: string | null; figureIndex?: number } | null;
   countIn?: boolean;
   originalTick?: number | null;
+  leadTick?: number | null;    // はじめの合図の間だけ。最初の語までの tick＝負の数（エンジンの同じ frame。夜間便 B-5）
 }
 
 export interface EngineLike {
@@ -97,7 +99,7 @@ export interface SessionHints {
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
-  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none', program: null
+  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, leadTick: null, notice: 'none', program: null
 }) as SessionView;
 
 export class PracticeSession<A extends AudioLike, V> {
@@ -256,7 +258,8 @@ export class PracticeSession<A extends AudioLike, V> {
       countIn,
       voiceKey: countIn ? null : frame.event?.voiceKey ?? null,
       originalTick: countIn ? null : frame.originalTick ?? null,
-      figureIndex: countIn ? null : frame.event?.figureIndex ?? null
+      figureIndex: countIn ? null : frame.event?.figureIndex ?? null,
+      leadTick: countIn ? frame.leadTick ?? null : null
     });
   }
 

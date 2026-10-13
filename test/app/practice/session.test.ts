@@ -92,6 +92,18 @@ test('frames show the voice key and tick; lead-in shows neither', async () => {
   assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.originalTick], [false, 'two', 1000]);
 });
 
+// 夜間便 B-5（Ruling 124）: 合図の間は leadTick だけが進み、voiceKey は null のまま（「はじめの合図…」の描画は変えない）。鳴り始めたら leadTick は null
+test('the count-in passes the lead tick on and keeps the voice key hidden (B-5)', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  h.frame({ playing: true, countIn: true, event: null, originalTick: null, leadTick: -1920 });
+  assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.leadTick], [true, null, -1920]);
+  h.frame({ playing: true, countIn: true, event: null, originalTick: null, leadTick: -960 });
+  assert.equal(h.session.current.leadTick, -960);
+  h.frame({ playing: true, countIn: false, event: { voiceKey: 'one' }, originalTick: 0, leadTick: 3000 });
+  assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.leadTick], [false, 'one', null]);
+});
+
 test('no sound after 2 seconds shows the banner (context never ran)', async () => {
   const h = harness();
   h.audio.state = 'suspended';

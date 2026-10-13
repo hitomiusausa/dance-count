@@ -208,7 +208,9 @@ export class PracticeAudioEngine {
     const duration = patternDurationSeconds(rangeDurationTicks, bpm, tempo);
     const elapsed = this.audioContext.currentTime - safeLatency(this.displayLatencySeconds()) - startTime;
     if (elapsed < 0) {
-      this.onFrame({ playing: true, event: null, progress: 0, countIn: true, originalTick: null });
+      // 夜間便 B-5（Ruling 124・監査 #8）: はじめの合図の進み＝最初の語までの tick（負の数。-1 拍なら -960）。同じ時計・同じ frame から出す（新しいタイマーは作らない）
+      const leadTick = tempo.secondsToTick(elapsed);
+      this.onFrame({ playing: true, event: null, progress: 0, countIn: true, originalTick: null, leadTick });
     } else {
       const localSeconds = loop ? elapsed % duration : Math.min(elapsed, duration);
       const localTick = tempo.secondsToTick(localSeconds);

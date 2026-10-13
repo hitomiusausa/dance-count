@@ -57,3 +57,18 @@ test('S5: the cells are the sounding figure only and light on the absolute routi
   assert.equal(stripView(second, 2880 + 960).lit, 1);
   assert.deepEqual(program.figures, [{ startTick: 0, endTick: 2880 }, { startTick: 2880, endTick: 8640 }]);
 });
+
+// 夜間便 B-5（Ruling 124・監査 #8）: はじめの合図の間は丸を灰で 1 語ずつ。leadTick（最初の語までの tick・負の数）を型の拍の合計で後ろから回す
+test('during the count-in the strip lights one word at a time from the lead tick, marked as lead (B-5)', async () => {
+  const { leadStripView } = await import('../../../src/app/practice/beat-indicator.ts');
+  const waltz = stripCells(idleProgram('waltz', '123'));
+  assert.deepEqual([-6, -5, -4, -3, -2, -1].map(beat => leadStripView(waltz, beat * 960 + 10).lit), [0, 1, 2, 0, 1, 2]);   // 2 小節の合図＝型 2 周
+  assert.equal(leadStripView(waltz, -960).lead, true);
+  const tango = stripCells(idleProgram('tango', 'SSQQS'));   // 2+2+1+1+2＝8 拍
+  assert.deepEqual([-8, -7, -6, -5, -4, -3, -2, -1].map(beat => leadStripView(tango, beat * 960).lit), [0, 0, 1, 1, 2, 3, 4, 4]);
+  // ジャイブ（型 6 拍・合図 8 拍）: 合図の最後は型の最後の語「6」＝鳴り始めの「1」へ続く
+  const jive = stripCells(idleProgram('jive', '123a45a6'));
+  assert.equal(jive[leadStripView(jive, -480).lit!]!.label, '6');
+  assert.equal(jive[leadStripView(jive, -8 * 960).lit!]!.label, '5');
+  assert.deepEqual(leadStripView(waltz, null), { ...stripView(waltz, null) });   // tick が無ければ点けない
+});
