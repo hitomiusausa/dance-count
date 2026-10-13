@@ -57,12 +57,15 @@ export function SettingsScreen() {
           ))}
         </div>
       ))}
-      <a class="dc-link-row dc-settings-section dc-settings-about" href={buildHash({ screen: 'S13', params: {} })}>
-        <Icon name="info" />
-        <span class="dc-link-label">{phrased(translator, 'settingsAbout')}</span>
-        <small class="dc-link-value">{translator.t('versionLabel', { version: APP_VERSION })}</small>
-        <Icon name="chev-r" />
-      </a>
+      <div class="dc-settings-group" role="group" aria-labelledby="dc-s6-about" data-group="about">
+        <h2 class="dc-field-label dc-settings-section" id="dc-s6-about">{translator.t('settingsAboutHeading')}</h2>
+        <a class="dc-link-row dc-settings-about" href={buildHash({ screen: 'S13', params: {} })}>
+          <Icon name="info" />
+          <span class="dc-link-label">{phrased(translator, 'settingsAbout')}</span>
+          <small class="dc-link-value">{translator.t('versionLabel', { version: APP_VERSION })}</small>
+          <Icon name="chev-r" />
+        </a>
+      </div>
     </main>
   );
 }

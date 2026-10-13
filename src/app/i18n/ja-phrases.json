@@ -43,6 +43,7 @@
   "settingsInstall": ["ホーム画面に","追加する","方法"],
   "settingsHelpHeading": ["困った","時は"],
   "settingsAbout": ["プライバシー・","アプリについて"],
+  "settingsAboutHeading": ["この","アプリに","ついて"],
   "deleteAllData": ["データを","全て","消す"],
   "confirmDeleteAllTitle": ["この","アプリの","データを","全て","消しますか？"],
   "confirmDeleteAllDetail": ["録音した","声・","受け取った","声・ルーティン・設定が","消えます。","元に","戻せません。"],

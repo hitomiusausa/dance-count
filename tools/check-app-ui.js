@@ -227,11 +227,12 @@ const STATES = [
   { name: 'S5 40字の名前（全角）', hash: `#/routines/${R.longJa.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   { name: 'S5 40字の名前（英数字）', hash: `#/routines/${R.longEn.id}/play`, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true },
   // D56（Ruling 115-4・118-3）: S6 は 言語・「困った時は」の束（追加の方法・音が鳴らない時）・「プライバシー・アプリについて」＝3（「声」は再生画面の声チップへ・
-  // 「先生の方へ」は表紙の「作る」へ）。375×548 でも 3 つとも初期表示に入る。左上「‹ 表紙」・下タブ無し
-  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', ops: 3, total: 3,
-    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'] },
-    textKeys: ['settingsHelpHeading', 'settingsAbout', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
-    firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]', '.dc-settings-about'] },
+  // 「先生の方へ」は表紙の「作る」へ）。D61: 最後の束に見出し「このアプリについて」を足したので、375×548 では言語と「困った時は」の 2 つが初期表示に入り、
+  // 「プライバシー・アプリについて」は下（スクロール）でもよい（opsSmall 2・初期表示の要素から外した）。375×667 以上は 3 つとも入る。左上「‹ 表紙」・下タブ無し
+  { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', ops: 3, opsSmall: 2, total: 3,
+    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], about: ['プライバシー・アプリについて'] },
+    textKeys: ['settingsHelpHeading', 'settingsAboutHeading', 'settingsAbout', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
+    firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // 帯があっても 375×548 で言語と「困った時は」は初期表示に入る（「プライバシー・アプリについて」は下でもよい＝ops は固定しない）
   { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
     firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },

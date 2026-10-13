@@ -80,6 +80,7 @@ export const APP_MESSAGES = {
     // 段8（Ruling 98）: S6 の見出し「困った時は」の束・S13 の行（版を右に）
     settingsHelpHeading: "If something's wrong",
     settingsAbout: 'Privacy & about this app',
+    settingsAboutHeading: 'About this app',
     versionLabel: 'Version {version}',
     // 段8（Ruling 99）: S13 の「データを全て消す」（文は about.ts）
     deleteAllData: 'Delete all data',
@@ -377,6 +378,7 @@ export const APP_MESSAGES = {
     settingsInstall: 'ホーム画面に追加する方法',
     settingsHelpHeading: '困った時は',
     settingsAbout: 'プライバシー・アプリについて',
+    settingsAboutHeading: 'このアプリについて',
     versionLabel: '版 {version}',
     deleteAllData: 'データを全て消す',
     confirmDeleteAllTitle: 'このアプリのデータを全て消しますか？',

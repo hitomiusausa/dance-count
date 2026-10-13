@@ -3845,3 +3845,11 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
   - **出どころ**: (1) 語の画面の大きい語の下の小さい語（`wordPrompts` の `other`＝もう一方の言葉の語彙の第一表記・Ruling 59-2／0-1 の訂正）。英語の声を録る時は「いち」「に」「スロー」、日本語の声では「One」「Two」。(2) 説明の画面の言葉の 2 択の英語の文「Count in Japanese (いち, に, スロー…)」。
   - **直し**: (1) 小さい語は**日本語の画面だけ**（`wordPrompts(locale, key, uiLocale)`。英語の画面では `null`＝描かない）。英語の画面で日本語の声を録る時は、言う語（「いち」）が見出しに 1 回だけ出る（下に「One」を出さない＝どちらを言うか迷わない。ローマ字も足さない＝その声を選ぶ人は日本語で数える人）。日本語の画面は今までどおり（英語の声の下に「スロー」、日本語の声の下に「Slow」）。(2) 「Count in Japanese (ichi, ni, san…)」（英語の画面に仮名を出さない）。
   - 検査: `test/app/voices/wizard.test.ts`・`ui:check` の S8 の語の画面（英語で `.dc-record-other` が無い・日本語で有る・英語の S8 の説明と語の画面に仮名が無い。日本語の声の見出しの語だけは例外）。
+
+# 設定の「このアプリについて」の見出し（D61）— ひとみうさの決定（2026-10-14）
+
+- **D61 S6 の最後の行に見出し「このアプリについて」（英語 “About this app”）を付ける**（ひとみうさの決定 2026-10-14。Ruling 98・D56 の S6 の束の読み替え）
+  - **出どころ**: 最後の行「プライバシー・アプリについて」は `dc-settings-section`（上 24px）だけで見出しが無く、「困った時は」の束（見出し→行）と並べると間が不揃いに見えた。
+  - **直し**: 別の束のまま、同じ型の見出しを足した。`div.dc-settings-group[role=group][aria-labelledby=dc-s6-about][data-group=about]` の中に `h2.dc-field-label.dc-settings-section#dc-s6-about`（鍵 `settingsAboutHeading`）＋行 `a.dc-link-row.dc-settings-about`（行・版の表示はそのまま）。行から `dc-settings-section` を外した（上 24px は見出しが持つ）。見出し→行の間は「困った時は」と同じ CSS（`.dc-field-label` の下 8px と `.dc-link-row` の上 8px が重なって 8px）。320 幅の `.dc-settings-about`（版を下の行へ）は行の内側の話なので見出しとの間は変わらない。CSS は変えていない。
+  - 検査: `ui:check` の S6（`linkGroups.about`・`textKeys` に `settingsAboutHeading`・R98＝束は目に見える見出しを持つ）。`ja-phrases.json`・`stage8-copy-review.md` は生成物なので作り直した。
+  - **代償**: 見出し 1 つ分（約 32px）増えるので、375×548（Safari SE）では「プライバシー・アプリについて」の行が初期表示の下に出る（スクロールで届く）。`ui:check` の S6 は `opsSmall: 2`・初期表示の要素から `.dc-settings-about` を外した（375×667 以上は 3 つとも入る）。
