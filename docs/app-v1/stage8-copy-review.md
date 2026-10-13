@@ -422,6 +422,12 @@
 | 307 | `routinesUnreadableMore` | ほか {count} 本も読めませんでした。 | {count} more routines couldn't be read. | 英語の初版 | OK |  |
 | 308 | `routinesOverLimit` | ルーティンは {max} 本までなので、{count} 本は受け取れません。 | You can keep up to {max} routines, so {count} can't be received. | 英語の初版 | OK |  |
 
+## 公開ページのメタ（index.html の description・og:description。検索・共有の時に出る）
+
+| # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
+|---|---|---|---|---|---|---|
+| 309 | `pageDescription` | 社交ダンスのカウント（1・2・3／スロー・クイック）を声で鳴らす練習アプリ。無料・登録なし。先生が自分の声を録音して、生徒に配れます。 | Voice counts for ballroom dance (1-2-3, slow-quick). Free, no sign-up. Teachers can record their own voice and share it with students. | 長さ・英語の初版 |  |  |
+
 ## 脚注: 節ごとの依頼の数（1 画面 1 つまでの材料。1 つの画面に同時に出る数ではない）
 
 - S0 表紙: 0
@@ -443,3 +449,4 @@
 - 共通（複数の画面・部品）: 0
 - 生徒への案内文（S9 でコピーされる）: 0
 - エラー・知らせ（仕様 §11）: 7
+- 公開ページのメタ（index.html の description・og:description。検索・共有の時に出る）: 0

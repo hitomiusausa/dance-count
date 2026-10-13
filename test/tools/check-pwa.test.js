@@ -9,7 +9,7 @@ import { BOOT_STYLE_MAX_BYTES, PRECACHE_MAX_BYTES, RENDER_BLOCKING_CSS_MAX_BYTES
 const VOICES = [{ id: 'default-en-female-v1', locale: 'en' }];
 const SUBSETS = ['noto-sans-jp-59', 'inter-latin'];
 const WORDS = ['slow', 'quick', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'and', 'ah'];
-const HTML = '<head><meta name="apple-mobile-web-app-title" content="Dance Count"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">'
+const HTML = '<head><meta name="apple-mobile-web-app-title" content="Dance Count"><meta name="description" content="Voice counts"><meta property="og:title" content="Dance Count for Ballroom"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">'
   + '<link rel="manifest" href="./manifest.webmanifest"><style>.dc-boot{color:#1B2A4A}</style>'
   + '<link rel="stylesheet" crossorigin href="./assets/index-AbC.css">'
   + '<link rel="stylesheet" href="./assets/fonts-F0.css" media="print" onload="this.media=&#39;all&#39;"></head>'
@@ -84,7 +84,15 @@ test('index.html links the manifest and the iPhone icon and names the app', asyn
   const files = { ...goodFiles(), 'index.html': '<head></head>' };
   const problems = await check({ files, precache: precached(files) });
   assert.deepEqual(problems, ['index.html has no manifest link', 'index.html has no apple-touch-icon link', 'index.html has no apple-mobile-web-app-title',
-    'index.html has no boot shell inside #app', 'index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found 0']);
+    'index.html has no boot shell inside #app', 'index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found 0',
+    'index.html has no description or og:title meta']);
+});
+
+test('the published index.html keeps no developer comments and has the page meta (夜間便 A-5・QW1)', async () => {
+  const commented = { ...goodFiles(), 'index.html': HTML.replace('<head>', '<head><!-- 段8: note -->') };
+  assert.deepEqual(await check({ files: commented, precache: precached(commented) }), ['index.html must not contain HTML comments (<!--)']);
+  const noOg = { ...goodFiles(), 'index.html': HTML.replace('<meta property="og:title" content="Dance Count for Ballroom">', '') };
+  assert.deepEqual(await check({ files: noOg, precache: precached(noOg) }), ['index.html has no description or og:title meta']);
 });
 
 test('the boot shell sits inside #app and its inline style stays small (段8 Ruling 101)', async () => {

@@ -32,6 +32,14 @@ const fontsStylesheet: Plugin = {
   }
 };
 
+// 夜間便 A-5（Ruling 123・QW1）: 公開ページのメタ（index.html の description・og:*）の URL。PUBLIC_APP_URL の末尾の / を落として %DC_APP_URL% に入れる
+// （空の時＝開発・普段のビルドは "/" と "/icons/icon-512.png" になる）。og:image は既存の icon-512.png（新しい画像は作らない）。
+const appUrl: Plugin = { name: 'dc-app-url', transformIndexHtml: html => html.replaceAll('%DC_APP_URL%', (process.env.PUBLIC_APP_URL ?? '').replace(/\/+$/, '')) };
+
+// 夜間便 A-5: index.html の <!-- … --> は開発者向けの注記なので、ビルドで全部落とす（公開 HTML に内部の注記を出さない＝check-pwa が dist に <!-- が無いことを見る）。
+// index.html のコメントの行そのものは触らない（agent/logo と衝突させない）。
+const stripHtmlComments: Plugin = { name: 'dc-strip-html-comments', apply: 'build', transformIndexHtml: { order: 'post', handler: html => html.replace(/<!--[\s\S]*?-->\s*/g, '') } };
+
 // base:'./' は Capacitor とサブドメイン配信の両方で同じ成果物を使うため（仕様 §10）。
 // optimizeDeps.entries を index.html に限定し、legacy/ や旧 HTML（1MB超）を依存スキャンに巻き込まない。
 export default defineConfig({
@@ -40,6 +48,8 @@ export default defineConfig({
     preact(),
     buildTag,
     fontsStylesheet,
+    appUrl,
+    stripHtmlComments,
     // Service Worker（Ruling 88〜93）。自前の src/sw.ts に precache の一覧を注入する。dev では動かさない（devOptions を付けない）。
     // 登録は src/app/platform/pwa-register.ts（virtual:pwa-register）だけ。更新は「更新する」を押した時（registerType: 'prompt'）。
     VitePWA({
