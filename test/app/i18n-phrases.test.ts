@@ -64,6 +64,21 @@ test('variables are filled inside a phrase, so a name is one unbreakable piece o
   assert.deepEqual(parts.map(part => [part.text, part.breakBefore]), [['山田 花子さんの', false], ['声で', true], ['鳴ります。', true]]);
 });
 
+test('a value marked nowrap is one no-wrap piece; the text reads the same (夜間便 A-3・監査 #6: 「スロ／ー」)', () => {
+  const ja = createAppTranslator('ja-JP');
+  const en = createAppTranslator('en');
+  for (const [locale, translator, chunks, word] of [['ja-JP', ja, PHRASES.recordHint, 'スロー'], ['en', en, undefined, 'Slow']] as const) {
+    const template = (APP_MESSAGES[locale] as Record<string, string>).recordHint;
+    const parts = phraseParts(template, chunks, { word: { text: word, nowrap: true } });
+    assert.equal(joined(parts), translator.t('recordHint', { word }), `${locale} reads the same`);
+    assert.deepEqual(parts.filter(part => part.text === word).map(part => [part.label, part.breakBefore]), [[true, false]], `${locale}: the word is one no-wrap piece`);
+  }
+  // 値の前後の括弧は元の部品の性質のまま（free）・分けた所では折らない
+  const inner = phraseParts('「{word}」と言って', ['「{word}」と', '言って'], { word: { text: 'クイック', nowrap: true } });
+  assert.deepEqual(inner.map(part => [part.text, part.label, part.breakBefore, part.free ?? false]),
+    [['「', false, false, true], ['クイック', true, false, false], ['」', false, false, true], ['と', false, false, false], ['言って', false, true, false]]);
+});
+
 test('a 「…」“…” that holds a {placeholder} is not a no-wrap piece, so a long name or file name can still wrap (fix 1・I1／M1)', () => {
   const ja = createAppTranslator('ja-JP');
   const en = createAppTranslator('en');

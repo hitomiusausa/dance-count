@@ -427,7 +427,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
           ? <p class="dc-record-hint dc-record-autostop">{phrased(translator, 'recordAutoStop')}</p>
           : alert !== 'none'
             ? <NoticeLine alert={alert} />
-            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
+            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: { text: prompts.main, nowrap: true } })}</p>}   {/* 夜間便 A-3: 語の途中で折らない */}
       </div>
       <div class="dc-rec-ring">
         {/* 合図（3・2・1・今）の間は押すと「やめる」。録音中だけ押せない（D59） */}

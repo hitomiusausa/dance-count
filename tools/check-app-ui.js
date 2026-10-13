@@ -1262,6 +1262,13 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!hint || !visible(hint)) issues.push('R72 the record hint is not shown');
     else if (!hint.textContent.includes(state.recordHintWord)) issues.push(`R72 the record hint "${hint.textContent.trim()}" does not include "${state.recordHintWord}"`);
   }
+  // 夜間便 A-3（Ruling 123・監査 #6）: 説明の 1 行の語（大きい語と同じ）は折らない 1 つの塊で、1 行に収まる（「スロ／ー」にしない）
+  if ((state.recordOther || state.recordHintWord) && document.querySelector('.dc-record-hint:not(.dc-record-autostop)')) {
+    const main = document.querySelector('.dc-record-main')?.textContent.trim() ?? '';
+    const piece = [...document.querySelectorAll('.dc-record-hint .dc-nowrap')].find(item => item.textContent === main);
+    if (!piece) issues.push(`A-3 the record hint has no no-wrap piece for "${main}"`);
+    else if (piece.getClientRects().length !== 1) issues.push(`A-3 the word "${main}" in the record hint breaks across ${piece.getClientRects().length} lines`);
+  }
   // D60: 語の下の小さい語は日本語の画面だけ（英語の画面に日本語の読みを出さない）
   if (state.recordOther || state.recordHintWord) {
     const other = document.querySelector('.dc-record-other');

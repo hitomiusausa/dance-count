@@ -17,13 +17,38 @@ export interface PhrasePart {
 const PLACEHOLDER = /\{(\w+)\}/g;
 const HAS_PLACEHOLDER = /\{\w+\}/;
 
-function fill(template: string, variables: Record<string, string | number>): string {
-  return template.replace(PLACEHOLDER, (whole, name: string) => (variables[name] === undefined ? whole : String(variables[name])));
+// 夜間便 A-3（Ruling 123・監査 #6）: 置き換える値のうち「この値は折らない」物（例 S8 の {word}＝「スロー」）。
+// 値は 1 つの塊（label＝.dc-nowrap）として描く。文字列には何も入れない（textContent は translator.t() と同じ。Ruling 97）。
+export interface NowrapValue { text: string; nowrap: true }
+export type PhraseVariables = Record<string, string | number | NowrapValue>;
+
+const valueText = (value: string | number | NowrapValue) => (typeof value === 'object' ? value.text : String(value));
+
+function fill(template: string, variables: PhraseVariables): string {
+  return template.replace(PLACEHOLDER, (whole, name: string) => (variables[name] === undefined ? whole : valueText(variables[name]!)));
+}
+
+// 1 つの部品（置き換える前の文）を、折らない値の所で分ける。値は label の塊・前後は元の部品の性質のまま・分けた所では折らない
+function splitNowrap(piece: string, base: Omit<PhrasePart, 'text'>, variables: PhraseVariables): PhrasePart[] {
+  const parts: PhrasePart[] = [];
+  let start = 0;
+  for (const match of piece.matchAll(PLACEHOLDER)) {
+    const value = variables[match[1]!];
+    if (typeof value !== 'object') continue;
+    const before = piece.slice(start, match.index);
+    if (before) parts.push({ ...base, text: fill(before, variables), breakBefore: parts.length === 0 && base.breakBefore });
+    parts.push({ text: value.text, label: true, breakBefore: parts.length === 0 && base.breakBefore });
+    start = match.index! + match[0].length;
+  }
+  if (!parts.length) return [{ ...base, text: fill(piece, variables) }];
+  const after = piece.slice(start);
+  if (after) parts.push({ ...base, text: fill(after, variables), breakBefore: false });
+  return parts;
 }
 
 // chunks が template を作り直せない（古い JSON）時は句を使わない（折り方が今までに戻るだけ。番人は test/app/i18n-phrases.test.ts）
 // 置き換えの印は句の途中でも「…」の途中でも切れない（道具が保証）ので、部品ごとに置き換えても translator.t() と同じ文になる。
-export function phraseParts(template: string, chunks: readonly string[] | undefined, variables: Record<string, string | number> = {}): PhrasePart[] {
+export function phraseParts(template: string, chunks: readonly string[] | undefined, variables: PhraseVariables = {}): PhrasePart[] {
   const pieces = chunks && chunks.join('') === template ? chunks : [template];
   const breaks = new Set<number>();
   let offset = 0;
@@ -38,14 +63,14 @@ export function phraseParts(template: string, chunks: readonly string[] | undefi
     if (part.label) {
       // 置き換えを含む括弧は塊にしない（中に <wbr> も足さない。折り方は free の CSS に任せる）
       const free = HAS_PLACEHOLDER.test(part.text);
-      parts.push({ text: fill(part.text, variables), label: !free, breakBefore: breaks.has(position), ...(free ? { free } : {}) });
+      parts.push(...splitNowrap(part.text, { label: !free, breakBefore: breaks.has(position), ...(free ? { free } : {}) }, variables));
     } else {
       let start = position;
       for (const cut of [...breaks].filter(at => at > position && at < end).sort((a, b) => a - b)) {
-        parts.push({ text: fill(template.slice(start, cut), variables), label: false, breakBefore: breaks.has(start) });
+        parts.push(...splitNowrap(template.slice(start, cut), { label: false, breakBefore: breaks.has(start) }, variables));
         start = cut;
       }
-      parts.push({ text: fill(template.slice(start, end), variables), label: false, breakBefore: breaks.has(start) });
+      parts.push(...splitNowrap(template.slice(start, end), { label: false, breakBefore: breaks.has(start) }, variables));
     }
     position = end;
   }
