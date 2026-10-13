@@ -232,6 +232,10 @@ const STATES = [
   // D55（Ruling 114-3）: 15 語のフィガーは 12 語ずつ（止まっている間は 1 頁目）
   { name: 'S5 長いフィガーの帯', hash: `#/routines/${R.waltzLongFigure.id}/play`, screen: 'S5', kind: 'focus', seed: [R.waltzLongFigure], ops: 5, opsSmall: 4, speedAndPlay: true,
     strip: { labels: '1 2 3 1 2 3 1 2 3 1 2 3' } },
+  // 夜間便 B-4（Ruling 124・監査 #12）: 鳴っている間は「今のフィガー」の下に「次: {名前}」。D33: 375×548 でも速さと ▶（■）が初期表示に残る
+  // 端末が画面を点けたままにできる（WakeLock が取れる）偽物を入れる＝画面が暗くなる案内（A-4）の枠を出さずに「次:」の行だけを見る
+  { name: 'S5 再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, present: ['[data-figure-next]'], wakeLock: true,
+    steps: [{ click: '[data-play]' }, { wait: '.dc-figure-now--on' }, { wait: '[data-figure-next]' }] },
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
@@ -483,6 +487,10 @@ try {
       if (state.noShare) await context.addInitScript(() => { navigator.canShare = () => false; });
       // 段8: 共有シートが拒む（Android の Chrome が種類で断る時と同じ NotAllowedError。§11「共有を拒まれた」）
       if (state.refuseShare) await context.addInitScript(() => { navigator.canShare = () => true; navigator.share = () => Promise.reject(new DOMException('refused (ui:check)', 'NotAllowedError')); });
+      // 夜間便 B-4: 画面を点けたままにできる端末（headless の Chrome は WakeLock を断る＝再生の 2 秒後に「画面が暗くなる」案内が出る）
+      if (state.wakeLock) await context.addInitScript(() => {
+        Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: () => Promise.resolve({ release: () => Promise.resolve(), addEventListener() {} }) } });
+      });
       // 段7: Android の Chrome の「ホーム画面に追加」の案内（beforeinstallprompt）を、アプリが読み終えた後に 1 回だけ出す偽物
       if (state.installPrompt) await context.addInitScript(() => addEventListener('load', () => {
         const event = new Event('beforeinstallprompt', { cancelable: true });

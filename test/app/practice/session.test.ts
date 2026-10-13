@@ -360,3 +360,14 @@ test('the first successful start marks the first playback once; a voice that fai
   await h.session.play(WALTZ);
   assert.equal(h.firstPlaybackMarks, 1);
 });
+
+// 夜間便 B-4（Ruling 124・監査 #12）: ■ の後は鳴っていた語・tick・フィガーを残さない（画面は初めの状態＝始めのフィガーの最初の語を灰で表示）
+test('stopping clears the sounding word, tick and figure, back to the first view', async () => {
+  const h = harness();
+  await h.session.play({ kind: 'routine', danceId: 'waltz', figures: [{ id: 'f-00000001', name: 'A', counts: '123' }, { id: 'f-00000002', name: 'B', counts: '123' }], bpm: 84, metronome: true, countInBars: 1, loop: true, track: null, voice: DEFAULT_VOICE, voiceOffsetMs: 0 });
+  h.frame({ playing: true, countIn: false, event: { voiceKey: 'three', figureIndex: 1 }, originalTick: 5000 });
+  assert.equal(h.session.current.figureIndex, 1);
+  h.session.stop();
+  const view = h.session.current;
+  assert.deepEqual([view.playing, view.voiceKey, view.originalTick, view.figureIndex, view.program], [false, null, null, null, null]);
+});

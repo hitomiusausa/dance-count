@@ -134,6 +134,10 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   const sounding = view.playing && !view.countIn && view.figureIndex !== null ? view.figureIndex : null;
   const shownIndex = sounding ?? range.startIndex;
+  // 夜間便 B-4（Ruling 124・監査 #12）: 鳴っている間だけ「次: {次のフィガー}」。figureIndex（同じ frame）だけから出す。
+  // 範囲の最後のフィガーでは、繰り返しオンなら範囲の先頭・オフなら出さない（1 本だけの範囲で次も同じなら出さない）
+  const nextIndex = sounding === null ? null : sounding < range.endIndex ? sounding + 1 : settings.loop ? range.startIndex : null;
+  const nextFigure = nextIndex !== null && nextIndex !== sounding ? routine.figures[nextIndex] : undefined;
   const shownFigure = routine.figures[shownIndex]!;
   const startCounts = routine.figures[range.startIndex]!.counts;
   const idleText = view.playing ? '' : formatCounts(routine.danceId, startCounts).split(' ')[0] ?? '';
@@ -164,6 +168,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}
             </div>
+            {nextFigure && <div class="dc-figure-next" data-figure-next data-ellipsis>{translator.t('nextFigure', { name: figureName(nextFigure.name) })}</div>}
           </CountBox>
         </div>
         <div class="dc-area-controls">

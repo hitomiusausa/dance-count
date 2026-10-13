@@ -306,7 +306,8 @@ export const APP_MESSAGES = {
     receivedRoutinesToo: 'The routines are under the “Routines” tab at the bottom of “Use”.',
     goHome: 'Choose a dance',
     seeRoutines: 'See routines',
-    playRoutine: 'Play the routine'   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
+    playRoutine: 'Play the routine',
+    nextFigure: 'Next: {name}'   // 夜間便 B-4（Ruling 124）: S5 の鳴っている間だけ「今のフィガー」の下に小さく 1 行（文は A-3 の監修へ）   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
   },
   'ja-JP': {
     appName: 'Dance Count',
@@ -608,7 +609,8 @@ export const APP_MESSAGES = {
     receivedRoutinesToo: 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。',
     goHome: '種目を選ぶ',
     seeRoutines: 'ルーティンを見る',
-    playRoutine: 'ルーティンを鳴らす'   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
+    playRoutine: 'ルーティンを鳴らす',
+    nextFigure: '次: {name}'   // 夜間便 B-4（Ruling 124）: S5 の鳴っている間だけ「今のフィガー」の下に小さく 1 行（文は A-3 の監修へ）   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
   }
 } as const satisfies Record<string, Record<string, string>>;
 

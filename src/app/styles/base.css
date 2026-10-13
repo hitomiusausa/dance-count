@@ -328,6 +328,8 @@ button { cursor: pointer; }
 .dc-figure-now { align-self: stretch; margin-top: 6px; padding: 0 0 0 10px; border-left: 4px solid var(--line); font-size: 18px; font-weight: 700; line-height: 1.3;
   color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-figure-now--on { border-left-color: var(--beat-on); color: var(--ink); }
+/* 夜間便 B-4: 鳴っている間だけ「今のフィガー」の下に小さく「次: {名前}」（16px・--ink2）。長い名前は「…」 */
+.dc-figure-next { align-self: stretch; padding-left: 14px; font-size: 16px; line-height: 1.3; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-figure-now-pos { font-size: 16px; color: var(--ink2); font-variant-numeric: tabular-nums; }
 .dc-range { display: flex; flex-direction: column; gap: 8px; }
 .dc-range-step { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; min-height: 56px; border-bottom: var(--bw) solid var(--line); }
