@@ -253,6 +253,7 @@ export const APP_MESSAGES = {
     shareRefused: 'Sharing didn\'t work. You can save it with “Save the file” below.',   // 拒まれた時は自動で保存しない（Fable の答え 2）
     saveFileAgain: 'Save the file',
     copyInstructions: 'Copy instructions for students',
+    showInstructions: 'Show the message',   // 夜間便 B-6（Ruling 124）: 配った後に案内文をたたんだ枠で見せる（文は A-3 の監修へ）
     instructionsCopied: 'Copied. You can paste it into LINE or email.',
     instructionsCopyByHand: 'Press and hold to select and copy.',
     instructionsLabel: 'Instructions for students',
@@ -551,6 +552,7 @@ export const APP_MESSAGES = {
     shareRefused: '共有できませんでした。下の「ファイルを保存する」で保存できます。',
     saveFileAgain: 'ファイルを保存する',
     copyInstructions: '生徒への案内文をコピー',
+    showInstructions: '案内文を見る',   // 夜間便 B-6（Ruling 124）: 配った後に案内文をたたんだ枠で見せる（文は A-3 の監修へ）
     instructionsCopied: '案内文をコピーしました。LINE やメールに貼れます。',
     instructionsCopyByHand: '長押しで選んでコピーできます。',
     instructionsLabel: '生徒への案内文',

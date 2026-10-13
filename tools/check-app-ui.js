@@ -332,6 +332,10 @@ const STATES = [
     texts: ['ファイルを送ったら、下の案内文も送ってください。', '生徒への案内文をコピー'], firstView: ['.dc-result', '.dc-share-done .dc-button'],
     steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '[data-group="share-voice"] [role="radio"] >> nth=1' },
       { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
+  // 夜間便 B-6（Ruling 124・監査 #9a）: 作った後、「案内文をコピー」の下にたたんだ「案内文を見る」（summary[data-more]＝主要操作に数えない）。開くと案内文そのもの
+  { name: 'S9 作った後・案内文を見る', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], fakeShare: true, total: 6, openMore: true,
+    present: ['.dc-share-done details[open] [data-instructions-view]'], textKeys: ['showInstructions', 'instructionsIphoneHead', 'instructionsStep1'],
+    steps: [{ fill: ['[data-group="distributor"] input', '山田'] }, { click: '.dc-consent-box' }, { click: '.dc-dock .dc-primary' }, { wait: '.dc-result' }] },
   // 段8（§11・段5）: 共有を拒まれた（navigator.share が NotAllowedError）→ 結果の 1 行と「ファイルを保存する」（自動では保存しない）。実経路
   { name: 'S9 共有を拒まれた', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], refuseShare: true, total: 7,
     texts: ['共有できませんでした。下の「ファイルを保存する」で保存できます。', 'ファイルを保存する'], firstView: ['.dc-result'],

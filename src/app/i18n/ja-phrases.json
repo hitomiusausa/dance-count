@@ -162,6 +162,7 @@
   "shareRefused": ["共有できませんでした。","下の","「ファイルを","保存する」で","保存できます。"],
   "saveFileAgain": ["ファイルを","保存する"],
   "copyInstructions": ["生徒への","案内文を","コピー"],
+  "showInstructions": ["案内文を","見る"],
   "instructionsCopied": ["案内文を","コピーしました。","LINE や","メールに","貼れます。"],
   "instructionsCopyByHand": ["長押しで","選んで","コピーできます。"],
   "instructionsLabel": ["生徒への","案内文"],

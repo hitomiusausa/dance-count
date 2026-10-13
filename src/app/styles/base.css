@@ -531,6 +531,10 @@ button { cursor: pointer; }
 .dc-share-done { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; scroll-margin-top: 12px; }
 .dc-result { padding: 10px 12px; border: var(--bw) solid var(--primary); border-left-width: 4px; border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .dc-result-sub { margin-top: 4px; font-size: 16px; font-weight: 400; }
+/* 夜間便 B-6: 配った後の「案内文を見る」の中身（読む専用。改行はそのまま・長い URL は枠の中で折る） */
+.dc-instructions-more { margin-top: 0; }
+.dc-instructions-view { padding: 8px 12px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); font-size: 16px; line-height: 1.5;
+  white-space: pre-line; overflow-wrap: anywhere; text-align: left; }
 .dc-instructions { min-height: 0; padding: 8px 12px; font-size: 16px; line-height: 1.5; resize: none; }
 /* S10 受け取る（Ruling 83）: 選ぶ（大きいボタン＋説明 2 行）→ 確認（中身の行・下に「やめる」「使う」）→ 受け取った */
 .dc-receive-choose { margin-top: 16px; }

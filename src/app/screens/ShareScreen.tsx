@@ -233,6 +233,14 @@ export function ShareScreen() {
           <button type="button" class="dc-button dc-button--secondary dc-wide" onClick={copyInstructions}>
             <Icon name="copy" /><span>{translator.t('copyInstructions')}</span>
           </button>
+          {/* 夜間便 B-6（Ruling 124・監査 #9a）: 送る前に中身を確かめられるよう、たたんだ枠で案内文そのものを見せる（読む専用・コピーの動きは変えない）。
+              「くわしく」と同じ型（summary[data-more]）＝たたんだ状態は主要操作に数えない（Ruling 18 の読み替え）。手でコピーの枠が出ている時は重ねない */}
+          {copy !== 'manual' && (
+            <details class="dc-more dc-instructions-more">
+              <summary data-more><span>{translator.t('showInstructions')}</span><Icon name="chevron" /></summary>
+              <div class="dc-more-body"><div class="dc-instructions-view" data-instructions-view>{instructions}</div></div>
+            </details>
+          )}
           {copy === 'manual' && (
             <div class="dc-field">
               <textarea class="dc-input dc-instructions" readOnly rows={8} value={instructions} aria-label={translator.t('instructionsLabel')} />
