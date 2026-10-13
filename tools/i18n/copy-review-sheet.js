@@ -42,7 +42,7 @@ export const GROUPS = Object.freeze([
 
 // 仕様 §11 の文（と段8で足す「消せませんでした」）。画面に関わらず「エラー」の節にまとめる。
 export const ERROR_KEYS = Object.freeze([
-  'noSoundTitle', 'noSoundBody', 'playbackStopped', 'voiceMissing', 'wakeLockTip', 'saveFailed', 'micDenied', 'micFailed', 'noRecorder',
+  'noSoundTitle', 'noSoundBody', 'playbackStopped', 'voiceMissing', 'wakeLockTip', 'wakeLockTipOther', 'saveFailed', 'micDenied', 'micFailed', 'noRecorder',
   'noVoiceHeard', 'fileBroken', 'fileTooLarge', 'fileTooNew', 'voiceLimitReached', 'routinesOverLimit', 'routineUnreadable',
   'routinesUnreadableMore', 'openedInLine', 'shareRefused', 'clearAllFailed'
 ]);

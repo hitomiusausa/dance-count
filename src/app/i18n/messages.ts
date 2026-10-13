@@ -65,6 +65,7 @@ export const APP_MESSAGES = {
     playbackStopped: 'Playback stopped. Press ▶ again.',
     voiceMissing: "This voice isn't on your device yet. Connect to the internet and play once.",
     wakeLockTip: 'Your screen may dim during practice. A longer Auto-Lock helps.',
+    wakeLockTipOther: 'Your screen may dim during practice. A longer screen timeout helps.',   // 夜間便 A-4: iPhone・iPad 以外（Auto-Lock は iOS の語）
     close: 'Close',
     saveFailed: "Couldn't save. Please check free space.",
     voicesTitle: 'Voice',
@@ -365,6 +366,7 @@ export const APP_MESSAGES = {
     playbackStopped: '再生が止まりました。もう一度 ▶ を押してください。',
     voiceMissing: 'この声はまだ端末に入っていません。インターネットにつないで一度再生してください。',
     wakeLockTip: '練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です。',
+    wakeLockTipOther: '練習中は画面が暗くなることがあります。画面が消えるまでの時間を長めにすると便利です。',   // 夜間便 A-4: iPhone・iPad 以外（自動ロックは iOS の語）
     close: '閉じる',
     saveFailed: '保存できませんでした。空き容量を確かめてください。',
     voicesTitle: '声',
