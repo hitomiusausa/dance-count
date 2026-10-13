@@ -3853,3 +3853,159 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
   - **直し**: 別の束のまま、同じ型の見出しを足した。`div.dc-settings-group[role=group][aria-labelledby=dc-s6-about][data-group=about]` の中に `h2.dc-field-label.dc-settings-section#dc-s6-about`（鍵 `settingsAboutHeading`）＋行 `a.dc-link-row.dc-settings-about`（行・版の表示はそのまま）。行から `dc-settings-section` を外した（上 24px は見出しが持つ）。見出し→行の間は「困った時は」と同じ CSS（`.dc-field-label` の下 8px と `.dc-link-row` の上 8px が重なって 8px）。320 幅の `.dc-settings-about`（版を下の行へ）は行の内側の話なので見出しとの間は変わらない。CSS は変えていない。
   - 検査: `ui:check` の S6（`linkGroups.about`・`textKeys` に `settingsAboutHeading`・R98＝束は目に見える見出しを持つ）。`ja-phrases.json`・`stage8-copy-review.md` は生成物なので作り直した。
   - **代償**: 見出し 1 つ分（約 32px）増えるので、375×548（Safari SE）では「プライバシー・アプリについて」の行が初期表示の下に出る（スクロールで届く）。`ui:check` の S6 は `opsSmall: 2`・初期表示の要素から `.dc-settings-about` を外した（375×667 以上は 3 つとも入る）。
+
+---
+
+# Fable 裁定 2026-10-14 夜間便 — 使いやすさ監査 18 件＋競合調査の quick wins 5 件の振り分け（A 本番／B プレビュー／C ひとみうさ判断）
+
+作成: 2026-10-14 夜 / 書き手: Fable（裁定だけ。コードには触れていない） / 入力: `docs/research/2026-10-14-ux-audit.md`（#1〜#18）・`docs/research/2026-10-14-competitor-research.md` §3(d)（QW1〜QW5）・`po-checklist.md`・HANDOVER §0・D23〜D62。
+ひとみうさの言葉: 「進められるだけ進めておいて。改善できるところもあればぜひ検討して実装してみておいて。朝起きて成果に驚きたい」。
+
+**判断の軸**: (1) D の決定と po-checklist の未決は覆さない（触る物は C、既定を付けて見せるだけなら B）。(2) A は「誰が見ても直す物」＝実際の画面と合っていない文・語の途中の折れ・足りないメタ情報・内部コメントの漏れ・既定の言葉の取り違え。好み・流れに触る物は A に入れない。(3) 一晩で Opus/Sonnet が回せる量＝A 6 件・B 6 件＋プレビューの器 1 件。残りは C に「次便でやる／ひとみうさが決める」を分けて置く。
+
+## 0. 裁定の根拠にした現物（推測は明記）
+
+- **#1**: `RecordVoiceScreen.tsx:89` `useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en')`。`requestRecordLanguage` を呼ぶのは S7 の「続きを録音する」（`VoicesScreen.tsx:143`）だけで、**M0 の行（`MakeScreen.tsx:28`）は呼ばずに S8 へ行く**ので、途中の声が日本語でも既定の 'en' が選ばれる。原因はここ（監査の読みどおり）。
+- **#3**: `ReceiveScreen.tsx:135` は `voice && plan.routines.length > 0` の時だけ `receivedRoutinesToo` を出し、主ボタン（:137）は `voice ? 'S1' : 'U2'` へ出る。つまり文の「下の「ルーティン」」は**次の画面（S1）の下タブ**を指している。S10 自身にはタブが無い（`routes.ts` S10 は focus）。文と画面が合っていないのは事実。
+- **#6**: `recordHint` は `phrased(translator, 'recordHint', { word })`（:425）。`{word}` の置き換えは `PhrasedText` の変数で、折らない指定は無い。
+- **#11**: `MakeScreen.tsx:51-63` の注釈どおり「折れるのは「 · 」の後だけ」は**通し確認 Task 7 で決めた意図した形**。監査の「読みにくい」は見た目の好み → A ではない。
+- **#16**: `wakeLockTip` は 1 文だけ（`messages.ts:67/367`）で端末を見分けていない。PC で出ること自体は WakeLock 失敗時の仕様（`session.ts:219` `wakeLockUnavailable`）。
+- **#17**: S2 は `dc-screen--dock`（`PracticeScreen.tsx:102`）で、`base.css:31` が dock の高さ分の下余白を足している。「くわしく」は**初期表示の外にあるだけで隠れてはいない**（監査も「スクロールすれば届く」）。375×667 を詰めないのは D33 の決定。→ 直さない。
+- **#8**: 合図の間もエンジンの frame は届く（`session.ts:253-258` が `frame.countIn` の時に `voiceKey`・`originalTick` を null に伏せている）。合図の進みは**同じ tick から**出せる＝第 2 の時間計算は要らない。
+- **QW1**: 本番 `https://count.dancemap.jp/` の HTML に `<!-- 段8（Ruling 101）: 起動の殻。…` が残っている（curl で確認）。`<meta name="description">`・OGP は無い。`vite.config.ts` は `transformIndexHtml` の差し込み（`%DC_BUILD%`・`%DC_BOOT_MARK%`）だけで、コメントは落としていない。`index.html` のコメント本文は `agent/logo` で D62 の行が足されている（＝コメントの行を A で消すと `agent/logo` と衝突する → ビルド時に落とす形にする）。
+- **配る S9**: `ShareScreen.tsx:43-45` `voiceId` の初期値は null（「入れない」）、`chosen` は `intent.routineId` がある時だけ。`ShareIntent` は `{ voiceId?, routineId? }`（`share-intent.ts`）なので、完成画面の「配る ›」から来た時の声は intent で分かる。
+- **前回**: `settings.lastDanceId`・`lastFigure`（`settings.ts:23-24`）・`state/resume.ts` の `lastPractice()`。ルーティンは入っていない（Ruling 121 のとおり）。
+- **配信**: `wrangler.jsonc` は `name: dance-count`・`routes: count.dancemap.jp`。プレビューは**別の設定ファイル**で `name: dance-count-preview`・routes 無し・`workers_dev: true` にしないと本番の経路に触る。
+- **監修シート**: `stage8-copy-review.md` は `npm run copy:sheet` が `messages.ts` から作る生成物（Ruling 96・D58 の運用）。新しい鍵は**作り直せば自動で載る**。ここで「A-3 へ」と書く物は「鍵は足してよいが、文はひとみうさが最終」の意味。
+
+## 1. 振り分けの一覧
+
+| 元 | 件名 | 区分 | 大きさ |
+|---|---|---|---|
+| #1(a) | 録音の「続きから」で言葉が英語に戻る | **A-1** | S |
+| #1(b) | M0 の「続きから」は説明の画面を飛ばして語へ | C-11（次便・D25/D32 の隣） | S |
+| #2 | 受け取ったルーティンが「前回」に残らない | **B-1** | M |
+| #3 | S10「下の「ルーティン」」が画面と合っていない | 文＝**A-2**／主ボタンの入れ替え＝**B-2** | S／S |
+| #4 | 日本語の画面で標準の声が英語 | C-1（po-checklist A-2・A-14） | — |
+| #5 | 「配る」で何も選ばれていない | **B-3** | S |
+| #6 | 「スロ／ー」語の途中で折れる | **A-3** | S |
+| #7 | 生徒の一覧にナチュラルターン等が無い | C-2（監修の順番） | — |
+| #8 | 「はじめの合図…」が 4 秒動かない | **B-5** | S |
+| #9 | 案内文が見えない・手順の不足・【iPhone】の行 | 【iPhone】の改行＝**A-6**／案内文を見せる枠＝**B-6**／文の追加＝C-3（A-3） | S |
+| #10 | 下タブ「フィガー」の絵が家 | C-4（絵の選択＝好み） | S |
+| #11 | 「作る」の声の行が読みにくい | C-5（次便） | S |
+| #12 | 再生中に次のフィガーが見えない・止めても数字が残る | **B-4** | S |
+| #13 | 「追加する」が押せない理由が無い | C-6（文は A-3） | S |
+| #14 | 編集の保存の手応えが無い | C-7（文は A-3） | S |
+| #15 | PC のスペースキー | C-8（次便） | S |
+| #16 | PC でも「Auto-Lock」 | **A-4** | S |
+| #17 | 375×667 で「くわしく」が下 | C-9（直さない・D33） | — |
+| #18 | 種目で行き先が違う | C-10（記録だけ・Ruling 119） | — |
+| QW1 | description・OGP・noscript・内部コメントの除去 | **A-5** | S |
+| QW2 | テンポの小節/分（MPM）併記 | C-12（次便 B・文は A-3） | S |
+| QW3 | 先生向けの 1 枚（QR） | C-13 | S |
+| QW4 | dancemap.jp からの入口 | C-14 | S（別サイト） |
+| QW5 | 「広告なし・登録なし…」の 1 行 | C-15（D47 の法務と一緒） | — |
+
+A＝6 件・B＝6 件（＋B-0 プレビューの器）・C＝15 件。
+
+## Ruling 123（A）今夜 本番へ — 枝 `agent/fixes-1014`（`agent/cloudflare` の `6a4c104` から）
+
+共通の完了条件: `npm test` fail 0・`npm run typecheck`・`npm run ui:check` PASS（数が増えるのはよい・減ったら理由を書く）・`npm run build`（`RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp`）が `check-dist` まで通る・関係するスモーク。**1 件 1 コミット**。文言の鍵を足したら `npm run i18n:phrases` と `npm run copy:sheet` で生成物を作り直す（D58 と同じ）。本番へのデプロイ（`npm run deploy:cf`）は**全 A の後に 1 回**。AGENTS.md「公開はひとみうさの許可の後」との関係は下の D63。
+
+- **A-1 録音の「続きから」の言葉（#1a）**
+  - 直し方（根本）: S8 の言葉の既定を**1 か所**で決める。`takeRecordLanguage()` があればそれ。無ければ、`saved` を読み終えた時点で「途中（0 < 語数 < 12）の声がある言葉」を選ぶ。両方とも途中なら `updatedAt` が新しい方。途中が無ければ今までどおり 'en'。ユーザーが説明の画面で 2 択を押した後は上書きしない（`saved` が届くのは非同期なので「まだ触っていない」フラグで守る）。M0 の行には `requestRecordLanguage` を足さない（S8 が自分で決めれば入口が何本あっても同じ＝1 つの正）。
+  - 検査: `test/app/voices/wizard.test.ts`（または新しい小さなテスト）に「日本語 1/12 だけ保存 → 既定が 'ja-JP'」「両方途中 → 新しい方」「どちらも無し → 'en'」「request があればそれが勝つ」。`ui:check` の S8 説明の画面に「途中の日本語あり」の状態を 1 つ（`ui-state` 既存の seed で足りれば流用）。`npm run smoke:voice` が通ること。
+- **A-2 S10 の 1 文（#3 の文だけ）**
+  - 鍵 `receivedRoutinesToo` を実際の場所に合わせる: ja「ルーティンは、「使う」の下のタブ「ルーティン」にあります。」／en “The routines are under the “Routines” tab at the bottom of “Use”.”。主ボタン・行き先は変えない（それは B-2）。
+  - po-checklist **A-16(1)** はこの文の確認待ちだった。「画面に無い物を指す」は事実の誤りなので直すが、**最終の文はひとみうさ**（A-3 の監修シートに載る）。A-16(1) の欄には「夜間便で読み替えた」と注記すること（po-checklist の編集は締めの便で）。
+  - 検査: `test/app/i18n.test.ts` 系の鍵の存在・`ui:check` S10「声とルーティン」の状態で文字列が出ること（`textKeys`）。
+- **A-3 「{word}」を折らない（#6）**
+  - `recordHint` の `{word}` を `<span class="dc-nowrap">`（既存の class）で包む。`PhrasedText` の変数差し込みで「この変数は折らない」を指定できる形（例: `variables` の値に `{ text, nowrap: true }` を許す／または `recordHint` だけ `wordNowrap` のオプション）。**文字列には何も入れない**（Ruling 97・`feedback_wrapping_diagnosis`）。
+  - 検査: 320・375 の ja/en で S8 の語の画面（長い語「ダブルリバース…」は出ないので「クイック」「アンド」「スロー」）を `ui:check` のスクリーンショットで見て、語が 1 行に収まること。既存の S8 の `ui:check` 状態を使う。
+- **A-4 WakeLock の案内を端末で分ける（#16）**
+  - `wakeLockTip` を 2 つに: iPhone・iPad（既存の iOS 判定＝`platform` にある物を使う。新しい判定は作らない）は今の文のまま。それ以外は ja「練習中は画面が暗くなることがあります。画面が消えるまでの時間を長めにすると便利です。」／en “Your screen may dim during practice. A longer screen timeout helps.”（鍵 `wakeLockTipOther`）。
+  - 文は**新しい公開文**なので A-3 の監修シートに載せる（鍵を足せば自動）。
+  - 検査: 鍵の単体テスト・`ui:check` の「WakeLock 失敗の帯」の状態（Ruling 100 の error-matrix に行があるはず）で iOS/非 iOS を 1 周ずつ。
+- **A-5 公開 HTML のメタ情報と内部コメント（QW1）**
+  - `index.html` の `<head>` に足す: `<meta name="description" content="…">`・`og:title`「Dance Count for Ballroom」・`og:description`（description と同じ）・`og:type` website・`og:url`（`PUBLIC_APP_URL`。ビルド時に差し込む＝`%DC_APP_URL%`）・`og:image`（`{PUBLIC_APP_URL}/icons/icon-512.png`。**新しい画像は作らない**＝`agent/logo` が入ればそのままうさぎになる）・`twitter:card` summary。`<noscript>` に 1 段落。
+  - description の文（ja 主・en 併記。アプリが実際にすることだけ。「解析」「広告」の語は D47 の法務待ちなので**入れない**）: 「社交ダンスのカウント（1・2・3／スロー・クイック）を声で鳴らす練習アプリ。無料・登録なし。先生が自分の声を録音して、生徒に配れます。 / Voice counts for ballroom dance (1-2-3, slow-quick). Free, no sign-up. Teachers can record their own voice and share it with students.」 → **A-3 の監修シートへ**（`index.html` の文は `messages.ts` に無いので、シートの末尾に「公開ページのメタ」の行を手で足す）。
+  - 内部コメント: `vite.config.ts` に `transformIndexHtml` を 1 つ足し、**ビルド時に `<!-- … -->` を全部落とす**（`index.html` のコメント行は触らない＝`agent/logo` と衝突させない）。`tools/pwa/check-pwa.js` に「index.html に `<!--` が無い」「description・og:title がある」の 2 行を足す。
+  - 検査: `npm run build` → `dist/index.html` を grep（コメント 0・meta あり・`%DC_` 残り無し）・`npm run smoke:pwa`。
+- **A-6 案内文の【iPhone】の後で改行（#9d）**
+  - `instructionsIphone` を「【iPhone】」と「1. このファイルを開き…」の 2 行に（`instructions.ts` の `lines` に 1 要素足す。鍵を 2 つに分けるのが素直: `instructionsIphoneHead`「【iPhone】」＋ `instructionsStep1`）。【Android】も同じ形に揃える（「【Android】」＋本文）。語は変えない。
+  - 検査: `test/app/share/instructions.test.ts`（既存なら期待値を更新。無ければ 1 本）・`npm run smoke:share` の案内文の比較。
+
+## Ruling 124（B）今夜 プレビューだけ — 枝 `agent/preview-1014`（`agent/logo` の `e54c9ac` に `agent/fixes-1014` をマージした所から）
+
+朝、ひとみうさが「試して決める」ための枝。**本番には乗せない**。B は好みが残るので、各件に「採る／戻す」の問いを付けて `po-checklist.md` に 18 として足す（締めの便）。
+
+- **B-0 プレビューの器**（最初にやる）
+  - `wrangler.preview.jsonc`: `name: "dance-count-preview"`・`routes` 無し・`workers_dev: true`・assets は本番と同じ。`package.json` に `deploy:preview`: `DC_PREVIEW=1 RELEASE=1 PUBLIC_APP_URL=https://dance-count-preview.<workers.dev の subdomain> npm run build && npx -y wrangler@latest deploy -c wrangler.preview.jsonc`（subdomain は最初の deploy の出力で分かる。分かったら URL を HANDOVER §0 に書く）。
+  - `DC_PREVIEW=1` の時だけ `transformIndexHtml` で `<meta name="robots" content="noindex, nofollow">` を差し込む。`check-pwa.js` は「本番ビルド（DC_PREVIEW 無し）に robots noindex が**無い**」も見る（逆の事故を防ぐ）。
+  - 別オリジンなので保存領域は本番と別＝受け取り・録音の試しは安全。SW の scope も別。
+  - 検査: `npm run smoke:pwa` を `DC_PREVIEW=1` でも 1 周。デプロイ後に `curl` で `noindex` と `og:` を見る。
+- **B-1 「前回」にルーティンも入れる（#2・Ruling 121 の拡張の提案）**
+  - `settings` に `lastKind: 'dance' | 'routine'` と `lastRoutineId: string | null` を足す（既存の `lastDanceId`・`lastFigure` は変えない。版は上げず `normalize` で欠けた鍵は既定）。S5 で ▶ を押した時に `lastKind='routine'`・`lastRoutineId` を保存。S2 で鳴らした時は `lastKind='dance'`（今の保存に 1 行）。
+  - `lastPractice()` が `lastKind==='routine'` でそのルーティンが存在すれば `{ kind:'routine', routine }` を返す。消えていれば dance の記憶へ落ちる（無ければ null）。
+  - カードの文（S0 の C・U1 の前回カード、同じ部品）: 1 行目「前回の練習」（既存鍵）・2 行目「ルーティン · {名前}」（受け取った物は「{配った人}さんのルーティン · {名前}」＝D49 の敬称の関数を使う）・右「▶ 続きから」（既存鍵 `resume`）。押すと S5 を**開いてすぐ鳴らす**（フィガーの「続きから」と同じ約束＝Ruling 121。S5 の `?autoplay` 相当は既存の `resumePractice` の型に倣う）。長い名前は既存の 2 行「…」の規則（po-checklist 17(2)）に従う。
+  - 検査: `test/app/settings`・`test/app/state`（`lastPractice` の 4 分岐）・`ui:check` S0・U1 に「前回がルーティン」の状態（ja/en・375×548 も）・`npm run smoke:routines` の末尾に「S5 で ▶ → トップへ → 前回カードに名前 → 押すと S5 が鳴る」。
+  - ひとみうさへの問い: 「前回」にルーティンも出してよいか（代案: 受け取ったルーティンがある時だけ「使う」の種目の上に「先生のルーティン（n）」の行＝監査 #2(b)）。
+- **B-2 S10 の主ボタンをルーティン優先に（#3 のボタン・po-checklist A-15 に触る）**
+  - 束に**ルーティンが入っていた時**: 主ボタン「ルーティンを鳴らす ›」／“Play the routine ›”（1 本ならその S5 へ・鳴らすのは ▶ を押してから＝自動では鳴らさない。2 本以上なら「ルーティンを見る ›」／“See the routines ›” で U2 へ）。「種目を選ぶ ›」は 2 番目（`dc-link-row` の型）。声だけの束は今のまま。A-2 の文は、ルーティンが入っている時は**出さない**（ボタンが答えになる）。
+  - 文は A-3 へ。
+  - 検査: `ui:check` S10 の 3 状態（声だけ／声＋ルーティン 1／声＋ルーティン 3）・`smoke:share` の受け取り側で主ボタンの行き先。
+  - 問い: A-15「S10 の出口は種目を選ぶ」をこの形に変えてよいか。
+- **B-3 「配る」の既定（#5）**
+  - ルーティンが**ちょうど 1 本**なら `chosen` に入れておく。声は: `intent.voiceId` があればそれ／無ければ**完成した自分の録音が 1 つだけ**ならそれ／それ以外は「入れない」。同意は今までどおり自分で押す（D37・D39・Ruling 82 の同意は変えない）。受け取った声は既定にしない。
+  - 検査: `test/app/share`（既定の 4 分岐の純粋関数にして単体テスト）・`ui:check` S9「声 1・ルーティン 1」の初期状態で選ばれていること・`smoke:share` は変更なしで通ること（既定が入っても同意前は「ファイルを作る」が押せない＝D51 の帯と矛盾しないか見る）。
+  - 問い: 声を既定で「入れる」にしてよいか（同意は別に押すので、知らずに配ることは無い）。
+- **B-4 S5 の「次:」と、止めた後の数字（#12）**
+  - 鳴っている間だけ、「今のフィガー」の行（Ruling 46）の**下に小さく 1 行**（16px・`--ink2`）「次: {次のフィガー名}」／“Next: {name}”。最後のフィガーで繰り返しオンなら先頭の名前、オフなら出さない。`figureIndex`（同じ frame）だけから出す。
+  - 止めたら（■・終わり）大きい数字を消して初めの状態に戻す（`IDLE_VIEW` に戻す所で `voiceKey` を null にする＝S2 も同じ挙動になるなら S2 も同時に）。
+  - **D33 の約束**: 375×548 で速さと ▶ が初期表示に残ること（Ruling 71）。残らなければ「次:」を「今のフィガー」の行の**右端**に `<small>` で入れて 1 行に収める（それでも 320 で 2 行になる時は「次:」を出さない）。
+  - 検査: `ui:check` S5「再生中」の 548/667/320 ja・en・`test/app/practice`（止めた後の view）。
+  - 問い: 「次:」の 1 行を足してよいか／止めた後に数字を消してよいか（今は最後の数字が残る）。
+- **B-5 「はじめの合図…」の間の進み（#8・Ruling 28 の範囲内）**
+  - 合図の間、D55 の「カウントの型の帯」の丸を**灰（`--ink2` 程度・琥珀は使わない）**で 1 語ずつ進める。数字は出さない（Ruling 28 のまま）。出どころは `session.ts:253` の frame＝`countIn` の時に伏せている `voiceKey`/`originalTick` を**別の鍵 `leadWordIndex`** で view に渡す（既存の `voiceKey` は null のまま＝今の S2 の「はじめの合図…」の描画は変えない）。**新しいタイマーは作らない**。
+  - 検査: `test/app/practice`（countIn の frame で `leadWordIndex` が進み `voiceKey` は null）・`ui:check` S2「合図の間」の見た目（既存の ui-state があれば流用）・`smoke:practice`。
+  - 問い: 合図の間に灰の丸が進むのでよいか（代案: 「はじめの合図…」の下に ●○○）。
+- **B-6 配った後に案内文を見せる（#9a・文は変えない）**
+  - S9 の結果の画面で「案内文をコピー」の下に、たたんだ枠「案内文を見る ›」／“Show the message ›”（押すと開く・既存の `dc-more` の型）。中は `instructions.ts` の文そのまま（読む専用）。コピーの動きは変えない。
+  - 文（見出しの鍵）は A-3 へ。
+  - 検査: `ui:check` S9「配った後」（たたんだ／開いた）・主要操作数（Ruling 82 の 5／6）に「見る」を足して超えるなら、たたんだ状態は数えない（Ruling 18 の読み替え。超えたら締めの便で報告）。
+
+## Ruling 125（C）ひとみうさが決める／次便に回す（夜間はやらない）
+
+| # | 何を | く！ちゃんのおすすめ | どこで |
+|---|---|---|---|
+| C-1 | 日本語の標準の声（#4。po-checklist A-2・A-14） | **A（Google・従量課金＋予算アラート）**。初めての生徒が英語で「合っていない」と感じるのは major。もし今日 12 語録れるなら **B（ひとみうさの録音）でまず出して**、後で A に替えるのも可（D28 で表示は「標準の声（日本語）」のまま） | `stage6-decision-card.md` |
+| C-2 | 監修の順番（#7） | 監修シートで**ナチュラルターン・リバースターン・ダブルリバーススピン（ワルツ）と、各種目の最初に習う 2〜3 件**を先に OK にする。画面は変えない | `figure-counts-review.md` |
+| C-3 | 案内文の追加（#9b・c・e） | 文頭に「0. まず下の URL を開き、ホーム画面に追加してください（追加の方法はアプリの設定にあります）。」を足し、URL の行を**先頭**へ。ルーティンだけの束は「私の声のカウント」→「私のルーティン」。**文は A-3 でひとみうさ** | `stage8-copy-review.md` |
+| C-4 | 下タブ「フィガー」の絵（#10・名前は D57 のまま） | 候補 (a) 足あと (b) 「1 2 3」の数字 (c) 音符。おすすめ **(a)**。時間が余れば scratch に 3 つ並べた比較 HTML を作ってよい（枝には入れない） | `TabBar.tsx:9` `icon: 'home'` |
+| C-5 | 「作る」の声の行を言葉ごとに 1 行（#11） | 次便でやる（S）。「英語 · 完成」「日本語 · 1 / 12 語 · 続きから」。`voiceStatusDone` の文は A-3 | `MakeScreen.tsx:51` |
+| C-6 | 「追加する」が押せない理由（#13） | 次便でやる。S9 の `dc-dock-note` と同じ型で「カウントを入れると、追加できます。」／“Enter the counts to add it.”。文は A-3 | S4 |
+| C-7 | 編集の保存の手応え（#14） | 次便でやる。名前の下に「自動で保存されます」／“Saved automatically”（帯は出さない＝操作を増やさない）。文は A-3 | S4 |
+| C-8 | PC のスペースキーで再生・停止（#15） | 次便でやる（S・文言なし）。文字を打つ欄にいる時は除く。▶/■ をタブ順の先頭にはしない（Ruling 102 の見出しフォーカスと衝突） | S2・S5 |
+| C-9 | 375×667 の「くわしく」（#17） | **直さない**。D33 は 548 だけを詰める決定。初期表示に速さと ▶ があれば足りる | — |
+| C-10 | 種目で行き先が違う（#18） | 記録だけ。Ruling 119 のまま。監修が進めば揃う | — |
+| C-11 | M0 の「続きから」で説明の画面を飛ばす（#1b） | 次便で可。D25/D32 の隣なので一言ほしい。A-1 で既定が直れば、押す回数は 1 回増えるだけ | S8 |
+| C-12 | テンポの小節/分（MPM）併記（QW2） | 次便の B で。S2 の速さの行に「♩=84 · テンポ 28」、競技の速さの行にも。語（「テンポ」「小節/分」）は A-3 | S2 くわしく |
+| C-13 | 先生向けの 1 枚（QR）（QW3） | A-3 の文が決まってから作る（案内文と同じ言葉で）。QR は count.dancemap.jp 直 | 新規（docs/外） |
+| C-14 | dancemap.jp からの入口（QW4） | **やる価値は高い**（既にある流入）。アプリ側は深いリンク `https://count.dancemap.jp/#/practice/waltz` で足りる（Ruling 117）。dancemap 側は FTP 手動デプロイ＝ひとみうさの作業。ボタンの文は「カウントを聞く」案 | dancemap.jp |
+| C-15 | 「広告なし・登録なし・解析なし・オフライン」の 1 行（QW5） | D47 の法務確認と一緒に決める。A-5 の description には「無料・登録なし」だけ入れた | S13・トップ |
+
+## D63（代理決定・ひとみうさ確認待ち）夜間便の A を本番に出す
+
+- ひとみうさの「進められるだけ進めておいて」を、**A（事実の誤り・足りない物の修正だけ）の本番反映の許可**と読む。AGENTS.md「公開はひとみうさの許可の後」の原則はそのまま（B は出さない・A でも流れや見た目の好みは含めない）。
+- 本番へ出す前の関門: 全 A のテスト・`ui:check`・`smoke:practice`・`smoke:voice`・`smoke:share`・`smoke:pwa` が緑。デプロイ後に本番 URL を 375×667 と 1280 で S8 説明（日本語途中）・S10・S8 語の画面・`curl` のメタを見て、スクリーンショットを HANDOVER に貼る。
+- 代案: デプロイだけ朝まで待つ（枝は push 済みにしておく）。コントローラーが「許可が足りない」と判断したらこちら。
+- 代償: 入れてある端末は次に開いた時に更新の帯（D45）が出る（文言の変化は A-2・A-4 の 2 文だけ）。
+
+## 便の順番（コントローラーへ）
+
+1. `agent/fixes-1014` を切る → A-5（器に近い）→ A-1 → A-2 → A-3 → A-4 → A-6 の順に 1 コミットずつ（A-1 と A-3 は同じ画面なので同じ実装者・逐次。A-5 は別の実装者で並列可）。
+2. 全 A の関門 → push → D63 のとおり本番へ。
+3. `agent/preview-1014` を切る（`agent/logo` ＋ `agent/fixes-1014` をマージ）→ B-0 → B-3・B-6（S9・別パッケージ寄り・並列可）／B-1・B-2（受け取り〜前回・逐次）／B-4・B-5（再生の view・逐次。同じ `session.ts` を触るので 1 人）。
+4. プレビューを `dance-count-preview` へ → URL と「朝見ること（B の 6 問）」を HANDOVER §0 と po-checklist 18 に書く。
+5. 時間が余ったら C-4 の比較 HTML（scratch）→ それ以外の C は手を付けない。
