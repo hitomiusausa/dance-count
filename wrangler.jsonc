@@ -1,0 +1,12 @@
+// Cloudflare Workers Static Assets（count.dancemap.jp）。Worker のコードは無く、dist をそのまま配る。
+// ルーティングはハッシュ（#/…）なので SPA の受け皿（not_found_handling）は要らない。無いパスは 404（smoke:pwa「深いパスはアプリで答えない」と同じ）。
+// キャッシュの指定は public/_headers（vite が dist にコピー）。公開は npm run deploy:cf。
+{
+  "name": "dance-count",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "none",
+    "html_handling": "auto-trailing-slash"
+  }
+}

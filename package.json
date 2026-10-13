@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build && node tools/check-dist.js",
     "preview": "vite preview",
+    "deploy:cf": "RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && npx -y wrangler@latest deploy",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
     "test": "node --test \"test/**/*.test.{js,ts}\"",
     "legacy": "python3 -m http.server 4173",

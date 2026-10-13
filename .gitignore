@@ -12,3 +12,6 @@ output/voices/
 .env.*
 *.credentials.json
 *-key.json
+
+# Cloudflare（wrangler のローカルの作業場）
+.wrangler/

@@ -1,0 +1,21 @@
+# Cloudflare Workers Static Assets のヘッダー（wrangler.jsonc）。この行の書き方は https://developers.cloudflare.com/workers/static-assets/headers/
+# 殻（index.html・sw.js・manifest）は毎回確かめる＝新しい版がすぐ届く（更新の帯 D45 はこれが前提）。
+# assets/ はファイル名にハッシュが入るので 1 年・immutable。audio/ はハッシュ無し（?v= で替える）ので既定（毎回確かめる）のまま。
+/*
+  X-Content-Type-Options: nosniff
+
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
