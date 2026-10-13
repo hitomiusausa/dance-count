@@ -1,7 +1,7 @@
 import { COUNT_VOCABULARIES } from '../../engine/count-vocabularies.js';
 import type { AppTranslator } from '../i18n/index.ts';
 import type { VoiceLocale } from './ids.ts';
-import { VOICE_KEYS, renamePack, type VoicePackRecord, type VoiceKey } from './store.ts';
+import { VOICE_KEYS, packProgress, renamePack, type VoicePackRecord, type VoiceKey } from './store.ts';
 
 // S8 の進み方（Ruling 59・D25）の純粋な部分。語は VOICE_KEYS の順に 1 つずつ・飛ばせない。
 export type RecordStep = { kind: 'intro' } | { kind: 'word'; index: number } | { kind: 'done' };
@@ -15,6 +15,18 @@ export function firstMissingIndex(pack: VoicePackRecord | null): number | null {
 export function stepAfterStart(pack: VoicePackRecord | null): RecordStep {
   const index = firstMissingIndex(pack);
   return index === null ? { kind: 'done' } : { kind: 'word', index };
+}
+
+// 夜間便 A-1（Ruling 123・監査 #1a）: S8 の言葉の既定を決める 1 か所。入口（S7 の「続きを録音する」・M0 の行・ほか）が何本あっても同じ答え。
+// requested（S7 からの一回限りの印）があればそれ。無ければ途中（0 < 語数 < 12）の声がある言葉。両方とも途中なら updatedAt が新しい方。
+// 途中が無ければ 'en'（今までの既定）。説明の画面で 2 択を押した後は呼ばない（画面が「まだ触っていない」で守る）。
+export function defaultRecordLanguage(requested: VoiceLocale | null, saved: Record<VoiceLocale, VoicePackRecord | null>): VoiceLocale {
+  if (requested) return requested;
+  const inProgress = (['en', 'ja-JP'] as const)
+    .map(locale => saved[locale])
+    .filter((pack): pack is VoicePackRecord => pack !== null && !packProgress(pack).complete && packProgress(pack).recorded > 0);
+  if (!inProgress.length) return 'en';
+  return inProgress.reduce((newest, pack) => (pack.updatedAt > newest.updatedAt ? pack : newest)).locale as VoiceLocale;
 }
 
 // 「次へ」はその語が録れている時だけ。12 語目の次は完成（Ruling 59-4）。

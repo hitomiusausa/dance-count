@@ -268,6 +268,9 @@ const STATES = [
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
   { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en',
     steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first'] },
+  // 夜間便 A-1（Ruling 123・監査 #1a）: 日本語の声が途中（7/12）で、S7 の「続きを録音する」を通らずに来ても（M0 の行と同じ）日本語が選ばれている
+  { name: 'S8 説明（日本語の途中あり）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], ops: 2, total: 2, recordLanguage: 'ja-JP',
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }] },
   // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（16px・操作ではない）。375×548 でも言葉の 2 択と主ボタンは初期表示に入る
   { name: 'S8 iPhone Safari（未録音）', hash: '#/voices/record', screen: 'S8', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 2, total: 2, recordLanguage: 'en',
     steps: [{ wait: '.dc-record-add-first' }], textKeys: ['recordAddFirst'],
@@ -1235,8 +1238,9 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 段4（Ruling 59）: 言葉の初期値は英語・録音ボタンは 144px で初期表示に入る・1 語目に「前の語」は無い・録れた語は波形と「聞く」が初期表示に入る・完成画面
   if (state.recordLanguage) {
     const checked = document.querySelector('[data-group="record-language"] [role="radio"][aria-checked="true"]');
-    const first = document.querySelector('[data-group="record-language"] [role="radio"]');
-    if (!checked || checked !== first) issues.push('R59 the record language does not start on English');
+    // 夜間便 A-1: 途中の声がある言葉が既定（日本語 7/12 だけ→日本語）。'en' は 1 つ目・'ja-JP' は 2 つ目
+    const expected = document.querySelectorAll('[data-group="record-language"] [role="radio"]')[state.recordLanguage === 'ja-JP' ? 1 : 0];
+    if (!checked || checked !== expected) issues.push(`R59 the record language does not start on ${state.recordLanguage}`);
   }
   if (state.recordButton) {
     const button = document.querySelector('.dc-rec');
