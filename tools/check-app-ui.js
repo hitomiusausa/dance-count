@@ -317,6 +317,9 @@ const STATES = [
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
       { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
   // 段8 Task 12（D51・final-review m2）: 録音もルーティンも無い時は帯に「先に…と配れます。」の 1 行（操作は増やさない＝名前と主ボタン（押せない）の 2）
+  // 夜間便 B-3（Ruling 124・監査 #5）: ルーティン 1 本・完成した自分の録音 1 つなら、開いた時に両方選ばれている。同意は既定にしない（押すまで主ボタンは押せない）
+  { name: 'S9 声 1・ルーティン 1（既定）', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: true,
+    present: ['.dc-share-routine[aria-checked="true"]', '[data-group="share-voice"] [role="radio"]:nth-child(2)[aria-checked="true"]', '.dc-consent-box[aria-checked="false"]'] },
   { name: 'S9 何も無い', hash: '#/share', screen: 'S9', kind: 'focus', ops: 2, total: 2, primaryDisabled: true, textKeys: ['shareNothingYet'], firstView: ['.dc-dock-note'] },
   // Fable 答え 2026-10-13 §2-3: 途中の自分の声だけの時は「録音した声はまだありません。」ではなく進み具合と「そろうと配れる」（操作は増えない）
   { name: 'S9 録音が途中', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.partialJa], ops: 3, total: 3, primaryDisabled: true,
@@ -1330,6 +1333,8 @@ function audit({ state, LIMITS, reducedMotion }) {
     else if (!element.previousElementSibling?.matches(previous)) issues.push(`R92 ${selector} is not right after ${previous}`);
   }
   for (const selector of state.absent ?? []) if (document.querySelector(selector)) issues.push(`R92 ${selector} must not be shown here`);
+  // 夜間便 B（Ruling 124）: その状態で必ずある要素（初期表示に入るかは問わない。選ばれている・開いている等の印を見る）
+  for (const selector of state.present ?? []) if (!document.querySelector(selector)) issues.push(`R124 ${selector} is not there`);
   // 段7（Ruling 90-3）: 更新の帯の置き場（S1 は種目タイルのすぐ下・S3/S6/S7 は見出しのすぐ下）
   if (state.bannerAfter) {
     const banner = document.querySelector('[data-alert="update"]');

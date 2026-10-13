@@ -137,7 +137,8 @@ try {
   await page.locator('[data-group="distributor"] input').fill('山田');
   await page.locator('[data-group="distributor"] input').press('Enter');
   await page.locator('.dc-consent-box').click();
-  await page.locator('.dc-share-list [role="checkbox"]', { hasText: 'ワルツの練習' }).click();
+  // 夜間便 B-3（Ruling 124）: ルーティンが 1 本だけなら開いた時に選ばれている（押すと外れる）
+  if ((await page.locator('.dc-share-list [role="checkbox"]', { hasText: 'ワルツの練習' }).getAttribute('aria-checked')) !== 'true') errors.push('S9: the only routine is not chosen by default (B-3)');
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.dc-dock .dc-primary').click()]);
   const expectedName = `声-山田-${today()}.dancecount.txt`;
   if (download.suggestedFilename() !== expectedName) errors.push(`S9: file name "${download.suggestedFilename()}", expected "${expectedName}"`);
@@ -180,14 +181,15 @@ try {
   await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
   await e.waitForSelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]');
   const fromS8 = await shareState(e);
-  if (fromS8.voice !== '自分の声（英語）' || fromS8.routines.length !== 0 || JSON.stringify(fromS8.order) !== '["voice","routines"]') errors.push(`S9 from S8 "Share": ${JSON.stringify(fromS8)}`);
+  // 夜間便 B-3（Ruling 124）: ルーティンが 1 本・完成した自分の録音が 1 つなら、どこから来ても両方選ばれている（同意は既定にしない）
+  if (fromS8.voice !== '自分の声（英語）' || JSON.stringify(fromS8.routines) !== '["ワルツの練習"]' || JSON.stringify(fromS8.order) !== '["voice","routines"]') errors.push(`S9 from S8 "Share": ${JSON.stringify(fromS8)}`);
   await e.goto(`${BASE}#/make/routines`);
   await e.waitForSelector('[data-screen="M1"]');
   await e.locator('.dc-row-head', { hasText: 'ワルツの練習' }).click();
   await e.locator('[data-group="routine-actions"] button', { hasText: '配る' }).click();
   await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
   const fromM1 = await shareState(e);
-  if (fromM1.voice !== '入れない' || JSON.stringify(fromM1.routines) !== '["ワルツの練習"]' || JSON.stringify(fromM1.order) !== '["routines","voice"]') errors.push(`S9 from the M1 row "Share": ${JSON.stringify(fromM1)}`);
+  if (fromM1.voice !== '自分の声（英語）' || JSON.stringify(fromM1.routines) !== '["ワルツの練習"]' || JSON.stringify(fromM1.order) !== '["routines","voice"]') errors.push(`S9 from the M1 row "Share": ${JSON.stringify(fromM1)}`);
   await entry.context.close();
 
   // ---- 生徒（別の端末） ----

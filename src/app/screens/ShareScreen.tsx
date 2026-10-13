@@ -10,7 +10,7 @@ import { canShareFile, copyText, downloadFile, shareFile } from '../platform/fil
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
 import { bundleFileName } from '../share/filename.ts';
-import { shareDockNote, shareSectionOrder } from '../share/layout.ts';
+import { shareDefaults, shareDockNote, shareSectionOrder } from '../share/layout.ts';
 import { studentInstructions } from '../share/instructions.ts';
 import { BUNDLE_MIME, BUNDLE_ROUTINES_MAX, DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -48,6 +48,8 @@ export function ShareScreen() {
   const [result, setResult] = useState<Result | null>(null);
   const [copy, setCopy] = useState<'idle' | 'copied' | 'manual'>('idle');
   const resultRef = useRef<HTMLDivElement>(null);
+  const latestRoutines = useRef(routines);
+  latestRoutines.current = routines;
 
   // 配れる声＝録音した完成の声（最大 2）。S7・S8 から来た時はその声を選んだ状態で始める（同意はまだ）。
   useEffect(() => {
@@ -59,7 +61,10 @@ export function ShareScreen() {
       const partial = list.filter(pack => pack.origin === 'recorded' && !isCompletePack(pack) && packProgress(pack).recorded > 0)
         .sort((a, b) => packProgress(b).recorded - packProgress(a).recorded || b.updatedAt.localeCompare(a.updatedAt));
       setInProgress(partial[0] ?? null);
-      if (intent?.voiceId && recorded.some(pack => pack.id === intent.voiceId)) setVoiceId(intent.voiceId);
+      // 夜間便 B-3: 開いた時の既定（声・ルーティン）。同意は既定にしない（share/layout.ts shareDefaults）。読み込み中は画面が出ていない＝人の選択を上書きしない
+      const defaults = shareDefaults({ intent, recordedIds: recorded.map(pack => pack.id), routineIds: latestRoutines.current.filter(routine => routinePlayability(routine) === 'ok').map(routine => routine.id) });
+      setVoiceId(defaults.voiceId);
+      setChosen(defaults.routineIds);
     });
     return () => { alive = false; };
   }, [storage]);
