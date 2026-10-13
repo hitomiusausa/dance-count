@@ -22,7 +22,7 @@ import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
 import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
-import { defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts, type RecordStep } from '../voices/wizard.ts';
+import { defaultRecordLanguage, defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts, type RecordStep } from '../voices/wizard.ts';
 
 // S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語 → 完成。
 // 1 語ごとに端末へ保存（戻る・電話・落ちるのどれでも録った語が残る）。「‹ 戻る」は S8 を出る（確認なし）。
@@ -86,7 +86,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   // バックアップの 1 行（Ruling 86-2）は、この端末で完成の画面を初めて出した時だけ（出したら hints に書く。閉じるボタンは無い）
   const [backupTip] = useState(() => !settings.hints.backupTipShownForRecording);
   const storage = useStorage();
-  const [language, setLanguage] = useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en');
+  // 言葉の既定（夜間便 A-1）: S7 からの印があればすぐそれ。声を読み終えたら defaultRecordLanguage で決め直す（2 択を押した後は上書きしない）
+  const [requestedLanguage] = useState(() => takeRecordLanguage());
+  const [language, setLanguage] = useState<VoiceLocale>(requestedLanguage ?? 'en');
+  const languageTouched = useRef(false);
   const [saved, setSaved] = useState<Record<VoiceLocale, VoicePackRecord | null> | null>(null);
   const [pack, setPack] = useState<VoicePackRecord | null>(null);
   const forcedWord = uiState === 'no-voice' || uiState === 'save-failed' || uiState === 'rec-countdown' || uiState === 'rec-capture';
@@ -114,7 +117,9 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     let alive = true;
     void Promise.all(LANGUAGES.map(locale => loadVoicePack(storage, recordedPackIdFor(locale)))).then(([en, ja]) => {
       if (!alive) return;
-      setSaved({ en: en ?? null, 'ja-JP': ja ?? null });
+      const loaded = { en: en ?? null, 'ja-JP': ja ?? null };
+      setSaved(loaded);
+      if (!languageTouched.current) setLanguage(defaultRecordLanguage(requestedLanguage, loaded));
       if (forcedWord) setPack(uiStateStartPack(en ?? null, newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString())));
     });
     // 画面を離れた: 届く結果を捨て、録音中ならやめて（マイクを閉じ・音声セッションを「再生」に戻す）、「聞く」も止める。
@@ -335,7 +340,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             const progress = packProgress(saved?.[locale] ?? null);
             return (
               <button key={locale} type="button" class="dc-radio-row dc-language-row" role="radio" aria-checked={checked ? 'true' : 'false'}
-                onClick={() => setLanguage(locale)}>
+                onClick={() => { languageTouched.current = true; setLanguage(locale); }}>
                 {checked ? <Icon name="check" /> : <span class="dc-ic" aria-hidden="true" />}
                 <span class="dc-radio-text">
                   <span>{countLabel(translator.t(locale === 'ja-JP' ? 'countInJapanese' : 'countInEnglish'))}</span>
@@ -422,7 +427,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
           ? <p class="dc-record-hint dc-record-autostop">{phrased(translator, 'recordAutoStop')}</p>
           : alert !== 'none'
             ? <NoticeLine alert={alert} />
-            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
+            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: { text: prompts.main, nowrap: true } })}</p>}   {/* 夜間便 A-3: 語の途中で折らない */}
       </div>
       <div class="dc-rec-ring">
         {/* 合図（3・2・1・今）の間は押すと「やめる」。録音中だけ押せない（D59） */}

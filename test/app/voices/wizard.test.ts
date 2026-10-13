@@ -4,7 +4,7 @@ import { packFixture } from '../helpers/voice-fixtures.ts';
 import { packDisplayName } from '../../../src/app/voices/selection.ts';
 import { newRecordedPack } from '../../../src/app/voices/store.ts';
 import { createAppTranslator } from '../../../src/app/i18n/index.ts';
-import { defaultVoiceName, firstMissingIndex, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts } from '../../../src/app/voices/wizard.ts';
+import { defaultRecordLanguage, defaultVoiceName, firstMissingIndex, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts } from '../../../src/app/voices/wizard.ts';
 
 test('start goes to the first missing word, or to the finished screen when all 12 are there (D25)', () => {
   assert.deepEqual(stepAfterStart(null), { kind: 'word', index: 0 });
@@ -79,4 +79,17 @@ test('a recorded voice is named in the display language at the time of recording
   assert.equal(defaultVoiceName(createAppTranslator('en'), 'en'), 'My voice (English)');
   const recordedInJapaneseUi = newRecordedPack('en', defaultVoiceName(createAppTranslator('ja-JP'), 'en'), '2026-10-12T00:00:00.000Z');
   assert.equal(packDisplayName(createAppTranslator('en'), recordedInJapaneseUi), '自分の声（英語）', 'switching to English later shows the stored name as it is (like a routine name)');
+});
+
+test('S8 picks the language of the voice in progress when no one asked for one (夜間便 A-1・監査 #1a)', () => {
+  const at = (pack: ReturnType<typeof packFixture>, updatedAt: string) => ({ ...pack, updatedAt });
+  const jaOne = at(packFixture('ja-JP', 1), '2026-10-14T10:00:00.000Z');
+  assert.equal(defaultRecordLanguage(null, { en: null, 'ja-JP': jaOne }), 'ja-JP', 'Japanese 1/12 only → Japanese');
+  assert.equal(defaultRecordLanguage(null, { en: packFixture('en', 12), 'ja-JP': jaOne }), 'ja-JP', 'a finished English voice is not in progress');
+  const enFive = at(packFixture('en', 5), '2026-10-14T11:00:00.000Z');
+  assert.equal(defaultRecordLanguage(null, { en: enFive, 'ja-JP': jaOne }), 'en', 'both in progress → the newer one');
+  assert.equal(defaultRecordLanguage(null, { en: at(enFive, '2026-10-14T09:00:00.000Z'), 'ja-JP': jaOne }), 'ja-JP');
+  assert.equal(defaultRecordLanguage(null, { en: null, 'ja-JP': null }), 'en', 'nothing → English as before');
+  assert.equal(defaultRecordLanguage(null, { en: packFixture('en', 12), 'ja-JP': packFixture('ja-JP', 12) }), 'en');
+  assert.equal(defaultRecordLanguage('en', { en: null, 'ja-JP': jaOne }), 'en', 'the request from S7 wins');
 });

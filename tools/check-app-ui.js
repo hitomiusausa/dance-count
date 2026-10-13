@@ -132,7 +132,9 @@ const STATES = [
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
-  { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
+  // 夜間便 A-4（Ruling 123・監査 #16）: 「自動ロック」は iPhone・iPad だけ。それ以外の端末は「画面が消えるまでの時間」
+  { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true, textKeys: ['wakeLockTipOther'] },
+  { name: 'S2 画面が暗くなる案内（iPhone）', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', userAgent: IOS_SAFARI_UA, speedAndPlay: true, alert: true, textKeys: ['wakeLockTip'] },
   // 段8（Ruling 100・仕様 §11）: 強制表示できなかった見た目。枠は 1 つ・速さと ▶ は初期表示のまま
   { name: 'S2 再生が止まった', hash: '#/practice/waltz?ui-state=stopped', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true,
     texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },
@@ -268,6 +270,9 @@ const STATES = [
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
   { name: 'S8 説明', hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en',
     steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first'] },
+  // 夜間便 A-1（Ruling 123・監査 #1a）: 日本語の声が途中（7/12）で、S7 の「続きを録音する」を通らずに来ても（M0 の行と同じ）日本語が選ばれている
+  { name: 'S8 説明（日本語の途中あり）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], ops: 2, total: 2, recordLanguage: 'ja-JP',
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }] },
   // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（16px・操作ではない）。375×548 でも言葉の 2 択と主ボタンは初期表示に入る
   { name: 'S8 iPhone Safari（未録音）', hash: '#/voices/record', screen: 'S8', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 2, total: 2, recordLanguage: 'en',
     steps: [{ wait: '.dc-record-add-first' }], textKeys: ['recordAddFirst'],
@@ -366,12 +371,13 @@ const STATES = [
     texts: ['ルーティン「こわれたルーティン」は読めませんでした。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-one-broken-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }] },
   // Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束はルーティンの在りかを 1 文で（出口は 1 つのまま・375×548 でも初期表示）
+  // 夜間便 A-2（Ruling 123・監査 #3）: S10 にタブは無いので、文は「「使う」の下のタブ「ルーティン」」＝次の画面の場所を指す（鍵で ja/en とも見る）
   { name: 'S10 受け取った', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1,
-    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'ルーティンは、下の「ルーティン」にあります。'], firstView: ['.dc-dock .dc-primary'],
+    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['receivedRoutinesToo'], firstView: ['.dc-dock .dc-primary'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'],
-    absentTexts: ['ルーティンは、下の「ルーティン」にあります。'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-only.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },
@@ -1235,8 +1241,9 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 段4（Ruling 59）: 言葉の初期値は英語・録音ボタンは 144px で初期表示に入る・1 語目に「前の語」は無い・録れた語は波形と「聞く」が初期表示に入る・完成画面
   if (state.recordLanguage) {
     const checked = document.querySelector('[data-group="record-language"] [role="radio"][aria-checked="true"]');
-    const first = document.querySelector('[data-group="record-language"] [role="radio"]');
-    if (!checked || checked !== first) issues.push('R59 the record language does not start on English');
+    // 夜間便 A-1: 途中の声がある言葉が既定（日本語 7/12 だけ→日本語）。'en' は 1 つ目・'ja-JP' は 2 つ目
+    const expected = document.querySelectorAll('[data-group="record-language"] [role="radio"]')[state.recordLanguage === 'ja-JP' ? 1 : 0];
+    if (!checked || checked !== expected) issues.push(`R59 the record language does not start on ${state.recordLanguage}`);
   }
   if (state.recordButton) {
     const button = document.querySelector('.dc-rec');
@@ -1256,6 +1263,13 @@ function audit({ state, LIMITS, reducedMotion }) {
     const hint = document.querySelector('.dc-record-hint');
     if (!hint || !visible(hint)) issues.push('R72 the record hint is not shown');
     else if (!hint.textContent.includes(state.recordHintWord)) issues.push(`R72 the record hint "${hint.textContent.trim()}" does not include "${state.recordHintWord}"`);
+  }
+  // 夜間便 A-3（Ruling 123・監査 #6）: 説明の 1 行の語（大きい語と同じ）は折らない 1 つの塊で、1 行に収まる（「スロ／ー」にしない）
+  if ((state.recordOther || state.recordHintWord) && document.querySelector('.dc-record-hint:not(.dc-record-autostop)')) {
+    const main = document.querySelector('.dc-record-main')?.textContent.trim() ?? '';
+    const piece = [...document.querySelectorAll('.dc-record-hint .dc-nowrap')].find(item => item.textContent === main);
+    if (!piece) issues.push(`A-3 the record hint has no no-wrap piece for "${main}"`);
+    else if (piece.getClientRects().length !== 1) issues.push(`A-3 the word "${main}" in the record hint breaks across ${piece.getClientRects().length} lines`);
   }
   // D60: 語の下の小さい語は日本語の画面だけ（英語の画面に日本語の読みを出さない）
   if (state.recordOther || state.recordHintWord) {

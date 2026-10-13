@@ -92,6 +92,10 @@ export async function checkPwaDist({ dist, files, standardVoices, fontSubsets })
     else if (!/@font-face/.test(await fs.readFile(path.join(dist, file), 'utf8'))) problems.push(`the fonts stylesheet ${file} has no @font-face`);
   }
 
+  // 1d. 公開ページのメタと内部の注記（夜間便 A-5・Ruling 123・QW1）: 検索・共有の説明がある・開発者向けの <!-- … --> を公開 HTML に残さない（vite.config.ts が落とす）
+  if (html.includes('<!--')) problems.push('index.html must not contain HTML comments (<!--)');
+  if (!/<meta name="description" content="[^"]+"/.test(html) || !/<meta property="og:title" content="[^"]+"/.test(html)) problems.push('index.html has no description or og:title meta');
+
   // 2. manifest（Ruling 93-1・93-3・93-6）
   let manifest = null;
   try { manifest = JSON.parse(await fs.readFile(path.join(dist, 'manifest.webmanifest'), 'utf8')); } catch { problems.push('manifest.webmanifest is not JSON'); }

@@ -36,12 +36,13 @@ export const GROUPS = Object.freeze([
   ['S0', 'S0 表紙'], ['S1', 'S1 使う › フィガー（種目）'], ['F1', 'F1 種目のフィガー'], ['S2', 'S2 再生'], ['U2', 'U2・M1 ルーティン（使う・作る）'], ['M0', 'M0 作る'], ['S4', 'S4 ルーティン編集'], ['S5', 'S5 ルーティン再生'],
   ['S6', 'S6 設定'], ['S7', 'S7 声'], ['S8', 'S8 自分の声を録音'], ['S9', 'S9 配る'], ['S10', 'S10 受け取る'],
   ['S11', 'S11 音が鳴らない時'], ['S12', 'S12 ホーム画面に追加する方法'], ['S13', 'S13 プライバシー・アプリについて'],
-  ['common', '共通（複数の画面・部品）'], ['instructions', '生徒への案内文（S9 でコピーされる）'], ['errors', 'エラー・知らせ（仕様 §11）']
+  ['common', '共通（複数の画面・部品）'], ['instructions', '生徒への案内文（S9 でコピーされる）'], ['errors', 'エラー・知らせ（仕様 §11）'],
+  ['pageMeta', '公開ページのメタ（index.html の description・og:description。検索・共有の時に出る）']
 ]);
 
 // 仕様 §11 の文（と段8で足す「消せませんでした」）。画面に関わらず「エラー」の節にまとめる。
 export const ERROR_KEYS = Object.freeze([
-  'noSoundTitle', 'noSoundBody', 'playbackStopped', 'voiceMissing', 'wakeLockTip', 'saveFailed', 'micDenied', 'micFailed', 'noRecorder',
+  'noSoundTitle', 'noSoundBody', 'playbackStopped', 'voiceMissing', 'wakeLockTip', 'wakeLockTipOther', 'saveFailed', 'micDenied', 'micFailed', 'noRecorder',
   'noVoiceHeard', 'fileBroken', 'fileTooLarge', 'fileTooNew', 'voiceLimitReached', 'routinesOverLimit', 'routineUnreadable',
   'routinesUnreadableMore', 'openedInLine', 'shareRefused', 'clearAllFailed'
 ]);
@@ -191,6 +192,13 @@ export async function collectEntries(root = ROOT) {
   const groups = assignGroups([...keys], refs);
   const entries = [...keys].map(key => ({ key, ja: APP_MESSAGES['ja-JP'][key], en: APP_MESSAGES.en[key], group: groups[key], legal: false }));
   if (about) for (const key of Object.keys(about.en)) entries.push({ key, ja: about['ja-JP'][key], en: about.en[key], group: 'S13', legal: true });
+  // 夜間便 A-5（Ruling 123・QW1）: 公開ページの説明は messages.ts に無い（index.html が正本）。「ja / en」の 1 行を読んで末尾の節に載せる
+  const indexPath = path.join(root, 'index.html');
+  const description = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8').match(/<meta name="description" content="([^"]*)"/)?.[1] : null;
+  if (description) {
+    const [ja, en = ''] = description.split(' / ');
+    entries.push({ key: 'pageDescription', ja, en, group: 'pageMeta', legal: false });
+  }
   return entries;
 }
 

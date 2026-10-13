@@ -3,12 +3,14 @@ import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
+import { platformKind } from '../platform/pwa.ts';
 import { buildHash, type UiState } from '../router/routes.ts';
 import type { StripView } from './beat-indicator.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
+import { wakeLockTipKey } from './wake-tip.ts';
 
 // S2・S5 が共通で組む部品（Ruling 42）。記憶の単位（種目ごと・ルーティンごと）は各画面が持ち、部品は値と操作だけを受け取る。
 const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standard: 'speedStandard', fast: 'speedFast' };
@@ -227,7 +229,7 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
       )}
       {notice === 'wake-tip' && (
         <>
-          <div class="dc-alert-text">{phrased(translator, 'wakeLockTip')}</div>
+          <div class="dc-alert-text">{phrased(translator, wakeLockTipKey(platformKind()))}</div>
           <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
         </>
       )}

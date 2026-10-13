@@ -65,6 +65,7 @@ export const APP_MESSAGES = {
     playbackStopped: 'Playback stopped. Press ▶ again.',
     voiceMissing: "This voice isn't on your device yet. Connect to the internet and play once.",
     wakeLockTip: 'Your screen may dim during practice. A longer Auto-Lock helps.',
+    wakeLockTipOther: 'Your screen may dim during practice. A longer screen timeout helps.',   // 夜間便 A-4: iPhone・iPad 以外（Auto-Lock は iOS の語）
     close: 'Close',
     saveFailed: "Couldn't save. Please check free space.",
     voicesTitle: 'Voice',
@@ -257,10 +258,12 @@ export const APP_MESSAGES = {
     instructionsLabel: 'Instructions for students',
     instructionsVoiceLead: 'You can practice with my voice in Dance Count.',
     instructionsRoutinesLead: 'You can use my routines in Dance Count.',
-    instructionsIphone: '[iPhone] 1. Open this file, tap Share (top right) → “Save to Files”',
+    instructionsIphoneHead: '[iPhone]',   // 夜間便 A-6: 見出しと手順を別の行に（語は変えない）
+    instructionsStep1: '1. Open this file, tap Share (top right) → “Save to Files”',
     instructionsStep2: '2. Open Dance Count → “Use” → “Routines” (bottom tab) → “Receive from a file” → “Choose a file”',
     instructionsStep3: '3. Choose this file from “Recents” and tap “Use”',
-    instructionsAndroid: '[Android] Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”)',
+    instructionsAndroidHead: '[Android]',
+    instructionsAndroid: 'Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”)',
     instructionsPhone: '(It\'s easiest on your phone.)',
     instructionsApp: 'App: {url}',
     backupTipRecording: 'Send yourself the file made with “Share” and you can use this voice on another phone.',
@@ -297,7 +300,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: "Choose a dance in “Use” and press ▶ to hear {name}'s voice.",
     receivedVoiceNamed: 'Choose a dance in “Use” and press ▶ to hear “{name}”.',
     receivedRoutines: 'They are in “Routines”.',
-    receivedRoutinesToo: 'The routines are under “Routines” at the bottom.',
+    receivedRoutinesToo: 'The routines are under the “Routines” tab at the bottom of “Use”.',
     goHome: 'Choose a dance',
     seeRoutines: 'See routines'
   },
@@ -365,6 +368,7 @@ export const APP_MESSAGES = {
     playbackStopped: '再生が止まりました。もう一度 ▶ を押してください。',
     voiceMissing: 'この声はまだ端末に入っていません。インターネットにつないで一度再生してください。',
     wakeLockTip: '練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です。',
+    wakeLockTipOther: '練習中は画面が暗くなることがあります。画面が消えるまでの時間を長めにすると便利です。',   // 夜間便 A-4: iPhone・iPad 以外（自動ロックは iOS の語）
     close: '閉じる',
     saveFailed: '保存できませんでした。空き容量を確かめてください。',
     voicesTitle: '声',
@@ -552,10 +556,12 @@ export const APP_MESSAGES = {
     instructionsLabel: '生徒への案内文',
     instructionsVoiceLead: 'Dance Count で、私の声のカウントを使えます。',
     instructionsRoutinesLead: 'Dance Count で、私のルーティンを使えます。',
-    instructionsIphone: '【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」',
+    instructionsIphoneHead: '【iPhone】',   // 夜間便 A-6: 見出しと手順を別の行に（語は変えない）
+    instructionsStep1: '1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」',
     instructionsStep2: '2. Dance Count を開き「使う」→ 下の「ルーティン」→「ファイルから受け取る」→「ファイルを選ぶ」',
     instructionsStep3: '3. 「最近使った項目」からこのファイルを選び「使う」',
-    instructionsAndroid: '【Android】このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」）',
+    instructionsAndroidHead: '【Android】',
+    instructionsAndroid: 'このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」）',
     instructionsPhone: '（スマホで受け取るのが便利です）',
     instructionsApp: 'アプリ: {url}',
     backupTipRecording: '「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。',
@@ -592,7 +598,7 @@ export const APP_MESSAGES = {
     receivedVoiceFrom: '「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。',
     receivedVoiceNamed: '「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。',
     receivedRoutines: '「ルーティン」に入っています。',
-    receivedRoutinesToo: 'ルーティンは、下の「ルーティン」にあります。',
+    receivedRoutinesToo: 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。',
     goHome: '種目を選ぶ',
     seeRoutines: 'ルーティンを見る'
   }

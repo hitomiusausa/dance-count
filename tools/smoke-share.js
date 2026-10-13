@@ -149,9 +149,11 @@ try {
   await page.waitForSelector('.dc-result-sub, textarea.dc-instructions');
   if (await page.locator('textarea.dc-instructions').count()) {
     if (!(await page.locator('textarea.dc-instructions').inputValue()).includes('【iPhone】')) errors.push('S9: the instructions box does not hold the instructions');
+    if (!(await page.locator('textarea.dc-instructions').inputValue()).split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   } else {
     const copied = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
     if (!copied.includes('【iPhone】')) errors.push('S9: the copied text is not the instructions');
+    else if (!copied.split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   }
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
@@ -206,7 +208,7 @@ try {
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
   await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
-  await expectText(s, 'ルーティンは、下の「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
+  await expectText(s, 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
   await s.locator('.dc-dock .dc-primary').click();
   await s.waitForSelector('[data-screen="S1"]');
   if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
