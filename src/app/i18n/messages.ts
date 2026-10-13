@@ -38,6 +38,8 @@ export const APP_MESSAGES = {
     danceGroup: 'Dances',
     lastTime: 'Last time',
     resume: 'Resume',
+    lastRoutine: 'Routine',                    // 夜間便 B-1（Ruling 124）: 前回カードの 2 行目「Routine · {名前}」（文は A-3 の監修へ）
+    lastRoutineFrom: 'Routine from {from}',    // 夜間便 B-1: 受け取ったルーティン（{from} は honorific()）
     speed: 'Speed',
     speedSlow: 'Slower',
     speedStandard: 'Standard',
@@ -342,6 +344,8 @@ export const APP_MESSAGES = {
     danceGroup: '種目',
     lastTime: '前回',
     resume: '続きから',
+    lastRoutine: 'ルーティン',                  // 夜間便 B-1（Ruling 124）: 前回カードの 2 行目「ルーティン · {名前}」（文は A-3 の監修へ）
+    lastRoutineFrom: '{from}のルーティン',      // 夜間便 B-1: 受け取ったルーティン（{from} は honorific()＝「山田さん」「山田先生」）
     speed: '速さ',
     speedSlow: 'ゆっくり',
     speedStandard: '標準',

@@ -22,6 +22,8 @@ export interface AppSettings {
   voiceOffsetMsByVoiceId: Record<string, number>;   // 標準の声のタイミング（ms・±200・0 は持たない）
   lastDanceId: string | null;               // 「前回」カード（無ければ出さない）
   lastFigure: string | null;                // 前回のフィガー（D57・Ruling 121。監修表の slug。基本のカウントなら null。lastDanceId と組）
+  lastKind: 'dance' | 'routine';            // 夜間便 B-1（Ruling 124）: 前回が種目（S2）かルーティン（S5）か。版は上げない（欠けていれば 'dance'）
+  lastRoutineId: string | null;             // 夜間便 B-1: 前回鳴らしたルーティン（S5 の ▶）。消えていれば種目の記憶へ落ちる（state/resume.ts）
   lastTemplateByDance: Record<string, string>;
   speedPresetByDance: Record<string, SpeedChoice>;
   customBpmByDance: Record<string, number>;
@@ -44,6 +46,8 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   voiceOffsetMsByVoiceId: {},
   lastDanceId: null,
   lastFigure: null,
+  lastKind: 'dance',
+  lastRoutineId: null,
   lastTemplateByDance: {},
   speedPresetByDance: {},
   customBpmByDance: {},
@@ -70,6 +74,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     voiceOffsetMsByVoiceId: pickVoiceOffsets(source.voiceOffsetMsByVoiceId),
     lastDanceId: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) ? source.lastDanceId : null,
     lastFigure: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) && isFigureSlug(source.lastFigure) ? source.lastFigure : null,
+    lastKind: source.lastKind === 'routine' ? 'routine' : 'dance',
+    lastRoutineId: isRoutineId(source.lastRoutineId) ? source.lastRoutineId : null,
     lastTemplateByDance: pickByDance(source.lastTemplateByDance, (danceId, value) =>
       typeof value === 'string' && DANCES[danceId]!.templates.includes(value) ? value : undefined),
     speedPresetByDance: pickByDance(source.speedPresetByDance, (_danceId, value) =>

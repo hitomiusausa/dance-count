@@ -19,6 +19,7 @@
   "recordFromMake": ["自分の声の録音は、","トップの「作る」\u2060から。"],
   "basicCount": ["基本の","カウント"],
   "chooseDance": ["種目を","選んでください"],
+  "lastRoutineFrom": ["{from}の","ルーティン"],
   "leadIn": ["はじめの","合図"],
   "leadInNow": ["はじめの","合図…"],
   "standardVoiceShort": ["標準","（英語）"],

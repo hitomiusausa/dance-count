@@ -180,8 +180,21 @@ try {
   await page.waitForSelector('[data-screen="S5"]');
   await expectSounding(page, 'S5');
 
-  // 消す: 戻る → 行を開いて削除 → 確認の「削除する」→ 0件
-  await page.locator('[data-back]').click();
+  // 夜間便 B-1（Ruling 124）: S5 で鳴らした → トップの「前回の練習」はそのルーティン（「ルーティン · 名前」）→ 押すと S5 が開いてすぐ鳴る
+  const playedName = (await page.locator('.dc-playhead h1').textContent())?.trim();
+  await page.locator('[data-play]').click();
+  await page.waitForTimeout(WRITE_SETTLE_MS);
+  await page.goto(`${BASE}#/`);
+  await page.waitForSelector('[data-screen="S0"] [data-resume]');
+  const resumeName = (await page.locator('[data-resume] .dc-resume-text b').textContent())?.trim();
+  if (resumeName !== `ルーティン · ${playedName}`) errors.push(`B-1: the cover's last practice reads "${resumeName}", expected "ルーティン · ${playedName}"`);
+  await page.locator('[data-resume]').click();
+  await page.waitForSelector('[data-screen="S5"]');
+  await expectSounding(page, 'S5 from the cover (B-1)');
+  await page.locator('[data-play]').click();
+
+  // 消す: 作る側の一覧へ → 行を開いて削除 → 確認の「削除する」→ 0件
+  await page.goto(`${BASE}#/make/routines`);
   await page.waitForSelector('[data-screen="M1"]');
   await page.locator('[data-row] .dc-row-head').first().click();
   await page.locator('[data-row-body] .dc-button--secondary').last().click();
@@ -563,4 +576,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5, deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5 and the cover's last practice resumes it (B-1), deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);

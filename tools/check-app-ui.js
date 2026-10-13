@@ -52,6 +52,9 @@ const LIMITS = Object.freeze({
 // 検査する画面と状態（Ruling 33・43）。kind は仕様 §3 の種別、ops は初期表示・total は画面全体の主要操作数の期待値（Ruling 18・35・36・40）。
 // prepare は「前回あり」を実経路で作る（偽装クエリは使わない）。seed はブラウザの IndexedDB に検査用のルーティンを書く（Ruling 43）。
 // steps は開いた後の人の操作（クリック・入力）。人の操作の後の状態は「初期表示 5 以下」を当てず全体（9 以下）だけを見る。
+// 夜間便 B-1: 前回が S5 のルーティン（S5 の ▶ で保存される形）。種目の記憶（ワルツ）も持つ＝消えた時の落ち先
+const LAST_ROUTINE = routine => ({ lastDanceId: 'waltz', lastKind: 'routine', lastRoutineId: routine.id, hints: { firstPlaybackDone: true } });
+const RECEIVED_LONG = { ...R.longJa, id: 'r-uicheck-recvlong', source: 'received', provenance: { ...R.longJa.provenance, sourceKind: 'received' }, receivedFrom: { distributor: '山田', receivedAt: '2026-10-14T00:00:00.000Z' } };
 const SEEDED = [R.waltz13, R.empty, R.longJa, R.longEn];
 // 段5: 受け取る画面に渡す配布ファイル（tools/make-share-fixtures.js が作る。Ruling 87-3）
 const SHARE = name => path.resolve(import.meta.dirname, '../test/fixtures/share', name);
@@ -85,6 +88,11 @@ const STATES = [
   // S2 を開いただけ（まだ鳴らしていない）では「続きから」は出さない（hints.firstPlaybackDone が立ってから。Ruling 115-1）
   { name: 'S0 前回あり・フィガー', hash: '#/', screen: 'S0', kind: 'cover', requires: 'reviewed', ops: 4, total: 4,
     settingsSeed: REVIEWED ? { lastDanceId: 'waltz', lastFigure: W1.slug, hints: { firstPlaybackDone: true } } : undefined, resumeName: REVIEWED ? `ワルツ · ${figureNameJa('waltz', W1.englishName)}` : undefined },
+  // 夜間便 B-1（Ruling 124・監査 #2）: 前回が S5 のルーティンなら「ルーティン · {名前}」（受け取った物は「山田さんのルーティン · {名前}」）。名前は 2 行まで
+  { name: 'S0 前回がルーティン', hash: '#/', screen: 'S0', kind: 'cover', seed: [R.waltz13], settingsSeed: LAST_ROUTINE(R.waltz13), ops: 4, total: 4,
+    firstView: ['[data-door="use"]', '[data-resume]', '[data-door="make"]', '.dc-cover-settings'], resumeName: 'ルーティン · ワルツの練習', resumeLines: 2, textKeys: ['continueLast', 'resume'] },
+  { name: 'S0 前回が受け取ったルーティン（長い名前）', hash: '#/', screen: 'S0', kind: 'cover', seed: [RECEIVED_LONG], settingsSeed: LAST_ROUTINE(RECEIVED_LONG), ops: 4, total: 4,
+    firstView: ['[data-door="use"]', '[data-resume]', '[data-door="make"]'], resumeName: `山田さんのルーティン · ${RECEIVED_LONG.name}`, resumeLines: 2 },
   { name: 'S0 開いただけ', hash: '#/', screen: 'S0', kind: 'cover', prepare: '#/practice/waltz', ops: 3, total: 3, absent: ['[data-resume]'] },
   { name: 'S0 更新あり', hash: '#/?ui-state=update-ready', screen: 'S0', kind: 'cover', ops: 3, total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: '.dc-cover-settings' },
   // U1（S1 の ID のまま #/use。D56 Ruling 115-2）: 「先生の声で練習」カードを外した。主要操作は 種目群 1（前回カードがあれば 2）。左上「‹ 表紙」・下タブ 2 つ
@@ -97,6 +105,12 @@ const STATES = [
   // 長い名前でも前回の名前は 2 行まで（3 行目以降は「…」。U10 は [data-ellipsis] を数えない・行数は R121 が見る）。全文は textContent に残る
   { name: 'S1 前回あり・長いフィガー', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, tilesMayScrollAt320: true, requires: 'reviewed',
     settingsSeed: REVIEWED ? { lastDanceId: 'waltz', lastFigure: W_LONGEST.slug } : undefined, resumeName: REVIEWED ? `ワルツ · ${figureNameJa('waltz', W_LONGEST.englishName)}` : undefined, resumeLines: 2 },
+  { name: 'S1 前回がルーティン', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, tilesMayScrollAt320: true, seed: [R.waltz13], settingsSeed: LAST_ROUTINE(R.waltz13),
+    resumeName: 'ルーティン · ワルツの練習', resumeLines: 2, textKeys: ['lastTime', 'resume'] },
+  { name: 'S1 前回が受け取ったルーティン（長い名前）', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, tilesMayScrollAt320: true, seed: [RECEIVED_LONG], settingsSeed: LAST_ROUTINE(RECEIVED_LONG),
+    resumeName: `山田さんのルーティン · ${RECEIVED_LONG.name}`, resumeLines: 2 },
+  // 前回のルーティンが消えていれば種目の記憶（ワルツ）へ落ちる
+  { name: 'S1 前回のルーティンが消えた', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, settingsSeed: LAST_ROUTINE({ id: 'r-uicheck-gone0001' }), resumeName: 'ワルツ' },
   { name: 'S1 前回のフィガーが表に無い', hash: '#/use', screen: 'S1', kind: 'root', ops: 2, tilesInView: true, settingsSeed: { lastDanceId: 'waltz', lastFigure: 'no-such-figure' }, resumeName: 'ワルツ' },
   // 段7（Ruling 90-3・90-7）: 更新の帯は S1 の最下段（種目タイルの下）。「更新する」は [data-alert-action]＝数えない。375×548 の初期表示（U12）は崩れない
   { name: 'S1 更新あり', hash: '#/use?ui-state=update-ready', screen: 'S1', kind: 'root', ops: 1, total: 1, tilesInView: true, alert: true,

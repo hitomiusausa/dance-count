@@ -6,6 +6,7 @@ import { phrased } from '../i18n/phrased.tsx';
 import { buildHash } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import { lastPractice, resumePractice } from '../state/resume.ts';
+import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 
 // S0 表紙（D56・Ruling 115-1・117）。D62: アプリ名の左にうさぎの絵（アプリのアイコンと同じ）。起動のたびに出る（側は覚えない）。上から: アプリ名と言語 → 扉「使う」（主・紺）＋その下にくっついた
@@ -15,8 +16,9 @@ import { useSettings } from '../state/settings.ts';
 export function CoverScreen() {
   const { translator, setLocale } = useI18n();
   const { settings } = useSettings();
+  const { routines } = useRoutines();
   const locale = translator.locale;
-  const last = settings.hints.firstPlaybackDone ? lastPractice(settings) : null;
+  const last = settings.hints.firstPlaybackDone ? lastPractice(settings, routines) : null;
   return (
     <main class="dc-screen dc-cover" data-screen="S0">
       <header class="dc-appbar">
@@ -43,7 +45,7 @@ export function CoverScreen() {
           <button type="button" class="dc-door-resume" data-resume onClick={() => resumePractice(last)}>
             <span class="dc-resume-text">
               <small>{translator.t('continueLast')}</small>
-              <b data-ellipsis><LastPracticeName last={last} locale={locale} /></b>
+              <b data-ellipsis><LastPracticeName last={last} locale={locale} translator={translator} /></b>
             </span>
             <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
           </button>

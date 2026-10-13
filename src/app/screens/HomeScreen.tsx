@@ -11,6 +11,7 @@ import { buildHash } from '../router/routes.ts';
 import { reviewedFigures } from '../routines/reviewed-counts.ts';
 import { useI18n } from '../state/i18n.ts';
 import { lastPractice, resumePractice } from '../state/resume.ts';
+import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 
 const DANCE_IDS = Object.keys(DANCE_PROFILES);
@@ -20,10 +21,11 @@ const DANCE_IDS = Object.keys(DANCE_PROFILES);
 export function HomeScreen() {
   const { translator, setLocale } = useI18n();
   const { settings, update } = useSettings();
+  const { routines } = useRoutines();
   const locale = translator.locale;
   // 初めて鳴った後の 1 回だけのカード（段7・Ruling 92-7・D42）。× で閉じたら二度と出さない
   const installCard = showsInstallCard({ hints: settings.hints, kind: platformKind(), standalone: isStandalone() });
-  const last = lastPractice(settings);
+  const last = lastPractice(settings, routines);
 
   return (
     <main class="dc-screen dc-home" data-screen="S1">
@@ -39,7 +41,7 @@ export function HomeScreen() {
         <button type="button" class="dc-resume" data-resume onClick={() => resumePractice(last)}>
           <span class="dc-resume-text">
             <small>{translator.t('lastTime')}</small>
-            <b data-ellipsis><LastPracticeName last={last} locale={locale} /></b>
+            <b data-ellipsis><LastPracticeName last={last} locale={locale} translator={translator} /></b>
           </span>
           <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
         </button>

@@ -50,7 +50,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   };
 
   // 開いた時点で「前回」を書く（Ruling 26）。フィガーも同じ 1 回で（D57・Ruling 121-1。基本なら null）
-  useEffect(() => { update({ lastDanceId: danceId, lastFigure: figure?.slug ?? null }); }, [session]);
+  useEffect(() => { update({ lastDanceId: danceId, lastFigure: figure?.slug ?? null, lastKind: 'dance' }); }, [session]);
   // 前回カードの印があれば、声が決まった時点ですぐ鳴らす（Ruling 32・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
     if (autoplayChecked.current || !playback.voice) return;

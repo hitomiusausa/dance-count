@@ -64,11 +64,18 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     };
   };
 
+  // 夜間便 B-1（Ruling 124）: ▶ で鳴らしたら「前回」をこのルーティンにする（トップ・U1 の前回カード。開いただけでは替えない）
+  const rememberLast = () => {
+    const now = latest.current.settings;
+    if (now.lastKind !== 'routine' || now.lastRoutineId !== routine.id) update({ lastKind: 'routine', lastRoutineId: routine.id });
+  };
+
   // S3 の ▶ から来た時だけ、声が決まった時点ですぐ鳴らす（一回限りの印。Ruling 32・40・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
     if (autoplayChecked.current || !playback.voice) return;
     autoplayChecked.current = true;
     if (takeAutoplay({ kind: 'routine', id: routine.id })) {
+      rememberLast();
       try { void session.play(optionsFrom(latest.current.settings, latest.current.range, playback.voice)); } catch { /* resolve 済みのルーティン。万一でも止まったまま */ }
     }
   }, [session, playback.voice]);
@@ -116,7 +123,10 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const togglePlay = () => {
     setForcedDismissed(true);
     if (isPlaying()) session.stop();
-    else void start(latest.current.settings, latest.current.range);
+    else {
+      rememberLast();
+      void start(latest.current.settings, latest.current.range);
+    }
   };
 
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
