@@ -46,6 +46,11 @@ const appUrl: Plugin = { name: 'dc-app-url', transformIndexHtml: html => html.re
 // index.html のコメントの行そのものは触らない（agent/logo と衝突させない）。
 const stripHtmlComments: Plugin = { name: 'dc-strip-html-comments', apply: 'build', transformIndexHtml: { order: 'post', handler: html => html.replace(/<!--[\s\S]*?-->\s*/g, '') } };
 
+// 夜間便 B-0（Ruling 124）: プレビュー（DC_PREVIEW=1・npm run deploy:preview）の時だけ検索に載せない印を入れる。
+// 本番のビルドには入らない（check-pwa が「DC_PREVIEW が無いのに noindex がある」を落とす＝逆の事故を防ぐ）。
+const IS_PREVIEW = process.env.DC_PREVIEW === '1';
+const previewNoindex: Plugin = { name: 'dc-preview-noindex', transformIndexHtml: () => (IS_PREVIEW ? [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head-prepend' }] : []) };
+
 // base:'./' は Capacitor とサブドメイン配信の両方で同じ成果物を使うため（仕様 §10）。
 // optimizeDeps.entries を index.html に限定し、legacy/ や旧 HTML（1MB超）を依存スキャンに巻き込まない。
 export default defineConfig({
@@ -57,6 +62,7 @@ export default defineConfig({
     fontsStylesheet,
     appUrl,
     stripHtmlComments,
+    previewNoindex,
     // Service Worker（Ruling 88〜93）。自前の src/sw.ts に precache の一覧を注入する。dev では動かさない（devOptions を付けない）。
     // 登録は src/app/platform/pwa-register.ts（virtual:pwa-register）だけ。更新は「更新する」を押した時（registerType: 'prompt'）。
     VitePWA({

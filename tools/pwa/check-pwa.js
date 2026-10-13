@@ -50,7 +50,8 @@ export function stylesheetLinks(html) {
 }
 
 // dist: dist の絶対パス・files: dist の中の全ファイル（/ 区切り）・standardVoices: standard-voices.json・fontSubsets: neededFontSubsets()
-export async function checkPwaDist({ dist, files, standardVoices, fontSubsets }) {
+// preview: プレビューのビルド（DC_PREVIEW=1・夜間便 B-0）。true の時だけ robots noindex が要る。false（本番）は noindex があってはいけない
+export async function checkPwaDist({ dist, files, standardVoices, fontSubsets, preview = false }) {
   const problems = [];
   // 0. ソースマップを公開しない（段7 レビュー M6。vite の build.sourcemap を誰かが入れたら落とす）
   for (const file of files) if (file.endsWith('.map')) problems.push(`dist must not include source maps (${file})`);
@@ -95,6 +96,10 @@ export async function checkPwaDist({ dist, files, standardVoices, fontSubsets })
   // 1d. 公開ページのメタと内部の注記（夜間便 A-5・Ruling 123・QW1）: 検索・共有の説明がある・開発者向けの <!-- … --> を公開 HTML に残さない（vite.config.ts が落とす）
   if (html.includes('<!--')) problems.push('index.html must not contain HTML comments (<!--)');
   if (!/<meta name="description" content="[^"]+"/.test(html) || !/<meta property="og:title" content="[^"]+"/.test(html)) problems.push('index.html has no description or og:title meta');
+  // 1e. 検索に載せない印（夜間便 B-0・Ruling 124）: プレビューだけに入る。本番に入ったら検索から消える＝逆の事故なので落とす
+  const noindex = /<meta name="robots" content="[^"]*noindex/.test(html);
+  if (preview && !noindex) problems.push('the preview index.html has no robots noindex meta');
+  if (!preview && noindex) problems.push('the production index.html must not have a robots noindex meta');
 
   // 2. manifest（Ruling 93-1・93-3・93-6）
   let manifest = null;

@@ -48,7 +48,7 @@ async function makeDist({ files = goodFiles(), precache = precached(files), sw }
   return { dist, files: Object.keys(all) };
 }
 
-const check = async options => checkPwaDist({ ...(await makeDist(options)), standardVoices: VOICES, fontSubsets: SUBSETS });
+const check = async ({ preview, ...options } = {}) => checkPwaDist({ ...(await makeDist(options)), standardVoices: VOICES, fontSubsets: SUBSETS, preview });
 
 test('the precache list is read out of the built sw.js', () => {
   assert.deepEqual(readPrecacheList('a(),we([{"revision":"1","url":"index.html"},{"revision":null,"url":"a]b.js"}],{x:1})'),
@@ -93,6 +93,13 @@ test('the published index.html keeps no developer comments and has the page meta
   assert.deepEqual(await check({ files: commented, precache: precached(commented) }), ['index.html must not contain HTML comments (<!--)']);
   const noOg = { ...goodFiles(), 'index.html': HTML.replace('<meta property="og:title" content="Dance Count for Ballroom">', '') };
   assert.deepEqual(await check({ files: noOg, precache: precached(noOg) }), ['index.html has no description or og:title meta']);
+});
+
+test('robots noindex is only in the preview build (夜間便 B-0・Ruling 124)', async () => {
+  const noindexed = { ...goodFiles(), 'index.html': HTML.replace('<head>', '<head><meta name="robots" content="noindex, nofollow">') };
+  assert.deepEqual(await check({ files: noindexed, precache: precached(noindexed) }), ['the production index.html must not have a robots noindex meta']);
+  assert.deepEqual(await check({ files: noindexed, precache: precached(noindexed), preview: true }), []);
+  assert.deepEqual(await check({ preview: true }), ['the preview index.html has no robots noindex meta']);
 });
 
 test('the boot shell shows the rabbit mark and no placeholder is left (D62)', async () => {

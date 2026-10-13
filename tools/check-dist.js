@@ -51,7 +51,7 @@ for (const file of files) {
 }
 for (const problem of await checkDistAudio(dist, standardVoices)) if (!problems.includes(problem)) problems.push(problem);
 // 段7: Service Worker・manifest・precache（Ruling 89・93）
-for (const problem of await checkPwaDist({ dist, files, standardVoices, fontSubsets: neededFontSubsets(root) })) if (!problems.includes(problem)) problems.push(problem);
+for (const problem of await checkPwaDist({ dist, files, standardVoices, fontSubsets: neededFontSubsets(root), preview: process.env.DC_PREVIEW === '1' })) if (!problems.includes(problem)) problems.push(problem);
 // 段8 Task 12（final-review I2）: 公開ビルド（RELEASE=1）は案内文の URL が要る（vite.config.ts と同じ環境変数を見る）
 const appUrl = process.env.PUBLIC_APP_URL ?? '';
 const urlProblem = releaseAppUrlProblem({ release: isRelease(process.env.RELEASE), url: appUrl });
