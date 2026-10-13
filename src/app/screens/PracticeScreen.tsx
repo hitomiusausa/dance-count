@@ -108,7 +108,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
             <small>{figure ? `${figureDisplayName(danceId, figure.englishName, translator.locale)} · ${formatCounts(danceId, counts)}` : formatCounts(danceId, counts)}</small>
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} />
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} />
         </div>
         <div>
           <SpeedChoices presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />

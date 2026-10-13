@@ -35,8 +35,8 @@ async function exists(file) {
   try { await fs.access(file); return true; } catch { return false; }
 }
 
-// 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限
-export const BOOT_STYLE_MAX_BYTES = 600;
+// 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限。D62 で 600 → 1024（紺の地・うさぎの大きさ・裾の揺れの keyframes・動きを減らす設定。今は約 690）
+export const BOOT_STYLE_MAX_BYTES = 1024;
 
 // 段8 Task 9b（Ruling 101）: 描画を止める CSS（index.html の media の無い stylesheet）の合計の上限。今は約 29KB（base.css）。
 // 書体の @font-face（約 415KB）は assets/fonts-*.css に分けて media="print"＋onload で読む＝ここに入れると起動の殻が描かれない。
@@ -66,6 +66,9 @@ export async function checkPwaDist({ dist, files, standardVoices, fontSubsets })
   if (!files.includes('icons/apple-touch-icon.png')) problems.push('missing icons/apple-touch-icon.png');
   // 1b. 起動の殻（段8・Ruling 101）: アプリが描くまでアプリの名前だけを出す。インラインの CSS は殻の分だけ（BOOT_STYLE_MAX_BYTES 以下）
   if (!/<div id="app"><div class="dc-boot" aria-hidden="true">/.test(html)) problems.push('index.html has no boot shell inside #app');
+  // D62: 殻のうさぎ（vite.config.ts の bootMark が差し込む）。置き換え忘れの印が残っていない・殻の中に絵がある
+  if (/%DC_[A-Z_]+%/.test(html)) problems.push('index.html still has a build placeholder (%DC_…%)');
+  else if (/<div class="dc-boot" aria-hidden="true">/.test(html) && !/<div class="dc-boot" aria-hidden="true"><svg /.test(html)) problems.push('index.html boot shell has no rabbit mark');
   const style = html.match(/<style>([\s\S]*?)<\/style>/)?.[1] ?? '';
   if (Buffer.byteLength(style) > BOOT_STYLE_MAX_BYTES) problems.push(`index.html boot style is ${Buffer.byteLength(style)} bytes > ${BOOT_STYLE_MAX_BYTES}`);
   // 1c. 描画を止める CSS は小さく・書体を含まない（段8 Task 9b）。書体は描画を止めない読み方（media="print"＋onload で all に）の別の CSS 1 本

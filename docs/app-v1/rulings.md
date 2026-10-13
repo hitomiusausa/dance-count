@@ -3853,3 +3853,15 @@ Fable の 11 問への答えは**直前の節「段8 計画者の質問への答
   - **直し**: 別の束のまま、同じ型の見出しを足した。`div.dc-settings-group[role=group][aria-labelledby=dc-s6-about][data-group=about]` の中に `h2.dc-field-label.dc-settings-section#dc-s6-about`（鍵 `settingsAboutHeading`）＋行 `a.dc-link-row.dc-settings-about`（行・版の表示はそのまま）。行から `dc-settings-section` を外した（上 24px は見出しが持つ）。見出し→行の間は「困った時は」と同じ CSS（`.dc-field-label` の下 8px と `.dc-link-row` の上 8px が重なって 8px）。320 幅の `.dc-settings-about`（版を下の行へ）は行の内側の話なので見出しとの間は変わらない。CSS は変えていない。
   - 検査: `ui:check` の S6（`linkGroups.about`・`textKeys` に `settingsAboutHeading`・R98＝束は目に見える見出しを持つ）。`ja-phrases.json`・`stage8-copy-review.md` は生成物なので作り直した。
   - **代償**: 見出し 1 つ分（約 32px）増えるので、375×548（Safari SE）では「プライバシー・アプリについて」の行が初期表示の下に出る（スクロールで届く）。`ui:check` の S6 は `opsSmall: 2`・初期表示の要素から `.dc-settings-about` を外した（375×667 以上は 3 つとも入る）。
+
+# アプリの絵（D62）— く！ちゃんの実装・ひとみうさの確認待ち（2026-10-14・枝 `agent/logo`・未マージ・未デプロイ）
+
+- **D62 アイコン・起動の殻・トップのロゴ・待ちの印を「ワルツのうさぎ」に**（絵の選択はひとみうさ＝02_21_29-4。D44 の仮の「DC」を置き換え）
+  - **唯一の元**: `src/app/brand/rabbit.ts`（3 色＝紺 #1B2A4A・アイボリー #FBF5EC・琥珀 #A54D06。座標は絵を囲む最小の円の中心 0,0・半径 100）。PNG 4 枚と `icon.svg` は `node tools/make-icons.js` で作る（ファイル名は同じ＝manifest・precache・check-dist はそのまま）。起動の殻の絵は `vite.config.ts` の `bootMark` が index.html に差し込む。
+  - **置き方**: iOS・タブ・PC（any）は元より 3% 大きく。maskable は耳の先と靴の先が安全域 80% の円に入るよう 0.87 倍（絵の円の半径 200／安全域 204.8）。スカートの端は寄せていない（円を決めるのは耳と靴）。
+  - **起動の殻**: 白 → **紺**の地にうさぎ（136px）＋「Dance Count / for Ballroom」。裾は `.dc-sway`（skewX・1 小節 1.35 秒・1 拍目が強い）。動きを減らす設定では止まる。殻の CSS の上限 600 → 1024 バイト（Ruling 101-1 の読み替え。今は約 690）。manifest の `background_color` も紺（Android の起動画面 → 殻 → アプリの白のちらつきを減らす）。
+  - **トップ（S0）**: アプリ名の左に 44px のアイコン（`BrandMark`。絵は読み上げない）。
+  - **待ちの印**（`WaltzSpinner`）: 28px のうさぎ＋1・2・3 の点（1 拍目が大きい）。0.4 秒より短い待ちでは見えない（CSS の遅れ）。S2・S5 の ▶ の後の声の準備（`view.starting`）に大きい数字の代わりに・S7・S9 の読み込み中。読み上げの文言は足していない（文言の監修が要るため）。
+  - **iOS の起動画像（apple-touch-startup-image）は作らない**: 機種・向きごとの PNG が要り保守が重い。紺の殻がすぐ出るので要らないと判断。
+  - 検査: `test/app/brand.test.ts`（3 色だけ・外部参照なし・maskable が安全域に入る・`icon.svg` が rabbit.ts と同じ）・`tools/pwa/check-pwa.js`（殻に絵がある・`%DC_…%` が残っていない）。
+  - **ひとみうさに決めてほしいこと**: プレビュー（scratchpad `dc_logo2/preview.html`）の「決めてほしいこと」。男性のうさぎ（A／B）・カードに出す案・二人の起動画面は**プレビューだけ**（枝には入れていない）。

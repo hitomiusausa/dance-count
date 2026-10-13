@@ -18,6 +18,7 @@ import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packDisplayName, packSelection, standardSelection, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
 import { STANDARD_VOICES } from '../voices/standard.ts';
 import { VOICE_LIMITS, isCompletePack, listVoicePacks, packProgress, removeVoicePack, type VoicePackRecord } from '../voices/store.ts';
+import { WaltzSpinner } from '../brand/BrandMark.tsx';
 
 // S7 声（仕様 §4 S7・Ruling 60・61）。一覧 [data-group="voice"]（role="radiogroup"）: 標準 → 自分の声（完成）→ 受け取った声 → 途中の声。
 // 1 回目のタップで選ぶ（selectedVoiceId と voiceLocale を一緒に書く）。選んだ行には「▶ 試聴」（ワルツ 1 小節）。
@@ -54,7 +55,7 @@ export function VoicesScreen({ uiState }: { uiState?: UiState }) {
 
   // 段8 Task 6 fix 1（レビュー I-1）: 読み込み中の形にも、読み終えた後と同じ位置に同じ見出しを出す。Preact が同じ h1 を使い回すので、
   // 画面が替わった時に App が置いたフォーカスが h1 に残る（読み込み中に main へ落ちない）
-  if (packs === null) return <main class="dc-screen" data-screen="S7" data-loading><BackButton screen="S7" /><h1 class="dc-heading">{translator.t('voicesTitle')}</h1></main>;
+  if (packs === null) return <main class="dc-screen" data-screen="S7" data-loading><BackButton screen="S7" /><h1 class="dc-heading">{translator.t('voicesTitle')}</h1><div class="dc-loading"><WaltzSpinner /></div></main>;
 
   const notice = deleteFailed ? 'save-failed' : (uiState === 'voice-missing' && !forcedDismissed) || view.notice === 'voice-missing' ? 'voice-missing' : 'none';
   const complete = packs.filter(isCompletePack);

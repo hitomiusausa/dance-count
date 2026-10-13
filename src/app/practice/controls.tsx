@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -15,15 +16,17 @@ const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standa
 // 大きな現在カウント＋カウントの型の帯（操作ではない。D55・Ruling 114）。children は帯の下に置く（S5 の「3 / 13 …」の1行）。
 // 帯は型 1 周の語を 1 語 1 丸（幅は語の長さに比例＝flex-grow に拍数）。鳴っている語の丸だけ琥珀（aria-current）。読み上げは「いま {count}」で足りる（aria-hidden）
 const DENSE_STRIP = 9;   // 丸が 9 個以上は文字を 15px に（data-dense）
-export function CountBox({ playing, countIn, nowText, idleText, strip, children }: {
-  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; children?: ComponentChildren;
+export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, children }: {
+  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; children?: ComponentChildren;
 }) {
   const { translator } = useI18n();
   return (
     <div class="dc-countbox" aria-live="off" aria-label={nowText ? translator.t('nowCount', { count: nowText }) : undefined}>
       {playing && countIn
         ? <div class="dc-now dc-now--lead">{translator.t('leadInNow')}</div>
-        : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
+        : preparing && !playing
+          ? <div class="dc-now dc-now--idle dc-now--wait" aria-hidden="true" data-preparing><WaltzSpinner /></div>
+          : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
       <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined}>
         {strip.cells.map((cell, index) => (
           <li key={`${index}-${cell.tick}`} data-cell={cell.kind} style={{ '--beats': cell.beats }}

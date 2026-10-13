@@ -3,12 +3,18 @@ import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
 import { SHARE_TARGET_FIELD } from './src/share-inbox-contract.ts';
+import { rabbitArt } from './src/app/brand/rabbit.ts';
 import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.js';
 
 // 段7: index.html の <meta name="dc-build"> に入る版の印（smoke:pwa が DC_BUILD_TAG=b で別の版を作り、更新されたかを見る）。
 // 既定は package.json の版（同じ木からは同じ dist ができる）。
 const BUILD_TAG = process.env.DC_BUILD_TAG ?? pkg.version;
 const buildTag: Plugin = { name: 'dc-build-tag', transformIndexHtml: html => html.replace('%DC_BUILD%', BUILD_TAG) };
+
+// D62: 起動の殻のうさぎ（絵の元は src/app/brand/rabbit.ts だけ）。裾は .dc-sway（index.html のインライン CSS）で揺れる。
+// viewBox の原点を絵の中心に置かない（CSS の transform-origin 0 0 が viewBox の左上になるため。translate で中心へ）
+const BOOT_MARK = `<svg viewBox="0 0 200 200"><g transform="translate(100 100)">${rabbitArt({ sway: true })}</g></svg>`;
+const bootMark: Plugin = { name: 'dc-boot-mark', transformIndexHtml: html => html.replace('%DC_BOOT_MARK%', BOOT_MARK) };
 
 // 段8 Task 9b（Ruling 101）: 書体の @font-face（524 個・約 415KB）は描画を止めない別の CSS に分ける。
 // main.tsx から import すると index-*.css に入り、それを読み終えるまで起動の殻すら描かれない（Slow 3G で白 8.4 秒）。
@@ -39,6 +45,7 @@ export default defineConfig({
   plugins: [
     preact(),
     buildTag,
+    bootMark,
     fontsStylesheet,
     // Service Worker（Ruling 88〜93）。自前の src/sw.ts に precache の一覧を注入する。dev では動かさない（devOptions を付けない）。
     // 登録は src/app/platform/pwa-register.ts（virtual:pwa-register）だけ。更新は「更新する」を押した時（registerType: 'prompt'）。
@@ -58,7 +65,7 @@ export default defineConfig({
         scope: './',
         display: 'standalone',
         theme_color: '#1B2A4A',
-        background_color: '#FFFFFF',
+        background_color: '#1B2A4A',   // D62: Android の起動画面を紺に（起動の殻の紺と続ける。白 → 紺 → 白のちらつきを避ける）
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },

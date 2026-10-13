@@ -13,7 +13,7 @@ const HTML = '<head><meta name="apple-mobile-web-app-title" content="Dance Count
   + '<link rel="manifest" href="./manifest.webmanifest"><style>.dc-boot{color:#1B2A4A}</style>'
   + '<link rel="stylesheet" crossorigin href="./assets/index-AbC.css">'
   + '<link rel="stylesheet" href="./assets/fonts-F0.css" media="print" onload="this.media=&#39;all&#39;"></head>'
-  + '<body><div id="app"><div class="dc-boot" aria-hidden="true"><b>Dance Count</b></div></div></body>';
+  + '<body><div id="app"><div class="dc-boot" aria-hidden="true"><svg viewBox="0 0 200 200"></svg><b>Dance Count</b></div></div></body>';
 const MANIFEST = {
   name: 'Dance Count', short_name: 'Dance Count', start_url: './', scope: './', display: 'standalone',
   icons: [{ src: 'icons/icon-192.png' }, { src: 'icons/icon-512-maskable.png', purpose: 'maskable' }],
@@ -85,6 +85,13 @@ test('index.html links the manifest and the iPhone icon and names the app', asyn
   const problems = await check({ files, precache: precached(files) });
   assert.deepEqual(problems, ['index.html has no manifest link', 'index.html has no apple-touch-icon link', 'index.html has no apple-mobile-web-app-title',
     'index.html has no boot shell inside #app', 'index.html must load exactly one fonts stylesheet without blocking (media="print" onload), found 0']);
+});
+
+test('the boot shell shows the rabbit mark and no placeholder is left (D62)', async () => {
+  const unreplaced = { ...goodFiles(), 'index.html': HTML.replace('<svg viewBox="0 0 200 200"></svg>', '%DC_BOOT_MARK%') };
+  assert.deepEqual(await check({ files: unreplaced, precache: precached(unreplaced) }), ['index.html still has a build placeholder (%DC_…%)']);
+  const noMark = { ...goodFiles(), 'index.html': HTML.replace('<svg viewBox="0 0 200 200"></svg>', '') };
+  assert.deepEqual(await check({ files: noMark, precache: precached(noMark) }), ['index.html boot shell has no rabbit mark']);
 });
 
 test('the boot shell sits inside #app and its inline style stays small (段8 Ruling 101)', async () => {

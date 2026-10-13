@@ -20,6 +20,7 @@ import { takeShareIntent } from '../state/share-intent.ts';
 import { useStorage } from '../state/storage.ts';
 import { packDisplayName } from '../voices/selection.ts';
 import { isCompletePack, listVoicePacks, packProgress, type VoicePackRecord } from '../voices/store.ts';
+import { WaltzSpinner } from '../brand/BrandMark.tsx';
 
 // S9 配る（仕様 §4 S9・Ruling 82）。集中画面。上から 名前 → 声（入れない／録音した完成の声）→ 同意（声を選んだ時だけ）→ ルーティン → 下固定「ファイルを作る」。
 // 声の指定なしで来た時（S6・S3 から）は 名前 → ルーティン → 声 → 同意（段5 Task 10b・share/layout.ts）。
@@ -141,7 +142,7 @@ export function ShareScreen() {
   };
 
   // 段8 Task 6 fix 1（レビュー I-1）: 読み込み中の形にも、読み終えた後と同じ上の行（名前の h1）を出す（フォーカスが h1 に残る）
-  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><FocusHeader screen="S9" title={translator.t('shareTitle')} heading /></main>;
+  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><FocusHeader screen="S9" title={translator.t('shareTitle')} heading /><div class="dc-loading"><WaltzSpinner /></div></main>;
 
   const atLimit = chosenRoutines.length >= BUNDLE_ROUTINES_MAX;
   const dockNote = shareDockNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length });
