@@ -434,19 +434,22 @@ const STATES = [
   // 夜間便 A-2（Ruling 123・監査 #3）: S10 にタブは無いので、文は「「使う」の下のタブ「ルーティン」」＝次の画面の場所を指す（鍵で ja/en とも見る）
   // 夜間便 B-2（Ruling 124・po-checklist A-15 の読み替え）: ルーティンが入っていたら主ボタンはルーティン（2 本以上は「ルーティンを見る」で U2）・「種目を選ぶ」は 2 番目の行。
   // A-2 の在りかの 1 文はボタンが答えなので出さない
-  { name: 'S10 受け取った', info: true, titleRow: true, hash: '#/receive', screen: 'S10', kind: 'focus', total: 2,
-    texts: ['受け取りました', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['seeRoutines', 'goHome'], firstView: ['.dc-dock .dc-primary', '[data-second-exit]'],
-    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
+  // D69（案 A）: 2 番目の行「種目を選ぶ」はやめた。本文は主ボタンを指し（1 本＝「ルーティンを再生する」・2 本以上＝「ルーティンを見る」）、種目の練習のことは文 1 つ（ボタンではない）
+  { name: 'S10 受け取った', info: true, titleRow: true, hash: '#/receive', screen: 'S10', kind: 'focus', total: 1,
+    texts: ['受け取りました', '下の「ルーティンを見る」からルーティンを選ぶと、山田さんの声で再生されます。', '種目ごとのカウント練習でも、この声を使えます。'],
+    textKeys: ['seeRoutines', 'receivedVoiceDancesToo'], firstView: ['.dc-dock .dc-primary', '[data-voice-dances-too]'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。', '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], absent: ['[data-second-exit]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S10 受け取った・先生からのひとこと', info: true, titleRow: true, hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, present: ['[data-teacher-note]'],
     texts: ['先生から', TEACHER_NOTE], textKeys: ['teacherNote', 'playRoutine'], firstView: ['.dc-dock .dc-primary', '[data-teacher-note]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-note-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }, { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
-  { name: 'S10 受け取った・声とルーティン 1 本', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2, textKeys: ['playRoutine', 'goHome'], firstView: ['.dc-dock .dc-primary', '[data-second-exit]'],
+  { name: 'S10 受け取った・声とルーティン 1 本', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['ルーティンを再生する', '下の「ルーティンを再生する」を押すと、山田さんの声で再生されます。', '種目ごとのカウント練習でも、この声を使えます。'],
+    textKeys: ['playRoutine', 'receivedVoiceDancesToo'], firstView: ['.dc-dock .dc-primary', '[data-voice-dances-too]'], absent: ['[data-second-exit]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-one-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S10 受け取った・声だけ', hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, texts: ['「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。'], textKeys: ['goHome'],
-    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'], absent: ['[data-second-exit]'],
+    absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。', '種目ごとのカウント練習でも、この声を使えます。'], absent: ['[data-second-exit]', '[data-voice-dances-too]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-only.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S11', hash: '#/help/sound', screen: 'S11', kind: 'focus', textKeys: ['soundHelpSwitch', 'soundHelpRetry'] },

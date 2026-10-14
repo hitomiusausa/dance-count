@@ -320,6 +320,12 @@ export const APP_MESSAGES = {
     receivedTitle: 'Received',
     receivedVoiceFrom: "Choose a dance in “Use” and press ▶ to hear {name}'s voice.",
     receivedVoiceNamed: 'Choose a dance in “Use” and press ▶ to hear “{name}”.',
+    // D69（ひとみうさ承認 2026-10-14・案 A）: 声＋ルーティンの束の S10。本文は主ボタンを指す（1 本＝「ルーティンを再生する」・2 本以上＝「ルーティンを見る」）
+    receivedVoicePlayFrom: "Press “Play the routine” below to hear {name}'s voice.",
+    receivedVoicePlayNamed: 'Press “Play the routine” below to hear “{name}”.',
+    receivedVoiceSeeFrom: "Choose a routine under “See routines” below to hear {name}'s voice.",
+    receivedVoiceSeeNamed: 'Choose a routine under “See routines” below to hear “{name}”.',
+    receivedVoiceDancesToo: 'You can also use this voice to practise the counts for each dance.',
     receivedRoutines: 'They are in “Routines”.',
     receivedRoutinesToo: 'The routines are under the “Routines” tab at the bottom of “Use”.',
     goHome: 'Choose a dance',
@@ -641,11 +647,16 @@ export const APP_MESSAGES = {
     receivedTitle: '受け取りました',
     receivedVoiceFrom: '「使う」で種目を選んで ▶ を押すと、{name}の声で鳴ります。',
     receivedVoiceNamed: '「使う」で種目を選んで ▶ を押すと、「{name}」で鳴ります。',
+    receivedVoicePlayFrom: '下の「ルーティンを再生する」を押すと、{name}の声で再生されます。',
+    receivedVoicePlayNamed: '下の「ルーティンを再生する」を押すと、「{name}」で再生されます。',
+    receivedVoiceSeeFrom: '下の「ルーティンを見る」からルーティンを選ぶと、{name}の声で再生されます。',
+    receivedVoiceSeeNamed: '下の「ルーティンを見る」からルーティンを選ぶと、「{name}」で再生されます。',
+    receivedVoiceDancesToo: '種目ごとのカウント練習でも、この声を使えます。',
     receivedRoutines: '「ルーティン」に入っています。',
     receivedRoutinesToo: 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。',
     goHome: '種目を選ぶ',
     seeRoutines: 'ルーティンを見る',
-    playRoutine: 'ルーティンを鳴らす',
+    playRoutine: 'ルーティンを再生する',
     nextFigure: '次: {name}'   // 夜間便 B-4（Ruling 124）: S5 の鳴っている間だけ「今のフィガー」の下に小さく 1 行（文は A-3 の監修へ）   // 夜間便 B-2（Ruling 124）: 受け取った束にルーティンが 1 本の時の主ボタン（S5 へ・鳴らすのは ▶ の後。文は A-3 の監修へ）
   }
 } as const satisfies Record<string, Record<string, string>>;

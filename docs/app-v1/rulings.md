@@ -4079,3 +4079,9 @@ A＝6 件・B＝6 件（＋B-0 プレビューの器）・C＝15 件。
   - **プライバシーの文（最小限）**: S13 の `aboutPrivacy5`「…あなたの名前と、入れた声・ルーティン・ひとこと、作った日時が入ります。…」／“…your name, the voice, routines and note you put in it, and the date it was made.…”。同意の文（声の配布）は変えていない（ひとことは声ではない）。
   - **文（案・A-3 の監修シートに載る）**: `shareNoteLabel`「生徒へのひとこと（なくてもOK）」／“A note for your students (optional)”・`shareNotePlaceholder`「例：来週の練習日までに覚えてきてね」／“e.g. Please learn this by our next lesson”・`shareNoteCount`「{count} / {max} 字」／“{count} / {max} characters”・`shareNoteSent`「ひとこと：「{note}」」／“Note: “{note}””・`teacherNote`「先生からのひとこと」／“A note from your teacher”。
   - 検査: `test/app/share/note.test.ts`（書記素で 80・入力を止める・掃除・HTML に見える字は字のまま・束の任意の項目で版 1 のまま・note なしのファイル・壊れた note でも読める・note の有無で他の読みが同じ・受け取ったルーティンに残り保存して読み直せる・配り直しで渡さない）・固定ファイル `bundle-note-routine.dancecount.txt`（`make-share-fixtures.js`）・`ui:check`（「S9 ひとこと（80 字で止まる）」「S10 受け取った・先生からのひとこと」「S5 受け取った・先生からのひとこと」）・`smoke:share`（先生: 90 字で止まる・ファイルに note と版 1・結果の枠の 1 行／生徒: S10 と S5 にひとこと・HTML として読まない）。
+
+- **D69 S10「受け取りました」（声＋ルーティンの束）の本文と出口の食い違いを直す＝案 A**（ひとみうさ承認 2026-10-14。夜間便 B-2・Ruling 124 の「声もあれば「種目を選ぶ ›」は 2 番目の行」を置き換え）
+  - **食い違い**: 本文「「使う」で種目を選んで ▶ を押すと…」と 2 番目の行「種目を選ぶ ›」が、主ボタン「ルーティンを鳴らす」と別の行き先を指していた。
+  - **直し**: `playRoutine` の ja を「ルーティンを鳴らす」→**「ルーティンを再生する」**（en “Play the routine” のまま）。声＋ルーティン 1 本の本文は `receivedVoicePlayFrom`／`receivedVoicePlayNamed`「下の「ルーティンを再生する」を押すと、{name}の声で／「{name}」で再生されます。」、2 本以上（主ボタン「ルーティンを見る」）は `receivedVoiceSeeFrom`／`receivedVoiceSeeNamed`「下の「ルーティンを見る」からルーティンを選ぶと、…で再生されます。」（{name} は `honorific`）。2 番目の行（`data-second-exit`）は**やめ**、本文・先生のひとことの下に文 1 つ `receivedVoiceDancesToo`「種目ごとのカウント練習でも、この声を使えます。」（ボタンではない・`data-voice-dances-too`）。声だけ・ルーティンだけの束は変えない。
+  - **代償**: S10 から U1（種目）へ直接出る道は無くなった（S5 → 戻る → U2 の下のタブ「フィガー」で行ける）。
+  - 検査: `ui:check`（S10 受け取った／声とルーティン 1 本＝本文・文 1 つ・2 番目の行が無い・主要操作 1／声だけ＝文 1 つが出ない）・`smoke:share`（主ボタン →S5（自動では鳴らさない）→ 戻ると U2 → タブで U1 →「‹ 表紙」1 回で表紙。前の「2 番目の行で U1」の列の置き換え）・`honorific.test`・`i18n-phrases.test`。

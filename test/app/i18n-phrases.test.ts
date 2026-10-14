@@ -85,7 +85,8 @@ test('a 「…」“…” that holds a {placeholder} is not a no-wrap piece, so
   const name = '山田花子先生のワルツとタンゴとフォックストロットのルーティン練習用'.padEnd(40, '花');
   const file = '声-山田花子先生-2026-10-12.dancecount.txt';
   const cases = [
-    ['shareSaved', { file }], ['routineUnreadable', { name }], ['replaceVoiceNamed', { name }], ['receivedVoiceNamed', { name }]
+    ['shareSaved', { file }], ['routineUnreadable', { name }], ['replaceVoiceNamed', { name }], ['receivedVoiceNamed', { name }],
+    ['receivedVoicePlayNamed', { name }], ['receivedVoiceSeeNamed', { name }]
   ] as const;
   for (const [key, variables] of cases) {
     const value = Object.values(variables)[0];

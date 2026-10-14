@@ -393,7 +393,6 @@ button { cursor: pointer; }
   border-bottom: var(--bw) solid var(--line); font-size: 18px; font-weight: 700; color: var(--ink); }
 .dc-link-label { flex: 1; min-width: 0; }
 /* 夜間便 B-2: S10 受け取った後の 2 番目の出口（「種目を選ぶ ›」）。行の見た目のボタン（画面替えは置き換え＝exitTo なので a ではない） */
-.dc-receive-second { border: none; border-bottom: var(--bw) solid var(--line); background: none; text-align: left; }
 .dc-link-value { min-width: 0; font-size: 16px; font-weight: 400; color: var(--ink2); text-align: right; overflow-wrap: anywhere; }
 .dc-link-row > .dc-ic:last-child { color: var(--ink2); }
 .dc-settings-section { margin-top: 24px; }

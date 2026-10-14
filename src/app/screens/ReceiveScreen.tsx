@@ -128,7 +128,8 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
   if (step === 'done' && plan) {
     const voice = plan.voice?.pack;
     // 夜間便 B-2（Ruling 124・監査 #3・po-checklist A-15 の読み替え）: 束にルーティンが入っていたら主ボタンはルーティン（1 本ならその S5 へ・自動では鳴らさない／
-    // 2 本以上は U2 へ）。声も入っていれば「種目を選ぶ ›」は 2 番目の行。声だけの束は今のまま（種目を選ぶ）。ルーティンの在りかの 1 文（A-2）はボタンが答えなので出さない
+    // 2 本以上は U2 へ）。声だけの束は今のまま（種目を選ぶ）。ルーティンの在りかの 1 文（A-2）はボタンが答えなので出さない。
+    // D69: 声も入っていた時の 2 番目の行「種目を選ぶ ›」はやめた（本文が主ボタンを指し、種目の練習のことは文 1 つ）
     const received = plan.routines.map(item => item.routine);
     const only = received.length === 1 ? received[0]! : null;
     const exit = received.length === 0 ? { screen: voice ? 'S1' as const : 'U2' as const, label: voice ? 'goHome' as const : 'seeRoutines' as const }
@@ -138,15 +139,12 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="done">
         {header}
         <p class="dc-body">
-          {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
+          {voice ? voiceNext(translator, voice, received.length) : phrased(translator, 'receivedRoutines')}
         </p>
         {/* D68: 先生からのひとこと（ファイルにあれば）。文字としてだけ出す（HTML として読まない） */}
         {plan.note && <TeacherNote note={plan.note} />}
-        {voice && received.length > 0 && (
-          <button type="button" class="dc-link-row dc-receive-second" data-second-exit onClick={() => exitTo({ screen: 'S1', params: {} })}>
-            <span class="dc-link-label">{translator.t('goHome')}</span><Icon name="chev-r" />
-          </button>
-        )}
+        {/* D69（案 A）: 2 番目の出口「種目を選ぶ ›」はやめ、種目の練習にも使えることは文 1 つで（ボタンにしない） */}
+        {voice && received.length > 0 && <p class="dc-body" data-voice-dances-too>{phrased(translator, 'receivedVoiceDancesToo')}</p>}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
             onClick={() => exitTo(exit.screen === 'S5' && only ? { screen: 'S5', params: { routineId: only.id } } : { screen: exit.screen, params: {} })}>
@@ -243,8 +241,12 @@ function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distribut
   return distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
 }
 
-function voiceNext(translator: AppTranslator, pack: VoicePackRecord) {
-  return pack.distributor ? phrased(translator, 'receivedVoiceFrom', { name: honorific(pack.distributor.name, translator.locale) }) : phrased(translator, 'receivedVoiceNamed', { name: pack.name });
+// D69（案 A）: ルーティンも入っていたら、本文は主ボタンを指す（1 本＝「ルーティンを再生する」・2 本以上＝「ルーティンを見る」）。声だけは今のまま
+function voiceNext(translator: AppTranslator, pack: VoicePackRecord, routines: number) {
+  const [from, named] = routines === 0 ? ['receivedVoiceFrom', 'receivedVoiceNamed'] as const
+    : routines === 1 ? ['receivedVoicePlayFrom', 'receivedVoicePlayNamed'] as const
+    : ['receivedVoiceSeeFrom', 'receivedVoiceSeeNamed'] as const;
+  return pack.distributor ? phrased(translator, from, { name: honorific(pack.distributor.name, translator.locale) }) : phrased(translator, named, { name: pack.name });
 }
 
 // 「ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ」。3 本目からは「ほか N 本」。

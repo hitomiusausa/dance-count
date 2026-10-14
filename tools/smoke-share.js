@@ -225,23 +225,32 @@ try {
   await expectText(s, 'ルーティン 1 本: ワルツの練習', 'S10 confirm');
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
-  await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
+  // D69（案 A）: 声＋ルーティン 1 本は、本文が主ボタン「ルーティンを再生する」を指す。種目の練習のことは文 1 つ（ボタンではない）
+  await expectText(s, '下の「ルーティンを再生する」を押すと、山田さんの声で再生されます。', 'S10 done');
+  await expectText(s, '種目ごとのカウント練習でも、この声を使えます。', 'S10 done');
   // D68: 先生からのひとこと（文字のまま。<b> は太字にならず字として出る）
   if ((await text(s, '[data-teacher-note] .dc-teacher-note-text')) !== TEACHER_NOTE) errors.push(`S10 done: the teacher note reads "${await text(s, '[data-teacher-note] .dc-teacher-note-text')}"`);
   if (await s.locator('[data-teacher-note] b').count()) errors.push('S10 done: the note was read as HTML');
-  // 夜間便 B-2（Ruling 124）: ルーティンが 1 本入っていたら主ボタンは「ルーティンを鳴らす」・「種目を選ぶ」は 2 番目の行（在りかの 1 文は出さない）
-  if ((await s.locator('.dc-dock .dc-primary').textContent())?.trim() !== 'ルーティンを鳴らす') errors.push(`S10 done: the main button reads "${(await s.locator('.dc-dock .dc-primary').textContent())?.trim()}", expected "ルーティンを鳴らす" (B-2)`);
+  // 夜間便 B-2（Ruling 124）・D69: ルーティンが 1 本入っていたら主ボタンは「ルーティンを再生する」。2 番目の行「種目を選ぶ」は無い（在りかの 1 文も出さない）
+  if ((await s.locator('.dc-dock .dc-primary').textContent())?.trim() !== 'ルーティンを再生する') errors.push(`S10 done: the main button reads "${(await s.locator('.dc-dock .dc-primary').textContent())?.trim()}", expected "ルーティンを再生する" (D69)`);
   if ((await s.locator('main').textContent())?.includes('ルーティンは、「使う」の下のタブ「ルーティン」にあります。')) errors.push('S10 done: the routines sentence is shown next to the routine button (B-2)');
-  await s.locator('[data-second-exit]').click();
-  await s.waitForSelector('[data-screen="S1"]');
-  if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
+  if (await s.locator('[data-second-exit]').count()) errors.push('S10 done: the second exit "Choose a dance" is still there (D69)');
+  if (await s.locator('main button, main a').filter({ hasText: '種目を選ぶ' }).count()) errors.push('S10 done: a "Choose a dance" button is still there (D69)');
+  // 主ボタン → その S5（自動では鳴らさない）→ 戻ると U2 → タブで U1 → 「‹ 表紙」1 回で表紙
+  // （前は 2 番目の行で U1 へ出ていた。Task 1 修正 1・Repro B の S0 → U2 → S10 → … の列で、受け取った後のタブ移動の後も 1 回で表紙に戻ることを見る。U1 からの 1 回は router-back のテスト）
+  await s.locator('.dc-dock .dc-primary').click();
+  await s.waitForSelector('[data-screen="S5"]');
   await s.waitForTimeout(WRITE_SETTLE_MS);
-  // 最終レビュー I1: S10 の文のとおり下の「ルーティン」へ（U2）。その後も「‹ 表紙」1 回で表紙
-  // （Task 1 修正 1・Repro B の S0 → U1 → U2 → S10 → U1 の列に、タブ U2 を足した形。U1 からの 1 回は router-back のテスト）
-  await s.locator('[data-nav] a').nth(1).click();
-  await s.waitForSelector('[data-screen="U2"]');
+  if ((await s.locator('[data-screen="S5"]').getAttribute('data-playing')) !== 'false') errors.push('S10 "Play the routine" (voice + 1 routine) started playing by itself (B-2: only after ▶)');
   await s.locator('[data-back]').click();
-  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 (tab) after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
+  await s.waitForSelector('[data-screen="U2"]');
+  if (!s.url().endsWith('#/use/routines')) errors.push(`back from S5 after receiving (voice + 1 routine) should land on U2 (url ${s.url()})`);
+  await s.locator('[data-nav] a').nth(0).click();
+  await s.waitForSelector('[data-screen="S1"]');
+  if (!s.url().endsWith('#/use')) errors.push(`the "Figures" tab after receiving should land on U1 (url ${s.url()})`);
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  await s.locator('[data-back]').click();
+  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U1 (tab) after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 
   // ワルツ ▶ が受け取った声で鳴る: 読み直した S2 で ▶ の間、標準の声の音声は 1 本も要求されない（smoke-voice.js と同じ証明）
   await s.goto(`${BASE}#/practice/waltz`);
@@ -348,7 +357,7 @@ try {
   await s.waitForSelector('[data-step="confirm"]');
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
-  // 夜間便 B-2: ルーティン 1 本だけの束は「ルーティンを鳴らす」→ その S5（自動では鳴らさない）→ 戻ると U2 →「‹ 表紙」1 回で表紙
+  // 夜間便 B-2: ルーティン 1 本だけの束は「ルーティンを再生する」→ その S5（自動では鳴らさない）→ 戻ると U2 →「‹ 表紙」1 回で表紙
   await s.locator('.dc-dock .dc-primary').click();
   await s.waitForSelector('[data-screen="S5"]');
   await s.waitForTimeout(WRITE_SETTLE_MS);
