@@ -266,6 +266,8 @@ export const APP_MESSAGES = {
     shareChooseSomething: 'Choose a voice or a routine to create the file.',
     shareNothingYet: 'Record a voice or make a routine first, and then you can share it.',
     createFile: 'Create file',
+    shareAskName: 'Enter “Your name”, then tap “Create file” again.',
+    shareAskConsent: 'Tick the box to agree, then tap “Create file” again.',
     shareAfterSend: 'After sending the file, send the instructions below too.',
     shareSaved: '“{file}” has been saved. You can attach it to LINE or email.',
     shareRefused: 'Sharing didn\'t work. You can save it with “Save the file” below.',   // 拒まれた時は自動で保存しない（Fable の答え 2）
@@ -585,6 +587,8 @@ export const APP_MESSAGES = {
     shareChooseSomething: '声かルーティンを選ぶと、ファイルを作れます。',
     shareNothingYet: '先に声を録音するか、ルーティンを作ると配れます。',
     createFile: 'ファイルを作る',
+    shareAskName: '「あなたの名前」を入れてから、もう一度「ファイルを作る」を押してください。',
+    shareAskConsent: '同意のチェックを入れてから、もう一度「ファイルを作る」を押してください。',
     shareAfterSend: 'ファイルを送ったら、下の案内文も送ってください。',
     shareSaved: '「{file}」を保存しました。LINE やメールに添付できます。',
     shareRefused: '共有できませんでした。下の「ファイルを保存する」で保存できます。',

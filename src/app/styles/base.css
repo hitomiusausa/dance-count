@@ -597,6 +597,7 @@ button { cursor: pointer; }
 .dc-share-routine { min-height: 64px; }
 .dc-share-dock { flex-direction: column; align-items: center; gap: 6px; }
 .dc-dock-note { font-size: 16px; color: var(--ink2); text-align: center; }
+.dc-dock-note--ask { color: var(--warn-ink); font-weight: 700; }
 .dc-share.dc-screen--dock { padding-bottom: calc(var(--dockh) + 48px + env(safe-area-inset-bottom)); }
 .dc-share-done { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; scroll-margin-top: 12px; }
 .dc-result { padding: 10px 12px; border: var(--bw) solid var(--primary); border-left-width: 4px; border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }

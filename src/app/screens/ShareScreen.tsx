@@ -51,6 +51,10 @@ export function ShareScreen() {
   const [result, setResult] = useState<Result | null>(null);
   const [copy, setCopy] = useState<'idle' | 'copied' | 'manual'>('idle');
   const resultRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLButtonElement>(null);
+  // 名前・同意が足りないまま「ファイルを作る」を押した時の案内（ひとみうさ 2026-10-14「見逃しやすい」）。足りた所で消える
+  const [blocked, setBlocked] = useState<'name' | 'consent' | null>(null);
   const latestRoutines = useRef(routines);
   latestRoutines.current = routines;
 
@@ -113,7 +117,12 @@ export function ShareScreen() {
     setCopy('idle');
   };
 
+  useEffect(() => { if ((blocked === 'name' && !needsName) || (blocked === 'consent' && !needsConsent)) setBlocked(null); }, [blocked, needsName, needsConsent]);
+
   const create = () => {
+    // 名前か同意が足りない: 押せるが作らず、帯に案内を出して足りない所へ（名前が先＝画面の上から）
+    if (!file && needsName) { setBlocked('name'); nameRef.current?.focus(); nameRef.current?.scrollIntoView({ block: 'center' }); return; }
+    if (!file && needsConsent) { setBlocked('consent'); consentRef.current?.focus(); consentRef.current?.scrollIntoView({ block: 'center' }); return; }
     if (!file) return;
     const made = file;
     const hasVoice = voice !== null;
@@ -180,7 +189,7 @@ export function ShareScreen() {
         // 同意の文は 2 文と長いので、ボタン（四角）の外に置き、文を押しても切り替わる（ボタン文言は 2 行まで・U10）。
         <div class="dc-consent" data-group="consent">
           <div class="dc-consent-row">
-            <button type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
+            <button ref={consentRef} type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
               onClick={() => setConsent(!consent)}>
               <span class="dc-checkbox" aria-hidden="true">{consent && <Icon name="check" />}</span>
             </button>
@@ -257,7 +266,7 @@ export function ShareScreen() {
       )}
       <div class="dc-field" data-group="distributor">
         <div class="dc-field-label" id="dc-s9-name-label">{translator.t('shareYourName')}</div>
-        <input class="dc-input" type="text" maxLength={DISTRIBUTOR_NAME_MAX} value={name} enterKeyHint="done" autoComplete="name" aria-labelledby="dc-s9-name-label"
+        <input ref={nameRef} class="dc-input" type="text" maxLength={DISTRIBUTOR_NAME_MAX} value={name} enterKeyHint="done" autoComplete="name" aria-labelledby="dc-s9-name-label"
           onInput={event => setName((event.currentTarget as HTMLInputElement).value)}
           onBlur={event => saveName(event.currentTarget as HTMLInputElement)}
           onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
@@ -283,7 +292,9 @@ export function ShareScreen() {
       )}
       <div class="dc-dock dc-share-dock">
         {dockNote && <div class="dc-dock-note">{phrased(translator, dockNote === 'nothing' ? 'shareNothingYet' : 'shareChooseSomething')}</div>}
-        <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>
+        {!dockNote && blocked && <div class="dc-dock-note dc-dock-note--ask" role="alert" data-blocked={blocked}>{phrased(translator, blocked === 'name' ? 'shareAskName' : 'shareAskConsent')}</div>}
+        {/* 名前・同意だけが足りない時は押せる（押すと上の案内）。配る物が無い・声の準備中は押せない */}
+        <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file && !((needsName || needsConsent) && !needsSomething)} onClick={create}>
           <Icon name="share" /><span>{translator.t('createFile')}</span>
         </button>
       </div>
