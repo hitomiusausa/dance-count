@@ -1,4 +1,4 @@
-import { BrandMark } from '../brand/BrandMark.tsx';
+import { BrandMark, DoorFigure } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { LastPracticeName } from '../i18n/LastPracticeName.tsx';
@@ -8,7 +8,7 @@ import { useI18n } from '../state/i18n.ts';
 import { lastPractice, resumePractice } from '../state/resume.ts';
 import { useSettings } from '../state/settings.ts';
 
-// S0 表紙（D56・Ruling 115-1・117）。D62: アプリ名の左にうさぎの絵（アプリのアイコンと同じ）。起動のたびに出る（側は覚えない）。上から: アプリ名と言語 → 扉「使う」（主・紺）＋その下にくっついた
+// S0 表紙（D56・Ruling 115-1・117）。D62: アプリ名の左にうさぎの絵（アプリのアイコンと同じ）・扉の丸（▶・マイク）は女性と男性のうさぎに（確認の案 1）。起動のたびに出る（側は覚えない）。上から: アプリ名と言語 → 扉「使う」（主・紺）＋その下にくっついた
 // 「前回の練習 ▶ 続きから」（C 案。初めて鳴った後だけ＝G2 の 1 タップ）→ 扉「作る」（副・枠線）→ 行「設定」→ 更新の帯（ルート画面と同じ帯）。
 // D58: 扉の見出しは「使う（生徒の方）」「作る（指導者の方）」。括弧は見出しと同じ行に小さく（.dc-door-for）。
 // 主要操作は 扉 2・続きから 1・設定 1 ＝ 4（初回 3）。言語は [data-utility]。
@@ -35,7 +35,7 @@ export function CoverScreen() {
       </header>
       <div class="dc-doorset">
         <a class="dc-door dc-door--main" data-door="use" href={buildHash({ screen: 'S1', params: {} })}>
-          <span class="dc-door-icon"><Icon name="play" /></span>
+          <DoorFigure door="use" />
           <span class="dc-door-text"><b>{translator.t('coverUse')}<span class="dc-door-for">{translator.t('coverUseFor')}</span></b><small data-description>{phrased(translator, 'coverUseSub')}</small></span>
           <Icon name="chev-r" />
         </a>
@@ -50,7 +50,7 @@ export function CoverScreen() {
         )}
       </div>
       <a class="dc-door" data-door="make" href={buildHash({ screen: 'M0', params: {} })}>
-        <span class="dc-door-icon"><Icon name="mic" /></span>
+        <DoorFigure door="make" />
         <span class="dc-door-text"><b>{translator.t('coverMake')}<span class="dc-door-for">{translator.t('coverMakeFor')}</span></b><small data-description>{phrased(translator, 'coverMakeSub')}</small></span>
         <Icon name="chev-r" />
       </a>

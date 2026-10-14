@@ -3,7 +3,7 @@ import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json' with { type: 'json' };
 import { SHARE_TARGET_FIELD } from './src/share-inbox-contract.ts';
-import { rabbitArt } from './src/app/brand/rabbit.ts';
+import { bootMark as bootFigure } from './src/app/brand/rabbit.ts';
 import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.js';
 
 // 段7: index.html の <meta name="dc-build"> に入る版の印（smoke:pwa が DC_BUILD_TAG=b で別の版を作り、更新されたかを見る）。
@@ -11,10 +11,11 @@ import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.
 const BUILD_TAG = process.env.DC_BUILD_TAG ?? pkg.version;
 const buildTag: Plugin = { name: 'dc-build-tag', transformIndexHtml: html => html.replace('%DC_BUILD%', BUILD_TAG) };
 
-// D62: 起動の殻のうさぎ（絵の元は src/app/brand/rabbit.ts だけ）。裾は .dc-sway（index.html のインライン CSS）で揺れる。
-// viewBox の原点を絵の中心に置かない（CSS の transform-origin 0 0 が viewBox の左上になるため。translate で中心へ）
-const BOOT_MARK = `<svg viewBox="0 0 200 200"><g transform="translate(100 100)">${rabbitArt({ sway: true })}</g></svg>`;
-const bootMark: Plugin = { name: 'dc-boot-mark', transformIndexHtml: html => html.replace('%DC_BOOT_MARK%', BOOT_MARK) };
+// D62: 起動の殻の絵（絵の元は src/app/brand/rabbit.ts だけ）。二人／一人は rabbit.ts の BOOT_FIGURE 1 つで切り替える（確認で二人に決定）。
+// 絵と、その絵の動き（index.html のインライン CSS の %DC_BOOT_CSS%。選んだ方の keyframes だけ）を差し込む
+const BOOT = bootFigure();
+// order: 'pre'＝Vite が index.html のインライン CSS を読む前に置き換える（%…% のままでは CSS として読めない）
+const bootMark: Plugin = { name: 'dc-boot-mark', transformIndexHtml: { order: 'pre', handler: html => html.replace('%DC_BOOT_MARK%', BOOT.svg).replace('/*%DC_BOOT_CSS%*/', BOOT.css) } };
 
 // 段8 Task 9b（Ruling 101）: 書体の @font-face（524 個・約 415KB）は描画を止めない別の CSS に分ける。
 // main.tsx から import すると index-*.css に入り、それを読み終えるまで起動の殻すら描かれない（Slow 3G で白 8.4 秒）。
