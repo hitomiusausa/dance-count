@@ -8,6 +8,7 @@
 // （/audio/default-en-female-v1/）が 1 本も要求されない。対照として、標準の声を選ぶと同じ操作で要求される。
 // 無音の本: 別のブラウザを無音の WAV（全 0）と、とても小さい声の WAV（0 ではないが RMS が基準未満）で起動 → 1 語目「録音する」→
 // 「声が入っていませんでした」・「次へ」は押せない。
+// D64: 3 語録った後、12 語のチップで 2 語目・12 語目・4 語目へ移る（合図の間はチップを押せない）。
 // 前提: `npm run dev`（既定 http://localhost:5173/）。DC_BASE_URL で変更可。偽マイクの WAV は `node tools/make-fake-mic-wav.js` で作って commit 済み。
 import path from 'node:path';
 import { chromium } from 'playwright-core';
@@ -141,8 +142,9 @@ async function playAndCollect(page, label) {
   return [...new Set(await page.evaluate(() => window.__played))];
 }
 
+// D64: 今の語＝12 語のチップの aria-current="step"（1 から数える）
 async function wordNumber(page) {
-  return Number((await page.locator('.dc-record-progress-text b').textContent())?.trim());
+  return page.locator('[data-group="record-words"] .dc-record-chip').evaluateAll(chips => chips.findIndex(chip => chip.getAttribute('aria-current') === 'step') + 1);
 }
 
 const browser = await launch('fake-mic.wav');
@@ -178,6 +180,23 @@ try {
     if (word === 1 && (await page.locator('.dc-record-dock .dc-button--secondary').count())) errors.push('S8: "Previous" on the first word');
     await page.locator('.dc-record-dock .dc-primary').click();
   }
+  // D64: チップを押すとその語へ（録れた 2 語目＝波形が出る・まだの 12 語目＝波形なし）。合図の間はチップを押せない（やめると押せる）
+  const chip = n => page.locator('[data-group="record-words"] .dc-record-chip').nth(n - 1);
+  await chip(2).click();
+  await page.waitForSelector('.dc-take').catch(() => {});
+  if ((await wordNumber(page)) !== 2 || !(await page.locator('.dc-take').count())) errors.push(`chips: tapping word 2 shows word ${await wordNumber(page)} (take ${await page.locator('.dc-take').count()})`);
+  await page.locator('.dc-rec').click();
+  await page.waitForSelector('[data-phase="countdown"]');
+  if (!(await chip(5).isDisabled())) errors.push('chips: tappable during the countdown');
+  await page.locator('.dc-rec').click();
+  await page.waitForSelector('[data-phase="idle"]', { timeout: 2000 });
+  if (await chip(5).isDisabled()) errors.push('chips: still disabled after "Cancel"');
+  await chip(12).click();
+  if ((await wordNumber(page)) !== 12 || (await page.locator('.dc-take').count())) errors.push(`chips: tapping word 12 shows word ${await wordNumber(page)}`);
+  await chip(4).click();
+  if ((await wordNumber(page)) !== 4) errors.push(`chips: back to word 4 shows word ${await wordNumber(page)}`);
+  if ((await readPacks(page)).some(pack => pack.words !== 3)) errors.push(`chips: the saved words changed ${JSON.stringify(await readPacks(page))}`);
+
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.locator('[data-back]').click();
   await page.waitForSelector('[data-screen="M0"]:not([data-loading])');

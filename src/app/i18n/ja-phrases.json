@@ -126,6 +126,7 @@
   "recordedUpTo": ["{count}\u00A0/\u00A012\u00A0語まで","録音済み"],
   "recordedAll": ["録音済み","（12 語）"],
   "startRecording": ["録音を","はじめる"],
+  "recordWords": ["録音する"," 12 語"],
   "recordHint": ["「今！」の","合図で","「{word}」と","言ってください。"],
   "reviewFromFirst": ["1\u00A0語目から","見直す"],
   "recordAutoStop": ["約\u00A02\u00A0秒で","自動で","止まります"],
