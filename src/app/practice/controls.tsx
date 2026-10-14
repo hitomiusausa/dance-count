@@ -9,6 +9,7 @@ import type { StripView } from './beat-indicator.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
+import { BARS_PER_CYCLE } from './bar-count.ts';
 import { tempoText } from './tempo.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
 import { wakeLockTipKey } from './wake-tip.ts';
@@ -19,12 +20,14 @@ const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standa
 // 大きな現在カウント＋カウントの型の帯（操作ではない。D55・Ruling 114）。children は帯の下に置く（S5 の「3 / 13 …」の1行）。
 // 帯は型 1 周の語を 1 語 1 丸（幅は語の長さに比例＝flex-grow に拍数）。鳴っている語の丸だけ琥珀（aria-current）。読み上げは「いま {count}」で足りる（aria-hidden）
 const DENSE_STRIP = 9;   // 丸が 9 個以上は文字を 15px に（data-dense）
-export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, children }: {
-  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; children?: ComponentChildren;
+// D72: bar は小節を数えている間だけの番号（1〜8）。箱の右上に重ねて出す（高さを足さない＝375×548 の初期表示の速さと ▶ を押し下げない）
+export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, bar = null, children }: {
+  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; bar?: number | null; children?: ComponentChildren;
 }) {
   const { translator } = useI18n();
   return (
     <div class="dc-countbox" aria-live="off" aria-label={nowText ? translator.t('nowCount', { count: nowText }) : undefined}>
+      {playing && !countIn && bar !== null && <div class="dc-bar-count" data-bar-count>{translator.t('barOfCycle', { bar, total: BARS_PER_CYCLE })}</div>}
       {playing && countIn
         ? <div class="dc-now dc-now--lead">{translator.t('leadInNow')}</div>
         : preparing && !playing
@@ -143,14 +146,35 @@ export function FineSpeed({ danceId, bpm, dragBpm, competition, onDrag, onCommit
   );
 }
 
-// 繰り返す（くわしくの中。Ruling 19）。
-export function RepeatRow({ loop, onToggle }: { loop: boolean; onToggle(): void }) {
+// 繰り返す（くわしくの中。Ruling 19）＋ D72 小節を数える（出す種目だけ）。2 つのオン・オフは「鳴らし方」の 1 つの束（[data-group]＝U4 で 1）。
+// barCounting が null の種目（S・Q で数える種目など。practice/bar-count.ts）は「繰り返す」だけ。
+export function PlaySwitches({ loop, onLoop, barCounting, onBarCounting, idPrefix }: {
+  loop: boolean; onLoop(): void; barCounting: boolean | null; onBarCounting(): void; idPrefix: string;
+}) {
+  const { translator } = useI18n();
+  const hintId = `${idPrefix}-bar-count-hint`;
+  return (
+    <div class="dc-play-switches" data-group="play-switches">
+      <SwitchRow id={`${idPrefix}-repeat`} label={translator.t('repeat')} on={loop} onToggle={onLoop} />
+      {barCounting !== null && (
+        <>
+          <SwitchRow id={`${idPrefix}-bar-count`} label={translator.t('barCounting')} on={barCounting} onToggle={onBarCounting} describedBy={hintId} data-bar-counting />
+          <div class="dc-offset-hint" id={hintId}>{phrased(translator, 'barCountingHint', { total: BARS_PER_CYCLE })}</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// 名前は「行の名前＋今の値」（aria-labelledby。見えている「オン」も名前に入る＝WCAG 2.5.3）
+function SwitchRow({ id, label, on, onToggle, describedBy, ...rest }: { id: string; label: string; on: boolean; onToggle(): void; describedBy?: string; 'data-bar-counting'?: boolean }) {
   const { translator } = useI18n();
   return (
     <div class="dc-more-row">
-      <span>{translator.t('repeat')}</span>
-      <button type="button" class="dc-chip" role="switch" aria-checked={loop ? 'true' : 'false'} onClick={onToggle}>
-        {loop ? translator.t('on') : translator.t('off')}
+      <span id={`${id}-label`}>{label}</span>
+      <button type="button" id={id} class="dc-chip" role="switch" aria-checked={on ? 'true' : 'false'} aria-labelledby={`${id}-label ${id}`} aria-describedby={describedBy}
+        onClick={onToggle} {...(rest['data-bar-counting'] ? { 'data-bar-counting': '' } : {})}>
+        {on ? translator.t('on') : translator.t('off')}
       </button>
     </div>
   );

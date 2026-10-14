@@ -383,3 +383,17 @@ test('stopping clears the sounding word, tick and figure, back to the first view
   const view = h.session.current;
   assert.deepEqual([view.playing, view.voiceKey, view.originalTick, view.figureIndex, view.program], [false, null, null, null, null]);
 });
+
+test('D72: bar counting reaches the engine (off unless asked) and the bar number reaches the view, not during the lead-in', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  assert.equal(h.starts[0]!.barCounting, false);
+  await h.session.play({ ...WALTZ, barCounting: true });
+  assert.equal(h.starts[1]!.barCounting, true);
+  h.frame({ playing: true, countIn: true, leadTick: -960, bar: 1 });
+  assert.equal(h.session.current.bar, null);
+  h.frame({ playing: true, countIn: false, originalTick: 0, event: { voiceKey: 'one' }, bar: 3 });
+  assert.equal(h.session.current.bar, 3);
+  h.session.stop();
+  assert.equal(h.session.current.bar, null);
+});

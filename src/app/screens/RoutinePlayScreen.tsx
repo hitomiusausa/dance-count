@@ -8,10 +8,11 @@ import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { honorific } from '../lib/honorific.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
+import { barCountingAvailable } from '../practice/bar-count.ts';
 import { tempoText } from '../practice/tempo.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -61,7 +62,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, track: null,
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -169,7 +170,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             {routine.receivedFrom?.note ? <TeacherNote note={routine.receivedFrom.note} head /> : <small data-ellipsis>{subtitle}</small>}
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting}>
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} bar={view.bar}>
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}
             </div>
@@ -196,7 +197,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             </div>
             <FineSpeed danceId={routine.danceId} idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
-            <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
+            <PlaySwitches idPrefix="dc-s5" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
+              barCounting={barCountingAvailable(routine.danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
             <VoiceOffsetRow idPrefix="dc-s5" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
           </MoreOptions>
         </div>

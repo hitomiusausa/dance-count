@@ -155,7 +155,12 @@ const STATES = [
   { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms',
-    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'] },   // D71
+    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'], present: ['[data-group="play-switches"] [data-bar-counting][aria-checked="false"]'], textKeys: ['barCounting'] },   // D71・D72
+  // D72: 小節を数えるは数字で数え、どの小節の頭にも「1」がある種目だけ（ワルツ・ヴィエニーズワルツ）。タンゴ（S・Q）には出ない。「繰り返す」と 1 つの束（U4 で 1＝開いて 9 のまま）
+  { name: 'S2 タンゴ・くわしく開', hash: '#/practice/tango', screen: 'S2', kind: 'focus', openMore: true, total: 8, absent: ['[data-bar-counting]'] },
+  // D72: 小節を数えている間は箱の右上に「n / 8 小節」（高さを足さない＝375×548 でも速さと ■ は初期表示）
+  { name: 'S2 小節を数える・再生中', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', settingsSeed: { barCounting: true }, speedAndPlay: true, wakeLock: true,
+    present: ['[data-bar-count]'], steps: [{ click: '[data-play]' }, { wait: '[data-bar-count]' }] },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   // 夜間便 A-4（Ruling 123・監査 #16）: 「自動ロック」は iPhone・iPad だけ。それ以外の端末は「画面が消えるまでの時間」
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true, textKeys: ['wakeLockTipOther'] },
@@ -263,7 +268,9 @@ const STATES = [
   // 端末が画面を点けたままにできる（WakeLock が取れる）偽物を入れる＝画面が暗くなる案内（A-4）の枠を出さずに「次:」の行だけを見る
   { name: 'S5 再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, present: ['[data-figure-next]'], wakeLock: true,
     steps: [{ click: '[data-play]' }, { wait: '.dc-figure-now--on' }, { wait: '[data-figure-next]' }] },
-  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
+  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9, present: ['[data-bar-counting]'] },
+  { name: 'S5 小節を数える・再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, settingsSeed: { barCounting: true }, speedAndPlay: true, wakeLock: true,
+    present: ['[data-bar-count]'], steps: [{ click: '[data-play]' }, { wait: '[data-bar-count]' }] },   // D72
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
     texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },

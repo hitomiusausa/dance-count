@@ -28,6 +28,8 @@
   "countPattern": ["カウントの","型"],
   "fineSpeed": ["速さの","細かい","調整"],
   "competitionSpeed": ["競技の","速さ","（♩={min}〜{max}・テンポ{mpmMin}〜{mpmMax}）"],
+  "barCounting": ["小節を","数える"],
+  "barCountingHint": ["小節の","頭の","「1」を、","小節の","番号","（1〜{total}）で","言います。"],
   "noSoundTitle": ["音が","出ていません。"],
   "noSoundBody": ["本体の","消音スイッチを","確かめて、","もう","一度"," ▶ を","押してください。"],
   "noSoundLink": ["音が","鳴らない","時は"],

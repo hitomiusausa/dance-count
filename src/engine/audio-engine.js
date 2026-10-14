@@ -5,6 +5,25 @@ import { scheduleVoiceEvent } from './voice-pack-loader.js';
 
 const DEFAULT_LOOKAHEAD_SECONDS = 0.35;
 
+// D72 小節を数える: 各小節の頭の「1」を小節の番号の語に替える（1-2-3 → 2-2-3 → … → 8-2-3 → 1-2-3）。
+// 語は声にもとからある数の語（one〜eight）だけ。予約の時刻は替えない（同じ event・同じ tick・同じ時刻の計算で、選ぶ語だけが替わる）。
+export const BAR_COUNT_WORDS = Object.freeze(['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']);
+
+// 鳴らし始め（範囲の頭を含む小節）から数えた小節の番号（0 始まり・8 で 1 周しない生の値）。
+export function barOrdinal({ tick, iteration = 0, rangeStartTick = 0, rangeDurationTicks, beatsPerBar }) {
+  const barTicks = beatsPerBar * TICKS_PER_BEAT;
+  const alignedStart = Math.floor(rangeStartTick / barTicks) * barTicks;
+  return Math.floor((tick - alignedStart + iteration * rangeDurationTicks) / barTicks);
+}
+
+// 鳴らす語。小節を数える時だけ、小節の頭（強拍）に置かれた「1」（voiceKey 'one'）を番号の語にする。それ以外はもとの語のまま。
+export function spokenVoiceKey(event, { barCounting = false, iteration = 0, rangeStartTick = 0, rangeDurationTicks, beatsPerBar }) {
+  if (!barCounting || event.voiceKey !== 'one') return event.voiceKey;
+  if (event.absoluteTick % (beatsPerBar * TICKS_PER_BEAT) !== 0) return event.voiceKey;
+  const ordinal = barOrdinal({ tick: event.absoluteTick, iteration, rangeStartTick, rangeDurationTicks, beatsPerBar });
+  return BAR_COUNT_WORDS[positiveModulo(ordinal, BAR_COUNT_WORDS.length)];
+}
+
 // tempo は省略可（既定は constantTempo(bpm)）。既定は検査の後で作る（引数の既定値にすると
 // 既存の検査より先に評価され、エラーの順番が変わるため）。BPM の検査は constantTempo が同じ文言で行う。
 export function patternDurationSeconds(durationTicks, bpm, tempo) {
@@ -66,7 +85,8 @@ export class PracticeAudioEngine {
     countInBars = 1,
     rangeStartTick = 0,
     rangeEndTick = compiled.durationTicks,
-    tempo
+    tempo,
+    barCounting = false
   }) {
     this.stop();
     if (!this.voicePack) throw new Error('Voice pack is not loaded');
@@ -96,6 +116,7 @@ export class PracticeAudioEngine {
       rangeStartTick,
       rangeEndTick,
       rangeDurationTicks: rangeEndTick - rangeStartTick,
+      barCounting: barCounting === true,
       startTime: patternStartTime,
       nextIteration: 0,
       scheduledThroughIteration: -1
@@ -164,20 +185,24 @@ export class PracticeAudioEngine {
     }
 
     const voiceEvents = compiled.events.filter(item => item.voiceKey && item.absoluteTick >= rangeStartTick && item.absoluteTick < rangeEndTick);
+    // D72: 鳴らす語（小節を数えない時はもとの語そのもの＝予約は前と同じ）。語ごとのタイミングは鳴らす語のもの
+    const barOptions = { barCounting: this.state.barCounting, rangeStartTick, rangeDurationTicks, beatsPerBar: compiled.profile.beatsPerBar };
+    const spoken = (event, eventIteration) => spokenVoiceKey(event, { ...barOptions, iteration: eventIteration });
     for (const [eventIndex, event] of voiceEvents.entries()) {
       const targetTime = rangeEventTimeSeconds({ event, iteration, rangeStartTick, rangeDurationTicks, bpm, startTime, tempo });
       const nextEvent = voiceEvents[eventIndex + 1] ?? (loop ? voiceEvents[0] : null);
       const nextIteration = eventIndex + 1 < voiceEvents.length ? iteration : iteration + 1;
       const endTime = nextEvent
         ? rangeEventTimeSeconds({ event: nextEvent, iteration: nextIteration, rangeStartTick, rangeDurationTicks, bpm, startTime, tempo })
-          + effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, nextEvent.voiceKey) / 1000
+          + effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, spoken(nextEvent, nextIteration)) / 1000
         : null;
+      const voiceKey = spoken(event, iteration);
       const source = scheduleVoiceEvent({
         audioContext: this.audioContext,
         voicePack: this.voicePack,
-        event,
+        event: voiceKey === event.voiceKey ? event : { ...event, voiceKey },
         targetTime,
-        userOffsetMs: effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, event.voiceKey),
+        userOffsetMs: effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, voiceKey),
         endTime
       });
       this.trackSource(source);
@@ -228,7 +253,9 @@ export class PracticeAudioEngine {
         progress: Math.min(1, localSeconds / duration),
         originalTick,
         iteration,
-        countIn: false
+        countIn: false,
+        // D72: 小節を数える時だけ、今の小節の番号（1〜8）。同じ frame の tick から（新しい時計は作らない）
+        ...(this.state.barCounting ? { bar: positiveModulo(barOrdinal({ tick: originalTick, iteration, rangeStartTick, rangeDurationTicks, beatsPerBar: compiled.profile.beatsPerBar }), BAR_COUNT_WORDS.length) + 1 } : {})
       });
     }
     this.frameId = requestAnimationFrame(() => this.frame());

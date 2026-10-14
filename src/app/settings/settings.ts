@@ -32,6 +32,7 @@ export interface AppSettings {
   metronome: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
+  barCounting: boolean;                     // D72 小節を数える（くわしく。S2・S5 共通・既定オフ。出す種目は practice/bar-count.ts）
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
   hints: {
     wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean;
@@ -56,6 +57,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   metronome: true,
   countInBars: 1,
   loop: true,
+  barCounting: false,
   distributorName: '',
   hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false }
 }) as AppSettings;
@@ -86,6 +88,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
+    barCounting: source.barCounting === true,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
     hints: {
       wakeLockTipShown: hints.wakeLockTipShown === true,

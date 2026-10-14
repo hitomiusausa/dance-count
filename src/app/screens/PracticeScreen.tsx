@@ -5,10 +5,11 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
+import { barCountingAvailable } from '../practice/bar-count.ts';
 import { tempoText } from '../practice/tempo.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
@@ -45,7 +46,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -111,7 +112,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
             <small>{figure ? `${figureDisplayName(danceId, figure.englishName, translator.locale)} · ${formatCounts(danceId, counts)}` : formatCounts(danceId, counts)}</small>
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} />
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} bar={view.bar} />
         </div>
         <div>
           <SpeedChoices danceId={danceId} presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
@@ -135,7 +136,8 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
             )}
             <FineSpeed danceId={danceId} idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
-            <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
+            <PlaySwitches idPrefix="dc-s2" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
+              barCounting={barCountingAvailable(danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
             <VoiceOffsetRow idPrefix="dc-s2" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
           </MoreOptions>
         </div>
