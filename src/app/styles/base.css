@@ -451,6 +451,12 @@ button { cursor: pointer; }
 .dc-listen { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 56px; }
 .dc-record-dock { gap: 8px; }
 .dc-record-dock .dc-button { flex: 1; max-width: 300px; }
+/* 「前のカウント／次のカウント」（ひとみうさ 2026-10-14）は 375 幅の半分に 1 行で入るよう、語の画面の帯だけ余白と字を詰める（2 行になると帯が高くなり波形と「聞く」が沈む・R59） */
+.dc-record[data-step="word"] .dc-record-dock .dc-button { gap: 4px; padding: 0 8px; font-size: 18px; white-space: nowrap; }
+@media (max-width: 359px) {
+  .dc-record[data-step="word"] .dc-record-dock .dc-button { font-size: 16px; }
+  .dc-record[data-step="word"] .dc-record-dock .dc-button svg { display: none; }
+}
 .dc-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dc-compare .dc-button { min-height: 56px; }
 /* 鳴っている方を塗る（S7 の「試聴」・「聞く」の .dc-chip と同じ見え方。アイコンの ▶／■ だけに頼らない。通し確認） */
