@@ -359,7 +359,7 @@ test('off-bar note: a waltz count that is not 3 beats is a note, not a reason, a
   e.setDraft({ name: 'シャッセ', counts: '12' });
   assert.deepEqual([e.check().valid, e.check().reason, e.check().note], [true, null, 'offBar']);
   e.setDraft({ name: '' });
-  assert.deepEqual([e.check().reason, e.check().note], ['name', 'offBar']); // 画面は reason が null の時だけ note を描く
+  assert.deepEqual([e.check().reason, e.check().note], [null, null]); // 名前を消すと一覧に戻り、カウントも空（D65）
   e.setDraft({ name: 'シャッセ', counts: '12a' });
   assert.equal(e.check().note, null); // 数えられない時は出さない
   assert.equal(e.decide(), false);
@@ -458,15 +458,16 @@ test('formLayout shows the name list only on an add row with an empty name in a 
   assert.deepEqual(formLayout({ action: 'done', reason: null }, { kind: 'edit', nameEmpty: true, hasCatalog: true }), { countsShown: true, namePicker: false, sameName: null });
 });
 
-test('counts typed before the name was cleared come back when a name is chosen again (Ruling 54 (f))', () => {
+// Ruling 54 (f) は D65（ひとみうさ 2026-10-14）で読み替え: 名前を消して一覧に戻ると、隠れたカウントも捨てて最初の行に戻る。
+test('counts typed before the name was cleared are dropped: the list comes back as the first add row (D65, replaces Ruling 54 (f))', () => {
   const e = editor();
   e.openAdd();
   e.setDraft({ name: 'コントラチェック', counts: '1&23' });
   e.setDraft({ name: '' });
   assert.equal(layout(e).namePicker, true);
-  assert.equal(e.open?.draft.counts, '1&23');
+  assert.equal(e.open?.draft.counts, '');
   e.setDraft({ name: 'リバースターン' });
-  assert.deepEqual([layout(e).countsShown, e.check().counts, e.check().valid], [true, '1&23', true]);
+  assert.deepEqual([layout(e).countsShown, e.check().counts, e.check().valid], [true, '', false]);
 });
 
 // D21・Ruling 54-8・10: かなとカナは同じ名前（foldFigureName の 1 段）。保存した表記は変えない。
@@ -704,3 +705,22 @@ test('auto counts: without the option the editor behaves as before', () => {
   assert.equal(e.open?.draft.counts, '');
   assert.equal(e.autoNote(), null);
 });
+
+// ひとみうさ 2026-10-14（実機）: 一覧から名前を選び → カウントを打つ／形を押す → 名前を消して一覧から別のフィガーを選ぶと、
+// 隠れた欄に前のカウントが残り、自動のカウントが入らなかった（ナチュラルターンで 1 2 3 → 消して シャッセ フロム PP → 1 2 3 のまま）。
+// 名前を消して一覧に戻った追加の行は、最初に開いた時と同じ（名前もカウントも空・自動の印なし）。
+test('auto counts: clearing the name back to the list resets the add row to its first state, so the next pick fills again', () => {
+  const { e } = autoEditor();
+  e.openAdd();
+  const first = structuredClone(e.open);
+  e.setDraft({ name: '私のステップ' });
+  e.setDraft({ counts: '123' });          // 形のチップ（カウントを触った）
+  e.setDraft({ name: '' });               // 名前を消す → 一覧（formLayout の namePicker）
+  assert.deepEqual(e.open, first);
+  assert.equal(layout(e).namePicker, true);
+  assert.equal(layout(e).countsShown, false);
+  e.setDraft({ name: 'シャッセフロムPP' });
+  assert.equal(e.open?.draft.counts, '12&3');
+  assert.equal(e.autoNote(), 'reviewed');
+});
+

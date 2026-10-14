@@ -2,7 +2,7 @@ import { RoutineEditorState } from '../../engine/routine-editor-state.js';
 import type { AutoCounts, AutoCountsFrom } from './auto-counts.ts';
 import { isOffBar } from './bar-check.ts';
 import { checkCounts, normalizeCounts, type CountsProblem } from './counts.ts';
-import { figureIdentity } from './figure-names.ts';
+import { figureIdentity, hasFigureNameSuggestions } from './figure-names.ts';
 import { FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 import type { Routine, RoutineFigure } from './routine.ts';
 
@@ -134,6 +134,12 @@ export class RoutineEditor {
     if (previous.kind === 'edit') { this.open = { ...previous, draft }; return; }
     // 追加の行（D52・Ruling 107）: カウントを触ったら以後この行では自動入力しない（空に戻せばまた入る）。
     if (patch.counts !== undefined) { this.open = { ...previous, draft, auto: null, autoFrom: null }; return; }
+    // 名前を消して種目のフィガーの一覧（formLayout の namePicker）に戻ったら、最初に開いた時と同じ空の行に戻す（ひとみうさ 2026-10-14）。
+    // 一覧の間はカウントの欄が隠れるので、前のフィガーで打った値を隠したまま持たない（残すと次に選んだフィガーへ自動のカウントが入らない）。
+    if (patch.name !== undefined && draft.name.trim() === '' && hasFigureNameSuggestions(this.routine.danceId)) {
+      this.open = { kind: 'add', draft: { name: draft.name, counts: '' }, auto: null, autoFrom: null };
+      return;
+    }
     let { auto, autoFrom } = previous;
     const renamed = patch.name !== undefined && this.identity(draft.name) !== this.identity(previous.draft.name);
     const untouched = draft.counts.trim() === '' || (auto !== null && draft.counts === auto);

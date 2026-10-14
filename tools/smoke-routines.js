@@ -381,6 +381,16 @@ try {
   await autoForm2.locator('input').nth(0).fill('ウィスク');   // 同じルーティンにあるので複製の形（D19）。打った値は残る
   await autoForm2.locator('input').nth(0).fill('リバースターン');
   if ((await autoForm2.locator('.dc-input--counts').inputValue()) !== '123123') errors.push(`auto counts: typed counts must not be replaced by a name change ("${await autoForm2.locator('.dc-input--counts').inputValue()}")`);
+  // D65（ひとみうさ 2026-10-14 の実機）: 名前を Backspace で全部消すと、一覧が最初と同じ数で戻り、次に選んだフィガーに自動のカウントが入る
+  const firstChoices = await autoForm2.locator('[data-group="figure-names"] .dc-chip').count();
+  await autoForm2.locator('input').nth(0).click();
+  await autoPage.keyboard.press('End');
+  for (let i = 0; i < 'リバースターン'.length; i += 1) await autoPage.keyboard.press('Backspace');
+  const againChoices = await autoForm2.locator('[data-group="figure-names"] .dc-chip').count();
+  if (againChoices < 17) errors.push(`D65: clearing the name should bring back the whole figure list (${againChoices} chips; first ${firstChoices})`);
+  await autoForm2.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ヘジテーションチェンジ$/ }).click();
+  // 前は隠れた欄に 123123（ナチュラルターンで打った値）が残り、自動では入らず印も出なかった。今は前に使った／監修済みのカウントと印が入る
+  if (await autoForm2.locator('[data-auto-counts]').count() !== 1) errors.push(`D65: after clearing the name, picking ヘジテーションチェンジ should auto-fill its counts with the note ("${await autoForm2.locator('.dc-input--counts').inputValue()}")`);
   await autoContext.close();
 
   // 同じフィガーなら同じ名前（D22）: 英語表示で、日本語の「ウィスク」が入っているルーティン（waltz13 の 4 行目）の追加の行 →
