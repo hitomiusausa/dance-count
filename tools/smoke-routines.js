@@ -74,6 +74,32 @@ try {
   await page.waitForSelector('[data-screen="M1"]');
   if (await page.locator('[data-row]').count()) errors.push('M1 should start empty');
 
+  // D66（ひとみうさ指示 2026-10-14）: 見出しの横の ⓘ。開く → 下の物は動かない → Esc で閉じてフォーカスは ⓘ → 開く →「閉じる」で閉じてフォーカスは ⓘ →
+  // 開く → 箱の外を押すと閉じる（押した物は押される＝ここでは見出し）
+  {
+    const info = page.locator('[data-info]');
+    const pop = page.locator('[data-info-pop]');
+    const addTop = async () => (await page.locator('[data-screen="M1"] .dc-primary').boundingBox())?.y;
+    const before = await addTop();
+    if ((await info.getAttribute('aria-label')) !== 'この画面について') errors.push(`D66 the info button should be named この画面について (${await info.getAttribute('aria-label')})`);
+    await info.click();
+    if ((await info.getAttribute('aria-expanded')) !== 'true' || !(await pop.isVisible())) errors.push('D66 tapping ⓘ should open the box');
+    const said = (await pop.textContent()) ?? '';
+    if (!said.includes('種目ごとのルーティンを組み立てて')) errors.push(`D66 the box should explain the screen ("${said}")`);
+    if (await addTop() !== before) errors.push('D66 opening the box must not move the page');
+    await page.keyboard.press('Escape');
+    if (await pop.isVisible()) errors.push('D66 Esc should close the box');
+    if (!(await info.evaluate(element => element === document.activeElement))) errors.push('D66 Esc should return focus to ⓘ');
+    await info.click();
+    await pop.getByRole('button', { name: '閉じる' }).click();
+    if (await pop.isVisible()) errors.push('D66 "閉じる" should close the box');
+    if (!(await info.evaluate(element => element === document.activeElement))) errors.push('D66 "閉じる" should return focus to ⓘ');
+    if ((await info.getAttribute('aria-expanded')) !== 'false') errors.push('D66 aria-expanded should be false after closing');
+    await info.click();
+    await page.mouse.click(300, 600);   // 箱の外（下の余白）
+    if (await pop.isVisible()) errors.push('D66 a tap outside should close the box');
+  }
+
   // 名前だけ打って端末の戻る（iPhone の端からのスワイプも同じ）: 離れる時の保存でハッシュを置き換えず M1 に着く・名前は残る
   await page.locator('[data-screen="M1"] .dc-primary').click();
   await page.locator('[data-group="dance"] button').first().click();

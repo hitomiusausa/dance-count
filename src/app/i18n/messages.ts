@@ -69,6 +69,13 @@ export const APP_MESSAGES = {
     wakeLockTip: 'Your screen may dim during practice. A longer Auto-Lock helps.',
     wakeLockTipOther: 'Your screen may dim during practice. A longer screen timeout helps.',   // 夜間便 A-4: iPhone・iPad 以外（Auto-Lock は iOS の語）
     close: 'Close',
+    // D66（ひとみうさ指示 2026-10-14）: 見出しの横の ⓘ と、画面ごとの 1〜2 文の説明
+    aboutThisScreen: 'About this screen',
+    infoMakeRoutines: 'Build a routine for each dance and add the counts. You can send a finished routine to your students, or play it in “Use”.',
+    infoRecord: 'Record the 12 count words in your own voice, and the counts will play in your voice. You can send it to your students in “Share”.',
+    infoShare: 'Put your voice and routines into one file and send it to your students. They open it in “Receive”.',
+    infoReceive: 'Open the file your teacher sent you to use their voice and routines on this device.',
+    infoRoutines: 'Routines from your teacher and ones you made are listed here. Tap one to play it right away.',
     saveFailed: "Couldn't save. Please check free space.",
     voicesTitle: 'Voice',
     standardVoiceEnglish: 'Standard voice (English)',
@@ -380,6 +387,13 @@ export const APP_MESSAGES = {
     wakeLockTip: '練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です。',
     wakeLockTipOther: '練習中は画面が暗くなることがあります。画面が消えるまでの時間を長めにすると便利です。',   // 夜間便 A-4: iPhone・iPad 以外（自動ロックは iOS の語）
     close: '閉じる',
+    // D66（ひとみうさ指示 2026-10-14）: 見出しの横の ⓘ と、画面ごとの 1〜2 文の説明
+    aboutThisScreen: 'この画面について',
+    infoMakeRoutines: '種目ごとのルーティンを組み立てて、カウントをつけられます。できたルーティンは生徒に配ったり、「使う」で鳴らしたりできます。',
+    infoRecord: 'カウントの 12 の言葉を自分の声で録音すると、その声でカウントが鳴ります。録音した声は「配る」で生徒に渡せます。',
+    infoShare: '自分の声とルーティンを 1 つのファイルにして、生徒に送れます。生徒はそのファイルを「受け取る」で開きます。',
+    infoReceive: '先生から届いたファイルを開くと、先生の声やルーティンをこの端末で使えるようになります。',
+    infoRoutines: '先生から受け取ったルーティンと、自分で作ったルーティンが並びます。押すとすぐ鳴ります。',
     saveFailed: '保存できませんでした。空き容量を確かめてください。',
     voicesTitle: '声',
     standardVoiceEnglish: '標準の声（英語）',

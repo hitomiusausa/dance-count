@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { FocusHeader } from '../components/FocusHeader.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
@@ -286,8 +286,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     replaceRoute({ screen: 'S9', params: {} });
   };
 
-  // 完成の画面だけは本文に見出し（「録音できました」）があるので、上の行の名前は h1 にしない（Ruling 102-3）
-  const header = <FocusHeader screen="S8" title={translator.t('recordTitle')} heading={step.kind !== 'done' || !pack} />;
+  // D67: 見出しは M1 と同じ形（「‹ 戻る」の行 → 大きい見出し＋ⓘ）。完成の画面は見出しが「録音できました」（h1 は 1 つ。Ruling 102-3）
+  const header = <ScreenHeading screen="S8" title={translator.t(step.kind === 'done' && pack ? 'voiceReadyTitle' : 'recordTitle')} info="infoRecord" />;
 
   if (blocked === 'unsupported') {
     // D53: 安全でない接続（http）では iOS が録音の口ごと隠す。ブラウザを替えても録れないので、文は「https で開くと…」に
@@ -365,7 +365,6 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="done">
         {header}
-        <h1 class="dc-heading">{translator.t('voiceReadyTitle')}</h1>
         <NoticeLine alert={alert} />
         <div class="dc-field">
           <div class="dc-field-label" id="dc-s8-name-label">{translator.t('voiceName')}</div>

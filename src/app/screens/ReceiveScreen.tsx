@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { FocusHeader } from '../components/FocusHeader.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -120,7 +120,9 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
   };
 
   // 確認・受け取ったの画面は本文に見出しがあるので、上の行の名前は選ぶ画面でだけ h1（Ruling 102-3）
-  const header = <FocusHeader screen="S10" title={translator.t('receiveTitle')} heading={!plan || step === 'pick'} />;
+  // D67: 見出しは M1 と同じ形。確認・受け取ったの画面は見出しが「このファイルの中身」「受け取りました」（h1 は 1 つ。Ruling 102-3）
+  const header = <ScreenHeading screen="S10" info="infoReceive"
+    title={translator.t(plan && step === 'done' ? 'receivedTitle' : plan && step === 'confirm' ? 'inThisFile' : 'receiveTitle')} />;
 
   if (step === 'done' && plan) {
     const voice = plan.voice?.pack;
@@ -134,7 +136,6 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="done">
         {header}
-        <h1 class="dc-heading">{translator.t('receivedTitle')}</h1>
         <p class="dc-body">
           {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
@@ -160,7 +161,6 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="confirm">
         {header}
-        <h1 class="dc-heading">{translator.t('inThisFile')}</h1>
         {saveFailed && (
           <div class="dc-alert" role="status" data-alert="save-failed">
             <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'saveFailed')}</b></div>

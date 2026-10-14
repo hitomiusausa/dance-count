@@ -48,3 +48,21 @@ export function onPageHidden(listener: () => void): () => void {
     window.removeEventListener('pagehide', listener);
   };
 }
+
+// D66: 開いた小さい箱（ⓘ の説明）を閉じる合図。Esc（keydown）と、画面のどこかを押し始めた時（pointerdown・捕捉段階＝下の物の処理より先）。
+// 戻り値で聞くのをやめる。
+export function onDismissSignals(handlers: { escape(event: KeyboardEvent): void; pointerDown(target: Node | null): void }): () => void {
+  const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') handlers.escape(event); };
+  const onDown = (event: PointerEvent) => handlers.pointerDown(event.target as Node | null);
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('pointerdown', onDown, true);
+  return () => {
+    document.removeEventListener('keydown', onKey);
+    document.removeEventListener('pointerdown', onDown, true);
+  };
+}
+
+// 今フォーカスのある要素（ⓘ の箱の中にあるか見る）
+export function focusedElement(): Element | null {
+  return document.activeElement;
+}

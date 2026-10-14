@@ -33,6 +33,31 @@ button { cursor: pointer; }
 .dc-shell:not([data-tabs]) .dc-screen:not(.dc-screen--dock) { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .dc-heading { font-size: 22px; font-weight: 700; line-height: 1.3; margin: 24px 0 12px; letter-spacing: var(--track); }
 .dc-body { font-size: 18px; margin: 0 0 12px; }
+/* D67: 画面の見出しの行（ScreenHeading）。h1.dc-heading の外の間（上 24・下 12）は行が持つ。ⓘ（D66）は見出しの横・48px の的を上下 -10px で行の高さに収める（行の高さは見出しの 1 行のまま＝ⓘ があっても無くても同じ） */
+.dc-title-row { position: relative; display: flex; align-items: center; gap: 2px; margin: 24px 0 12px; }
+.dc-title-row > .dc-heading { margin: 0; min-width: 0; }
+/* 的は上に 15px・下に 4px はみ出す（上の「‹ 戻る」・下の物との間 8px 以上＝U3）。絵は見出しの字の真ん中の高さ（padding-top 10） */
+.dc-info-button { flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -15px 0 -4px; padding: 10px 0 0; border: none; border-radius: 50%; background: none; color: var(--primary); }
+.dc-info-button[aria-expanded="true"] { background: var(--soft); }
+/* 説明の箱: 見出しの行の下端から重ねて出す（下の物を動かさない）。色は地・文字・枠の札（--surface・--ink・--primary）だけ */
+.dc-info-pop { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; padding: 12px 8px 4px 16px; border: var(--bw) solid var(--primary); border-radius: var(--r);
+  background: var(--surface); color: var(--ink); box-shadow: var(--lift-shadow); }
+.dc-info-pop[hidden] { display: none; }
+.dc-info-text { margin: 0 8px 0 0; font-size: 18px; font-weight: 400; line-height: 1.5; text-wrap: pretty; }
+.dc-info-close { display: flex; align-items: center; gap: 4px; min-height: 48px; margin-left: auto; padding: 0 8px; border: none; background: none; color: var(--primary); font-size: 18px; font-weight: 700; }
+/* 見える高さ 600px 未満（375×548 など）: どの画面の見出しの行も同じに詰める（D67）。上の間 0（「‹ 戻る」の的 48 の字の下の空きが間になる）・下 8・
+   見出し 20px（S1 と同じ）。ⓘ は上へだけはみ出し、「‹ 戻る」と横に 8px 以上離すため見出しの幅を 5 字ぶん以上にする（「配る」は ⓘ との間が空く） */
+@media (max-height: 599px) and (max-width: 1023px) {
+  .dc-title-row { margin: 0 0 8px; align-items: flex-end; }
+  .dc-title-row > .dc-heading { min-width: 5em; font-size: 20px; line-height: 1.2; }
+  .dc-title-row > .dc-info-button { align-self: flex-end; margin: -48px 0 0; padding: 0 0 0; place-items: end center; }
+  .dc-record .dc-language-row { min-height: 56px; }   /* 64 → 56（言葉の 2 択を初期表示に） */
+  /* S9: 名前・声・同意・主ボタンを初期表示に（Ruling 82。見出しの行が増えた分をここで詰める） */
+  .dc-share-heading { margin-top: 4px; }
+  .dc-share .dc-consent { margin-top: 8px; }
+  .dc-share .dc-consent-row { padding-bottom: 4px; }
+  .dc-share [data-group="share-voice"] .dc-radio-row { min-height: 52px; }
+}
 
 /* 下タブ（Ruling 17）。1024px 以上は上部の横並び（Ruling 21） */
 .dc-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: calc(var(--tabh) + env(safe-area-inset-bottom)); display: flex; gap: 8px; padding: 0 8px env(safe-area-inset-bottom);
@@ -406,6 +431,15 @@ button { cursor: pointer; }
    高さは U3 の 48 ではなく 38（375×548 は 36）・間は 6px（[data-tap-compact]＝D64 の例外。ui:check もこの値で見る）。
    語は折らない・はみ出さない（クイック・Seven・Three）: かなは詰め（palt）。スマホ幅（〜479px）は 14px（[data-fineprint]＝U1 の小さい字の下限）、
    それより広い所は 16px。320 幅（〜359px）は 6 列に「クイック」が入らないので 4 列 × 3 段（D64 の妥協） */
+/* D67（ひとみうさ指示 2026-10-14）: 語の画面も見出しは M1 と同じ形（「‹ 戻る」→ 大きい見出し＋ⓘ）。丸・波形・「聞く」・帯を初期表示に残すため、この画面だけ
+   見出しの行の上下の間を 4・0 に（下はチップの段の上の間 8 が区切る）・ⓘ は下にはみ出さない（上へだけ）。スマホ幅では丸を 162 → 138（中の押せる丸 144 → 120・字 20 → 18）・波形の上 16 → 4 */
+.dc-record[data-step="word"] .dc-title-row { margin: 4px 0 0; align-items: flex-end; }
+.dc-record[data-step="word"] .dc-info-button { align-self: flex-end; margin: -48px 0 0; padding: 0 0 2px; place-items: end center; }
+@media (max-width: 1023px) {
+  .dc-record[data-step="word"] .dc-rec-ring { width: 138px; height: 138px; }
+  .dc-record[data-step="word"] .dc-rec { width: 120px; height: 120px; font-size: 18px; }
+  .dc-record[data-step="word"] .dc-take { margin-top: 4px; }
+}
 .dc-record-words { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }   /* 上の「‹ 戻る」との間 8（U3） */
 .dc-record-chip { display: flex; align-items: center; justify-content: center; min-width: 0; height: 38px; padding: 0;
   border: 1.5px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink);
@@ -532,15 +566,19 @@ button { cursor: pointer; }
   .dc-record-slot { margin-bottom: 8px; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行は役目を終えている */
   /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 語のチップ。D64）の場所に重ねる（最終レビュー M3）。
-     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 64px＝上の余白 8＋戻るの行 48＋チップの段の上の間 8（D64） */
+     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 88px＝上の余白 8＋戻るの行 48＋見出しの行（上 0＋20px の 1 行 24）＋チップの段の上の間 8（D64・D67） */
   .dc-record[data-step="word"][data-taken="true"][data-notice] { position: relative; }
   .dc-record[data-taken="true"][data-notice] .dc-record-words { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 64px; left: 16px; right: 16px; min-height: 0; margin: 0; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 88px; left: 16px; right: 16px; min-height: 0; margin: 0; }
   /* 録れた語の録り直しの録音中（D59）: 「約 2 秒で…」も同じく進み具合の行に重ねる（丸を動かさない） */
   .dc-record[data-step="word"][data-taken="true"][data-phase="capture"] { position: relative; }
   .dc-record[data-taken="true"][data-phase="capture"] .dc-record-words { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 64px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 88px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
   .dc-take { margin-top: 4px; padding: 4px 0; }   /* D64: 8 → 4 */
+  /* D67: 語の画面の説明の 1 行の箱の下 8 → 4（見出しの詰め方は下の「見出しの行」の 600px 未満の段） */
+  .dc-record[data-step="word"] .dc-record-slot { margin-bottom: 4px; }
+  .dc-record[data-step="word"] .dc-title-row { margin-bottom: 0; }   /* 下はチップの段の上の間 8 が区切る */
+  .dc-record[data-step="word"] .dc-listen { min-height: 48px; }   /* 56 → 48（U3 の下限） */
 }
 /* S9 配る（Ruling 82）: 名前 → 声 → 同意 → ルーティン → 下固定「ファイルを作る」。押せない理由は近くに 1 行（.dc-hint・.dc-dock-note） */
 .dc-share-heading { margin-top: 16px; }
