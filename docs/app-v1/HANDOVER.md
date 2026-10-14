@@ -6,6 +6,7 @@
 ---
 
 ## 00. いまの本番（2026-10-14 夜）— まずここを読む
+- **2026-10-15 追記: 本番＝ 7df60fc（Version b811a2f3）**。D70（S4 編集の行でも名前を消すと一覧から選び直し・自動のカウントで上書き）と PC の中央ずれ（scrollbar-gutter・700px 以上）を追加。test 727・ui:check 1079。進行中＝枝 `agent/free-1015`（テンポ併記・小節の数え・音量別・教室の掲示物）。お金の方針＝無料＋「応援（チップ）」・将来 App Store（`docs/research/2026-10-15-monetization-plan.md`）
 - **本番 https://count.dancemap.jp ＝ 枝 `agent/cloudflare` 360f7a8（Version 5727e45a）**。`agent/preview-1014` を早送りで本番へ（ひとみうさ「本番に出して」2026-10-14）。プレビュー https://dance-count-preview.hitomiusausa.workers.dev も同じ中身
 - 入ったもの: D62 ロゴ確定版（アイコン余白・起動画面＝二人・丸いコインの待ちの印・扉の絵 案1）／夜間便 B-1〜B-6／D64 録音の 12 語チップ（前のカウント／次のカウント）／D65 フィガー名を消すと行を初期化（自動カウントが入らない穴）／D66 ⓘ／D67 見出し統一／D68 生徒へのひとこと（吹き出し C・男性うさぎ先生・暖色・「先生からのメッセージ」・S5 は副題の代わりに 1 行）／S9 名前・同意なしで押すと案内／D69 S10 声＋ルーティンは「ルーティンを再生する」一本化
 - 関門: test 723・typecheck・ui:check 1065・smoke share/routines/voice/practice・本番を Chrome 375/1280 で開いてコンソールエラー 0・横スクロール 0
