@@ -4,6 +4,7 @@ import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
 import { isFigureSlug } from '../routines/figure-names.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
+import { VOLUME_DEFAULT, clampVolumePercent } from '../practice/volume.ts';
 import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { isVoiceId } from '../voices/ids.ts';
 
@@ -32,6 +33,8 @@ export interface AppSettings {
   metronome: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
+  voiceVolume: number;                      // D73 声の大きさ（0〜100 %・既定 100＝今までと同じ。practice/volume.ts）
+  clickVolume: number;                      // D73 メトロノームの大きさ（同上）
   barCounting: boolean;                     // D72 小節を数える（くわしく。S2・S5 共通・既定オフ。出す種目は practice/bar-count.ts）
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
   hints: {
@@ -57,6 +60,8 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   metronome: true,
   countInBars: 1,
   loop: true,
+  voiceVolume: 100,
+  clickVolume: 100,
   barCounting: false,
   distributorName: '',
   hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false }
@@ -88,6 +93,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
+    voiceVolume: clampVolumePercent(source.voiceVolume) ?? VOLUME_DEFAULT,
+    clickVolume: clampVolumePercent(source.clickVolume) ?? VOLUME_DEFAULT,
     barCounting: source.barCounting === true,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
     hints: {

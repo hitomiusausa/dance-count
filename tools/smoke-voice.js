@@ -276,7 +276,7 @@ try {
 
   // 声のタイミング（Ruling 62）: 早く ×2 → −20 ms。録音の声そのものに保存される。
   await page.locator('summary[data-more]').click();
-  for (let i = 0; i < 2; i += 1) await page.locator('[data-group="voice-offset"] .dc-chip').first().click();
+  for (let i = 0; i < 2; i += 1) await page.locator('[data-voice-offset-buttons] .dc-chip').first().click();
   if ((await page.locator('[data-voice-offset]').textContent())?.trim() !== '−20 ms') errors.push(`voice offset: "${await page.locator('[data-voice-offset]').textContent()}"`);
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();

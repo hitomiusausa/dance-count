@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
@@ -11,6 +12,7 @@ import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
 import { BARS_PER_CYCLE } from './bar-count.ts';
 import { tempoText } from './tempo.ts';
+import { VOLUME_MAX, VOLUME_MIN, VOLUME_STEP } from './volume.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
 import { wakeLockTipKey } from './wake-tip.ts';
 
@@ -182,16 +184,17 @@ function SwitchRow({ id, label, on, onToggle, describedBy, ...rest }: { id: stri
 
 // 声のタイミング（くわしくの最後の行。Ruling 62・D24）。1 行目にラベルと値、2 行目に「‹ 早く」「遅く ›」（320 幅でも横に溢れない）。
 // 端では押せない。スライダーは使わない（10ms を指で合わせられない）。
-export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: number; onStep(direction: -1 | 1): void; idPrefix: string }) {
+// inGroup: S2・S5 では D73 の「音」の束（SoundGroup）の中に入れる（束が U4 の 1 つ。S4 は今までどおり単独の束）
+export function VoiceOffsetRow({ offsetMs, onStep, idPrefix, inGroup = false }: { offsetMs: number; onStep(direction: -1 | 1): void; idPrefix: string; inGroup?: boolean }) {
   const { translator } = useI18n();
   const labelId = `${idPrefix}-voice-offset-label`;
   return (
-    <div class="dc-voice-offset" role="group" aria-labelledby={labelId} data-group="voice-offset">
+    <div class="dc-voice-offset" role="group" aria-labelledby={labelId} data-group={inGroup ? undefined : 'voice-offset'}>
       <div class="dc-field-label" id={labelId}>
         <span>{translator.t('voiceTiming')}</span>
         <span class="dc-offset-value" data-voice-offset>{formatVoiceOffset(offsetMs)}</span>
       </div>
-      <div class="dc-offset-buttons">
+      <div class="dc-offset-buttons" data-voice-offset-buttons>
         <button type="button" class="dc-chip" disabled={!canStep(offsetMs, -1)} onClick={() => onStep(-1)}>
           <Icon name="chev-l" /><span>{translator.t('voiceEarlier')}</span>
         </button>
@@ -200,6 +203,45 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: numbe
         </button>
       </div>
       <div class="dc-offset-hint">{phrased(translator, 'voiceTimingHint')}</div>
+    </div>
+  );
+}
+
+// D73 声とメトロノームの大きさ（くわしく）。2 本のスライダーと声のタイミングを「音」の 1 つの束にする（[data-group="sound"]＝U4 で 1）。
+// 動かしている間は再生を止めずにすぐ効き（onPreview）、指を離した・キーを放した時に端末へ残す（onCommit）。
+export type VolumeKind = 'voice' | 'click';
+const VOLUME_LABEL: Record<VolumeKind, MessageKey> = { voice: 'voiceVolume', click: 'clickVolume' };
+
+export function SoundGroup({ idPrefix, volumes, onPreview, onCommit, children }: {
+  idPrefix: string; volumes: Record<VolumeKind, number>;
+  onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void; children?: ComponentChildren;
+}) {
+  return (
+    <div class="dc-sound" data-group="sound">
+      {(['voice', 'click'] as const).map(kind => (
+        <VolumeSlider key={kind} id={`${idPrefix}-${kind}-volume`} kind={kind} percent={volumes[kind]} onPreview={onPreview} onCommit={onCommit} />
+      ))}
+      {children}
+    </div>
+  );
+}
+
+function VolumeSlider({ id, kind, percent, onPreview, onCommit }: {
+  id: string; kind: VolumeKind; percent: number; onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void;
+}) {
+  const { translator } = useI18n();
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? percent;
+  const valueText = translator.t('volumePercent', { percent: shown });
+  return (
+    <div class="dc-volume" data-volume={kind}>
+      <div class="dc-field-label">
+        <span id={`${id}-label`}>{translator.t(VOLUME_LABEL[kind])}</span>
+        <span data-volume-value>{valueText}</span>
+      </div>
+      <input id={id} aria-labelledby={`${id}-label`} type="range" min={VOLUME_MIN} max={VOLUME_MAX} step={VOLUME_STEP} value={shown} aria-valuetext={valueText}
+        onInput={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(value); onPreview(kind, value); }}
+        onChange={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(null); onCommit(kind, value); }} />
     </div>
   );
 }

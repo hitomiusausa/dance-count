@@ -58,6 +58,14 @@ export function effectiveVoiceOffsetMs(globalOffsetMs = 0, wordOffsetsMs = {}, v
   return global + word;
 }
 
+// D73 声とメトロノームの大きさ: 0〜1 の倍率（既定 1＝今までの大きさ）。それぞれ 1 本の出口（GainNode）にまとめて掛ける。
+// 予約・時刻には触らない（出口の倍率だけ。鳴っている最中に変えても予約し直さない）。
+export function clampVolume(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 1;
+  return Math.min(1, Math.max(0, number));
+}
+
 export class PracticeAudioEngine {
   // displayLatencySeconds: 画面のハイライトだけを遅らせる秒数（Bluetooth の outputLatency。Ruling 29）。
   // frame() の経過時間にだけ効き、予約（scheduleAhead・scheduleClick・start の戻り値）には使わない。
@@ -69,6 +77,30 @@ export class PracticeAudioEngine {
     this.lookaheadSeconds = lookaheadSeconds;
     this.sources = new Set();
     this.playing = false;
+    this.volumes = { voice: 1, click: 1 };
+    this.buses = null;
+  }
+
+  // 声・メトロノームの出口（最初に鳴らす時に 1 回だけ作る。同じ AudioContext ではエンジンを使い回す）
+  ensureBuses() {
+    if (this.buses) return this.buses;
+    const voice = this.audioContext.createGain();
+    const click = this.audioContext.createGain();
+    voice.gain.value = this.volumes.voice;
+    click.gain.value = this.volumes.click;
+    voice.connect(this.audioContext.destination);
+    click.connect(this.audioContext.destination);
+    this.buses = { voice, click };
+    return this.buses;
+  }
+
+  // 鳴っている最中でもすぐ効く（出口の倍率を替えるだけ）
+  setVolumes({ voice = this.volumes.voice, click = this.volumes.click } = {}) {
+    this.volumes = { voice: clampVolume(voice), click: clampVolume(click) };
+    if (this.buses) {
+      this.buses.voice.gain.value = this.volumes.voice;
+      this.buses.click.gain.value = this.volumes.click;
+    }
   }
 
   setVoicePack(voicePack) {
@@ -86,9 +118,12 @@ export class PracticeAudioEngine {
     rangeStartTick = 0,
     rangeEndTick = compiled.durationTicks,
     tempo,
-    barCounting = false
+    barCounting = false,
+    voiceVolume,
+    clickVolume
   }) {
     this.stop();
+    if (voiceVolume !== undefined || clickVolume !== undefined) this.setVolumes({ voice: voiceVolume, click: clickVolume });
     if (!this.voicePack) throw new Error('Voice pack is not loaded');
     if (!(rangeStartTick >= 0 && rangeEndTick > rangeStartTick && rangeEndTick <= compiled.durationTicks)) {
       throw new RangeError('Invalid playback range');
@@ -101,6 +136,7 @@ export class PracticeAudioEngine {
       throw new Error('beat-map tempo is not supported by the playback engine yet');
     }
     tempo ??= constantTempo(bpm);
+    this.ensureBuses();   // 検査（範囲・テンポ）の後に作る（エラーの順番を変えない）
     const beatSeconds = tempo.tickToSeconds(TICKS_PER_BEAT);
     const patternStartTime = this.audioContext.currentTime + 0.12 + countInBeats * beatSeconds;
     const countInStartTime = patternStartTime - countInBeats * beatSeconds;
@@ -199,6 +235,7 @@ export class PracticeAudioEngine {
       const voiceKey = spoken(event, iteration);
       const source = scheduleVoiceEvent({
         audioContext: this.audioContext,
+        destination: this.ensureBuses().voice,
         voicePack: this.voicePack,
         event: voiceKey === event.voiceKey ? event : { ...event, voiceKey },
         targetTime,
@@ -215,7 +252,7 @@ export class PracticeAudioEngine {
     oscillator.frequency.value = accent ? 1320 : 880;
     gain.gain.setValueAtTime(accent ? 0.18 : 0.10, time);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.035);
-    oscillator.connect(gain).connect(this.audioContext.destination);
+    oscillator.connect(gain).connect(this.ensureBuses().click);
     oscillator.start(time);
     oscillator.stop(time + 0.04);
     this.trackSource(oscillator);

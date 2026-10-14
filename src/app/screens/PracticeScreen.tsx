@@ -5,12 +5,13 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
 import { barCountingAvailable } from '../practice/bar-count.ts';
 import { tempoText } from '../practice/tempo.ts';
+import { volumeGain } from '../practice/volume.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -46,7 +47,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), clickVolume: volumeGain(next.clickVolume), barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -82,6 +83,16 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     latest.current.voice = result.voice;
     if (Object.keys(result.patch).length > 0) change(result.patch);
     else if (isPlaying()) void start(latest.current.settings);
+  };
+
+  // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
+  const volumeKey = (kind: VolumeKind) => (kind === 'voice' ? 'voiceVolume' : 'clickVolume') as 'voiceVolume' | 'clickVolume';
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  const commitVolume = (kind: VolumeKind, percent: number) => {
+    const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
+    latest.current.settings = { ...latest.current.settings, ...patch };
+    update(patch);
+    session.setVolumes({ [kind]: volumeGain(percent) });
   };
 
   const togglePlay = () => {
@@ -138,7 +149,9 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
             <PlaySwitches idPrefix="dc-s2" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
               barCounting={barCountingAvailable(danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
-            <VoiceOffsetRow idPrefix="dc-s2" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume, click: settings.clickVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <VoiceOffsetRow idPrefix="dc-s2" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            </SoundGroup>
           </MoreOptions>
         </div>
       </div>

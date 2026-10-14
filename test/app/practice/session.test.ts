@@ -397,3 +397,14 @@ test('D72: bar counting reaches the engine (off unless asked) and the bar number
   h.session.stop();
   assert.equal(h.session.current.bar, null);
 });
+
+test('D73: volumes reach the engine at start (default 1) and can change while playing without a restart', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  assert.deepEqual([h.starts[0]!.voiceVolume, h.starts[0]!.clickVolume], [1, 1]);
+  await h.session.play({ ...WALTZ, voiceVolume: 0.25, clickVolume: 0 });
+  assert.deepEqual([h.starts[1]!.voiceVolume, h.starts[1]!.clickVolume], [0.25, 0]);
+  h.session.setVolumes({ voice: 0.5 });
+  assert.equal(h.starts.length, 2, 'no restart');
+  assert.equal(h.session.current.playing, true);
+});

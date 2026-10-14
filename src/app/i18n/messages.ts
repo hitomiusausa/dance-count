@@ -63,6 +63,9 @@ export const APP_MESSAGES = {
     barCounting: 'Count the bars',                                   // D72
     barCountingHint: 'At the start of each bar, says the bar number (1–{total}) instead of “1”.',
     barOfCycle: 'Bar {bar} / {total}',
+    voiceVolume: 'Voice volume',                                     // D73
+    clickVolume: 'Metronome volume',
+    volumePercent: '{percent}%',
     play: 'Play',
     stop: 'Stop',
     nowCount: 'Now: {count}',
@@ -401,6 +404,9 @@ export const APP_MESSAGES = {
     barCounting: '小節を数える',
     barCountingHint: '小節の頭の「1」を、小節の番号（1〜{total}）で言います。',
     barOfCycle: '{bar} / {total} 小節',
+    voiceVolume: '声の大きさ',
+    clickVolume: 'メトロノームの大きさ',
+    volumePercent: '{percent}%',
     play: '再生',
     stop: '停止',
     nowCount: 'いま {count}',

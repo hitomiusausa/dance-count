@@ -14,6 +14,8 @@ interface CommonOptions {
   metronome: boolean;
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
+  voiceVolume?: number;        // D73 声の倍率 0〜1（画面が practice/volume.ts の volumeGain で直して渡す。省略＝1）
+  clickVolume?: number;        // D73 メトロノームの倍率 0〜1
   barCounting?: boolean;       // D72 小節を数える（画面が barCountingAvailable で絞って渡す。省略＝オフ）
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
   voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
@@ -80,6 +82,7 @@ export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
+  setVolumes?(volumes: { voice?: number; click?: number }): void;   // D73: 鳴っている最中でも止めずに効く
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -152,6 +155,11 @@ export class PracticeSession<A extends AudioLike, V> {
     this.update({ ...IDLE_VIEW, notice: this.view.notice });
   }
 
+  // D73: 大きさのスライダー。再生を止めずにエンジンの出口の倍率だけを替える（次の ▶ は options の値で始まる）
+  setVolumes(volumes: { voice?: number; click?: number }): void {
+    this.engine?.setVolumes?.(volumes);
+  }
+
   dismissNotice(): void {
     this.update({ ...this.view, notice: 'none' });
   }
@@ -201,7 +209,9 @@ export class PracticeSession<A extends AudioLike, V> {
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,
         wordOffsetsMs: wordOffsetsFor(options.voice),
-        barCounting: options.barCounting === true
+        barCounting: options.barCounting === true,
+        voiceVolume: options.voiceVolume ?? 1,
+        clickVolume: options.clickVolume ?? 1
       });
     } catch {
       void lockPromise.then(lock => lock?.release());
