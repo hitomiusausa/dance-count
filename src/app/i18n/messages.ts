@@ -211,8 +211,8 @@ export const APP_MESSAGES = {
     recordCueNow: 'Now!',   // 合図の最後（D59）
     recordAutoStop: 'Stops automatically in about 2 seconds',   // 2 秒＝TAKE_MS（platform/recorder.ts）
     listenTake: 'Play',
-    previousWord: 'Previous',
-    nextWord: 'Next',
+    previousWord: 'Previous count',
+    nextWord: 'Next count',
     finishRecording: 'Finish',
     noVoiceHeard: "We couldn't hear your voice. Please record again.",
     micDenied: 'The microphone is turned off for this app.',
@@ -518,8 +518,8 @@ export const APP_MESSAGES = {
     recordCueNow: '今！',   // 合図の最後（D59）
     recordAutoStop: '約\u00A02\u00A0秒で自動で止まります',   // 2 秒＝TAKE_MS（platform/recorder.ts）
     listenTake: '聞く',
-    previousWord: '前の語',
-    nextWord: '次へ',
+    previousWord: '前のカウント',
+    nextWord: '次のカウント',
     finishRecording: '完成へ',
     noVoiceHeard: '声が入っていませんでした。もう一度録音してください。',
     micDenied: 'マイクが使えない設定になっています。',
