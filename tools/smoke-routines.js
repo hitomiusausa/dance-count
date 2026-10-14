@@ -417,6 +417,32 @@ try {
   await autoForm2.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ヘジテーションチェンジ$/ }).click();
   // 前は隠れた欄に 123123（ナチュラルターンで打った値）が残り、自動では入らず印も出なかった。今は前に使った／監修済みのカウントと印が入る
   if (await autoForm2.locator('[data-auto-counts]').count() !== 1) errors.push(`D65: after clearing the name, picking ヘジテーションチェンジ should auto-fill its counts with the note ("${await autoForm2.locator('.dc-input--counts').inputValue()}")`);
+  // D70（ひとみうさ承認 2026-10-15）: 既存の行（2 行目のウィスク 12&3）を開く → 名前の下に「名前を消すと、一覧から選び直せます。」→
+  // Backspace で名前を全部消すと追加の行と同じ一覧（カウントの欄は隠れる）→ 一覧の「ウィーブ フロム PP」で欄が上書きされ印が出る →「決定」で行が変わる。
+  // もう一度開いて名前を消し、自動のカウントが無い名前を打つと、カウントはそのまま
+  await autoPage.locator('.dc-figure-head').nth(1).click();   // 追加の行（ヘジテーションチェンジ）は原則どおり確定して閉じる
+  const editForm = autoPage.locator('.dc-figure-form').last();
+  const repickHint = (await editForm.locator('[data-repick-hint]').textContent().catch(() => null))?.trim();
+  if (repickHint !== '名前を消すと、一覧から選び直せます。') errors.push(`D70: the open edit row should show the repick hint under the name ("${repickHint}")`);
+  const editCountsBefore = await editForm.locator('.dc-input--counts').inputValue();
+  await editForm.locator('input').nth(0).click();
+  await autoPage.keyboard.press('End');
+  for (let i = 0; i < 'ウィスク'.length; i += 1) await autoPage.keyboard.press('Backspace');
+  const editChoices = await editForm.locator('[data-group="figure-names"][data-catalog] .dc-chip').count();
+  if (editChoices !== 17) errors.push(`D70: clearing the name on an edit row should list the 17 waltz figures (${editChoices})`);
+  if (await editForm.locator('.dc-input--counts').count()) errors.push('D70: the counts field should hide while the edit row name is empty');
+  await editForm.locator('[data-group="figure-names"] .dc-chip', { hasText: /^ウィーブ フロム PP$/ }).click();
+  const editCountsAfter = await editForm.locator('.dc-input--counts').inputValue();
+  if (editCountsAfter === editCountsBefore || await editForm.locator('[data-auto-counts]').count() !== 1) errors.push(`D70: picking ウィーブ フロム PP on an edit row should overwrite ${editCountsBefore} with its counts and show the note ("${editCountsAfter}")`);
+  await editForm.locator('.dc-primary').click();
+  const editRows = await autoPage.locator('.dc-figure-head').allTextContents();
+  if (!editRows[1]?.includes('ウィーブ フロム PP') || !editRows[1].includes([...editCountsAfter].join(' '))) errors.push(`D70: "Done" should save ウィーブ フロム PP ${editCountsAfter} on the 2nd row (${JSON.stringify(editRows)})`);
+  await autoPage.locator('.dc-figure-head').nth(1).click();
+  const editForm2 = autoPage.locator('.dc-figure-form').last();
+  await editForm2.locator('input').nth(0).fill('');
+  await editForm2.locator('input').nth(0).fill('わたしのステップ');
+  if ((await editForm2.locator('.dc-input--counts').inputValue()) !== editCountsAfter) errors.push(`D70: a name without auto counts should keep the row's counts ${editCountsAfter} ("${await editForm2.locator('.dc-input--counts').inputValue()}")`);
+  if (await editForm2.locator('[data-auto-counts]').count()) errors.push('D70: the auto note should go away for a name without auto counts');
   await autoContext.close();
 
   // 同じフィガーなら同じ名前（D22）: 英語表示で、日本語の「ウィスク」が入っているルーティン（waltz13 の 4 行目）の追加の行 →
@@ -612,4 +638,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5 and the cover's last practice resumes it (B-1), deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);
+console.log(`routines smoke OK: name kept on back, created by taps, invalid counts blocked, dragged (lifted row follows the finger) and undone, survives reload, plays in S5 and the cover's last practice resumes it (B-1), deleted, allowed symbols always shown, same name adds a copy (notice under the name, counts hidden and kept), bar notes inform without blocking, count patterns fill the counts, a pattern on a shared name updates all and undoes as one, an empty add row lists the dance's figures and a tap fills the name, hiragana finds katakana names, an English "Whisk" from the list joins the Japanese ウィスク row as a copy (D22), a figure used in another routine fills its counts with a note and typed counts are kept (D52), an open edit row hints the list, lists the figures when its name is cleared and a re-picked figure overwrites the counts with a note (D70), the dock hides only while the keyboard is open (faked visualViewport) and comes back when it closes, a drag with the keyboard open does not run away, the dock stays while playing, the first save asks the device to keep the data, a valid open row is saved when the page is hidden and a name-only row stays open as typed, "Delete all data" empties the device and opens a fresh S1; ${webkitNote}`);

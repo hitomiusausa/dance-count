@@ -78,7 +78,7 @@ test('page hidden: only a valid open row is committed; an incomplete row stays o
   e.openRow(0);
   e.setDraft({ counts: '12a3' });               // 編集の行の無効な打ち替えは元に戻さない
   assert.equal(e.closeIfValid(), false);
-  assert.deepEqual(e.open, { kind: 'edit', index: 0, draft: { name: 'ナチュラルターン', counts: '12a3' } });
+  assert.deepEqual(e.open, { kind: 'edit', index: 0, draft: { name: 'ナチュラルターン', counts: '12a3' }, auto: null, autoFrom: null, countsFor: 'ナチュラルターン' });
   assert.equal(e.routine.figures[0]!.counts, '123');
 
   e.openAdd();
@@ -230,7 +230,7 @@ test('up / down with an invalid draft drops the draft, moves the stored figure, 
   e.setDraft({ counts: '12a3' });
   assert.equal(e.moveOpen(1), true);
   assert.deepEqual(names(e), ['B:123', 'A:123', 'C:123']);
-  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'A', counts: '123' } });
+  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'A', counts: '123' }, auto: null, autoFrom: null, countsFor: 'A' });
 });
 
 test('duplicate with an invalid draft drops the draft, copies the stored figure below, and the original row stays open', () => {
@@ -239,7 +239,7 @@ test('duplicate with an invalid draft drops the draft, copies the stored figure 
   e.setDraft({ counts: '12a3' });
   assert.equal(e.duplicateOpen(), true);
   assert.deepEqual(names(e), ['A:123', 'B:123', 'B:123', 'C:123']);
-  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'B', counts: '123' } });
+  assert.deepEqual(e.open, { kind: 'edit', index: 1, draft: { name: 'B', counts: '123' }, auto: null, autoFrom: null, countsFor: 'B' });
 });
 
 // Ruling 50（D13）: 名前の仲間に入る時はその仲間のカウントを受け取る。仲間のカウントを変える時は仲間ごと変わる。
@@ -447,15 +447,16 @@ test('formLayout shows the name list only on an add row with an empty name in a 
   e.setDraft({ name: 'ウィスク' });
   assert.deepEqual(layout(e), { countsShown: false, namePicker: false, sameName: 'copy' });
   e.openRow(0);
-  e.setDraft({ name: '' }); // 編集の行では名前を空にしても一覧は出さない
-  assert.deepEqual(layout(e), { countsShown: true, namePicker: false, sameName: null });
+  e.setDraft({ name: '' }); // 編集の行も名前を空にすると一覧（D70・ひとみうさ承認 2026-10-15）
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: true, sameName: null });
   // ヴィエニーズワルツは一覧が無いので、名前が空でも最初からカウントの欄を出す
   const vw = new RoutineEditor(createRoutine({ id: 'r-bbbbbbbb', danceId: 'vwaltz', name: 'VW', now: NOW }), () => 'f-vw000000');
   vw.openAdd();
   assert.deepEqual(layout(vw), { countsShown: true, namePicker: false, sameName: null });
   // 純粋関数としても: 同じ入力で同じ答え
   assert.deepEqual(formLayout({ action: 'add', reason: null }, { kind: 'add', nameEmpty: true, hasCatalog: false }), { countsShown: true, namePicker: false, sameName: null });
-  assert.deepEqual(formLayout({ action: 'done', reason: null }, { kind: 'edit', nameEmpty: true, hasCatalog: true }), { countsShown: true, namePicker: false, sameName: null });
+  assert.deepEqual(formLayout({ action: 'done', reason: null }, { kind: 'edit', nameEmpty: true, hasCatalog: true }), { countsShown: false, namePicker: true, sameName: null });
+  assert.deepEqual(formLayout({ action: 'done', reason: null }, { kind: 'edit', nameEmpty: true, hasCatalog: false }), { countsShown: true, namePicker: false, sameName: null });
 });
 
 // Ruling 54 (f) は D65（ひとみうさ 2026-10-14）で読み替え: 名前を消して一覧に戻ると、隠れたカウントも捨てて最初の行に戻る。
@@ -688,13 +689,70 @@ test('auto counts: switching from an auto-filled name into the copy form clears 
   assert.equal(e.open?.draft.counts, '1&23');
 });
 
-test('auto counts: edit rows never auto-fill (Ruling 107-1)', () => {
-  const { e, calls } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '123']]);
+// --- D70（ひとみうさ承認 2026-10-15）: 編集の行で名前を消すと一覧から選び直せる。選び直したフィガーに自動のカウントがあれば上書き ---
+const editAuto = (e: RoutineEditor) => (e.open?.kind === 'edit' ? [e.open.draft.counts, e.open.auto, e.autoNote()] : undefined);
+
+test('D70: clearing the name on an edit row shows the list but keeps the counts (unlike D65 on the add row)', () => {
+  const { e, calls } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '1&23']]);
   e.openRow(1);
-  e.setDraft({ counts: '' });
+  e.setDraft({ name: '' });
+  assert.deepEqual(layout(e), { countsShown: false, namePicker: true, sameName: null });
+  assert.equal(e.open?.draft.counts, '1&23');
+  assert.deepEqual(calls, []);
+  // 自動のカウントが無い名前を選び直すと、元のカウントのまま
+  e.setDraft({ name: '私の新しいステップ' });
+  assert.deepEqual(editAuto(e), ['1&23', null, null]);
+  assert.equal(layout(e).countsShown, true);
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', '私の新しいステップ:1&23']);
+});
+
+test('D70: picking a figure with reviewed counts overwrites the counts (even typed ones) and shows the note', () => {
+  const { e } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '123']]);
+  e.openRow(1);
+  e.setDraft({ counts: '1&23' });          // 先に打っていても上書き（ひとみうさが上書きを選んだ）
+  e.setDraft({ name: '' });
+  e.setDraft({ name: 'シャッセフロムPP' });
+  assert.deepEqual(editAuto(e), ['12&3', '12&3', 'reviewed']);
+  assert.equal(e.decide(), true);
+  assert.deepEqual(names(e), ['ナチュラルターン:123', 'シャッセフロムPP:12&3']);
+});
+
+test('D70: history counts fill too; a later name without auto counts keeps the current counts and drops the note', () => {
+  const { e } = autoEditor([['ナチュラルターン', '123'], ['私のステップ', '123']]);
+  e.openRow(1);
   e.setDraft({ name: 'ウィスク' });
-  assert.equal(e.open?.draft.counts, '');
-  assert.equal(e.autoNote(), null);
+  assert.deepEqual(editAuto(e), ['12&3', '12&3', 'history']);
+  e.setDraft({ name: '私の新しいステップ' });
+  assert.deepEqual(editAuto(e), ['12&3', null, null]);
+  e.setDraft({ counts: '123' });           // カウントを触ると印は消える
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.deepEqual(editAuto(e), ['123', '123', 'reviewed']);
+});
+
+test('D70: re-picking the same figure (or its other spelling) never overwrites', () => {
+  const { e, calls } = autoEditor([['ナチュラルターン', '123'], ['クローズドチェンジ', '1&23']]);
+  e.openRow(1);
+  e.setDraft({ name: '' });
+  e.setDraft({ name: 'クローズドチェンジ' });   // 元の名前を選び直す
+  assert.deepEqual(editAuto(e), ['1&23', null, null]);
+  e.setDraft({ name: 'クローズドチェン' });     // 一文字消して打ち直しても同じ
+  e.setDraft({ name: 'クローズドチェンジ' });
+  assert.deepEqual(editAuto(e), ['1&23', null, null]);
+  e.setDraft({ name: 'シャッセフロムPP' });      // 別のフィガーへ → 上書き
+  e.setDraft({ counts: '123' });
+  e.setDraft({ name: '' });
+  e.setDraft({ name: 'シャッセフロムPP' });      // 上書きしたフィガーを選び直しても、打った値はそのまま
+  assert.deepEqual(editAuto(e), ['123', null, null]);
+  assert.deepEqual(calls, ['クローズドチェン', 'シャッセフロムPP']);
+});
+
+test('D70: renaming into another row of this routine is left to "Use that count" (D19), not auto counts', () => {
+  const { e, calls } = autoEditor([['ウィスク', '1&23'], ['私のステップ', '123']]);
+  e.openRow(1);
+  e.setDraft({ name: 'ウィスク' });
+  assert.equal(e.check().action, 'matchCounts');
+  assert.deepEqual(editAuto(e), ['123', null, null]);
   assert.deepEqual(calls, []);
 });
 

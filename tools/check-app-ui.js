@@ -199,7 +199,18 @@ const STATES = [
   { name: 'S4 新規・種目選択', hash: '#/routines/new', screen: 'S4', kind: 'focus', ops: 1, total: 1 },
   { name: 'S4 0件', hash: `#/routines/${R.empty.id}/edit`, screen: 'S4', kind: 'focus', seed: SEEDED, ops: 3, total: 3 },
   { name: 'S4 13件・閉', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 5 },
-  { name: 'S4 13件・行を開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-figure-head >> nth=2' }], total: 8, patterns: 8, pressed: 1 },
+  // D70（ひとみうさ承認 2026-10-15）: 開いた編集の行には名前の欄の下に「名前を消すと、一覧から選び直せます。」（.dc-hint・操作は増えない＝total 8 のまま）
+  { name: 'S4 13件・行を開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, steps: [{ click: '.dc-figure-head >> nth=2' }], total: 8, patterns: 8, pressed: 1,
+    present: ['[data-repick-hint]'], textKeys: ['clearNameToRepick'] },
+  // D70: 編集の行で名前を消すと追加の行と同じ一覧（カウントの欄・使える文字・形は隠れ、「決定」は押せない）。ヒントは名前が空の間は出さない。
+  // total 9（上限ちょうど）＝開いた行の 8 ＋ figure-names（形のグループは主ボタンがあるので残る）
+  { name: 'S4 編集の行・名前を消した', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 9, absent: ['[data-repick-hint]'],
+    nameChoices: { count: 17, heading: 'ワルツのフィガー（17）', first: 'クローズドチェンジ' },
+    steps: [{ click: '.dc-figure-head >> nth=2' }, { fill: ['.dc-figure-form input >> nth=0', ''] }] },
+  // D70: 一覧から監修済みのフィガー（17 番目・12&3）を選び直す → 前のカウントを上書きして「目安のカウントです」・「決定」が押せる
+  { name: 'S4 編集の行・選び直した', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, total: 8, patterns: 8, pressed: 1,
+    autoFilled: { from: 'reviewed', counts: '12&3', name: 'フォーラウェイリバース＆スリップピボット' }, textKeys: ['countsFromReviewed', 'clearNameToRepick'],
+    steps: [{ click: '.dc-figure-head >> nth=2' }, { fill: ['.dc-figure-form input >> nth=0', ''] }, { click: '[data-group="figure-names"] .dc-chip >> nth=16' }] },
   { name: 'S4 13件・くわしく開', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, openMore: true, total: 8 },
   { name: 'S4 不正カウント', hash: S4_13, screen: 'S4', kind: 'focus', seed: SEEDED, invalidCounts: true, patterns: 8, pressed: 0,
     steps: [{ click: '.dc-add-tail' }, { fill: ['.dc-figure-form input >> nth=0', 'コントラチェック'] }, { fill: ['.dc-figure-form input >> nth=1', '12a3'] }] },

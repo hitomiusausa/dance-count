@@ -14,8 +14,11 @@ import type { Routine, RoutineFigure } from './routine.ts';
 // 変更した操作は true を返す（画面はその時だけ保存する）。
 export interface FigureDraft { name: string; counts: string }
 // 追加の行の auto（D52・Ruling 107-2）: 最後に自動で入れたカウント（手を付けていなければ draft.counts と同じ）。autoFrom はその出どころ（印の文言）。
-// setDraft({ counts }) が来たら null（手打ちも形のチップも「自分で決めた」）。編集の行には無い（自動入力しない）。
-export type OpenRow = { kind: 'edit'; index: number; draft: FigureDraft } | { kind: 'add'; draft: FigureDraft; auto: string | null; autoFrom: AutoCountsFrom | null };
+// setDraft({ counts }) が来たら null（手打ちも形のチップも「自分で決めた」）。
+// 編集の行（D70・ひとみうさ承認 2026-10-15）にも auto がある。countsFor は今のカウントがどのフィガーの分か（開いた時は元の名前、
+// 自動で入れたらその名前）。名前がこれと違うフィガーに変わった時だけ自動のカウントで上書きする（同じ名前を選び直しても上書きしない）。
+export type OpenRow = { kind: 'edit'; index: number; draft: FigureDraft; auto: string | null; autoFrom: AutoCountsFrom | null; countsFor: string }
+  | { kind: 'add'; draft: FigureDraft; auto: string | null; autoFrom: AutoCountsFrom | null };
 // 画面が RoutineEditor に渡す口（D52・Ruling 107-7）。画面が端末のルーティンと今のルーティンの ID を閉じ込めて渡す（editor は routines を知らない）。
 export interface RoutineEditorOptions { autoCounts?: (name: string) => AutoCounts | null }
 export type DraftReason = CountsProblem | 'sameName' | 'name' | null;
@@ -35,14 +38,15 @@ export interface DraftCheck { valid: boolean; counts: string; reason: DraftReaso
 //   同じ名前でなくなれば欄ごと元に戻る。
 // - sameName: 同じ名前の注意を名前の欄のすぐ下に出す形。'copy'＝追加の行（複製元の「名前（カウント）」＋名前を変える道の一言）、
 //   'match'＝編集の行で既存の名前に打ち替えた時（「カウントを合わせる」。文は今のまま、位置だけ名前の欄の下）。
-// - namePicker（D20・Ruling 54-2・3）: 追加の行で名前が空（空白だけも空）かつ種目に照合済みの名前がある（VW は無い）時だけ true＝
+// - namePicker（D20・Ruling 54-2・3）: 名前が空（空白だけも空）かつ種目に照合済みの名前がある（VW は無い）時だけ true＝
 //   名前の欄の下にその種目の照合済みフィガー全部を並べ、カウントの欄・使える文字・カウントの形は出さない（名前が先。名前が入った瞬間に
-//   同じ場所へ欄と形が出る）。編集の行では名前を空にしても出さない。打っていたカウントは draft に残る（複製の形と同じ）。
+//   同じ場所へ欄と形が出る）。編集の行も同じ（D70・ひとみうさ承認 2026-10-15。名前を消すと一覧から選び直せる）。
+//   追加の行は名前を消すと最初の空の行に戻る（D65）が、編集の行はカウントを draft に残す（名前を消しただけで元のカウントを失わない）。
 export interface FormLayout { countsShown: boolean; namePicker: boolean; sameName: 'copy' | 'match' | null }
 export interface FormContext { kind: OpenRow['kind']; nameEmpty: boolean; hasCatalog: boolean }
 export function formLayout(check: Pick<DraftCheck, 'action' | 'reason'>, context: FormContext): FormLayout {
   const copy = check.action === 'addCopy';
-  const namePicker = context.kind === 'add' && context.nameEmpty && context.hasCatalog;
+  const namePicker = context.nameEmpty && context.hasCatalog;
   return { countsShown: !copy && !namePicker, namePicker, sameName: check.reason !== 'sameName' ? null : copy ? 'copy' : 'match' };
 }
 
@@ -112,7 +116,7 @@ export class RoutineEditor {
     const changed = this.close();
     const figure = this.routine.figures[index];
     if (!figure) return changed;
-    this.open = { kind: 'edit', index, draft: { name: figure.name, counts: figure.counts } };
+    this.open = this.editRow(index);
     this.moreOpen = false;
     return changed;
   }
@@ -131,7 +135,7 @@ export class RoutineEditor {
     const previous = this.open;
     const draft = { ...previous.draft, ...patch };
     draft.name = draft.name.slice(0, FIGURE_NAME_MAX);
-    if (previous.kind === 'edit') { this.open = { ...previous, draft }; return; }
+    if (previous.kind === 'edit') { this.open = this.editDraft(previous, draft, patch); return; }
     // 追加の行（D52・Ruling 107）: カウントを触ったら以後この行では自動入力しない（空に戻せばまた入る）。
     if (patch.counts !== undefined) { this.open = { ...previous, draft, auto: null, autoFrom: null }; return; }
     // 名前を消して種目のフィガーの一覧（formLayout の namePicker）に戻ったら、最初に開いた時と同じ空の行に戻す（ひとみうさ 2026-10-14）。
@@ -161,10 +165,25 @@ export class RoutineEditor {
     this.open = { ...previous, draft, auto, autoFrom };
   }
 
-  // カウント欄の下の印（D52・Ruling 108-3）。追加の行で自動入力した値に手を付けていない間だけ、その出どころ。
+  // 編集の行（D70・ひとみうさ承認 2026-10-15）: 名前が countsFor と違うフィガーに変わり、そのフィガーに自動のカウント（D52 の照合表・履歴）が
+  // あれば、打っていたカウントがあっても上書きする（ひとみうさが上書きを選んだ）。無ければ今のカウントのまま（印だけ消す）。
+  // 名前を消しただけではカウントは変えない（D65 の追加の行と違い、元のカウントを失わない）。同じルーティンの同じ名前は D19 の
+  // 「カウントを合わせる」が受け持つ（自動では引かない）。カウントを触ったら印は消す（追加の行と同じ）。
+  private editDraft(previous: Extract<OpenRow, { kind: 'edit' }>, draft: FigureDraft, patch: Partial<FigureDraft>): OpenRow {
+    if (patch.counts !== undefined) return { ...previous, draft, auto: null, autoFrom: null };
+    if (patch.name === undefined || draft.name.trim() === '' || this.identity(draft.name) === this.identity(previous.draft.name)) {
+      return { ...previous, draft };
+    }
+    if (this.identity(draft.name) === this.identity(previous.countsFor)) return { ...previous, draft };
+    const found = this.lookupAutoCounts && !this.sameName(draft.name, previous.index) ? this.lookupAutoCounts(draft.name) : null;
+    if (!found) return { ...previous, draft, auto: null, autoFrom: null };
+    return { ...previous, draft: { ...draft, counts: found.counts }, auto: found.counts, autoFrom: found.from, countsFor: draft.name };
+  }
+
+  // カウント欄の下の印（D52・Ruling 108-3・D70）。自動入力した値に手を付けていない間だけ、その出どころ。
   autoNote(): AutoCountsFrom | null {
     const open = this.open;
-    if (open?.kind !== 'add' || open.auto === null || open.draft.counts !== open.auto) return null;
+    if (!open || open.auto === null || open.draft.counts !== open.auto) return null;
     return open.autoFrom;
   }
 
@@ -219,7 +238,7 @@ export class RoutineEditor {
   matchCounts(): boolean {
     if (this.open?.kind !== 'edit') return false;
     const { action, same } = this.check();
-    if (action === 'matchCounts' && same) this.open = { ...this.open, draft: { name: same.name, counts: same.counts } };
+    if (action === 'matchCounts' && same) this.open = { ...this.open, draft: { name: same.name, counts: same.counts }, auto: null, autoFrom: null };
     return false;
   }
 
@@ -246,7 +265,7 @@ export class RoutineEditor {
     const target = index + delta;
     if (target < 0 || target >= this.routine.figures.length) return committed;
     this.edits.moveFigure(index, target);
-    this.open = { kind: 'edit', index: target, draft: this.draftOf(target) };  // 行は動かしたフィガーについて行く
+    this.open = this.editRow(target);  // 行は動かしたフィガーについて行く
     return true;
   }
 
@@ -255,7 +274,7 @@ export class RoutineEditor {
     const { index } = this.open;
     this.commitKeepingOpen();
     this.edits.duplicateFigure(index, this.newFigureId(), '');
-    this.open = { kind: 'edit', index, draft: this.draftOf(index) };
+    this.open = this.editRow(index);
     return true;
   }
 
@@ -336,15 +355,15 @@ export class RoutineEditor {
     return { index: indexes[0]!, name: first.name, counts: first.counts, others: indexes.length };
   }
 
-  private draftOf(index: number): FigureDraft {
+  private editRow(index: number): OpenRow {
     const figure = this.routine.figures[index]!;
-    return { name: figure.name, counts: figure.counts };
+    return { kind: 'edit', index, draft: { name: figure.name, counts: figure.counts }, auto: null, autoFrom: null, countsFor: figure.name };
   }
 
   private commitKeepingOpen(): boolean {
     const open = this.open;
     const changed = this.close();
-    this.open = open?.kind === 'edit' ? { kind: 'edit', index: open.index, draft: this.draftOf(open.index) } : null;
+    this.open = open?.kind === 'edit' ? this.editRow(open.index) : null;
     return changed;
   }
 }
