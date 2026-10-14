@@ -18,7 +18,7 @@ export const ABOUT_TEXT = {
     aboutPrivacy6: 'You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the app added to the Home Screen keep their data separately. Only the one you have open is deleted.',
     aboutCreditsHeading: 'Credits',
     aboutCreditFonts: 'Fonts: Inter and Noto Sans JP (SIL Open Font License 1.1)',
-    aboutCreditCode: 'Preact and Workbox (MIT License)',
+    aboutCreditCode: 'Preact, Workbox and QR Code Generator (MIT License)',
     aboutCreditIcons: 'Some icons: Lucide (ISC License)'
   },
   'ja-JP': {
@@ -36,7 +36,7 @@ export const ABOUT_TEXT = {
     aboutPrivacy6: 'データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。',
     aboutCreditsHeading: '使っているもの',
     aboutCreditFonts: '書体：Inter・Noto Sans JP（SIL Open Font License 1.1）',
-    aboutCreditCode: 'Preact・Workbox（MIT License）',
+    aboutCreditCode: 'Preact・Workbox・QR Code Generator（MIT License）',
     aboutCreditIcons: '一部のアイコン：Lucide（ISC License）'
   }
 } as const satisfies Record<string, Record<string, string>>;

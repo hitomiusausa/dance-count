@@ -10,6 +10,12 @@ const DOOR_MAKE = rabbitIconSvg({ shape: 'rounded', size: 48, figure: 'gent' });
 // 先生からのひとことの顔（D68 の見た目・ひとみうさ 2026-10-14「C 吹き出し・アイコンはうさぎ先生男性」）: 丸い紺に男性。大きさは CSS で 36px（compact は 28px）
 const TEACHER_FACE = rabbitIconSvg({ shape: 'circle', placement: 'coin', size: 36, figure: 'gent' });
 
+// D74 教室に貼る案内のロゴ（紙に印刷するので大きめの元。表示の大きさは CSS）
+const POSTER_MARK = rabbitIconSvg({ shape: 'rounded', size: 96 });
+export function PosterMark() {
+  return <span class="dc-poster-mark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: POSTER_MARK }} />;
+}
+
 // トップ（S0）のロゴの絵。文字「Dance Count」の左。読み上げは見出しの文字に任せる（絵は隠す）
 export function BrandMark() {
   return <span class="dc-brand-mark" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TILE }} />;

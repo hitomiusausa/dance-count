@@ -84,6 +84,8 @@ const W_TWO_BARS = WALTZ_FIGURES.find(figure => figure.counts.length > 4) ?? W1;
 // 一番長い日本語名（「フォーラウェイリバース＆スリップピボット」）: 前回の名前は 2 行で「…」（[data-ellipsis]・U10）
 const W_LONGEST = REVIEWED ? WALTZ_FIGURES.reduce((longest, figure) => (figureNameJa('waltz', figure.englishName).length > figureNameJa('waltz', longest.englishName).length ? figure : longest)) : undefined;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
+// D73: くわしくの「音」の束＝声・メトロノームの大きさ（0〜100%・既定 100）と声のタイミング（U4 で 1。開いて 9 のまま）
+const SOUND_GROUP = ['[data-group="sound"] [data-volume="voice"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-volume="click"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-voice-offset-buttons]'];
 const STATES = [
   // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
   // 言語は [data-utility]、更新の帯の「更新する」は [data-alert-action]（数えない）。戻る・下タブは無い（U11）
@@ -149,11 +151,18 @@ const STATES = [
     present: ['.dc-beats[data-lead] li[aria-current="true"]', '.dc-now--lead'],
     steps: [{ click: '[data-play]' }, { wait: '.dc-now--lead' }, { wait: '.dc-beats[data-lead] li[aria-current="true"]' }] },
   { name: 'S2 表に無いフィガー', hash: '#/practice/waltz/no-such-figure', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, landsOn: '#/practice/waltz', strip: { labels: '1 2 3' } },
-  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' } },
+  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' },
+    texts: ['テンポ28'] },   // D71: 速さの選択肢の 2 行目は日本語では「テンポ」（英語は ♩=84 のまま＝texts は日本語の周だけ）
   // D55（Ruling 114）: カウントの型の帯。ジャイブは 6 拍の型の 8 語（a も丸）・タンゴは S が Q の 2 倍の幅・320 でも 1 行
   { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
-  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
+  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms',
+    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'], present: ['[data-group="play-switches"] [data-bar-counting][aria-checked="false"]', ...SOUND_GROUP], textKeys: ['barCounting', 'voiceVolume', 'clickVolume'] },   // D71・D72・D73
+  // D72: 小節を数えるは数字で数え、どの小節の頭にも「1」がある種目だけ（ワルツ・ヴィエニーズワルツ）。タンゴ（S・Q）には出ない。「繰り返す」と 1 つの束（U4 で 1＝開いて 9 のまま）
+  { name: 'S2 タンゴ・くわしく開', hash: '#/practice/tango', screen: 'S2', kind: 'focus', openMore: true, total: 8, absent: ['[data-bar-counting]'] },
+  // D72: 小節を数えている間は箱の右上に「n / 8 小節」（高さを足さない＝375×548 でも速さと ■ は初期表示）
+  { name: 'S2 小節を数える・再生中', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', settingsSeed: { barCounting: true }, speedAndPlay: true, wakeLock: true,
+    present: ['[data-bar-count]'], steps: [{ click: '[data-play]' }, { wait: '[data-bar-count]' }] },
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   // 夜間便 A-4（Ruling 123・監査 #16）: 「自動ロック」は iPhone・iPad だけ。それ以外の端末は「画面が消えるまでの時間」
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true, textKeys: ['wakeLockTipOther'] },
@@ -261,7 +270,9 @@ const STATES = [
   // 端末が画面を点けたままにできる（WakeLock が取れる）偽物を入れる＝画面が暗くなる案内（A-4）の枠を出さずに「次:」の行だけを見る
   { name: 'S5 再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, present: ['[data-figure-next]'], wakeLock: true,
     steps: [{ click: '[data-play]' }, { wait: '.dc-figure-now--on' }, { wait: '[data-figure-next]' }] },
-  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9 },
+  { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9, present: ['[data-bar-counting]', ...SOUND_GROUP] },
+  { name: 'S5 小節を数える・再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, settingsSeed: { barCounting: true }, speedAndPlay: true, wakeLock: true,
+    present: ['[data-bar-count]'], steps: [{ click: '[data-play]' }, { wait: '[data-bar-count]' }] },   // D72
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
     texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },
@@ -275,8 +286,8 @@ const STATES = [
   // 「先生の方へ」は表紙の「作る」へ）。D61: 最後の束に見出し「このアプリについて」を足したので、375×548 では言語と「困った時は」の 2 つが初期表示に入り、
   // 「プライバシー・アプリについて」は下（スクロール）でもよい（opsSmall 2・初期表示の要素から外した）。375×667 以上は 3 つとも入る。左上「‹ 表紙」・下タブ無し
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', ops: 3, opsSmall: 2, total: 3,
-    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], about: ['プライバシー・アプリについて'] },
-    textKeys: ['settingsHelpHeading', 'settingsAboutHeading', 'settingsAbout', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
+    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], about: ['プライバシー・アプリについて', '教室に貼る案内を作る'] },   // D74: 「このアプリについて」の束に 1 行（束なので U4 は 3 のまま）
+    textKeys: ['settingsHelpHeading', 'settingsAboutHeading', 'settingsAbout', 'settingsPoster', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
     firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // 帯があっても 375×548 で言語と「困った時は」は初期表示に入る（「プライバシー・アプリについて」は下でもよい＝ops は固定しない）
   { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
@@ -468,6 +479,13 @@ const STATES = [
   { name: 'S11（設定から）', hash: '#/help/sound', via: { hash: '#/settings', screen: 'S6' }, screen: 'S11', kind: 'focus', focusHeading: true,
     steps: [{ click: 'a[href="#/help/sound"]' }, { wait: '[data-screen="S11"]' }] },
   // 段8 S13（Ruling 99-3）: 主要操作は mailto と「データを全て消す」の 2（375 幅の初期表示は文が長いので固定しない）。確認ダイアログは見た目だけ（消さない）
+  // D74 教室に貼る案内（S14）: 教室の名前（任意）と下の帯の「印刷する／PDF で保存」＝2。見本の紙（QR・3 つの手順）は操作ではない
+  { name: 'S14', hash: '#/poster', via: { hash: '#/settings', screen: 'S6' }, screen: 'S14', kind: 'focus', ops: 2, total: 2, focusHeading: true,
+    steps: [{ click: '[data-poster-link]' }, { wait: '[data-screen="S14"]' }],
+    firstView: ['[data-group="poster-school"] input', '[data-poster-print]'], present: ['[data-poster-qr] svg[role="img"]', '[data-poster-address]'], absent: ['[data-poster-school]'],
+    textKeys: ['posterTitle', 'posterSchoolLabel', 'posterPrint', 'posterStep1Title', 'posterStep2Title', 'posterStep3Title'], texts: ['count.dancemap.jp'] },
+  { name: 'S14 教室の名前', hash: '#/poster', screen: 'S14', kind: 'focus', ops: 2, total: 2, present: ['[data-poster-school]'], texts: ['さくらダンス教室'],
+    steps: [{ fill: ['[data-group="poster-school"] input', 'さくらダンス教室'] }] },
   { name: 'S13', hash: '#/about', screen: 'S13', kind: 'focus', total: 2,
     textKeys: ['aboutOperator', 'aboutNotOfficial', 'deleteAllData'], texts: ['info@kugainc.com'],
     firstView: ['.dc-about-contact'] },

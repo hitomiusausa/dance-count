@@ -20,7 +20,8 @@ test('every screen hash from spec §3 parses to its screen and params', () => {
     ['#/receive', 'S10', {}],
     ['#/help/sound', 'S11', {}],
     ['#/help/install', 'S12', {}],
-    ['#/about', 'S13', {}]
+    ['#/about', 'S13', {}],
+    ['#/poster', 'S14', {}]
   ];
   for (const [hash, screen, params] of cases) {
     assert.deepEqual(parseHash(hash), { screen, params, query: {} }, hash);
@@ -97,7 +98,7 @@ test('tabs show on the two "Use" roots only (D56・Ruling 116-1)', () => {
 test('back without history goes to the parent from the D56 route table (Ruling 116-1)', () => {
   const expected: Record<ScreenId, ScreenId | null> = {
     S0: null, S1: 'S0', U2: 'S0', M0: 'S0', M1: 'M0', F1: 'S1', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
-    S8: 'M0', S9: 'M0', S10: 'U2', S11: 'S6', S12: 'S6', S13: 'S6'
+    S8: 'M0', S9: 'M0', S10: 'U2', S11: 'S6', S12: 'S6', S13: 'S6', S14: 'S6'
   };
   for (const screen of Object.keys(expected) as ScreenId[]) assert.equal(parentScreen(screen), expected[screen], screen);
 });

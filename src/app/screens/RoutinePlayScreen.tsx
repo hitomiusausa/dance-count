@@ -8,10 +8,13 @@ import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { honorific } from '../lib/honorific.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
+import { barCountingAvailable } from '../practice/bar-count.ts';
+import { tempoText } from '../practice/tempo.ts';
+import { volumeGain } from '../practice/volume.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -60,7 +63,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, track: null,
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), clickVolume: volumeGain(next.clickVolume), barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -121,6 +124,16 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     restart(latest.current.settings, next);
   };
 
+  // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
+  const volumeKey = (kind: VolumeKind) => (kind === 'voice' ? 'voiceVolume' : 'clickVolume') as 'voiceVolume' | 'clickVolume';
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  const commitVolume = (kind: VolumeKind, percent: number) => {
+    const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
+    latest.current.settings = { ...latest.current.settings, ...patch };
+    update(patch);
+    session.setVolumes({ [kind]: volumeGain(percent) });
+  };
+
   const togglePlay = () => {
     setForcedDismissed(true);
     if (isPlaying()) session.stop();
@@ -168,7 +181,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             {routine.receivedFrom?.note ? <TeacherNote note={routine.receivedFrom.note} head /> : <small data-ellipsis>{subtitle}</small>}
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting}>
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} bar={view.bar}>
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}
             </div>
@@ -176,12 +189,12 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
           </CountBox>
         </div>
         <div class="dc-area-controls">
-          <SpeedChoices presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
+          <SpeedChoices danceId={routine.danceId} presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
               <div class="dc-range" data-group="range">
@@ -193,10 +206,13 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
                   onStep={delta => { const now = latest.current.range; const end = now.endIndex + delta; changeRange({ startIndex: Math.min(now.startIndex, end), endIndex: end }); }} />
               </div>
             </div>
-            <FineSpeed idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
+            <FineSpeed danceId={routine.danceId} idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
-            <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
-            <VoiceOffsetRow idPrefix="dc-s5" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            <PlaySwitches idPrefix="dc-s5" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
+              barCounting={barCountingAvailable(routine.danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
+            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume, click: settings.clickVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <VoiceOffsetRow idPrefix="dc-s5" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            </SoundGroup>
           </MoreOptions>
         </div>
         <div class="dc-area-list">

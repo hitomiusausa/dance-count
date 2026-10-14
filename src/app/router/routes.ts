@@ -2,7 +2,7 @@
 // D56（Ruling 116）: 表紙 S0（#/）・「使う」の U1（今の S1 の ID のまま #/use）と U2（#/use/routines）・「作る」の M0（#/make）と M1（#/make/routines）。
 // S3 は廃止（古い #/routines は U2 へ置き換え）。深い画面（S2・S4・S5・S7〜S13）の path は変えない。
 // D57（Ruling 119-1）: F1「種目のフィガー」（#/figures/:danceId）。監修済みのフィガーが 1 件以上ある種目だけ（resolve.ts）。
-export type ScreenId = 'S0' | 'S1' | 'U2' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
+export type ScreenId = 'S0' | 'S1' | 'U2' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13' | 'S14';
 // cover＝表紙（戻る無し・下タブ無し）。root＝側の入口（U1・U2・M0）。list＝一覧（M1・S6）。focus＝集中画面
 export type ScreenKind = 'cover' | 'root' | 'focus' | 'list';
 export type Side = 'use' | 'make';
@@ -46,7 +46,9 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
   S10: { kind: 'focus', parent: 'U2', side: 'use', tab: null, path: '/receive' },
   S11: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/help/sound' },
   S12: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/help/install' },
-  S13: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/about' }
+  S13: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/about' },
+  // D74 教室に貼る案内（設定の「このアプリについて」から）
+  S14: { kind: 'focus', parent: 'S6', side: null, tab: null, path: '/poster' }
 };
 
 // S4 は「新規」と「編集」の2つの形を持つので、編集の形をここで足す。S2 はフィガーを鳴らす形（D57・Ruling 120-1）。

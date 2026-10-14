@@ -66,3 +66,20 @@ export function onDismissSignals(handlers: { escape(event: KeyboardEvent): void;
 export function focusedElement(): Element | null {
   return document.activeElement;
 }
+
+// D74 教室に貼る案内: 印刷（PDF で保存も同じ画面から選べる）。PDF の名前は文書の題名になるので、印刷の間だけ題名を替えて戻す。
+// 印刷できない端末（print が無い）では false。
+export function printPage(documentTitle: string): boolean {
+  if (typeof window.print !== 'function') return false;
+  const before = document.title;
+  document.title = documentTitle;
+  const restore = () => { document.title = before; window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  try {
+    window.print();
+  } catch {
+    restore();
+    return false;
+  }
+  return true;
+}

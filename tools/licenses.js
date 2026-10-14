@@ -7,5 +7,8 @@ export const LICENSE_FILES = Object.freeze({
   'licenses/Preact-MIT.txt': 'node_modules/preact/LICENSE',
   'licenses/Workbox-MIT.txt': 'node_modules/workbox-precaching/LICENSE',
   // アイコン（icons.svg の repeat・chevron-down は Lucide のパスと一致、gear ほかも Lucide 系の疑い）。lucide は依存ではないので、LICENSE（ISC＋Feather の MIT）を third_party に置く
-  'licenses/Lucide-ISC.txt': 'third_party/lucide/LICENSE'
+  'licenses/Lucide-ISC.txt': 'third_party/lucide/LICENSE',
+  // D74 教室に貼る案内の QR（qrcode-generator 2.0.4・MIT）。npm の包みに LICENSE の文書が無い（MIT の告知はソースの頭だけ）ので、
+  // ソースの頭の告知（著作権者・URL・QR コードの商標）と MIT の全文を third_party に置く
+  'licenses/QRCodeGenerator-MIT.txt': 'third_party/qrcode-generator/LICENSE'
 });

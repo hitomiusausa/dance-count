@@ -17,6 +17,7 @@ import { FigureListScreen } from './screens/FigureListScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
 import { InstallHelpScreen } from './screens/InstallHelpScreen.tsx';
 import { MakeScreen } from './screens/MakeScreen.tsx';
+import { PosterScreen } from './screens/PosterScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
 import { RoutineEditScreen } from './screens/RoutineEditScreen.tsx';
 import { RoutinePlayScreen } from './screens/RoutinePlayScreen.tsx';
@@ -59,7 +60,8 @@ const SIMPLE_SCREENS: Partial<Record<ScreenId, ComponentType>> = {
   S6: SettingsScreen,
   S9: ShareScreen,
   S11: SoundHelpScreen,
-  S12: InstallHelpScreen
+  S12: InstallHelpScreen,
+  S14: PosterScreen
 };
 
 export function App() {
