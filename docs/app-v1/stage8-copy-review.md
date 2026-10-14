@@ -183,8 +183,8 @@
 | 108 | `recordCueNow` | 今！ | Now! | 英語の初版 |  |  |
 | 109 | `recordAutoStop` | 約⍽2⍽秒で自動で止まります | Stops automatically in about 2 seconds | 英語の初版 |  |  |
 | 110 | `listenTake` | 聞く | Play | 英語の初版 | OK |  |
-| 111 | `previousWord` | 前の語 | Previous | 英語の初版 | OK |  |
-| 112 | `nextWord` | 次へ | Next | 英語の初版 | OK |  |
+| 111 | `previousWord` | 前のカウント | Previous count | 英語の初版 | OK |  |
+| 112 | `nextWord` | 次のカウント | Next count | 英語の初版 | OK |  |
 | 113 | `finishRecording` | 完成へ | Finish | 英語の初版 | OK |  |
 | 114 | `micHowTo` | 設定の開き方 | How to allow it | 英語の初版 | OK |  |
 | 115 | `micHowToIphone` | iPhone：設定 → アプリ → Safari → マイク（ホーム画面から開いた時は、Safari のかわりにこのアプリの名前） | iPhone: Settings → Apps → Safari → Microphone (if you opened it from the Home Screen, this app's name instead of Safari) | 技術語の疑い（マイク・microphone）・長さ・英語の初版 | iPhone: Settings → Apps → Safari → Microphone (if you opened it from your Home Screen, choose this app's name instead of Safari) |  |
