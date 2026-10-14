@@ -7,6 +7,8 @@ const COIN_BACK = rabbitIconSvg({ shape: 'circle', placement: 'coin', size: 32, 
 // S0 の扉の絵（D62 確認・案 1）: 「使う」＝女性（紺の扉の上に絵だけ）・「作る」＝男性（白い扉の上に紺の角丸ごと）。大きさは前の丸と同じ 48px
 const DOOR_USE = figureSvg('lady', 48);
 const DOOR_MAKE = rabbitIconSvg({ shape: 'rounded', size: 48, figure: 'gent' });
+// 先生からのひとことの顔（D68 の見た目・ひとみうさ 2026-10-14「C 吹き出し・アイコンはうさぎ先生男性」）: 丸い紺に男性。大きさは CSS で 36px（compact は 28px）
+const TEACHER_FACE = rabbitIconSvg({ shape: 'circle', placement: 'coin', size: 36, figure: 'gent' });
 
 // トップ（S0）のロゴの絵。文字「Dance Count」の左。読み上げは見出しの文字に任せる（絵は隠す）
 export function BrandMark() {
@@ -31,4 +33,9 @@ export function WaltzSpinner() {
       <span class="dc-waltz-dots"><i /><i /><i /></span>
     </span>
   );
+}
+
+// 先生からのひとことの顔。読み上げは吹き出しの文字に任せる（絵は隠す）
+export function TeacherFace() {
+  return <span class="dc-teacher-face" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TEACHER_FACE }} />;
 }

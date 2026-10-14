@@ -361,7 +361,7 @@
 | 256 | `noSoundLink` | 音が鳴らない時は | If there is no sound | 英語の初版 | OK（ja は見出し soundHelpTitle「音が鳴らない時」にそろえて「音が鳴らない時は」に直した＝Fix round 1。en は元から同じ） |  |
 | 257 | `close` | 閉じる | Close | 英語の初版 | OK |  |
 | 258 | `aboutThisScreen` | この画面について | About this screen | 英語の初版 |  |  |
-| 259 | `teacherNote` | 先生からのひとこと | A note from your teacher | 英語の初版 |  |  |
+| 259 | `teacherNote` | 先生から | From your teacher | 英語の初版 |  |  |
 | 260 | `standardVoiceEnglish` | 標準の声（英語） | Standard voice (English) | 英語の初版 | OK。製品判断（Fable OQ7）: どこでも短い “Standard (English)” にすれば 320px 幅の特別扱いが要らなくなる |  |
 | 261 | `soundHelpTitle` | 音が鳴らない時 | If there is no sound | 英語の初版 | OK |  |
 | 262 | `updateReady` | 新しい版があります。 | A new version is ready. | 技術語の疑い（版・version）・英語の初版 | An update is ready. |  |
