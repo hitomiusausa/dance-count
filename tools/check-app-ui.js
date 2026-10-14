@@ -286,8 +286,8 @@ const STATES = [
   // 「先生の方へ」は表紙の「作る」へ）。D61: 最後の束に見出し「このアプリについて」を足したので、375×548 では言語と「困った時は」の 2 つが初期表示に入り、
   // 「プライバシー・アプリについて」は下（スクロール）でもよい（opsSmall 2・初期表示の要素から外した）。375×667 以上は 3 つとも入る。左上「‹ 表紙」・下タブ無し
   { name: 'S6', hash: '#/settings', screen: 'S6', kind: 'list', ops: 3, opsSmall: 2, total: 3,
-    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], about: ['プライバシー・アプリについて'] },
-    textKeys: ['settingsHelpHeading', 'settingsAboutHeading', 'settingsAbout', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
+    linkGroups: { help: ['ホーム画面に追加する方法', '音が鳴らない時'], about: ['プライバシー・アプリについて', '教室に貼る案内を作る'] },   // D74: 「このアプリについて」の束に 1 行（束なので U4 は 3 のまま）
+    textKeys: ['settingsHelpHeading', 'settingsAboutHeading', 'settingsAbout', 'settingsPoster', 'backToCover'], absent: ['a[href="#/voices"]', '[data-group="teacher"]', 'a[href="#/voices/record"]', 'a[href="#/share"]'],
     firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // 帯があっても 375×548 で言語と「困った時は」は初期表示に入る（「プライバシー・アプリについて」は下でもよい＝ops は固定しない）
   { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
@@ -479,6 +479,13 @@ const STATES = [
   { name: 'S11（設定から）', hash: '#/help/sound', via: { hash: '#/settings', screen: 'S6' }, screen: 'S11', kind: 'focus', focusHeading: true,
     steps: [{ click: 'a[href="#/help/sound"]' }, { wait: '[data-screen="S11"]' }] },
   // 段8 S13（Ruling 99-3）: 主要操作は mailto と「データを全て消す」の 2（375 幅の初期表示は文が長いので固定しない）。確認ダイアログは見た目だけ（消さない）
+  // D74 教室に貼る案内（S14）: 教室の名前（任意）と下の帯の「印刷する／PDF で保存」＝2。見本の紙（QR・3 つの手順）は操作ではない
+  { name: 'S14', hash: '#/poster', via: { hash: '#/settings', screen: 'S6' }, screen: 'S14', kind: 'focus', ops: 2, total: 2, focusHeading: true,
+    steps: [{ click: '[data-poster-link]' }, { wait: '[data-screen="S14"]' }],
+    firstView: ['[data-group="poster-school"] input', '[data-poster-print]'], present: ['[data-poster-qr] svg[role="img"]', '[data-poster-address]'], absent: ['[data-poster-school]'],
+    textKeys: ['posterTitle', 'posterSchoolLabel', 'posterPrint', 'posterStep1Title', 'posterStep2Title', 'posterStep3Title'], texts: ['count.dancemap.jp'] },
+  { name: 'S14 教室の名前', hash: '#/poster', screen: 'S14', kind: 'focus', ops: 2, total: 2, present: ['[data-poster-school]'], texts: ['さくらダンス教室'],
+    steps: [{ fill: ['[data-group="poster-school"] input', 'さくらダンス教室'] }] },
   { name: 'S13', hash: '#/about', screen: 'S13', kind: 'focus', total: 2,
     textKeys: ['aboutOperator', 'aboutNotOfficial', 'deleteAllData'], texts: ['info@kugainc.com'],
     firstView: ['.dc-about-contact'] },

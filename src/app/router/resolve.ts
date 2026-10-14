@@ -12,7 +12,7 @@ import type { RedirectTarget, Route, ScreenId } from './routes.ts';
 // D57（Ruling 119-6・120-4）: F1 は監修済みのフィガーが 1 件以上の種目だけ（0 件なら S2 の基本へ置き換え・知らない種目は U1）。
 // S2 のフィガーの形は、監修表に無い slug（訂正で消えた・打ち間違い）なら S2 の基本へ置き換える（エラーは出さない）。
 // 古い経路（#/routines＝alias）は U2 を出し、ハッシュを #/use/routines に置き換える（ui-state は持ち越す）。
-export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S0', 'S1', 'U2', 'M0', 'M1', 'F1', 'S2', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13'];
+export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S0', 'S1', 'U2', 'M0', 'M1', 'F1', 'S2', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14'];
 
 export interface Resolved { screen: ScreenId; redirect: RedirectTarget | null }
 

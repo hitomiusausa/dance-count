@@ -746,3 +746,54 @@ button { cursor: pointer; }
 .dc-figure-name { word-break: keep-all; overflow-wrap: anywhere; }
 /* D57: 前回の名前は 2 行まで（U10）。「ワルツ · フォーラウェイリバース＆スリップピボット」のような長い名前は 2 行目で「…」（[data-ellipsis]・Ruling 47） */
 .dc-resume-text b[data-ellipsis] { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* ---------- D74 教室に貼る案内（S14）。画面では見本のカード、印刷では A4 縦 1 枚 ---------- */
+.dc-poster-frame { margin: 4px 0 16px; }
+.dc-poster { display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: #fff; color: var(--ink); }
+.dc-poster-head { display: flex; align-items: center; gap: 12px; }
+.dc-poster-head > div { min-width: 0; }
+.dc-poster-mark svg { display: block; width: 56px; height: 56px; }
+.dc-poster-kind { font-size: 16px; font-weight: 700; color: var(--ink2); }
+.dc-poster-brand { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; }
+.dc-poster-school { font-size: 22px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.dc-poster-lead { margin: 0; font-size: 18px; line-height: 1.6; }
+.dc-poster-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dc-poster-qr-code svg { display: block; width: min(240px, 70vw); height: auto; }
+.dc-poster-address { font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
+.dc-poster-steps-head { margin: 4px 0 0; font-size: 20px; font-weight: 800; }
+.dc-poster-steps { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.dc-poster-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 18px; line-height: 1.5; }
+.dc-poster-step-no { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 20px; font-weight: 800; }
+.dc-poster-step-text { display: flex; flex-direction: column; min-width: 0; }
+.dc-poster-step-text b { font-size: 20px; }
+.dc-poster-foot { font-size: 14px; color: var(--ink2); }
+@media (max-width: 299px) {   /* Safari 150%（250 幅）: 見本の紙の余白とロゴを詰めて、ページを横に動かさない */
+  .dc-poster { padding: 16px 10px; }
+  .dc-poster-mark svg { width: 40px; height: 40px; }
+  .dc-poster-brand { font-size: 22px; }
+  .dc-poster .dc-nowrap { white-space: normal; }   /* 「ファイルから受け取る」の括りも 250 幅では折る */
+}
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  html, body { background: #fff !important; }
+  .dc-shell { padding: 0 !important; }
+  .dc-poster-screen { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .dc-poster-screen > :not(.dc-poster-frame) { display: none !important; }
+  .dc-poster-frame { margin: 0; }
+  .dc-poster { box-sizing: border-box; height: 272mm; justify-content: space-between; gap: 6mm; padding: 10mm 12mm; border: 0.6mm solid #1B2A4A; border-radius: 4mm; break-inside: avoid;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .dc-poster-mark svg { width: 22mm; height: 22mm; }
+  .dc-poster-head { gap: 5mm; }
+  .dc-poster-kind { font-size: 14pt; }
+  .dc-poster-brand { font-size: 34pt; }
+  .dc-poster-school { font-size: 26pt; text-align: center; }
+  .dc-poster-lead { font-size: 16pt; text-align: center; }
+  .dc-poster-qr-code svg { width: 82mm; }
+  .dc-poster-address { font-size: 16pt; }
+  .dc-poster-steps-head { font-size: 18pt; }
+  .dc-poster-steps { gap: 4mm; }
+  .dc-poster-steps li { gap: 5mm; font-size: 14pt; }
+  .dc-poster-step-no { width: 12mm; height: 12mm; font-size: 18pt; }
+  .dc-poster-step-text b { font-size: 18pt; }
+  .dc-poster-foot { font-size: 9pt; text-align: center; }
+}
