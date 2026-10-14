@@ -18,8 +18,8 @@
   <title>Dance Count</title>
   <!-- 段8（Ruling 101）: 起動の殻。アプリが最初の画面を描くまでの白い時間に、アプリの名前だけを出す（言語が決まる前なので固有名詞だけ）。
        Preact の render は #app の中身を置き換えない（殻の横に画面を足す）ので、アプリが最初の画面を入れた後に removeBootShell()（App.tsx）で殻を外す。CSS は殻の分だけ（1024 バイト以下＝tools/pwa/check-pwa.js）。
-       D62: 紺の地にうさぎ（下の殻の印は vite.config.ts の bootMark が src/app/brand/rabbit.ts の絵に置き換える）。裾はワルツの 3 拍で揺れる（1 小節 1.35 秒・動きを減らす設定では止まる） -->
-  <style>.dc-boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:12vh;background:#1B2A4A;color:#FBF5EC;font-family:Inter,"Noto Sans JP",-apple-system,system-ui,sans-serif}.dc-boot svg{width:136px;height:136px}.dc-boot b{margin-top:20px;font-size:28px;font-weight:800;letter-spacing:-.015em}.dc-boot small{font-size:16px;opacity:.8}.dc-sway{animation:dc-sway 1.35s ease-in-out infinite}@keyframes dc-sway{0%,100%{transform:skewX(-2deg)}12%{transform:skewX(4deg)}33%{transform:skewX(1deg)}45%{transform:skewX(2.5deg)}67%{transform:skewX(-.5deg)}78%{transform:skewX(1deg)}}@media (prefers-reduced-motion:reduce){.dc-sway{animation:none}}</style>
+       D62: 紺の地に二人のうさぎ（下の殻の印・CSS の末尾の印は vite.config.ts の bootMark が src/app/brand/rabbit.ts の絵と動きに置き換える）。足元を軸に二人がワルツの 3 拍で傾き、裾が揺れる（1 小節 1.35 秒・動きを減らす設定では止まる） -->
+  <style>.dc-boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:12vh;background:#1B2A4A;color:#FBF5EC;font-family:Inter,"Noto Sans JP",-apple-system,system-ui,sans-serif}.dc-boot b{margin-top:20px;font-size:28px;font-weight:800;letter-spacing:-.015em}.dc-boot small{font-size:16px;opacity:.8}/*%DC_BOOT_CSS%*/</style>
 </head>
 <body>
   <div id="app"><div class="dc-boot" aria-hidden="true">%DC_BOOT_MARK%<b>Dance Count</b><small>for Ballroom</small></div></div>

@@ -35,7 +35,7 @@ async function exists(file) {
   try { await fs.access(file); return true; } catch { return false; }
 }
 
-// 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限。D62 で 600 → 1024（紺の地・うさぎの大きさ・裾の揺れの keyframes・動きを減らす設定。今は約 690）
+// 段8（Ruling 101-1）: 起動の殻のインライン CSS の上限。D62 で 600 → 1024（紺の地・絵の大きさ・二人の傾きと裾の揺れの keyframes・動きを減らす設定。今は約 935）
 export const BOOT_STYLE_MAX_BYTES = 1024;
 
 // 段8 Task 9b（Ruling 101）: 描画を止める CSS（index.html の media の無い stylesheet）の合計の上限。今は約 29KB（base.css）。
