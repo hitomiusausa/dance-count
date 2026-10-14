@@ -40,6 +40,7 @@ const LIMITS = Object.freeze({
   bodyFont: 18, minFont: 16, fineprintFont: 14, // U1
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
   tap: 48, tapGap: 8, // U3
+  compactTap: 36, compactTapGap: 6, // D64: S8 の 12 語のチップ（[data-tap-compact]）だけの例外（高さ 36 以上・チップ同士の間 6 以上）
   initialOps: 5, totalOps: 9, groupChoices: 10, moreSummaries: 1, // U4〜U6
   catalogChoices: 20, // U5 の例外: 照合済みの名前の一覧 [data-group][data-catalog] は選択肢でなく一覧（Ruling 54。src の FIGURE_CHOICES_MAX と同じ）
   contrastText: 4.5, contrastLarge: 3, contrastUi: 3, // U7
@@ -300,32 +301,39 @@ const STATES = [
     steps: [{ wait: '.dc-record-add-first' }], textKeys: ['recordAddFirst'],
     firstView: ['[data-group="record-language"]', '.dc-dock .dc-primary'] },
   // Ruling 72: 説明の 1 行は「すぐ「Slow」と言って」・説明と枠は同じ 60px の箱（枠が出ても丸が動かない）
-  { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, noPrevious: true, recordHintWord: 'Slow', recordSlot: 60,
+  { name: 'S8 1 語目・未録音', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 3, recordWordAt: 0, recordButton: true, noPrevious: true, recordHintWord: 'Slow', recordSlot: 60,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
   // takeShownCompact: 600px 未満では録れた語の説明の 1 行を出さない・それ以外は出したまま（Ruling 71-7）
-  { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, takeShown: true, takeShownCompact: true,
+  { name: 'S8 8 語目から前の語へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 5, recordWordAt: 6, takeShown: true, takeShownCompact: true,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
       { click: '.dc-record-dock .dc-button--secondary' }, { wait: '.dc-take' }] },
+  // D64: 12 語のチップを押すとその語へ（8 語目 → 3 語目＝録れた語。波形と「聞く」が出る）。まだの語へも移れる（12 語目＝波形なし）
+  { name: 'S8 チップで 3 語目へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 5, recordWordAt: 2, takeShown: true,
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
+      { click: '[data-group="record-words"] .dc-record-chip >> nth=2' }, { wait: '.dc-take' }] },
+  { name: 'S8 チップでまだの 12 語目へ', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 4, recordWordAt: 11, recordButton: true,
+    steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' },
+      { click: '[data-group="record-words"] .dc-record-chip >> nth=11' }, { wait: '[aria-current="step"]:nth-child(12)' }] },
   // 段5（Ruling 86-2・D39）: 帯は「完了」「配る ›」＝5（上限）。初めての完成の画面にだけバックアップの 1 行。375×548 でも 5 つが入る
   { name: 'S8 完成', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 5, doneName: '自分の声（英語）',
     texts: ['「配る」で作ったファイルを自分にも送っておくと、端末を替えても声を使えます。'],
     firstView: ['#dc-s8-name', '[data-group="compare"]', '.dc-record-again', '.dc-record-dock .dc-button--secondary', '.dc-record-dock .dc-primary'],
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   // D59: 合図（3・2・1・今）の間は丸の中に大きい数字と「やめる」（丸は押せる＝やめる）。録音中は「● 録音中」と縮む棒・箱に「約 2 秒で…」（丸は押せない）
-  { name: 'S8 合図の間', hash: '#/voices/record?ui-state=rec-countdown', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordSlot: 60, recordPhase: 'countdown', recordHintWord: 'Slow' },
-  { name: 'S8 録音中', hash: '#/voices/record?ui-state=rec-capture', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordSlot: 60, recordPhase: 'capture' },
+  { name: 'S8 合図の間', hash: '#/voices/record?ui-state=rec-countdown', screen: 'S8', kind: 'focus', total: 3, recordWordAt: 0, recordButton: true, recordSlot: 60, recordPhase: 'countdown', recordHintWord: 'Slow' },
+  { name: 'S8 録音中', hash: '#/voices/record?ui-state=rec-capture', screen: 'S8', kind: 'focus', total: 3, recordWordAt: 0, recordButton: true, recordSlot: 60, recordPhase: 'capture' },
   // D60: 英語の画面では語の下の小さい語（いち・に）を出さない。日本語の画面では出す（英語の声を録る時の「スロー」など）
-  { name: 'S8 1 語目・日本語の声', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, recordButton: true, recordOther: true,
+  { name: 'S8 1 語目・日本語の声', hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 3, recordWordAt: 0, recordButton: true, recordOther: true,
     steps: [{ click: '[data-group="record-language"] [role="radio"] >> nth=1' }, { click: '.dc-dock .dc-primary' }, { wait: '[data-step="word"]' }] },
   { name: 'S8 マイク拒否', hash: '#/voices/record?ui-state=mic-denied', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en' },
-  { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60 },
+  { name: 'S8 声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', alert: true, total: 3, recordWordAt: 0, recordButton: true, recordSlot: 60 },
   // 最終レビュー M3: 録れた語で枠が出ても、丸と波形・「聞く」は初期表示に入ったまま（375×548 では枠を進み具合の行に重ねる）。ui-state は声を書かない（M5）
-  { name: 'S8 録れた語で声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], alert: true, total: 3,
+  { name: 'S8 録れた語で声が入っていない', hash: '#/voices/record?ui-state=no-voice', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], alert: true, total: 4, totalSmall: 3,
     recordButton: true, takeShown: true, steps: [{ wait: '.dc-wave rect:nth-of-type(41)' }] },
   // 段8（Ruling 100・§11）: マイクが見つからない・使用中は説明の画面の枠（ボタン無し）。言葉の 2 択と「録音をはじめる」は残る
   { name: 'S8 マイクを使えない', hash: '#/voices/record?ui-state=mic-failed', screen: 'S8', kind: 'focus', alert: true, ops: 2, total: 2, recordLanguage: 'en',
     texts: ['マイクを使えませんでした。'] },
-  { name: 'S8 保存できなかった', hash: '#/voices/record?ui-state=save-failed', screen: 'S8', kind: 'focus', alert: true, total: 2, recordButton: true, recordSlot: 60,
+  { name: 'S8 保存できなかった', hash: '#/voices/record?ui-state=save-failed', screen: 'S8', kind: 'focus', alert: true, total: 3, recordWordAt: 0, recordButton: true, recordSlot: 60,
     texts: ['保存できませんでした。'] },
   { name: 'S8 非対応', hash: '#/voices/record?ui-state=no-recorder', screen: 'S8', kind: 'focus', alert: true, ops: 0, total: 0 },
   // D53: http（LAN の IP など）で開くと iOS は録音の口ごと隠す。枠の文は「https で開くと録音できます」（ブラウザを替えても録れないため）
@@ -831,9 +839,12 @@ function audit({ state, LIMITS, reducedMotion }) {
 
   // U3 タップ対象の大きさと間隔（固定バーと本文の間・別の固定バー同士は対象外。同じバーの中は測る）
   const targets = [...document.querySelectorAll(TARGETS)].filter(visible).filter(element => !(element.tagName === 'INPUT' && element.closest('label')));
+  // D64（ひとみうさ承認 2026-10-14）: S8 の 12 語のチップ [data-tap-compact] は 48 ではなく 36（2 段 × 6 を 375×548 に入れるため）・チップ同士の間は 6
+  const compactGroup = element => element.closest('[data-tap-compact]');
   for (const element of targets) {
     const rect = element.getBoundingClientRect();
-    if (rect.width < LIMITS.tap - 0.5 || rect.height < LIMITS.tap - 0.5) issues.push(`U3 tap ${Math.round(rect.width)}x${Math.round(rect.height)} ${describe(element)}`);
+    const min = compactGroup(element) ? LIMITS.compactTap : LIMITS.tap;
+    if (rect.width < min - 0.5 || rect.height < min - 0.5) issues.push(`U3 tap ${Math.round(rect.width)}x${Math.round(rect.height)} ${describe(element)}`);
   }
   const modal = document.querySelector('dialog[open]:modal');
   for (let i = 0; i < targets.length; i += 1) {
@@ -851,7 +862,8 @@ function audit({ state, LIMITS, reducedMotion }) {
       const dx = Math.max(0, Math.max(ra.left, rb.left) - Math.min(ra.right, rb.right));
       const dy = Math.max(0, Math.max(ra.top, rb.top) - Math.min(ra.bottom, rb.bottom));
       const gap = Math.hypot(dx, dy);
-      if (gap < LIMITS.tapGap - 0.5) issues.push(`U3 gap ${gap.toFixed(1)}px < ${LIMITS.tapGap} between ${describe(a)} and ${describe(b)}`);
+      const minGap = compactGroup(a) && compactGroup(a) === compactGroup(b) ? LIMITS.compactTapGap : LIMITS.tapGap;
+      if (gap < minGap - 0.5) issues.push(`U3 gap ${gap.toFixed(1)}px < ${minGap} between ${describe(a)} and ${describe(b)}`);
     }
   }
 
@@ -879,7 +891,9 @@ function audit({ state, LIMITS, reducedMotion }) {
   // 「初期表示」は画面を開いた直後のこと。「くわしく」を開いた状態は人の操作の後なので全体（9以下）だけを見る（Ruling 31: 開くと8）。
   if (!state.afterAction && initialOps > LIMITS.initialOps) issues.push(`U4 initial operations ${initialOps} > ${LIMITS.initialOps}`);
   if (totalOps > LIMITS.totalOps) issues.push(`U4 total operations ${totalOps} > ${LIMITS.totalOps}`);
-  if (state.total !== undefined && totalOps !== state.total) issues.push(`U4 total operations ${totalOps}, expected ${state.total}`);
+  // totalSmall: 600px 未満の高さで数が変わる状態（S8 の録れた語の枠は 12 語のチップの段に重なり、チップが隠れる。D64）
+  const expectedTotal = state.compact && state.totalSmall !== undefined ? state.totalSmall : state.total;
+  if (expectedTotal !== undefined && totalOps !== expectedTotal) issues.push(`U4 total operations ${totalOps}, expected ${expectedTotal}`);
   const expectedOps = state.compact && state.opsSmall !== undefined ? state.opsSmall : state.ops;   // 375×548 の例外（Ruling 71-6・9）
   if (expectedOps !== undefined && initialOps !== expectedOps) issues.push(`U4 initial operations ${initialOps}, expected ${expectedOps}`);
 
@@ -1319,6 +1333,30 @@ function audit({ state, LIMITS, reducedMotion }) {
   if (state.english && document.querySelector('[data-screen="S8"][data-step="word"], [data-screen="S8"][data-step="intro"]')) {   // 完成画面の声の名前は打った名前のまま（対象外）
     const said = document.querySelector('main')?.innerText ?? '';
     if (/[\u3040-\u30ff]/.test(said) && !document.querySelector('[data-step="word"] .dc-record-main[lang="ja"]')) issues.push(`D60 the English S8 shows kana: "${said.match(/[^\n]*[\u3040-\u30ff][^\n]*/)?.[0]}"`);
+  }
+  // D64: 12 語のチップ。12 個・今の語は 1 つだけ（aria-current="step"）＝recordWordAt・語は 1 行でチップの中に入る・読み上げの名前は「n番目・語・状態」。
+  // 合図の間・録音中は押せない（それ以外は全部押せる＝まだの語へも移れる）
+  if (state.recordWordAt !== undefined) {
+    const group = document.querySelector('[data-group="record-words"]');
+    const chips = [...document.querySelectorAll('[data-group="record-words"] .dc-record-chip')];
+    if (!group || group.getAttribute('role') !== 'group' || !group.getAttribute('aria-label')) issues.push('D64 the word chips are not a labelled group');
+    if (chips.length !== 12) issues.push(`D64 ${chips.length} word chips, expected 12`);
+    const current = chips.filter(chip => chip.getAttribute('aria-current') === 'step');
+    if (current.length !== 1 || chips.indexOf(current[0]) !== state.recordWordAt) issues.push(`D64 the current chip is #${current.map(chip => chips.indexOf(chip) + 1).join(',')}, expected #${state.recordWordAt + 1}`);
+    if (document.querySelector('[data-screen="S8"] [role="progressbar"]')) issues.push('D64 the word step still has a progressbar (the chips carry the position)');
+    const busy = state.recordPhase === 'countdown' || state.recordPhase === 'capture';
+    for (const [n, chip] of chips.entries()) {
+      if (!visible(chip)) continue;
+      const word = chip.querySelector('span');
+      const box = chip.getBoundingClientRect();
+      const text = word?.getBoundingClientRect();
+      const inner = chip.clientWidth;
+      if (!word || !text || text.width > inner + 0.5 || new Set([...word.getClientRects()].map(rect => Math.round(rect.top))).size !== 1) issues.push(`D64 chip #${n + 1} "${word?.textContent}" does not fit on one line (${text ? Math.round(text.width) : '?'} > ${inner})`);
+      if (box.height < LIMITS.compactTap - 0.5) issues.push(`D64 chip #${n + 1} is ${Math.round(box.height)}px high`);
+      const label = chip.getAttribute('aria-label') ?? '';
+      if (!label.includes(word?.textContent ?? '\u0000') || !label.includes(String(n + 1))) issues.push(`D64 chip #${n + 1} is named "${label}"`);
+      if (chip.disabled !== busy) issues.push(`D64 chip #${n + 1} is ${chip.disabled ? 'disabled' : 'enabled'}${busy ? ' during the countdown/recording' : ''}`);
+    }
   }
   // D59: 合図の間・録音中の見た目
   if (state.recordPhase === 'countdown') {

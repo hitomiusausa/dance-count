@@ -3,7 +3,8 @@ import type { AppTranslator } from '../i18n/index.ts';
 import type { VoiceLocale } from './ids.ts';
 import { VOICE_KEYS, packProgress, renamePack, type VoicePackRecord, type VoiceKey } from './store.ts';
 
-// S8 の進み方（Ruling 59・D25）の純粋な部分。語は VOICE_KEYS の順に 1 つずつ・飛ばせない。
+// S8 の進み方（Ruling 59・D25）の純粋な部分。「次へ」は VOICE_KEYS の順に 1 つずつ（録れていない語は飛ばせない）。
+// D64（ひとみうさ承認 2026-10-14）: 上の 12 語のチップを押すと、録れていない語も含めてどの語へも移れる（jumpStep）。
 export type RecordStep = { kind: 'intro' } | { kind: 'word'; index: number } | { kind: 'done' };
 
 // 最初の未録音の語。全部録れていれば null（完成画面から。D25）。
@@ -45,6 +46,29 @@ export function takeErrorOutcome(kind: string | null): TakeErrorOutcome {
 
 export function previousStep(index: number): RecordStep | null {
   return index > 0 ? { kind: 'word', index: index - 1 } : null;
+}
+
+// D64: 12 語のチップ（2 段 × 6）。押すとその語へ。合図（3・2・1・今）と録音のあいだ（busy）・今の語・範囲の外は動かない（null）。
+// 移る時の片付け（録音をやめる・「聞く」を止める・枠を消す）は画面の goTo（「‹ 前の語」と同じ道）。
+export function jumpStep(target: number, current: number, busy: boolean): RecordStep | null {
+  if (busy || target === current || !Number.isInteger(target) || target < 0 || target >= VOICE_KEYS.length) return null;
+  return { kind: 'word', index: target };
+}
+
+// D64: チップの中身。語は録っている声の言葉の第一表記（wordPrompts の main＝見出しと同じ。英語の画面で日本語の声なら「いち」＝D60 の例外と同じ）。
+// 見た目: now（今の語。録れていても枠で示す＝前の 12 のますと同じ）・done（録音済み＝紺で塗る）・todo（まだ＝白）。
+// 読み上げ: 「4番目・よん・録音済み」「5番目・ご・まだ」（今の語は aria-current="step" を足す。録れたかどうかは今の語でも読む）。
+export type WordChipState = 'now' | 'done' | 'todo';
+export type WordChip = { key: VoiceKey; index: number; word: string; state: WordChipState; current: boolean; label: string };
+export function wordChips(pack: VoicePackRecord, current: number, translator: AppTranslator): WordChip[] {
+  const locale = pack.locale;
+  return VOICE_KEYS.map((key, index) => {
+    const recorded = Boolean(pack.words[key]);
+    const word = wordPrompts(locale, key, translator.locale).main;
+    const state: WordChipState = index === current ? 'now' : recorded ? 'done' : 'todo';
+    const label = translator.t('recordWordChip', { index: index + 1, word, state: translator.t(recorded ? 'recordWordDone' : 'recordWordTodo') });
+    return { key, index, word, state, current: index === current, label };
+  });
 }
 
 // 見出しの語（56px）＝選んだ言葉の語彙の第一表記、下の小さい語（20px）＝もう一方の語彙の第一表記（Ruling 0-1 の訂正）。

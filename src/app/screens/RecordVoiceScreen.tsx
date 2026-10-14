@@ -22,9 +22,9 @@ import { voicePreviewOptions } from '../voices/preview.ts';
 import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
 import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
-import { defaultRecordLanguage, defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts, type RecordStep } from '../voices/wizard.ts';
+import { defaultRecordLanguage, defaultVoiceName, jumpStep, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordChips, wordPrompts, type RecordStep } from '../voices/wizard.ts';
 
-// S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語 → 完成。
+// S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30・D64）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語（上の 12 語のチップでどの語へも移れる）→ 完成。
 // 1 語ごとに端末へ保存（戻る・電話・落ちるのどれでも録った語が残る）。「‹ 戻る」は S8 を出る（確認なし）。
 // マイクが使えない（拒否・ほかのアプリや通話が使用中）は別画面にせず、説明の画面の説明 3 行の場所に枠を出す。
 // 言葉の 2 択と「録音をはじめる」は残す＝もう一度は同じボタン（D30・Fable Q2/Q4）。
@@ -407,14 +407,17 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'} data-phase={phase}
       data-taken={take ? 'true' : 'false'} data-notice={alert !== 'none' ? alert : undefined}>
       {header}
-      <div class="dc-record-progress" role="progressbar" aria-valuemin={0} aria-valuemax={VOICE_KEYS.length} aria-valuenow={index + 1}
-        aria-label={translator.t('wordProgress', { index: index + 1 })}>
-        <div class="dc-record-progress-text" aria-hidden="true"><b>{index + 1}</b> / 12</div>
-        <div class="dc-record-cells" aria-hidden="true">
-          {VOICE_KEYS.map((key, cell) => (
-            <span key={key} class={`dc-record-cell${cell === index ? ' dc-record-cell--now' : pack.words[key] ? ' dc-record-cell--done' : ''}`} />
-          ))}
-        </div>
+      {/* D64（ひとみうさ承認 2026-10-14）: 進み具合の 12 のますを、押せる 12 語のチップ（2 段 × 6）に。押すとその語へ（「‹ 前の語」と同じ goTo＝録音をやめる・「聞く」を止める・枠を消す）。
+          紺で塗る＝録音済み・枠＝今の語・白＝まだ。合図と録音のあいだは押せない。位置はチップが示すので「6 / 12」の行は外した（375×548 で丸と帯が初期表示に残る）。
+          読み上げは組の名前＋各チップ「4番目・よん・録音済み」と aria-current="step"（progressbar は外した＝同じ位置を 2 回読まない） */}
+      <div class="dc-record-words" role="group" aria-label={translator.t('recordWords')} data-group="record-words" data-choices-max={VOICE_KEYS.length}
+        data-tap-compact data-fineprint lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>
+        {wordChips(pack, index, translator).map(chip => (
+          <button key={chip.key} type="button" class="dc-record-chip" data-state={chip.state} aria-current={chip.current ? 'step' : undefined}
+            aria-label={chip.label} disabled={recording} onClick={() => goTo(jumpStep(chip.index, index, recording))}>
+            <span>{chip.word}</span>
+          </button>
+        ))}
       </div>
       <div class="dc-record-word">
         <div class="dc-record-main" lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>{prompts.main}</div>

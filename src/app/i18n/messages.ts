@@ -198,7 +198,10 @@ export const APP_MESSAGES = {
     recordedUpTo: '{count}\u00A0/\u00A012\u00A0words recorded',
     recordedAll: 'Recorded (12 words)',
     startRecording: 'Start recording',
-    wordProgress: '{index} / 12 words',
+    recordWords: 'The 12 words',   // D64: 12 語のチップの組の名前（読み上げだけ）
+    recordWordChip: 'Word {index}, {word}, {state}',   // D64: チップの読み上げ。{word} は録っている声の語（日本語の声なら「いち」＝D60 の例外）
+    recordWordDone: 'recorded',
+    recordWordTodo: 'not yet',
     recordHint: 'At “Now!”, say “{word}”.',   // {word}＝その語の画面の大きい語（Ruling 72・D34 → D59 の合図に合わせて）
     recordWord: 'Record',
     recordAgain: 'Record again',
@@ -502,7 +505,10 @@ export const APP_MESSAGES = {
     recordedUpTo: '{count}\u00A0/\u00A012\u00A0語まで録音済み',
     recordedAll: '録音済み（12 語）',
     startRecording: '録音をはじめる',
-    wordProgress: '{index} / 12 語',
+    recordWords: '録音する 12 語',   // D64: 12 語のチップの組の名前（読み上げだけ）
+    recordWordChip: '{index}番目・{word}・{state}',   // D64: チップの読み上げ「4番目・よん・録音済み」
+    recordWordDone: '録音済み',
+    recordWordTodo: 'まだ',
     recordHint: '「今！」の合図で「{word}」と言ってください。',   // {word}＝その語の画面の大きい語（Ruling 72・D34 → D59 の合図に合わせて）
     recordWord: '録音する',
     recordAgain: '録り直す',

@@ -395,14 +395,25 @@ button { cursor: pointer; }
 /* 折り方は .dc-phrased（句の境だけ）。pretty・balance は句の境の中から行を選ぶだけ（Safari 26 でも効く＝F44。効かない所では無害） */
 .dc-record-intro, .dc-record .dc-alert-text { text-wrap: pretty; }
 .dc-record-hint { text-wrap: balance; }
-.dc-record-progress { margin-top: 4px; }
-.dc-record-progress-text { font-size: 18px; color: var(--ink2); white-space: nowrap; }
-.dc-record-progress-text b { font-size: 24px; color: var(--ink); }
-.dc-record-cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 6px; }
-.dc-record-cell { height: 10px; border-radius: 3px; border: 1.5px solid var(--line); }
-.dc-record-cell--done { background: var(--primary); border-color: var(--primary); }
-.dc-record-cell--now { background: var(--soft); border: 2px solid var(--primary); }
-.dc-record-word { margin: 16px 0 4px; text-align: center; }
+/* D64（ひとみうさ承認 2026-10-14）: 進み具合は押せる 12 語のチップ（2 段 × 6）。前の 12 のますと同じ色の決まり（紺＝録音済み・枠＝今の語・白＝まだ）。
+   高さは U3 の 48 ではなく 38（375×548 は 36）・間は 6px（[data-tap-compact]＝D64 の例外。ui:check もこの値で見る）。
+   語は折らない・はみ出さない（クイック・Seven・Three）: かなは詰め（palt）。スマホ幅（〜479px）は 14px（[data-fineprint]＝U1 の小さい字の下限）、
+   それより広い所は 16px。320 幅（〜359px）は 6 列に「クイック」が入らないので 4 列 × 3 段（D64 の妥協） */
+.dc-record-words { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }   /* 上の「‹ 戻る」との間 8（U3） */
+.dc-record-chip { display: flex; align-items: center; justify-content: center; min-width: 0; height: 38px; padding: 0;
+  border: 1.5px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink);
+  font-size: 16px; font-weight: 700; line-height: 1; white-space: nowrap; font-feature-settings: "palt"; }
+.dc-record-chip[data-state="done"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+/* 今の語: 紺の枠＋外に 2px の紺の輪（枠を太くすると中が狭まり「クイック」がはみ出す。輪はチップの間 6px の中に描く） */
+.dc-record-chip[data-state="now"] { background: var(--soft); border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); color: var(--primary); font-weight: 800; }
+.dc-record-chip:disabled { cursor: default; }
+@media (max-width: 479px) {
+  .dc-record-chip { font-size: 14px; letter-spacing: -0.02em; }
+}
+@media (max-width: 359px) {
+  .dc-record-words { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.dc-record-word { margin: 8px 0 4px; text-align: center; }   /* D64: 上はチップの段が区切る（16 → 8） */
 .dc-record-main { font-size: 56px; font-weight: 800; line-height: 1.15; letter-spacing: var(--track); overflow-wrap: anywhere; }
 .dc-record-other { font-size: 20px; color: var(--ink2); }
 /* 説明の 1 行と枠は同じ箱（枠の 2 行 59px 以上）。枠が出ても丸が動かない（Ruling 72-2） */
@@ -501,20 +512,22 @@ button { cursor: pointer; }
   .dc-practice .dc-chip-row { margin-top: 8px; min-height: 48px; }  /* 56 → 48（タップ対象の下限） */
   .dc-practice .dc-more { margin-top: 8px; }
   /* S8 語の画面: 丸と、録れた語の波形＋「聞く」が初期表示に入る（Ruling 71-7） */
-  .dc-record-progress { margin-top: 0; }
-  .dc-record-word { margin: 8px 0 4px; }
+  .dc-record-chip { height: 36px; }   /* D64: 375×548 は 36（丸と波形・帯が初期表示に残る） */
+  .dc-record-word { margin: 4px 0 4px; }   /* D64: 8 → 4 */
+  .dc-record-main { line-height: 1.05; }   /* D64: 56px の語の行の上下を詰める（1.15 → 1.05） */
+  .dc-record-other { line-height: 1.25; }  /* D64: 語の下の小さい語の行（日本語の画面）を詰める */
   .dc-record-slot { margin-bottom: 8px; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行は役目を終えている */
-  /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 のます）の場所に重ねる（最終レビュー M3）。
-     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 56px＝上の余白 8＋戻るの行 48 */
+  /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 語のチップ。D64）の場所に重ねる（最終レビュー M3）。
+     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 64px＝上の余白 8＋戻るの行 48＋チップの段の上の間 8（D64） */
   .dc-record[data-step="word"][data-taken="true"][data-notice] { position: relative; }
-  .dc-record[data-taken="true"][data-notice] .dc-record-progress { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 0; margin: 0; }
+  .dc-record[data-taken="true"][data-notice] .dc-record-words { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 64px; left: 16px; right: 16px; min-height: 0; margin: 0; }
   /* 録れた語の録り直しの録音中（D59）: 「約 2 秒で…」も同じく進み具合の行に重ねる（丸を動かさない） */
   .dc-record[data-step="word"][data-taken="true"][data-phase="capture"] { position: relative; }
-  .dc-record[data-taken="true"][data-phase="capture"] .dc-record-progress { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
-  .dc-take { margin-top: 8px; padding: 4px 0; }
+  .dc-record[data-taken="true"][data-phase="capture"] .dc-record-words { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 64px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
+  .dc-take { margin-top: 4px; padding: 4px 0; }   /* D64: 8 → 4 */
 }
 /* S9 配る（Ruling 82）: 名前 → 声 → 同意 → ルーティン → 下固定「ファイルを作る」。押せない理由は近くに 1 行（.dc-hint・.dc-dock-note） */
 .dc-share-heading { margin-top: 16px; }
