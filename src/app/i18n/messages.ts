@@ -71,6 +71,12 @@ export const APP_MESSAGES = {
     close: 'Close',
     // D66（ひとみうさ指示 2026-10-14）: 見出しの横の ⓘ と、画面ごとの 1〜2 文の説明
     aboutThisScreen: 'About this screen',
+    // D68（ひとみうさ指示 2026-10-14）: 配る時の生徒へのひとこと
+    shareNoteLabel: 'A note for your students (optional)',
+    shareNotePlaceholder: 'e.g. Please learn this by our next lesson',
+    shareNoteCount: '{count} / {max} characters',
+    shareNoteSent: 'Note: “{note}”',
+    teacherNote: 'A note from your teacher',
     infoMakeRoutines: 'Build a routine for each dance and add the counts. You can send a finished routine to your students, or play it in “Use”.',
     infoRecord: 'Record the 12 count words in your own voice, and the counts will play in your voice. You can send it to your students in “Share”.',
     infoShare: 'Put your voice and routines into one file and send it to your students. They open it in “Receive”.',
@@ -389,6 +395,12 @@ export const APP_MESSAGES = {
     close: '閉じる',
     // D66（ひとみうさ指示 2026-10-14）: 見出しの横の ⓘ と、画面ごとの 1〜2 文の説明
     aboutThisScreen: 'この画面について',
+    // D68（ひとみうさ指示 2026-10-14）: 配る時の生徒へのひとこと
+    shareNoteLabel: '生徒へのひとこと（なくてもOK）',
+    shareNotePlaceholder: '例：来週の練習日までに覚えてきてね',
+    shareNoteCount: '{count} / {max} 字',
+    shareNoteSent: 'ひとこと：「{note}」',
+    teacherNote: '先生からのひとこと',
     infoMakeRoutines: '種目ごとのルーティンを組み立てて、カウントをつけられます。できたルーティンは生徒に配ったり、「使う」で鳴らしたりできます。',
     infoRecord: 'カウントの 12 の言葉を自分の声で録音すると、その声でカウントが鳴ります。録音した声は「配る」で生徒に渡せます。',
     infoShare: '自分の声とルーティンを 1 つのファイルにして、生徒に送れます。生徒はそのファイルを「受け取る」で開きます。',

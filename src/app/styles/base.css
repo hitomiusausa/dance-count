@@ -606,6 +606,14 @@ button { cursor: pointer; }
 .dc-instructions-view { padding: 8px 12px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); font-size: 16px; line-height: 1.5;
   white-space: pre-line; overflow-wrap: anywhere; text-align: left; }
 .dc-instructions { min-height: 0; padding: 8px 12px; font-size: 16px; line-height: 1.5; resize: none; }
+/* D68: 配る時の生徒へのひとこと（S9 のいちばん下）と、受け取った側の「先生からのひとこと」（S10 の受け取りました・S5 の一覧の上） */
+.dc-share-note { margin-top: 16px; }
+.dc-share-note .dc-field { margin: 8px 0 0; }
+.dc-teacher-note { margin: 4px 0 16px; padding: 10px 12px; border-left: 4px solid var(--primary); border-radius: var(--r-s); background: var(--soft); color: var(--ink); }
+.dc-teacher-note-label { font-size: 16px; font-weight: 700; color: var(--ink2); }
+.dc-teacher-note-text { font-size: 18px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
+.dc-teacher-note--compact { margin: 8px 0 12px; padding: 6px 10px; }
+.dc-teacher-note--compact .dc-teacher-note-text { font-size: 16px; }
 /* S10 受け取る（Ruling 83）: 選ぶ（大きいボタン＋説明 2 行）→ 確認（中身の行・下に「やめる」「使う」）→ 受け取った */
 .dc-receive-choose { margin-top: 16px; }
 .dc-receive-help { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 18px; }

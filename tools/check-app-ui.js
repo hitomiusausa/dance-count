@@ -57,6 +57,10 @@ const LIMITS = Object.freeze({
 const LAST_ROUTINE = routine => ({ lastDanceId: 'waltz', lastKind: 'routine', lastRoutineId: routine.id, hints: { firstPlaybackDone: true } });
 const RECEIVED_LONG = { ...R.longJa, id: 'r-uicheck-recvlong', source: 'received', provenance: { ...R.longJa.provenance, sourceKind: 'received' }, receivedFrom: { distributor: '山田', receivedAt: '2026-10-14T00:00:00.000Z' } };
 const SEEDED = [R.waltz13, R.empty, R.longJa, R.longEn];
+// D68: 先生からのひとこと付きで受け取ったルーティン（S5 のフィガーの一覧の上に小さく）
+const TEACHER_NOTE = '来週の練習日までに覚えてきてね。最後のウィスクはゆっくり！';
+const RECEIVED_NOTE = { ...R.waltz13, id: 'r-uicheck-recvnote', source: 'received', provenance: { ...R.waltz13.provenance, sourceKind: 'received' },
+  receivedFrom: { distributor: '山田', receivedAt: '2026-10-14T00:00:00.000Z', note: TEACHER_NOTE } };
 // 段5: 受け取る画面に渡す配布ファイル（tools/make-share-fixtures.js が作る。Ruling 87-3）
 const SHARE = name => path.resolve(import.meta.dirname, '../test/fixtures/share', name);
 const TOO_LARGE = { name: 'big.dancecount.txt', mimeType: 'text/plain', buffer: Buffer.alloc(20 * 1024 * 1024 + 1, 32) };
@@ -238,6 +242,8 @@ const STATES = [
   // opsSmall: 375×548（Safari SE）では声チップが帯の下＝初期表示 4（Ruling 71-6）
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true, strip: { labels: '1 2 3' } },
   // D55（Ruling 114-3）: 15 語のフィガーは 12 語ずつ（止まっている間は 1 頁目）
+  { name: 'S5 受け取った・先生からのひとこと', hash: `#/routines/${RECEIVED_NOTE.id}/play`, screen: 'S5', kind: 'focus', seed: [RECEIVED_NOTE], ops: 5, opsSmall: 4, speedAndPlay: true,
+    present: ['[data-teacher-note]'], texts: ['先生からのひとこと', TEACHER_NOTE], textKeys: ['teacherNote'] },
   { name: 'S5 長いフィガーの帯', hash: `#/routines/${R.waltzLongFigure.id}/play`, screen: 'S5', kind: 'focus', seed: [R.waltzLongFigure], ops: 5, opsSmall: 4, speedAndPlay: true,
     strip: { labels: '1 2 3 1 2 3 1 2 3 1 2 3' } },
   // 夜間便 B-4（Ruling 124・監査 #12）: 鳴っている間は「今のフィガー」の下に「次: {名前}」。D33: 375×548 でも速さと ▶（■）が初期表示に残る
@@ -358,6 +364,9 @@ const STATES = [
   // 夜間便 B-3（Ruling 124・監査 #5）: ルーティン 1 本・完成した自分の録音 1 つなら、開いた時に両方選ばれている。同意は既定にしない（押すまで主ボタンは押せない）
   { name: 'S9 声 1・ルーティン 1（既定）', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: true,
     present: ['.dc-share-routine[aria-checked="true"]', '[data-group="share-voice"] [role="radio"]:nth-child(2)[aria-checked="true"]', '.dc-consent-box[aria-checked="false"]'] },
+  // D68: 生徒へのひとこと（いちばん下にたたんだ「くわしく」の型・任意）。開いて 85 字を入れても 80 字で止まり、下に「80 / 80 字」
+  { name: 'S9 ひとこと（80 字で止まる）', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 6, primaryDisabled: true,
+    present: ['.dc-share-note input'], texts: ['80 / 80 字'], textKeys: ['shareNoteLabel'], steps: [{ click: '.dc-share-note summary' }, { fill: ['.dc-share-note input', 'あ'.repeat(85)] }] },
   { name: 'S9 何も無い', info: true, titleRow: true, hash: '#/share', screen: 'S9', kind: 'focus', ops: 2, total: 2, primaryDisabled: true, textKeys: ['shareNothingYet'], firstView: ['.dc-dock-note'] },
   // Fable 答え 2026-10-13 §2-3: 途中の自分の声だけの時は「録音した声はまだありません。」ではなく進み具合と「そろうと配れる」（操作は増えない）
   { name: 'S9 ⓘ を開いた', info: 'open', titleRow: true, hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5,
@@ -427,6 +436,9 @@ const STATES = [
     absentTexts: ['ルーティンは、「使う」の下のタブ「ルーティン」にあります。'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
+  { name: 'S10 受け取った・先生からのひとこと', info: true, titleRow: true, hash: '#/receive', screen: 'S10', kind: 'focus', total: 1, present: ['[data-teacher-note]'],
+    texts: ['先生からのひとこと', TEACHER_NOTE], textKeys: ['teacherNote', 'playRoutine'], firstView: ['.dc-dock .dc-primary', '[data-teacher-note]'],
+    steps: [{ upload: ['input[type="file"]', SHARE('bundle-note-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' }, { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },
   { name: 'S10 受け取った・声とルーティン 1 本', hash: '#/receive', screen: 'S10', kind: 'focus', total: 2, textKeys: ['playRoutine', 'goHome'], firstView: ['.dc-dock .dc-primary', '[data-second-exit]'],
     steps: [{ upload: ['input[type="file"]', SHARE('bundle-voice-one-routine.dancecount.txt')] }, { wait: '[data-step="confirm"]' },
       { click: '.dc-receive-dock .dc-primary' }, { wait: '[data-step="done"]' }] },

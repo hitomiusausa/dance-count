@@ -23,6 +23,7 @@ import { useI18n } from '../state/i18n.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
+import { TeacherNote } from '../components/TeacherNote.tsx';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 interface Range { startIndex: number; endIndex: number }
@@ -198,6 +199,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
           </MoreOptions>
         </div>
         <div class="dc-area-list">
+          {/* D68: 受け取ったルーティンに先生からのひとことがあれば、フィガーの一覧の上に小さく（見返せる。初期表示の操作は押し下げない） */}
+          {routine.receivedFrom?.note && <TeacherNote note={routine.receivedFrom.note} compact />}
           <h2 class="dc-list-heading">{translator.t('figuresHeading')}</h2>
           <div ref={list} class="dc-list dc-play-list" role="list" data-list>
             {routine.figures.map((figure, index) => {

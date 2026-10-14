@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { ScreenHeading } from '../components/ScreenHeading.tsx';
+import { TeacherNote } from '../components/TeacherNote.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -139,6 +140,8 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
         <p class="dc-body">
           {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
         </p>
+        {/* D68: 先生からのひとこと（ファイルにあれば）。文字としてだけ出す（HTML として読まない） */}
+        {plan.note && <TeacherNote note={plan.note} />}
         {voice && received.length > 0 && (
           <button type="button" class="dc-link-row dc-receive-second" data-second-exit onClick={() => exitTo({ screen: 'S1', params: {} })}>
             <span class="dc-link-label">{translator.t('goHome')}</span><Icon name="chev-r" />

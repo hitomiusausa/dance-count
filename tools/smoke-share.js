@@ -23,6 +23,7 @@ const WRITE_SETTLE_MS = 500;       // 書き込みの確定を待ってから再
 const STANDARD_AUDIO = '/audio/default-en-female-v1/';
 const TOO_LARGE = { name: 'big.dancecount.txt', mimeType: 'text/plain', buffer: Buffer.alloc(20 * 1024 * 1024 + 1, 32) };
 const errors = [];
+const TEACHER_NOTE = '来週までに覚えてきてね <b>大事</b>';   // D68（HTML に見える字も文字のまま）
 
 function today() {
   const now = new Date();
@@ -139,6 +140,15 @@ try {
   await page.locator('.dc-consent-box').click();
   // 夜間便 B-3（Ruling 124）: ルーティンが 1 本だけなら開いた時に選ばれている（押すと外れる）
   if ((await page.locator('.dc-share-list [role="checkbox"]', { hasText: 'ワルツの練習' }).getAttribute('aria-checked')) !== 'true') errors.push('S9: the only routine is not chosen by default (B-3)');
+  // D68: 生徒へのひとこと（いちばん下にたたんである・任意）。開いて 90 字を打つと 80 字で止まり「80 / 80 字」→ 打ち直して短い文に。
+  // 文は HTML のように見える字も含める（受け取る側で文字のまま出ること）
+  if (await page.locator('.dc-share-note[open]').count()) errors.push('S9: the note should start folded');
+  await page.locator('.dc-share-note summary').click();
+  const noteInput = page.locator('.dc-share-note input');
+  await noteInput.fill('あ'.repeat(90));
+  if ((await noteInput.inputValue()).length !== 80) errors.push(`S9 note: typing 90 characters should stop at 80 (${(await noteInput.inputValue()).length})`);
+  if ((await text(page, '[data-note-count]')) !== '80 / 80 字') errors.push(`S9 note: the counter reads "${await text(page, '[data-note-count]')}"`);
+  await noteInput.fill(TEACHER_NOTE);
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.dc-dock .dc-primary').click()]);
   const expectedName = `声-山田-${today()}.dancecount.txt`;
   if (download.suggestedFilename() !== expectedName) errors.push(`S9: file name "${download.suggestedFilename()}", expected "${expectedName}"`);
@@ -146,6 +156,8 @@ try {
   await download.saveAs(teacherFile);
   await page.waitForSelector('.dc-result');
   await expectText(page, `「${expectedName}」を保存しました。`, 'S9 result');
+  await expectText(page, `ひとこと：「${TEACHER_NOTE}」`, 'S9 result (D68)');
+  if (await page.locator('.dc-share-note').count()) errors.push('S9 result: the note fold should give way to the result line (one "more" at a time)');
   await page.locator('.dc-share-done button', { hasText: '生徒への案内文をコピー' }).click();
   await page.waitForSelector('.dc-result-sub, textarea.dc-instructions');
   if (await page.locator('textarea.dc-instructions').count()) {
@@ -161,6 +173,7 @@ try {
   await page.waitForSelector('[data-screen="S9"]:not([data-loading])');
   if ((await page.locator('[data-group="distributor"] input').inputValue()) !== '山田') errors.push('S9: the name is not remembered');
   const bundle = JSON.parse(fs.readFileSync(teacherFile, 'utf8'));
+  if (bundle.note !== TEACHER_NOTE || bundle.schemaVersion !== 1) errors.push(`teacher file: note ${JSON.stringify(bundle.note)} / schemaVersion ${bundle.schemaVersion} (D68: the optional "note", version unchanged)`);
   if (bundle.type !== 'dance-count-bundle' || bundle.distributor?.name !== '山田' || !bundle.consent?.voiceDistribution || bundle.routines?.length !== 1) {
     errors.push(`teacher file: ${JSON.stringify({ type: bundle.type, distributor: bundle.distributor, consent: bundle.consent, routines: bundle.routines?.length })}`);
   }
@@ -210,6 +223,9 @@ try {
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
   await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
+  // D68: 先生からのひとこと（文字のまま。<b> は太字にならず字として出る）
+  if ((await text(s, '[data-teacher-note] .dc-teacher-note-text')) !== TEACHER_NOTE) errors.push(`S10 done: the teacher note reads "${await text(s, '[data-teacher-note] .dc-teacher-note-text')}"`);
+  if (await s.locator('[data-teacher-note] b').count()) errors.push('S10 done: the note was read as HTML');
   // 夜間便 B-2（Ruling 124）: ルーティンが 1 本入っていたら主ボタンは「ルーティンを鳴らす」・「種目を選ぶ」は 2 番目の行（在りかの 1 文は出さない）
   if ((await s.locator('.dc-dock .dc-primary').textContent())?.trim() !== 'ルーティンを鳴らす') errors.push(`S10 done: the main button reads "${(await s.locator('.dc-dock .dc-primary').textContent())?.trim()}", expected "ルーティンを鳴らす" (B-2)`);
   if ((await s.locator('main').textContent())?.includes('ルーティンは、「使う」の下のタブ「ルーティン」にあります。')) errors.push('S10 done: the routines sentence is shown next to the routine button (B-2)');
@@ -251,6 +267,7 @@ try {
   await s.waitForSelector('[data-screen="S5"]');
   await expectSounding(s, 'S5 received routine');
   await s.locator('[data-play]').click();
+  if ((await text(s, '[data-teacher-note] .dc-teacher-note-text')) !== TEACHER_NOTE) errors.push(`S5: the teacher note should stay on the received routine ("${await text(s, '[data-teacher-note] .dc-teacher-note-text')}")`);
 
   // 同じファイルをもう一度 → 置き換え（増えない。D38）
   await openReceive(s);

@@ -4,6 +4,7 @@ import { USER_PROVENANCE, normalizeRoutine, routinePlayability, type Routine } f
 import { ROUTINE_NAME_MAX } from '../routines/limits.ts';
 import { isCompletePack, normalizeVoicePackRecord, type VoicePackRecord } from '../voices/store.ts';
 import { stripInvisible } from './clean-text.ts';
+import { cleanNote } from './note.ts';
 import {
   BUNDLE_ROUTINES_MAX, BUNDLE_SCHEMA_VERSION, BUNDLE_TYPE, DISTRIBUTOR_NAME_MAX,
   RECEIVED_MIME_MAX, RECEIVED_MIME_PATTERN, RECEIVED_TIMESTAMP_MAX, RECEIVED_WORD_MS_MAX
@@ -22,6 +23,7 @@ export interface BundleInput {
   voice: ExportedVoice | null;       // exportVoiceForBundle の結果（声を入れない時は null）
   routines: readonly Routine[];
   now: string;
+  note?: string | null;              // 生徒へのひとこと（D68・任意・80 字まで）。空なら書かない
 }
 
 // 配れるのは録音した完成の声だけ（受け取った声は配れない。D37）。S9 は声を選んだ時に 1 回だけ呼び、結果を持っておく
@@ -37,7 +39,7 @@ export function cleanDistributorName(name: string): string {
 }
 
 // 束の JSON 文字列。名前が空・何も入っていない・上限を超える時は投げる（S9 は主ボタンを押せなくしているので、ここに来ない）。
-export function buildBundle({ distributorName, voice, routines, now }: BundleInput): string {
+export function buildBundle({ distributorName, voice, routines, now, note = null }: BundleInput): string {
   const name = cleanDistributorName(distributorName);
   if (!name) throw new Error('distributor name is required');
   if (!voice && routines.length === 0) throw new Error('nothing to share');
@@ -53,6 +55,9 @@ export function buildBundle({ distributorName, voice, routines, now }: BundleInp
     bundle.consent = { voiceDistribution: true, consentedAt: now } satisfies Consent;
     bundle.voicePack = voice;
   }
+  // D68: 生徒へのひとこと。版（schemaVersion）は上げない＝今までのアプリは知らない項目として読み飛ばす（parseBundle は決まった項目だけを読む）
+  const cleanedNote = cleanNote(note);
+  if (cleanedNote) bundle.note = cleanedNote;
   // ルーティンは自分で作った物の形で書く（受け取った物を配り直す時も。元の先生の名前は残さない。Ruling 80-2）。
   if (routines.length > 0) bundle.routines = routines.map(toSharedRoutine);
   return JSON.stringify(bundle);
@@ -76,6 +81,7 @@ export type ParsedBundle =
       legacy: boolean;                   // 旧画面の単体パック（dance-count-recorded-voice-pack）
       distributor: { name: string } | null;   // 旧単体パックだけ null
       consent: Consent | null;
+      note: string | null;               // 生徒へのひとこと（D68）。無い・文字列でない・空なら null（ファイルは壊れていない扱い）
       voice: ParsedVoice | null;
       routines: Routine[];               // 鳴らせる物だけ（ID は先生の端末のまま）
       rejected: Array<{ name: string | null }>;   // 読めなかったルーティン（名前が読めなければ null。画面が「（名前なし）」と出す）
@@ -95,12 +101,14 @@ export function parseBundle(text: string): ParsedBundle {
   let rawRoutines: unknown = undefined;
   let distributor: { name: string } | null = null;
   let consent: Consent | null = null;
+  let note: string | null = null;
   if (data.type === BUNDLE_TYPE) {
     if (Number.isInteger(data.schemaVersion) && (data.schemaVersion as number) > BUNDLE_SCHEMA_VERSION) return { ok: false, problem: 'too-new' };
     if (data.schemaVersion !== BUNDLE_SCHEMA_VERSION) return BROKEN;
     const name = isRecord(data.distributor) && typeof data.distributor.name === 'string' ? cleanDistributorName(data.distributor.name) : '';
     if (!name) return BROKEN;
     distributor = { name };
+    note = cleanNote(data.note);
     rawVoice = data.voicePack ?? null;
     rawRoutines = data.routines;
     if (rawVoice !== null) {
@@ -138,7 +146,7 @@ export function parseBundle(text: string): ParsedBundle {
     }
   }
   if (!voice && routines.length === 0) return BROKEN;   // 空の束・全部読めない束は「読めなかった」と同じ（Ruling 80-5-5）
-  return { ok: true, legacy, distributor, consent, voice, routines, rejected };
+  return { ok: true, legacy, distributor, consent, note, voice, routines, rejected };
 }
 
 // 声はエンジンの import（base64 → Blob・形の検査）→ 12 語そろい → 端末に保存できる形（名前・語ごと 2MB・合計 20MB）。

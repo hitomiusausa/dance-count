@@ -10,6 +10,7 @@ import { canShareFile, copyText, downloadFile, shareFile } from '../platform/fil
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
 import { bundleFileName } from '../share/filename.ts';
+import { NOTE_MAX, cleanNote, limitNoteInput, noteLength } from '../share/note.ts';
 import { shareDefaults, shareDockNote, shareSectionOrder } from '../share/layout.ts';
 import { studentInstructions } from '../share/instructions.ts';
 import { BUNDLE_MIME, BUNDLE_ROUTINES_MAX, DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
@@ -27,7 +28,7 @@ import { WaltzSpinner } from '../brand/BrandMark.tsx';
 // 押せない理由はボタンの近くに 1 行（依頼形にしない）。ファイルはタップの前に作っておき、タップでは共有を同期に呼ぶ（F22・Ruling 81-2）。
 // 作った後は上に結果の 1 行と「生徒への案内文をコピー」（初期表示の 5 を超えないため・「ファイル → 案内」の順。Ruling 82-4・82-5）。
 // 受け取った声は配れない（D37）。鳴らさない（Ruling 82-8）。
-type Result = { kind: 'sent' | 'saved' | 'refused'; file: File; hasVoice: boolean };
+type Result = { kind: 'sent' | 'saved' | 'refused'; file: File; hasVoice: boolean; note: string | null };
 
 export function ShareScreen() {
   const { translator } = useI18n();
@@ -40,6 +41,8 @@ export function ShareScreen() {
   // 録音が途中の自分の声（録れた語が一番多い 1 本。同数なら新しい方）。配れる声が無い時の 1 行に使う（Fable 答え 2026-10-13 §2-3）
   const [inProgress, setInProgress] = useState<VoicePackRecord | null>(null);
   const [name, setName] = useState(settings.distributorName);
+  const [note, setNote] = useState('');   // 生徒へのひとこと（D68・任意・80 字まで。端末には残さない＝ファイルごと）
+  const [noteOpen, setNoteOpen] = useState(false);
   const [voiceId, setVoiceId] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [chosen, setChosen] = useState<string[]>(() => (intent?.routineId ? [intent.routineId] : []));
@@ -96,15 +99,17 @@ export function ShareScreen() {
   const chosenKey = chosenRoutines.map(routine => `${routine.id}:${routine.updatedAt}`).join(',');
 
   // 選択・名前・同意が変わるたびにファイルを作り直す（タップの中で作らない＝共有をタップの最初の文で呼べる。Ruling 81-2）。
+  const madeNote = useRef<string | null>(null);   // 今のファイルに入れたひとこと（結果の枠に出す）
   const file = useMemo(() => {
     if (!ready) return null;
+    madeNote.current = cleanNote(note);
     const now = new Date();
-    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString() });
+    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString(), note: cleanNote(note) });
     return new File([text], bundleFileName({ locale, distributorName: cleanName, hasVoice: voice !== null, now }), { type: BUNDLE_MIME });
-  }, [ready, cleanName, voice, chosenKey, locale]);
+  }, [ready, cleanName, voice, chosenKey, locale, cleanNote(note)]);
 
   const show = (kind: Result['kind'], made: File, hasVoice: boolean) => {
-    setResult({ kind, file: made, hasVoice });
+    setResult({ kind, file: made, hasVoice, note: madeNote.current });
     setCopy('idle');
   };
 
@@ -224,6 +229,7 @@ export function ShareScreen() {
               : result.kind === 'refused' ? phrased(translator, 'shareRefused')
               : phrased(translator, 'shareSaved', { file: result.file.name })}</div>
             {copy === 'copied' && <div class="dc-result-sub">{phrased(translator, 'instructionsCopied')}</div>}
+            {result.note && <div class="dc-result-sub" data-note-sent>{translator.t('shareNoteSent', { note: result.note })}</div>}
           </div>
           {result.kind === 'refused' && (
             <button type="button" class="dc-button dc-button--secondary dc-wide" onClick={saveRefused}>
@@ -258,6 +264,23 @@ export function ShareScreen() {
         {needsName && <div class="dc-hint">{phrased(translator, 'shareNameNeeded')}</div>}
       </div>
       {shareSectionOrder(intent).map(section => <Fragment key={section}>{section === 'voice' ? voiceSection : routineSection}</Fragment>)}
+      {/* D68（ひとみうさ指示 2026-10-14）: 生徒へのひとこと（任意）。いちばん下にたたんで置く（「くわしく」と同じ型＝summary[data-more]。たたんだ状態は
+          主要操作に数えない＝初期表示の 5 を超えない・名前・声・同意・主ボタンを押し下げない）。80 字（書記素）で入力を止め、下に「n / 80 字」。
+          配る物が何も無い時は出さない。ファイルを作った後は、たたみを消して結果の枠に「ひとこと：…」を出す（「案内文を見る」と合わせて「くわしく」は 1 つ＝U6） */}
+      {!result && (voices.length > 0 || shareable.length > 0) && (
+        <details class="dc-more dc-share-note" open={noteOpen} onToggle={event => setNoteOpen((event.currentTarget as HTMLDetailsElement).open)}>
+          <summary data-more><span>{translator.t('shareNoteLabel')}</span><Icon name="chevron" /></summary>
+          <div class="dc-more-body">
+            <div class="dc-field" data-group="share-note">
+              <input class="dc-input" type="text" value={note} enterKeyHint="done" autoComplete="off" aria-label={translator.t('shareNoteLabel')} aria-describedby="dc-s9-note-count"
+                placeholder={translator.t('shareNotePlaceholder')}
+                onInput={event => { const input = event.currentTarget as HTMLInputElement; const next = limitNoteInput(input.value); if (next !== input.value) input.value = next; setNote(next); }}
+                onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
+              <div class="dc-hint" id="dc-s9-note-count" data-note-count>{translator.t('shareNoteCount', { count: noteLength(note), max: NOTE_MAX })}</div>
+            </div>
+          </div>
+        </details>
+      )}
       <div class="dc-dock dc-share-dock">
         {dockNote && <div class="dc-dock-note">{phrased(translator, dockNote === 'nothing' ? 'shareNothingYet' : 'shareChooseSomething')}</div>}
         <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>

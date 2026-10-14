@@ -14,6 +14,7 @@ export interface ImportPlan {
   routinesOverLimit: number;       // 200 本に入らなかった本数
   rejected: Array<{ name: string | null }>;
   distributor: { name: string } | null;
+  note: string | null;             // 生徒へのひとこと（D68）。S10 の「受け取りました」に出し、受け取ったルーティンにも持たせる
 }
 
 export interface PlanContext {
@@ -40,9 +41,9 @@ export function planImport(parsed: ParsedOk, packs: readonly VoicePackRecord[], 
     const same = routines.find(item => item.receivedFrom?.sourceId === routine.id) ?? null;
     if (!same && room <= 0) { routinesOverLimit += 1; continue; }
     if (!same) room -= 1;
-    planned.push({ routine: receivedRoutine(routine, parsed.distributor?.name ?? '', now, newId), replaces: same?.id ?? null });
+    planned.push({ routine: receivedRoutine(routine, parsed.distributor?.name ?? '', parsed.note, now, newId), replaces: same?.id ?? null });
   }
-  return { voice, voiceBlocked, routines: planned, routinesOverLimit, rejected: parsed.rejected, distributor: parsed.distributor };
+  return { voice, voiceBlocked, routines: planned, routinesOverLimit, rejected: parsed.rejected, distributor: parsed.distributor, note: parsed.note };
 }
 
 // 受け取った声（Ruling 84-1）: 新しい v- の ID・origin:'received'・誰から・同意・先生の端末の ID と時刻。
@@ -93,14 +94,14 @@ function receivedWords(words: VoicePackRecord['words']): VoicePackRecord['words'
 }
 
 // 受け取ったルーティン（Ruling 84-2）: ルーティンもフィガーも新しい ID・source:'received'・誰から（先生の端末の ID を sourceId に）。
-function receivedRoutine(routine: Routine, distributor: string, now: string, newId: PlanContext['newId']): Routine {
+function receivedRoutine(routine: Routine, distributor: string, note: string | null, now: string, newId: PlanContext['newId']): Routine {
   return {
     ...routine,
     id: newId('r'),
     figures: routine.figures.map(figure => ({ ...figure, id: newId('f') })),
     source: 'received',
     provenance: { ...USER_PROVENANCE, sourceKind: 'received' },
-    receivedFrom: { distributor, receivedAt: now, sourceId: routine.id },
+    receivedFrom: { distributor, receivedAt: now, sourceId: routine.id, ...(note ? { note } : {}) },
     createdAt: now,
     updatedAt: now
   };
