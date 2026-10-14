@@ -15,6 +15,9 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+/* PC: 行を開く・追加で縦のスクロールバーが出ても中身が左右に動かない（ひとみうさ 2026-10-15「中央が少しずれる」）。下の帯・上のタブ（fixed）も同じ中心になるのを実測。
+   中身が画面幅いっぱいの狭い幅（スマホ・狭い窓）には付けない（溝の 15px で幅が減り、枠の高さ・折れが変わるため） */
+@media (min-width: 700px) { html { scrollbar-gutter: stable; } }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 18px; line-height: 1.5; }
 button, a { font: inherit; color: inherit; }
 button { cursor: pointer; }
