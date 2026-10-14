@@ -9,6 +9,7 @@ import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, Noti
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
+import { tempoText } from '../practice/tempo.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -113,12 +114,12 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} />
         </div>
         <div>
-          <SpeedChoices presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
+          <SpeedChoices danceId={danceId} presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             {!figure && profile.templates.length > 1 && (
               <div>
                 <div class="dc-field-label"><span>{translator.t('countPattern')}</span></div>
@@ -132,7 +133,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
                 </div>
               </div>
             )}
-            <FineSpeed idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
+            <FineSpeed danceId={danceId} idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
             <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
             <VoiceOffsetRow idPrefix="dc-s2" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />

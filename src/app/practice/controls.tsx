@@ -9,6 +9,7 @@ import type { StripView } from './beat-indicator.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
+import { tempoText } from './tempo.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
 import { wakeLockTipKey } from './wake-tip.ts';
 
@@ -40,9 +41,9 @@ export function CountBox({ playing, countIn, nowText, idleText, strip, preparing
   );
 }
 
-// 速さの選択肢（S2 は3択、S5 は端で2択になることがある。Ruling 24・40）。選択中だけ「♩=値」を併記。
-export function SpeedChoices({ presets, selected, onChoose }: {
-  presets: Partial<Record<SpeedPreset, number>>; selected: SpeedChoice; onChoose(preset: SpeedPreset): void;
+// 速さの選択肢（S2 は3択、S5 は端で2択になることがある。Ruling 24・40）。選択中だけ速さを併記（D71: 日本語は「テンポ28」、英語は「♩=84」）。
+export function SpeedChoices({ danceId, presets, selected, onChoose }: {
+  danceId: string; presets: Partial<Record<SpeedPreset, number>>; selected: SpeedChoice; onChoose(preset: SpeedPreset): void;
 }) {
   const { translator } = useI18n();
   const shown = SPEED_PRESETS.filter(preset => presets[preset] !== undefined);
@@ -56,7 +57,7 @@ export function SpeedChoices({ presets, selected, onChoose }: {
             <button key={preset} type="button" class="dc-opt" role="radio" aria-checked={checked ? 'true' : 'false'}
               onClick={() => { if (!checked) onChoose(preset); }}>
               <b class="dc-opt-label">{checked && <Icon name="check" />}{translator.t(SPEED_LABEL[preset])}</b>
-              {checked && <small>{translator.t('tempoMark', { tempo: presets[preset]! })}</small>}
+              {checked && <small data-preset-tempo>{translator.t('presetTempo', { tempo: presets[preset]!, mpm: tempoText(danceId, presets[preset]!) })}</small>}
             </button>
           );
         })}
@@ -117,8 +118,9 @@ export function MoreOptions({ label, open, onToggle, children }: {
 }
 
 // 速さの細かい調整（スライダー 40〜220）と「競技の速さ」（Ruling 13・31）。1つのグループ。
-export function FineSpeed({ bpm, dragBpm, competition, onDrag, onCommit, idPrefix }: {
-  bpm: number; dragBpm: number | null; competition: { min: number; max: number };
+// D71: 値は「♩=84（テンポ28）」／“♩=84 · 28 MPM”、競技の速さにもテンポを添える。
+export function FineSpeed({ danceId, bpm, dragBpm, competition, onDrag, onCommit, idPrefix }: {
+  danceId: string; bpm: number; dragBpm: number | null; competition: { min: number; max: number };
   onDrag(value: number | null): void; onCommit(value: unknown): void; idPrefix: string;
 }) {
   const { translator } = useI18n();
@@ -128,13 +130,14 @@ export function FineSpeed({ bpm, dragBpm, competition, onDrag, onCommit, idPrefi
     <div class="dc-fine" data-group="speed-fine">
       <div class="dc-field-label" id={labelId}>
         <span>{translator.t('fineSpeed')}</span>
-        <span>{translator.t('tempoMark', { tempo: shown })}</span>
+        <span data-fine-tempo>{translator.t('fineTempo', { tempo: shown, mpm: tempoText(danceId, shown) })}</span>
       </div>
       <input aria-labelledby={labelId} type="range" min={BPM_MIN} max={BPM_MAX} step={1} value={shown}
         onInput={event => onDrag(Number((event.currentTarget as HTMLInputElement).value))}
         onChange={event => { onDrag(null); onCommit((event.currentTarget as HTMLInputElement).value); }} />
-      <button type="button" class="dc-chip" onClick={() => onCommit(competition.min)}>
-        {translator.t('competitionSpeed', { min: competition.min, max: competition.max })}
+      {/* D71: テンポを添えて 1 行に入らなくなったので、句の境で 2 行に折る（「競技の速さ／（♩=84〜90・テンポ28〜30）」） */}
+      <button type="button" class="dc-chip dc-chip--wrap" data-competition-speed onClick={() => onCommit(competition.min)}>
+        {phrased(translator, 'competitionSpeed', { min: competition.min, max: competition.max, mpmMin: tempoText(danceId, competition.min), mpmMax: tempoText(danceId, competition.max) })}
       </button>
     </div>
   );

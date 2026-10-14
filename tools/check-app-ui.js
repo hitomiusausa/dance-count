@@ -149,11 +149,13 @@ const STATES = [
     present: ['.dc-beats[data-lead] li[aria-current="true"]', '.dc-now--lead'],
     steps: [{ click: '[data-play]' }, { wait: '.dc-now--lead' }, { wait: '.dc-beats[data-lead] li[aria-current="true"]' }] },
   { name: 'S2 表に無いフィガー', hash: '#/practice/waltz/no-such-figure', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, landsOn: '#/practice/waltz', strip: { labels: '1 2 3' } },
-  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' } },
+  { name: 'S2 くわしく閉', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3' },
+    texts: ['テンポ28'] },   // D71: 速さの選択肢の 2 行目は日本語では「テンポ」（英語は ♩=84 のまま＝texts は日本語の周だけ）
   // D55（Ruling 114）: カウントの型の帯。ジャイブは 6 拍の型の 8 語（a も丸）・タンゴは S が Q の 2 倍の幅・320 でも 1 行
   { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
-  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms' },
+  { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms',
+    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'] },   // D71
   { name: 'S2 音が出ない', hash: '#/practice/waltz?ui-state=no-sound', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true },
   // 夜間便 A-4（Ruling 123・監査 #16）: 「自動ロック」は iPhone・iPad だけ。それ以外の端末は「画面が消えるまでの時間」
   { name: 'S2 画面が暗くなる案内', hash: '#/practice/jive?ui-state=wakelock-tip', screen: 'S2', kind: 'focus', speedAndPlay: true, alert: true, textKeys: ['wakeLockTipOther'] },

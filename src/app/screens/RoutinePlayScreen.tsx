@@ -12,6 +12,7 @@ import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, Noti
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
+import { tempoText } from '../practice/tempo.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -176,12 +177,12 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
           </CountBox>
         </div>
         <div class="dc-area-controls">
-          <SpeedChoices presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
+          <SpeedChoices danceId={routine.danceId} presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
               <div class="dc-range" data-group="range">
@@ -193,7 +194,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
                   onStep={delta => { const now = latest.current.range; const end = now.endIndex + delta; changeRange({ startIndex: Math.min(now.startIndex, end), endIndex: end }); }} />
               </div>
             </div>
-            <FineSpeed idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
+            <FineSpeed danceId={routine.danceId} idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
             <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
             <VoiceOffsetRow idPrefix="dc-s5" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
