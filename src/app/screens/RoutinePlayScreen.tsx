@@ -23,7 +23,7 @@ import { useI18n } from '../state/i18n.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
-import { TeacherNote } from '../components/TeacherNote.tsx';
+import { HEAD_FULL_MAX, TeacherNote } from '../components/TeacherNote.tsx';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 interface Range { startIndex: number; endIndex: number }
@@ -164,7 +164,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
         <div class="dc-area-main">
           <header class="dc-playhead">
             <h1 data-ellipsis title={routine.name} aria-label={routine.name}>{routine.name}</h1>
-            <small data-ellipsis>{subtitle}</small>
+            {/* D68: 先生からのひとことがあれば、副題（種目・作成者）の 1 行の代わりに吹き出しの 1 行（初期表示の操作を押し下げない。ひとみうさ 2026-10-14「くわしくを開かなくても見える所に」） */}
+            {routine.receivedFrom?.note ? <TeacherNote note={routine.receivedFrom.note} head /> : <small data-ellipsis>{subtitle}</small>}
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
           <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting}>
@@ -199,8 +200,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
           </MoreOptions>
         </div>
         <div class="dc-area-list">
-          {/* D68: 受け取ったルーティンに先生からのひとことがあれば、フィガーの一覧の上に小さく（見返せる。初期表示の操作は押し下げない） */}
-          {routine.receivedFrom?.note && <TeacherNote note={routine.receivedFrom.note} compact />}
+          {/* D68: 見出しの下の 1〜2 行で省略される長さの時だけ、フィガーの一覧の上に全文を小さく（見返せる） */}
+          {routine.receivedFrom?.note && [...routine.receivedFrom.note].length > HEAD_FULL_MAX && <TeacherNote note={routine.receivedFrom.note} compact />}
           <h2 class="dc-list-heading">{translator.t('figuresHeading')}</h2>
           <div ref={list} class="dc-list dc-play-list" role="list" data-list>
             {routine.figures.map((figure, index) => {

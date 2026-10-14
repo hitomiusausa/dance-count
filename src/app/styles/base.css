@@ -619,6 +619,11 @@ button { cursor: pointer; }
 .dc-teacher-note--compact .dc-teacher-face { flex-basis: 28px; width: 28px; height: 28px; }
 .dc-teacher-note--compact .dc-teacher-note-bubble { padding: 6px 12px 8px; }
 .dc-teacher-note--compact .dc-teacher-note-text { font-size: 16px; }
+/* S5 の見出しの下（head）: 副題の 1 行の代わり。顔 22px・本文 16px の 1 行（省略）。押せる物は無い */
+.dc-teacher-note--head { flex-basis: 100%; min-width: 0; gap: 6px; align-items: center; margin: 2px 0 0; }
+.dc-teacher-note--head .dc-teacher-face { flex-basis: 22px; width: 22px; height: 22px; }
+.dc-teacher-note--head .dc-teacher-note-bubble { padding: 1px 10px 2px; border-radius: 3px 10px 10px 10px; }
+.dc-teacher-note--head .dc-teacher-note-text { font-size: 16px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* S10 受け取る（Ruling 83）: 選ぶ（大きいボタン＋説明 2 行）→ 確認（中身の行・下に「やめる」「使う」）→ 受け取った */
 .dc-receive-choose { margin-top: 16px; }
 .dc-receive-help { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 18px; }

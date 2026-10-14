@@ -243,7 +243,7 @@ const STATES = [
   { name: 'S5 くわしく閉', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, ops: 5, opsSmall: 4, speedAndPlay: true, chipToDock: true, singleLineHeading: true, strip: { labels: '1 2 3' } },
   // D55（Ruling 114-3）: 15 語のフィガーは 12 語ずつ（止まっている間は 1 頁目）
   { name: 'S5 受け取った・先生からのひとこと', hash: `#/routines/${RECEIVED_NOTE.id}/play`, screen: 'S5', kind: 'focus', seed: [RECEIVED_NOTE], ops: 5, opsSmall: 4, speedAndPlay: true,
-    present: ['[data-teacher-note]'], texts: ['先生から', TEACHER_NOTE], textKeys: ['teacherNote'] },
+    present: ['[data-teacher-note]'], firstView: ['[data-teacher-note="head"]'], texts: ['先生から', TEACHER_NOTE], textKeys: ['teacherNote'] },
   { name: 'S5 長いフィガーの帯', hash: `#/routines/${R.waltzLongFigure.id}/play`, screen: 'S5', kind: 'focus', seed: [R.waltzLongFigure], ops: 5, opsSmall: 4, speedAndPlay: true,
     strip: { labels: '1 2 3 1 2 3 1 2 3 1 2 3' } },
   // 夜間便 B-4（Ruling 124・監査 #12）: 鳴っている間は「今のフィガー」の下に「次: {名前}」。D33: 375×548 でも速さと ▶（■）が初期表示に残る
