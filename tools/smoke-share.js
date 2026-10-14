@@ -134,7 +134,10 @@ try {
   await page.locator('[data-group="voice-actions"] button', { hasText: '配る' }).click();
   await page.waitForSelector('[data-screen="S9"]:not([data-loading])');
   if ((await page.locator('[data-group="share-voice"] [role="radio"][aria-checked="true"]').textContent())?.trim() !== '自分の声（英語）') errors.push('S9: the voice from S7 is not chosen');
-  if (!(await page.locator('.dc-dock .dc-primary').isDisabled())) errors.push('S9: "Create file" is pressable before the name and the consent');
+  // 名前・同意の前でも押せる。押すと作らずに案内（名前が先）→ 名前の欄にフォーカス（ひとみうさ 2026-10-14）
+  await page.locator('.dc-dock .dc-primary').click();
+  if (!(await page.locator('[data-blocked="name"]').count())) errors.push('S9: pressing "Create file" without a name shows no guidance');
+  if (!(await page.evaluate(() => document.activeElement?.getAttribute('aria-labelledby') === 'dc-s9-name-label'))) errors.push('S9: the name field is not focused after the guidance');
   await page.locator('[data-group="distributor"] input').fill('山田');
   await page.locator('[data-group="distributor"] input').press('Enter');
   await page.locator('.dc-consent-box').click();
