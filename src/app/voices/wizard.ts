@@ -18,11 +18,11 @@ export function stepAfterStart(pack: VoicePackRecord | null): RecordStep {
   return index === null ? { kind: 'done' } : { kind: 'word', index };
 }
 
-// 夜間便 A-1（Ruling 123・監査 #1a）: S8 の言葉の既定を決める 1 か所。入口（S7 の「続きを録音する」・M0 の行・ほか）が何本あっても同じ答え。
-// requested（S7 からの一回限りの印）があればそれ。無ければ途中（0 < 語数 < 12）の声がある言葉。両方とも途中なら updatedAt が新しい方。
+// 夜間便 A-1（Ruling 123・監査 #1a）: S8 の言葉の既定を決める 1 か所。入口（M0 の行・ほか）が何本あっても同じ答え。
+// 途中（0 < 語数 < 12）の声がある言葉。両方とも途中なら updatedAt が新しい方。
+// D75（ひとみうさ承認 2026-10-15）: S7 の「続きを録音する」を外したので、S7 からの一回限りの印（requested）は無くした。
 // 途中が無ければ 'en'（今までの既定）。説明の画面で 2 択を押した後は呼ばない（画面が「まだ触っていない」で守る）。
-export function defaultRecordLanguage(requested: VoiceLocale | null, saved: Record<VoiceLocale, VoicePackRecord | null>): VoiceLocale {
-  if (requested) return requested;
+export function defaultRecordLanguage(saved: Record<VoiceLocale, VoicePackRecord | null>): VoiceLocale {
   const inProgress = (['en', 'ja-JP'] as const)
     .map(locale => saved[locale])
     .filter((pack): pack is VoicePackRecord => pack !== null && !packProgress(pack).complete && packProgress(pack).recorded > 0);

@@ -32,7 +32,6 @@ export const APP_MESSAGES = {
     editFromMake: 'To edit or delete a routine, go to “Make” on the home screen.',
     cannotPlayEmpty: 'No figures yet. You can fix this in “Make”.',
     cannotPlayFix: 'Some counts need fixing. You can fix this in “Make”.',
-    recordFromMake: 'To record your own voice, go to “Make” on the home screen.',
     basicCount: 'Basic count',
     chooseDance: 'Choose a dance',
     danceGroup: 'Dances',
@@ -226,7 +225,6 @@ export const APP_MESSAGES = {
     distributorVoice: "{name}'s voice",
     defaultVoiceNameEn: 'My voice (English)',
     defaultVoiceNameJa: 'My voice (Japanese)',
-    voiceInProgressCount: '·\u00A0{count}\u00A0/\u00A012\u00A0words',   // 途中の声の行の数（名前のあと・灰色）。「7 / 12 words」は折らない（320 幅。Ruling 73）
     previewVoice: 'Preview',
     recordVoice: 'Record your voice',
     confirmDeleteVoiceTitle: 'Delete this voice?',
@@ -240,6 +238,7 @@ export const APP_MESSAGES = {
     recordedUpTo: '{count}\u00A0/\u00A012\u00A0words recorded',
     recordedAll: 'Recorded (12 words)',
     startRecording: 'Start recording',
+    openRecordedVoice: 'Open your recording',   // D75: S8 の説明の画面の主ボタン（選んだ言葉の声が 12 語そろっている時＝完成の画面へ）
     recordWords: 'The 12 words',   // D64: 12 語のチップの組の名前（読み上げだけ）
     recordWordChip: 'Word {index}, {word}, {state}',   // D64: チップの読み上げ。{word} は録っている声の語（日本語の声なら「いち」＝D60 の例外）
     recordWordDone: 'recorded',
@@ -393,7 +392,6 @@ export const APP_MESSAGES = {
     editFromMake: 'ルーティンを直す・消す時は、トップの「作る」\u2060から。',   // \u2060＝「」」の直後で折り返さない（375 幅で「から。」だけが残る）
     cannotPlayEmpty: 'フィガーがありません。「作る」で直せます。',
     cannotPlayFix: 'カウントに直す所があります。「作る」で直せます。',
-    recordFromMake: '自分の声の録音は、トップの「作る」\u2060から。',   // \u2060＝「」」の直後で折り返さない（320 幅で「から。」だけが次の行に残る）
     basicCount: '基本のカウント',
     chooseDance: '種目を選んでください',
     danceGroup: '種目',
@@ -583,7 +581,6 @@ export const APP_MESSAGES = {
     distributorVoice: '{name}の声',
     defaultVoiceNameEn: '自分の声（英語）',
     defaultVoiceNameJa: '自分の声（日本語）',
-    voiceInProgressCount: '·\u00A0{count}\u00A0/\u00A012\u00A0語',   // 途中の声の行の数（名前のあと・灰色）。「7 / 12 語」は折らない（320 幅。Ruling 73）
     previewVoice: '試聴',
     recordVoice: '自分の声を録音する',
     confirmDeleteVoiceTitle: 'この声を削除しますか？',
@@ -597,6 +594,7 @@ export const APP_MESSAGES = {
     recordedUpTo: '{count}\u00A0/\u00A012\u00A0語まで録音済み',
     recordedAll: '録音済み（12 語）',
     startRecording: '録音をはじめる',
+    openRecordedVoice: '録音した声を開く',   // D75: S8 の説明の画面の主ボタン（選んだ言葉の声が 12 語そろっている時＝完成の画面へ）
     recordWords: '録音する 12 語',   // D64: 12 語のチップの組の名前（読み上げだけ）
     recordWordChip: '{index}番目・{word}・{state}',   // D64: チップの読み上げ「4番目・よん・録音済み」
     recordWordDone: '録音済み',
