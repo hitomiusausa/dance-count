@@ -4,6 +4,7 @@ import { validateRoutineProvenance } from '../../engine/routine-provenance.js';
 import { APP_VERSION } from '../app-version.ts';
 import { BPM_MAX, BPM_MIN } from '../practice/speed.ts';
 import { isFigureId, isRoutineId } from './ids.ts';
+import { readDistributorId } from '../share/distributor-id.ts';
 import { cleanNote } from '../share/note.ts';
 import { COUNTS_MAX, CREATED_WITH_VERSION_MAX, FIGURE_NAME_MAX, FIGURES_MAX, ROUTINE_NAME_MAX } from './limits.ts';
 
@@ -16,7 +17,8 @@ export interface RoutineProvenance {
   sourceKind: RoutineSource; authority: null; authorityClaimStatus: 'not-applicable'; reviewStatus: 'unreviewed';
 }
 // sourceId＝先生の端末でのルーティンの ID（同じルーティンを受け取り直した時に置き換えるため。Ruling 84-4）
-export interface ReceivedFrom { distributor: string; receivedAt: string; sourceId?: string; note?: string }   // note＝先生からのひとこと（D68）
+// distributorId＝配る人の見分け用の番号（D76（ひとみうさ承認 2026-10-15）。旧い物には無い）
+export interface ReceivedFrom { distributor: string; receivedAt: string; sourceId?: string; distributorId?: string; note?: string }   // note＝先生からのひとこと（D68）
 export interface Routine {
   id: string;
   danceId: string;
@@ -100,7 +102,11 @@ export function normalizeRoutine(raw: unknown): Routine | null {
 function readReceivedFrom(value: unknown): ReceivedFrom | null {
   if (!isRecord(value) || typeof value.distributor !== 'string' || typeof value.receivedAt !== 'string') return null;
   const note = cleanNote(value.note);
-  return { distributor: value.distributor, receivedAt: value.receivedAt, ...(isRoutineId(value.sourceId) ? { sourceId: value.sourceId } : {}), ...(note ? { note } : {}) };
+  const distributorId = readDistributorId(value.distributorId);
+  return {
+    distributor: value.distributor, receivedAt: value.receivedAt, ...(isRoutineId(value.sourceId) ? { sourceId: value.sourceId } : {}),
+    ...(distributorId ? { distributorId } : {}), ...(note ? { note } : {})
+  };
 }
 
 function isName(value: unknown, max: number): value is string {

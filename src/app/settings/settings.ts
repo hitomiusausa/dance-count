@@ -5,12 +5,14 @@ import { isFigureSlug } from '../routines/figure-names.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
 import { VOLUME_DEFAULT, clampVolumePercent } from '../practice/volume.ts';
+import { readDistributorId } from '../share/distributor-id.ts';
 import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { isVoiceId } from '../voices/ids.ts';
 
 // 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
 // selectedVoiceId は録音・受け取った声の ID も残す（段4・Ruling 61-1）。voiceOffsetMsByVoiceId は標準の声のタイミング（Ruling 62-3。
 // 録音の声は声そのものの timingAdjustments に持つ）。distributorName は S9 の「あなたの名前」（次回から入っている。Ruling 82-2）。
+// distributorId は配る人の見分け用の番号（D76（ひとみうさ承認 2026-10-15）。初めて配布ファイルを作る時に作る・画面には出さない。share/distributor-id.ts）。
 // hints.backupTip* はバックアップの 1 行を出したか（S8 完成・S4 の最初の保存で各 1 回。Ruling 86-2・86-3）。
 // hints.firstPlaybackDone は初めて鳴った印・homeScreenCardDismissed は S1 の「ホーム画面に追加」カードを × で閉じた印（段7・Ruling 92-7・D42）。
 export const SETTINGS_KEY = 'app';
@@ -37,6 +39,7 @@ export interface AppSettings {
   clickVolume: number;                      // D73 メトロノームの大きさ（同上）
   barCounting: boolean;                     // D72 小節を数える（くわしく。S2・S5 共通・既定オフ。出す種目は practice/bar-count.ts）
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
+  distributorId: string | null;             // D76 見分け用の番号（null＝まだ配っていない。版は上げない＝無ければ null）
   hints: {
     wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean;
     firstPlaybackDone: boolean; homeScreenCardDismissed: boolean;
@@ -64,6 +67,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   clickVolume: 100,
   barCounting: false,
   distributorName: '',
+  distributorId: null,
   hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false }
 }) as AppSettings;
 
@@ -97,6 +101,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
     clickVolume: clampVolumePercent(source.clickVolume) ?? VOLUME_DEFAULT,
     barCounting: source.barCounting === true,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
+    distributorId: readDistributorId(source.distributorId),
     hints: {
       wakeLockTipShown: hints.wakeLockTipShown === true,
       backupTipShownForRecording: hints.backupTipShownForRecording === true,

@@ -87,8 +87,8 @@ async function readStores(page) {
       transaction.oncomplete = () => {
         db.close();
         resolve({
-          packs: packs.result.map(pack => ({ id: pack.id, origin: pack.origin, name: pack.name, distributor: pack.distributor?.name ?? null, sourceId: pack.sourceId ?? null })),
-          routines: routines.result.map(routine => ({ id: routine.id, source: routine.source, from: routine.receivedFrom?.distributor ?? null }))
+          packs: packs.result.map(pack => ({ id: pack.id, origin: pack.origin, name: pack.name, distributor: pack.distributor?.name ?? null, distributorId: pack.distributor?.id ?? null, sourceId: pack.sourceId ?? null })),
+          routines: routines.result.map(routine => ({ id: routine.id, source: routine.source, from: routine.receivedFrom?.distributor ?? null, distributorId: routine.receivedFrom?.distributorId ?? null }))
         });
       };
     };
@@ -180,6 +180,22 @@ try {
   if (bundle.type !== 'dance-count-bundle' || bundle.distributor?.name !== '山田' || !bundle.consent?.voiceDistribution || bundle.routines?.length !== 1) {
     errors.push(`teacher file: ${JSON.stringify({ type: bundle.type, distributor: bundle.distributor, consent: bundle.consent, routines: bundle.routines?.length })}`);
   }
+  // D76（ひとみうさ承認 2026-10-15）: 見分け用の番号（distributor.id・16 進 32 字）。画面には出さない。
+  // 再読み込みの後に名前を変えて作った 2 本目も同じ番号（端末の設定に残っている）
+  const senderId = bundle.distributor?.id;
+  if (!/^[0-9a-f]{32}$/.test(senderId ?? '')) errors.push(`teacher file: distributor.id ${JSON.stringify(senderId)} (D76)`);
+  await page.locator('[data-group="distributor"] input').fill('山田花子');
+  await page.locator('[data-group="distributor"] input').press('Enter');
+  await page.locator('.dc-consent-box').click();
+  const [download2] = await Promise.all([page.waitForEvent('download'), page.locator('.dc-dock .dc-primary').click()]);
+  const renamedFile = path.join(workDir, `renamed-${download2.suggestedFilename()}`);
+  await download2.saveAs(renamedFile);
+  await page.waitForSelector('.dc-result');
+  const renamed = JSON.parse(fs.readFileSync(renamedFile, 'utf8'));
+  if (renamed.distributor?.name !== '山田花子' || renamed.distributor?.id !== senderId || !renamed.voicePack || renamed.routines?.length !== 1) {
+    errors.push(`second file from the same device: ${JSON.stringify({ distributor: renamed.distributor, voice: Boolean(renamed.voicePack), routines: renamed.routines?.length })} (D76: same id)`);
+  }
+  if (senderId && (await page.locator('body').innerText()).includes(senderId)) errors.push('S9: the sender id is shown on screen (D76)');
 
   // ---- 先生: ほかの入口から S9 へ（段5 Task 9 I1・Task 10b） ----
   const entry = await openPage(browser, { canShare: false, microphone: true });
@@ -294,6 +310,22 @@ try {
   if (afterAgain.packs.filter(pack => pack.origin === 'received').length !== 1) errors.push(`after the same file again: voices ${JSON.stringify(afterAgain.packs)}`);
   if (afterAgain.routines.length !== 1 || afterAgain.routines[0].source !== 'received' || afterAgain.routines[0].from !== '山田') errors.push(`after the same file again: routines ${JSON.stringify(afterAgain.routines)}`);
   if (afterAgain.packs[0]?.sourceId !== 'user-recorded-v1' || !/^v-/.test(afterAgain.packs[0]?.id ?? '')) errors.push(`received voice ids: ${JSON.stringify(afterAgain.packs)}`);
+  if (afterAgain.packs[0]?.distributorId !== senderId || afterAgain.routines[0]?.distributorId !== senderId) errors.push(`received voice / routine should keep the sender id (D76): ${JSON.stringify(afterAgain)}`);
+
+  // D76: 名前を変えた同じ先生（同じ番号）のファイル → 声もルーティンも置き換え（2 つにならない）。確認の 1 行は生徒の一覧にある名前で
+  await openReceive(s);
+  await pickFile(s, renamedFile);
+  await s.waitForSelector('[data-step="confirm"]');
+  await expectText(s, '山田花子さんの声（英語）· 12 語', 'S10 renamed teacher');
+  await expectText(s, '山田さんの声はすでにあります。「使う」で新しい方に置き換わります。', 'S10 renamed teacher');
+  await expectText(s, '同じルーティンは新しい方に置き換わります。', 'S10 renamed teacher');
+  await s.locator('.dc-receive-dock .dc-primary').click();
+  await s.waitForSelector('[data-step="done"]');
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  const afterRenamed = await readStores(s);
+  const receivedPacks = afterRenamed.packs.filter(pack => pack.origin === 'received');
+  if (receivedPacks.length !== 1 || receivedPacks[0].distributor !== '山田花子' || receivedPacks[0].distributorId !== senderId) errors.push(`after the renamed teacher's file: voices ${JSON.stringify(afterRenamed.packs)} (D76)`);
+  if (afterRenamed.routines.length !== 1 || afterRenamed.routines[0].from !== '山田花子') errors.push(`after the renamed teacher's file: routines ${JSON.stringify(afterRenamed.routines)} (D76)`);
 
   // 旧画面の単体パック（名前の無いファイル）は声の名前で受け取れる
   await openReceive(s);
@@ -371,7 +403,7 @@ try {
   // 受け取った声は配れない（D37）・消すと標準（英語）に戻る
   await s.goto(`${BASE}#/voices`);
   await s.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  const yamada = s.locator('[data-group="voice"] [role="radio"]', { hasText: '山田さんの声' });
+  const yamada = s.locator('[data-group="voice"] [role="radio"]', { hasText: '山田花子さんの声' });   // D76: 名前を変えた先生の声に置き換わった
   await yamada.click();
   await yamada.click();
   const actions = await s.locator('[data-group="voice-actions"] button').allTextContents();
@@ -390,4 +422,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted; one "‹ Cover" tap reaches the cover after receiving');
+console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, a renamed teacher (same sender id) replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted; one "‹ Cover" tap reaches the cover after receiving');

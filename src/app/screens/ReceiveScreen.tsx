@@ -174,7 +174,7 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
             <div key={index} class="dc-receive-note">{phrased(translator, 'routineUnreadable', { name: item.name ?? translator.t('routineNoName') })}</div>
           ))}
           {plan.rejected.length > NAMES_SHOWN && <div class="dc-receive-note">{phrased(translator, 'routinesUnreadableMore', { count: plan.rejected.length - NAMES_SHOWN })}</div>}
-          {voice?.replaces && <div class="dc-receive-note">{replaceLine(translator, voice.pack, plan.distributor)}</div>}
+          {voice?.replaces && <div class="dc-receive-note">{replaceLine(translator, voice.replaces)}</div>}
           {replacesRoutines && <div class="dc-receive-note">{phrased(translator, 'replaceRoutines')}</div>}
           {plan.routinesOverLimit > 0 && <div class="dc-receive-note">{phrased(translator, 'routinesOverLimit', { max: ROUTINES_MAX, count: plan.routinesOverLimit })}</div>}
         </div>
@@ -237,8 +237,10 @@ function voiceLine(translator: AppTranslator, pack: VoicePackRecord, distributor
   return distributor ? phrased(translator, 'fileVoiceFrom', { name: honorific(distributor.name, translator.locale), ...values }) : phrased(translator, 'fileVoiceNamed', { name: pack.name, ...values });
 }
 
-function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
-  return distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
+// 置き換わる方（端末にある声）の名前で言う。D76（ひとみうさ承認 2026-10-15）: 見分け用の番号が同じなら名前を変えた先生の声も置き換わるので、
+// ファイルの新しい名前ではなく生徒の一覧に出ている名前（「山田さんの声はすでにあります」）
+function replaceLine(translator: AppTranslator, replaces: VoicePackRecord) {
+  return replaces.distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(replaces.distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: replaces.name });
 }
 
 // D69（案 A）: ルーティンも入っていたら、本文は主ボタンを指す（1 本＝「ルーティンを再生する」・2 本以上＝「ルーティンを見る」）。声だけは今のまま
