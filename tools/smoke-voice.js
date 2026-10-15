@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // 段4の完了条件（全体地図・Ruling 63-5）を本物の Chrome と偽マイク（WAV ファイル）で確かめる。
-// 表紙「作る」→ M0「自分の声を録音する」→ S8 英語 →「録音をはじめる」→ 3 語録って「戻る」→ M0 に「英語 · 3 / 12 語 · 続きから」→ S7 に「· 3 / 12 語」→
-// 開いて「続きを録音する」→ 4 語目から 12 語目まで（録るたびに波形と「聞く」）→ 完成 → 聞き比べ（自分の声・標準の声が鳴って止まる）→
-// 「完了」→ S7 で選ばれている → S2 ワルツが自分の声で鳴る・チップ「声: 自分の声（英語）」→ 再読み込みでも同じ →
-// くわしくの「早く」×2 で「−20 ms」→ 再読み込みでも残る → S7 で削除 → チップ「声: 標準（英語）」。
+// 表紙「作る」→ M0「自分の声を録音する」→ S8 英語 →「録音をはじめる」→ 3 語録って「戻る」→ M0 に「英語 · 3 / 12 語 · 続きから」→
+// S7 に途中の声は出ない（D75）→ M0 → S8 の説明の画面に「3 / 12 語まで録音済み」と「削除」・主ボタン「続きを録音する」→
+// 4 語目から 12 語目まで（録るたびに波形と「聞く」）→ 完成 → 聞き比べ（自分の声・標準の声が鳴って止まる）→
+// 「完了」→ M0（D75）→ S7 で選ばれている・もう一度押しても開かない → S2 ワルツが自分の声で鳴る・チップ「声: 自分の声（英語）」→ 再読み込みでも同じ →
+// くわしくの「早く」×2 で「−20 ms」→ 再読み込みでも残る → S8 の説明の画面で削除（D75）→ チップ「声: 標準（英語）」。
 // 録音の声で鳴ることの証明: 12 語が IndexedDB の voice-packs に入っている → 新しく読み直して選ぶ → ▶ の間、標準の声の音声
 // （/audio/default-en-female-v1/）が 1 本も要求されない。対照として、標準の声を選ぶと同じ操作で要求される。
 // 無音の本: 別のブラウザを無音の WAV（全 0）と、とても小さい声の WAV（0 ではないが RMS が基準未満）で起動 → 1 語目「録音する」→
@@ -202,15 +203,21 @@ try {
   await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
   const status = (await page.locator('a.dc-hub[href="#/voices/record"] small').textContent())?.trim();
   if (status !== '英語 · 3 / 12 語 · 続きから') errors.push(`M0: the recording row reads "${status}"`);
+  // D75（ひとみうさ承認 2026-10-15）: S7（使う）には途中の声を出さない。続きは M0 → S8 の説明の画面
   await page.goto(`${BASE}#/voices`);
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  const partial = (await page.locator('.dc-voice-partial').textContent())?.replace(/\u00a0/g, ' ').trim(); // 「3 / 12 語」は改行しない空白（U+00A0）でつないである
-  if (partial !== '自分の声（英語） · 3 / 12 語') errors.push(`S7: partial row reads "${partial}"`);
-  await page.locator('.dc-voice-partial').click();
-  await page.locator('[data-group="voice-actions"] .dc-button').first().click();
+  const s7Rows = await page.locator('[data-group="voice"] .dc-voice-name').allTextContents();
+  if (s7Rows.some(row => row.includes('自分の声'))) errors.push(`S7: the partial voice is shown ${JSON.stringify(s7Rows)}`);
+  await page.goBack();
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  await page.locator('a.dc-hub[href="#/voices/record"]').click();
   await page.waitForSelector('[data-step="intro"]');
+  await page.waitForSelector('.dc-dock .dc-primary:not([disabled])');
   const progressLine = (await page.locator('[data-group="record-language"] [aria-checked="true"] small').textContent())?.replace(/\u00a0/g, ' ').trim();
   if (progressLine !== '3 / 12 語まで録音済み') errors.push(`S8 intro: progress reads "${progressLine}"`);
+  if (!(await page.locator('[data-group="record-manage"] button', { hasText: '削除' }).count())) errors.push('S8 intro: no "Delete" for the voice in progress');
+  const continueLabel = (await page.locator('.dc-dock .dc-primary').textContent())?.trim();
+  if (continueLabel !== '続きを録音する') errors.push(`S8 intro: the primary button reads "${continueLabel}"`);
   await page.locator('.dc-dock .dc-primary').click();
   await page.waitForSelector('[data-step="word"]');
 
@@ -233,11 +240,18 @@ try {
     await page.waitForFunction(element => element.getAttribute('aria-pressed') === 'false', await button.elementHandle(), { timeout: SOUND_TIMEOUT_MS })
       .catch(() => errors.push(`compare ${index}: did not end by itself`));
   }
-  // 段5（D39）: 完成の帯は「完了」（左）と「配る ›」（右・主ボタン）。ここは「完了」で S7 へ
+  // 段5（D39）: 完成の帯は「完了」（左）と「配る ›」（右・主ボタン）。D75: 「完了」で M0（作る）へ戻る（M0 から来たので 1 つ戻る）
   await page.locator('.dc-record-dock button', { hasText: '完了' }).click();
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  const doneStatus = (await page.locator('a.dc-hub[href="#/voices/record"] small').textContent())?.trim();
+  if (doneStatus !== '英語 · 12 / 12 語 · 録音済み') errors.push(`M0 after "Done": the recording row reads "${doneStatus}"`);
+  // S7 では選ばれていて、もう一度押しても開かない（配る・削除は「作る」の側。D75）
+  await page.goto(`${BASE}#/voices`);
   await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
   const chosen = (await page.locator('[data-group="voice"] [role="radio"][aria-checked="true"]').textContent())?.trim();
   if (chosen !== '自分の声（英語）') errors.push(`S7: chosen row is "${chosen}"`);
+  await page.locator('[data-group="voice"] [role="radio"][aria-checked="true"]').click();
+  if (await page.locator('[data-group="voice-actions"]').count()) errors.push('S7: tapping my chosen voice again opened actions');
 
   // S2 が自分の声で鳴る（段4の完了条件）
   await page.goto(`${BASE}#/practice/waltz`);
@@ -285,13 +299,24 @@ try {
   await page.waitForTimeout(300);
   if ((await page.locator('[data-voice-offset]').textContent())?.trim() !== '−20 ms') errors.push('voice offset was not kept after reload');
 
-  // 削除 → 標準に戻る（Ruling 60-4）
-  await page.goto(`${BASE}#/voices`);
-  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  await page.locator('[data-group="voice"] [role="radio"][aria-checked="true"]').click();
-  await page.locator('[data-group="voice-actions"] .dc-button').last().click();
+  // 削除 → 標準に戻る（Ruling 60-4）。D75: 自分の声の削除は S8 の説明の画面（完成した英語の声は主ボタン「録音した声を開く」）
+  await page.goto(`${BASE}#/voices/record`);
+  await page.waitForSelector('[data-step="intro"]');
+  await page.waitForSelector('.dc-dock .dc-primary:not([disabled])');
+  const openLabel = (await page.locator('.dc-dock .dc-primary').textContent())?.trim();
+  if (openLabel !== '録音した声を開く') errors.push(`S8 intro (complete): the primary button reads "${openLabel}"`);
+  await page.locator('[data-group="record-manage"] button').click();
+  const detail = (await page.locator('dialog[open] .dc-dialog-detail').textContent())?.trim();
+  if (detail !== '自分の声（英語）') errors.push(`S8 delete confirm: names "${detail}"`);
   await page.locator('dialog[open] .dc-primary').click();
   await page.waitForTimeout(WRITE_SETTLE_MS);
+  if ((await readPacks(page)).length) errors.push(`S8 after delete: still stored ${JSON.stringify(await readPacks(page))}`);
+  if (await page.locator('[data-group="record-manage"]').count()) errors.push('S8 after delete: "Delete" is still shown');
+  if (await page.locator('[data-group="record-language"] small').count()) errors.push('S8 after delete: the progress line is still shown');
+  const startLabel = (await page.locator('.dc-dock .dc-primary').textContent())?.trim();
+  if (startLabel !== '録音をはじめる') errors.push(`S8 after delete: the primary button reads "${startLabel}"`);
+  await page.goto(`${BASE}#/voices`);
+  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
   const after = (await page.locator('[data-group="voice"] [role="radio"][aria-checked="true"]').textContent())?.trim();
   if (after !== '標準の声（英語）') errors.push(`S7 after delete: chosen "${after}"`);
   await page.goto(`${BASE}#/practice/waltz`);

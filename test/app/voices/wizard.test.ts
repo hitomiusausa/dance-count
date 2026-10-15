@@ -81,17 +81,16 @@ test('a recorded voice is named in the display language at the time of recording
   assert.equal(packDisplayName(createAppTranslator('en'), recordedInJapaneseUi), '自分の声（英語）', 'switching to English later shows the stored name as it is (like a routine name)');
 });
 
-test('S8 picks the language of the voice in progress when no one asked for one (夜間便 A-1・監査 #1a)', () => {
+test('S8 picks the language of the voice in progress (夜間便 A-1・監査 #1a・D75 で S7 の印は無し)', () => {
   const at = (pack: ReturnType<typeof packFixture>, updatedAt: string) => ({ ...pack, updatedAt });
   const jaOne = at(packFixture('ja-JP', 1), '2026-10-14T10:00:00.000Z');
-  assert.equal(defaultRecordLanguage(null, { en: null, 'ja-JP': jaOne }), 'ja-JP', 'Japanese 1/12 only → Japanese');
-  assert.equal(defaultRecordLanguage(null, { en: packFixture('en', 12), 'ja-JP': jaOne }), 'ja-JP', 'a finished English voice is not in progress');
+  assert.equal(defaultRecordLanguage({ en: null, 'ja-JP': jaOne }), 'ja-JP', 'Japanese 1/12 only → Japanese');
+  assert.equal(defaultRecordLanguage({ en: packFixture('en', 12), 'ja-JP': jaOne }), 'ja-JP', 'a finished English voice is not in progress');
   const enFive = at(packFixture('en', 5), '2026-10-14T11:00:00.000Z');
-  assert.equal(defaultRecordLanguage(null, { en: enFive, 'ja-JP': jaOne }), 'en', 'both in progress → the newer one');
-  assert.equal(defaultRecordLanguage(null, { en: at(enFive, '2026-10-14T09:00:00.000Z'), 'ja-JP': jaOne }), 'ja-JP');
-  assert.equal(defaultRecordLanguage(null, { en: null, 'ja-JP': null }), 'en', 'nothing → English as before');
-  assert.equal(defaultRecordLanguage(null, { en: packFixture('en', 12), 'ja-JP': packFixture('ja-JP', 12) }), 'en');
-  assert.equal(defaultRecordLanguage('en', { en: null, 'ja-JP': jaOne }), 'en', 'the request from S7 wins');
+  assert.equal(defaultRecordLanguage({ en: enFive, 'ja-JP': jaOne }), 'en', 'both in progress → the newer one');
+  assert.equal(defaultRecordLanguage({ en: at(enFive, '2026-10-14T09:00:00.000Z'), 'ja-JP': jaOne }), 'ja-JP');
+  assert.equal(defaultRecordLanguage({ en: null, 'ja-JP': null }), 'en', 'nothing → English as before');
+  assert.equal(defaultRecordLanguage({ en: packFixture('en', 12), 'ja-JP': packFixture('ja-JP', 12) }), 'en');
 });
 
 test('D64: a word chip jumps to that word (recorded or not); nothing during the countdown/recording, on the current word or out of range', () => {
