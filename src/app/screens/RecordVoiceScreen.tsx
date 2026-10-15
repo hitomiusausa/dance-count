@@ -447,7 +447,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
       {header}
       {/* D64（ひとみうさ承認 2026-10-14）: 進み具合の 12 のますを、押せる 12 語のチップ（2 段 × 6）に。押すとその語へ（「‹ 前の語」と同じ goTo＝録音をやめる・「聞く」を止める・枠を消す）。
           紺で塗る＝録音済み・枠＝今の語・白＝まだ。合図と録音のあいだは押せない。位置はチップが示すので「6 / 12」の行は外した（375×548 で丸と帯が初期表示に残る）。
-          読み上げは組の名前＋各チップ「4番目・よん・録音済み」と aria-current="step"（progressbar は外した＝同じ位置を 2 回読まない） */}
+          読み上げは組の名前＋各チップ「4番目・し・録音済み」と aria-current="step"（progressbar は外した＝同じ位置を 2 回読まない） */}
       <div class="dc-record-words" role="group" aria-label={translator.t('recordWords')} data-group="record-words" data-choices-max={VOICE_KEYS.length}
         data-tap-compact data-fineprint lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>
         {wordChips(pack, index, translator).map(chip => (

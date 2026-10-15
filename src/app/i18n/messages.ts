@@ -596,7 +596,7 @@ export const APP_MESSAGES = {
     startRecording: '録音をはじめる',
     openRecordedVoice: '録音した声を開く',   // D75: S8 の説明の画面の主ボタン（選んだ言葉の声が 12 語そろっている時＝完成の画面へ）
     recordWords: '録音する 12 語',   // D64: 12 語のチップの組の名前（読み上げだけ）
-    recordWordChip: '{index}番目・{word}・{state}',   // D64: チップの読み上げ「4番目・よん・録音済み」
+    recordWordChip: '{index}番目・{word}・{state}',   // D64: チップの読み上げ「4番目・し・録音済み」
     recordWordDone: '録音済み',
     recordWordTodo: 'まだ',
     recordHint: '「今！」の合図で「{word}」と言ってください。',   // {word}＝その語の画面の大きい語（Ruling 72・D34 → D59 の合図に合わせて）

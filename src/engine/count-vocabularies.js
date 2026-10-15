@@ -8,7 +8,7 @@ export const COUNT_VOCABULARIES = Object.freeze({
   }),
   'ja-JP': vocabulary('ja-JP', 'ja-JP', { en: 'Japanese counts', 'ja-JP': '日本語カウント' }, {
     slow: ['スロー', 'Slow'], quick: ['クイック', 'Quick'], one: ['いち', '1'], two: ['に', '2'],
-    three: ['さん', '3'], four: ['よん', '「し」でも可 / “shi” is also used'], five: ['ご', '5'], six: ['ろく', '6'],
+    three: ['さん', '3'], four: ['し', '「よん」でも可 / “yon” is also used'], five: ['ご', '5'], six: ['ろく', '6'],
     seven: ['なな', '「しち」でも可 / “shichi” is also used'], eight: ['はち', '8'], and: ['アンド', '&'], ah: ['ア', 'a']
   })
 });

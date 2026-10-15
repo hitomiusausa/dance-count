@@ -26,7 +26,7 @@ test('next only after the word is recorded, 12th leads to done; previous from th
 test('prompts: the chosen vocabulary big, the other one small in the Japanese UI (Ruling 59-2)', () => {
   assert.deepEqual(wordPrompts('en', 'slow', 'ja-JP'), { main: 'Slow', other: 'スロー' });
   assert.deepEqual(wordPrompts('ja-JP', 'slow', 'ja-JP'), { main: 'スロー', other: 'Slow' });
-  assert.deepEqual(wordPrompts('ja-JP', 'four', 'ja-JP'), { main: 'よん', other: 'Four' }, 'never the 「し」でも可 note');
+  assert.deepEqual(wordPrompts('ja-JP', 'four', 'ja-JP'), { main: 'し', other: 'Four' }, 'never the 「よん」でも可 note');
   assert.deepEqual(wordPrompts('en', 'ah', 'ja-JP'), { main: 'a', other: 'ア' });
 });
 
@@ -104,16 +104,16 @@ test('D64: a word chip jumps to that word (recorded or not); nothing during the 
   assert.equal(jumpStep(1.5, 7, false), null);
 });
 
-test('D64: chips show the recorded pack\'s words; states recorded / now / not yet; names like 「4番目・よん・録音済み」', () => {
+test('D64: chips show the recorded pack\'s words; states recorded / now / not yet; names like 「4番目・し・録音済み」', () => {
   const ja = createAppTranslator('ja-JP');
   const en = createAppTranslator('en');
   const chips = wordChips(packFixture('ja-JP', 7), 5, ja);
   assert.equal(chips.length, 12);
-  assert.deepEqual(chips.map(chip => chip.word), ['スロー', 'クイック', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'アンド', 'ア']);
+  assert.deepEqual(chips.map(chip => chip.word), ['スロー', 'クイック', 'いち', 'に', 'さん', 'し', 'ご', 'ろく', 'なな', 'はち', 'アンド', 'ア']);
   assert.deepEqual(chips.map(chip => chip.state), ['done', 'done', 'done', 'done', 'done', 'now', 'done', 'todo', 'todo', 'todo', 'todo', 'todo'],
     'the current word is shown as now even when recorded (like the old 12 cells)');
   assert.deepEqual(chips.filter(chip => chip.current).map(chip => chip.index), [5]);
-  assert.equal(chips[5]!.label, '6番目・よん・録音済み', 'recorded state is still read on the current word');
+  assert.equal(chips[5]!.label, '6番目・し・録音済み', 'recorded state is still read on the current word');
   assert.equal(chips[3]!.label, '4番目・に・録音済み');
   assert.equal(chips[8]!.label, '9番目・なな・まだ');
   const english = wordChips(packFixture('en', 2), 0, en);

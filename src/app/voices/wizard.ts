@@ -57,7 +57,7 @@ export function jumpStep(target: number, current: number, busy: boolean): Record
 
 // D64: チップの中身。語は録っている声の言葉の第一表記（wordPrompts の main＝見出しと同じ。英語の画面で日本語の声なら「いち」＝D60 の例外と同じ）。
 // 見た目: now（今の語。録れていても枠で示す＝前の 12 のますと同じ）・done（録音済み＝紺で塗る）・todo（まだ＝白）。
-// 読み上げ: 「4番目・よん・録音済み」「5番目・ご・まだ」（今の語は aria-current="step" を足す。録れたかどうかは今の語でも読む）。
+// 読み上げ: 「4番目・し・録音済み」「5番目・ご・まだ」（今の語は aria-current="step" を足す。録れたかどうかは今の語でも読む）。
 export type WordChipState = 'now' | 'done' | 'todo';
 export type WordChip = { key: VoiceKey; index: number; word: string; state: WordChipState; current: boolean; label: string };
 export function wordChips(pack: VoicePackRecord, current: number, translator: AppTranslator): WordChip[] {
