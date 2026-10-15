@@ -19,7 +19,7 @@ import { recordedPackIdFor, type VoiceLocale } from '../voices/ids.ts';
 import { captureWaitMs, countdownPlan, type CountMark } from '../voices/countdown.ts';
 import { processTake, type DecodeContext } from '../voices/normalize.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
-import { DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packDisplayName, packSelection } from '../voices/selection.ts';
+import { chooseVoice, forgetVoiceSettings, packDisplayName, packSelection, standardSelectionFor } from '../voices/selection.ts';
 import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, removeVoicePack, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
 import { defaultRecordLanguage, defaultVoiceName, jumpStep, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordChips, wordPrompts, type RecordStep } from '../voices/wizard.ts';
@@ -265,7 +265,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     if (!pack) return;
     if (comparePlaying && comparing === which) { session.stop(); return; }
     setComparing(which);
-    void session.play(voicePreviewOptions(which === 'mine' ? packSelection(pack) : DEFAULT_VOICE, 0, 2));
+    // D78: 「標準の声」は録った言葉の標準の声（日本語の録音は 標準の声（日本語）と比べる）
+    void session.play(voicePreviewOptions(which === 'mine' ? packSelection(pack) : standardSelectionFor(pack.locale), 0, 2));
   };
 
   // 空にしたら既定名に戻し、欄にも書き戻す（名前が変わらず描き直されない時も欄が空のまま見えない。最終レビュー M1）。

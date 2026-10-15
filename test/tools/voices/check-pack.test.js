@@ -74,9 +74,17 @@ test('WAV problems are each caught', async () => {
   await expectProblem(ja, async (_, dir) => fs.writeFile(path.join(dir, 'notes.txt'), 'x'), /notes\.txt/);
 });
 
-test('standard-voices.json is the single source and starts with English only', async () => {
+test('standard-voices.json is the single source: English first, then the Japanese standard voice (stage 6c・D78)', async () => {
   const voices = await loadStandardVoices();
-  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en' }]);
+  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en' }, { id: 'default-ja-female-v1', locale: 'ja-JP' }]);
+});
+
+test('the shipped Japanese standard pack passes the guard and its gate was approved by the owner (D78)', async () => {
+  const dir = path.join(root, 'public/audio/default-ja-female-v1');
+  const { problems, manifest } = await checkPack(dir);
+  assert.deepEqual(problems, []);
+  assert.equal(manifest.locale, 'ja-JP');
+  assert.equal(manifest.gate.status, 'approved');
 });
 
 test('checkDistAudio: listed packs must exist and pass; unknown packs must not ship', async () => {

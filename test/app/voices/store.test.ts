@@ -27,8 +27,9 @@ test('recorded voice ids are the legacy constants, one per language (Ruling 56-3
 
 test('the standard voice list starts with the English voice the settings default to (Ruling 60-5)', () => {
   assert.equal(STANDARD_VOICES[0]!.id, STANDARD_VOICE_ID);
-  assert.deepEqual(STANDARD_VOICES.map(voice => voice.locale), ['en']);
+  assert.deepEqual(STANDARD_VOICES.map(voice => voice.locale), ['en', 'ja-JP']);   // D78: 英語の下に日本語（Ruling 60-1）
   assert.equal(findStandardVoice(STANDARD_VOICE_ID)?.locale, 'en');
+  assert.equal(findStandardVoice('default-ja-female-v1')?.locale, 'ja-JP');
   assert.equal(findStandardVoice('user-recorded-v1'), undefined);
 });
 
