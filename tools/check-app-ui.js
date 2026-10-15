@@ -294,33 +294,33 @@ const STATES = [
     firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
   // 段4（Ruling 60・63）＋段5（Ruling 86-1）＋D56（Ruling 115-5）: S7 は 一覧 1＋「ファイルから受け取る」1＝2。「自分の声を録音する」は表紙の「作る」へ。
   // D75（ひとみうさ承認 2026-10-15）: 「録音は「作る」から」の案内の行も外した（S7 は声を選ぶだけ）。受け取った声の行を開くと voice-actions（削除）が足される。
-  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 2, total: 2, voiceRows: ['標準の声（英語）'], absent: ['.dc-record-link', '.dc-record-in-make', '.dc-hint'] },
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 2, total: 2, voiceRows: ['標準の声（英語）', '標準の声（日本語）'], absent: ['.dc-record-link', '.dc-record-in-make', '.dc-hint'] },
   // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。D56: S7 への入口は S2／S5 の声チップ（S1 の先生カード・S6 の「声」は無くなった。Ruling 115-5）。
   // フォーカスは見出し（main に落ちない）
   { name: 'S7（再生画面から）', hash: '#/voices', via: { hash: '#/practice/waltz', screen: 'S2' }, screen: 'S7', kind: 'focus', ops: 2, total: 2, focusHeading: true,
     steps: [{ click: 'a.dc-chip-row' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
   // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2）。一覧は data-choices-max=24 まで。下のボタンはスクロールで届く（初期表示は固定しない）
-  // D75: 途中の声（日本語 7/12）は出ない＝標準と合わせて 22 行
-  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 2, rows: 22 },
+  // D75: 途中の声（日本語 7/12）は出ない。D78: 標準は 2 行（英語・日本語）＝合わせて 23 行
+  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 2, rows: 23 },
   // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
   { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true,
     texts: ['この声はまだ端末に入っていません。'] },
   // 段5 Task 10b・D56: 声が 3 本でも「ファイルから受け取る」は 375×548 の初期表示に入る。D75: 途中の声（日本語 7/12）は出さない（続き・削除は S8 の説明の画面）
   { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
-    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声'], firstView: ['.dc-receive-link'] },
+    voiceRows: ['標準の声（英語）', '標準の声（日本語）', '自分の声（英語）', '山田さんの声'], firstView: ['.dc-receive-link'] },
   // D75: 自分の声は選ぶだけ。選んでいる自分の声をもう一度押しても開かない（「配る」「削除」は「作る」の側）
   { name: 'S7 自分の声は開かない', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
     absent: ['[data-group="voice-actions"]', '.dc-voice-row[data-open]'],
-    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
   // D37: 受け取った声は配れない（開いた行は「削除」だけ）
   { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     actions: { group: 'voice-actions', labels: ['削除'] },
-    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=3' }, { click: '[data-group="voice"] [role="radio"] >> nth=3' }] },
   // D75: S7 で消せるのは受け取った声だけ（ui-state=confirm-delete は最初の受け取った声）
   { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.receivedJa], confirm: true },
   { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', voiceSeed: [V.receivedJa], failDeletes: true, alert: true,
-    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
+    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' },
       { click: '[data-group="voice-actions"] button >> nth=-1' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
     absent: ['[data-alert="update"]'] },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
