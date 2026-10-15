@@ -562,6 +562,9 @@ button { cursor: pointer; }
   .dc-routine-play .dc-figure-now { margin-top: 2px; }             /* S5 の音が出ない枠つきでも速さが入る（Ruling 23） */
   .dc-practice .dc-now:not(.dc-now--lead) { min-height: 72px; font-size: 72px; }   /* 96 → 72（S5 と同じ） */
   .dc-practice .dc-countbox { padding-bottom: 4px; margin-bottom: 4px; }
+  /* 次便 A（2026-10-15）: S5 は見出しの下に種目の 1 行があるぶん、画面が暗くなる案内（Android 等の 3 行）の枠が出ると速さが下の ▶ に隠れた。
+     枠が出ている間だけ大きい数字を 72 → 56 に（枠を閉じれば戻る。600px 以上・S2 は変えない） */
+  .dc-routine-play:has([data-alert="wake-tip"]) .dc-now:not(.dc-now--lead) { min-height: 56px; font-size: 56px; }
   .dc-practice .dc-beats { margin-top: 4px; }
   .dc-practice .dc-beats li { height: 28px; }
   .dc-practice .dc-field-label { margin: 2px 0 4px; }

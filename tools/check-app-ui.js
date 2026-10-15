@@ -273,6 +273,9 @@ const STATES = [
   { name: 'S5 くわしく開', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, openMore: true, total: 9, present: ['[data-bar-counting]', ...SOUND_GROUP] },
   { name: 'S5 小節を数える・再生中', hash: S5_13, screen: 'S5', kind: 'focus', seed: SEEDED, settingsSeed: { barCounting: true }, speedAndPlay: true, wakeLock: true,
     present: ['[data-bar-count]'], steps: [{ click: '[data-play]' }, { wait: '[data-bar-count]' }] },   // D72
+  // 次便 A（2026-10-14 夜間便 B で見つけた）: 画面が暗くなる案内の枠が出ても、375×548 の日本語で速さと ▶ が初期表示に残る
+  { name: 'S5 画面が暗くなる案内', hash: `${S5_13}?ui-state=wakelock-tip`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true, textKeys: ['wakeLockTipOther'] },
+  { name: 'S5 画面が暗くなる案内（iPhone）', hash: `${S5_13}?ui-state=wakelock-tip`, screen: 'S5', kind: 'focus', seed: SEEDED, userAgent: IOS_SAFARI_UA, speedAndPlay: true, alert: true, textKeys: ['wakeLockTip'] },
   { name: 'S5 音が出ない', hash: `${S5_13}?ui-state=no-sound`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true },
   { name: 'S5 再生が止まった', hash: `${S5_13}?ui-state=stopped`, screen: 'S5', kind: 'focus', seed: SEEDED, speedAndPlay: true, alert: true,
     texts: ['再生が止まりました。もう一度 ▶ を押してください。'] },
