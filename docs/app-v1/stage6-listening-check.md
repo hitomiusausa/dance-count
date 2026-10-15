@@ -46,7 +46,7 @@
 
 | 採用する声（候補） | 理由 | approvedAt |
 |---|---|---|
-| | | |
+| `google-ja-JP-Chirp3-HD-Aoede-final-20261015`（Chirp3-HD-Aoede を語ごとに選んだ組み合わせ: スロー・に・さん・し・アンド（文字「アン」）・ろく（文字「ロク」）＝v4 速さ 1.15／クイック（「クイッ」）・ご＝v2／はち（「はちっ」）・ア（「アッ」）＝v3／いち＝最初の生成の終わりを 45ms 削り 120ms で絞る／なな＝最初の生成の終わりを 120ms で絞る）→ `default-ja-female-v1` | ひとみうさが iPhone（スピーカー）で語ごとに選んだ。練習・試合の速さとも英語の標準の声より悪くない・全種目の鳴り合わせの監査 ok。いちは 90 bpm のワルツ 1& で「アン」と重ならないように絞った・ななは「ななだ」を直した。D78 | 2026-10-15T10:06:20.796Z |
 
 採用の手順（く！ちゃん）: `npm run voices:adopt -- output/voices/<候補> --approved-by ひとみうさ --listened-on "iPhone SE" --notes "…"`（まず dry-run で確認）→ `--yes` → 6c（`src/app/voices/standard-voices.json` に `{ "id": "default-ja-female-v1", "locale": "ja-JP" }`・`messages.ts`）と**同じコミット**で。JSON に無いパックは `npm run build` が落とします。
 
