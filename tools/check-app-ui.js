@@ -405,11 +405,12 @@ const STATES = [
     textKeys: ['recordNeedsHttps'], absent: ['[data-alert="no-recorder"]'] },
   // 段5（Ruling 82・87-2）: S9 は 名前・声・同意・ルーティン・「ファイルを作る」＝5（上限）。作った後は「案内文をコピー」が足されて 6。
   // firstView: 375×548 でも名前・声・同意・主ボタンが初期表示に入る（声を選んだ後＝人の操作の後なので ops ではなく要素で見る）。
-  // 段5 Task 10b: 声の指定（S7 の「配る」）で来た時だけ 名前 → 声 → 同意 → ルーティン の並び（指定なしは ルーティン → 声）。via で S7 から実経路で開く
-  { name: 'S9 声あり', info: true, titleRow: true, hash: '#/share', via: { hash: '#/voices', screen: 'S7' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: false,
+  // 段5 Task 10b: 声の指定（「配る」）で来た時だけ 名前 → 声 → 同意 → ルーティン の並び（指定なしは ルーティン → 声）。
+  // D75: S7 の「配る」は無くなったので、via は S8 の説明 →「録音した声を開く」→ 完成の「配る ›」の実経路
+  { name: 'S9 声あり', info: true, titleRow: true, hash: '#/share', via: { hash: '#/voices/record', screen: 'S8' }, screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: false,
     firstView: ['[data-group="distributor"]', '[data-group="share-voice"]', '.dc-consent-row', '.dc-dock .dc-primary'],
-    steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
-      { click: '[data-group="voice-actions"] button >> nth=0' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }, { click: '[data-group="record-language"] [role="radio"] >> nth=0' }, { click: '.dc-dock .dc-primary' },
+      { wait: '[data-step="done"]' }, { click: '.dc-record-dock .dc-primary' }, { wait: '[data-screen="S9"]:not([data-loading])' }], focusHeading: true },
   // 段8 Task 12（D51・final-review m2）: 録音もルーティンも無い時は帯に「先に…と配れます。」の 1 行（操作は増やさない＝名前と主ボタン（押せない）の 2）
   // 夜間便 B-3（Ruling 124・監査 #5）: ルーティン 1 本・完成した自分の録音 1 つなら、開いた時に両方選ばれている。同意は既定にしない（押すまで主ボタンは押せない）
   { name: 'S9 声 1・ルーティン 1（既定）', hash: '#/share', screen: 'S9', kind: 'focus', seed: [R.waltz13], voiceSeed: [V.completeEn], total: 5, primaryDisabled: false,
@@ -620,7 +621,7 @@ try {
       if (state.seed) await page.evaluate(seedRoutinesInPage, state.seed);
       if (state.voiceSeed) await page.evaluate(seedVoicePacksInPage, state.voiceSeed);
       if (state.settingsSeed) await page.evaluate(seedSettingsInPage, state.settingsSeed);
-      // via: 別の画面から実経路で入る状態（S7 の「配る」→ S9 など。一回限りの印は URL に無いので直接は開けない）
+      // via: 別の画面から実経路で入る状態（S8 完成の「配る ›」→ S9 など。一回限りの印は URL に無いので直接は開けない）
       // seed した時は新しく読み込む（動いているアプリにハッシュだけ渡すと、古い一覧で S4／S5 を S3 へ置き換える。段7 Task 1）
       if (state.seed || state.voiceSeed || state.settingsSeed) await openAfterSeed(page, BASE + (state.via?.hash ?? state.hash));
       else await page.goto(BASE + (state.via?.hash ?? state.hash));
