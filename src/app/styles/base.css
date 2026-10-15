@@ -379,7 +379,10 @@ button { cursor: pointer; }
 .dc-range-step { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; min-height: 56px; border-bottom: var(--bw) solid var(--line); }
 .dc-range-label { font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-range-value { min-width: 0; font-size: 18px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-.dc-step { padding: 0 8px; gap: 2px; }
+/* 「‹ 前」「次 ›」: 山の絵は 24 の箱の真ん中 8px だけなので、箱の余白を詰めて外側と文字側の空きをそろえる（字と山の間は 6px ほど） */
+.dc-step { padding: 0 12px; gap: 4px; }
+.dc-step .dc-ic:first-child { margin: 0 -6px 0 -8px; }
+.dc-step .dc-ic:last-child { margin: 0 -8px 0 -6px; }
 .dc-list-heading { margin: 20px 0 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-play-list { margin-top: 8px; }
 /* 追従で見せる行が固定の ▶ の帯に隠れない */
