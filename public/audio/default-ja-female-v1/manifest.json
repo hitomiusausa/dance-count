@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "id": "default-ja-female-v1",
+  "name": "Google ja-JP-Chirp3-HD-Aoede（ことばごとに選んだ組み合わせ）",
+  "source": "google-cloud-tts",
+  "locale": "ja-JP",
+  "voiceName": "ja-JP-Chirp3-HD-Aoede",
+  "speakingRate": null,
+  "sampleRate": 48000,
+  "status": "auto-onset-measured",
+  "provider": "google-cloud-tts",
+  "generatedAt": "2026-10-15T09:03:25.322Z",
+  "pipeline": {
+    "version": "ja-v1",
+    "targetOnsetMs": 40,
+    "loudnessRef": "default-en-female-v1"
+  },
+  "gate": {
+    "status": "approved",
+    "approvedBy": "ひとみうさ",
+    "approvedAt": "2026-10-15T10:06:20.796Z",
+    "listenedOn": "iPhone（スピーカー）",
+    "notes": "Chirp3-HD-Aoede をことばごとに選んで組み合わせ（v2/v3/v4/最初）。ろく=ロク、なな・いちは終わりを絞った。2026-10-15 聞き比べページで選定",
+    "candidate": "google-ja-JP-Chirp3-HD-Aoede-final-20261015"
+  },
+  "words": {
+    "slow": {
+      "file": "slow.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 545,
+      "peakRms": 0.2296
+    },
+    "quick": {
+      "file": "quick.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 340,
+      "peakRms": 0.2155
+    },
+    "one": {
+      "file": "one.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 390,
+      "peakRms": 0.1138
+    },
+    "two": {
+      "file": "two.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 310,
+      "peakRms": 0.1851
+    },
+    "three": {
+      "file": "three.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 310,
+      "peakRms": 0.2238
+    },
+    "four": {
+      "file": "four.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 340,
+      "peakRms": 0.141
+    },
+    "five": {
+      "file": "five.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 335,
+      "peakRms": 0.2099
+    },
+    "six": {
+      "file": "six.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 455,
+      "peakRms": 0.2245
+    },
+    "seven": {
+      "file": "seven.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 445,
+      "peakRms": 0.2033
+    },
+    "eight": {
+      "file": "eight.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 395,
+      "peakRms": 0.2024
+    },
+    "and": {
+      "file": "and.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 330,
+      "peakRms": 0.1673
+    },
+    "ah": {
+      "file": "ah.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 240,
+      "peakRms": 0.2313
+    }
+  },
+  "onsetMeasuredAt": "2026-10-15T10:06:02.948Z"
+}
