@@ -292,42 +292,70 @@ const STATES = [
   // 帯があっても 375×548 で言語と「困った時は」は初期表示に入る（「プライバシー・アプリについて」は下でもよい＝ops は固定しない）
   { name: 'S6 更新あり', hash: '#/settings?ui-state=update-ready', screen: 'S6', kind: 'list', total: 3, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1',
     firstView: ['[data-group="language"]', 'a[href="#/help/install"]', 'a[href="#/help/sound"]'] },
-  // 段4（Ruling 60・63）＋段5（Ruling 86-1）＋D56（Ruling 115-5）: S7 は 一覧 1＋「ファイルから受け取る」1＝2。「自分の声を録音する」は表紙の「作る」へ移し、1 行の案内に。
-  // 行を開くと voice-actions が足される。
-  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 2, total: 2, voiceRows: ['標準の声（英語）'], textKeys: ['recordFromMake'], absent: ['.dc-record-link'] },
+  // 段4（Ruling 60・63）＋段5（Ruling 86-1）＋D56（Ruling 115-5）: S7 は 一覧 1＋「ファイルから受け取る」1＝2。「自分の声を録音する」は表紙の「作る」へ。
+  // D75（ひとみうさ承認 2026-10-15）: 「録音は「作る」から」の案内の行も外した（S7 は声を選ぶだけ）。受け取った声の行を開くと voice-actions（削除）が足される。
+  { name: 'S7 標準だけ', hash: '#/voices', screen: 'S7', kind: 'focus', ops: 2, total: 2, voiceRows: ['標準の声（英語）'], absent: ['.dc-record-link', '.dc-record-in-make', '.dc-hint'] },
   // 段8 Task 6 fix 1（レビュー I-1・Ruling 102-2）: S7 は読み込み中の形を通る。D56: S7 への入口は S2／S5 の声チップ（S1 の先生カード・S6 の「声」は無くなった。Ruling 115-5）。
   // フォーカスは見出し（main に落ちない）
   { name: 'S7（再生画面から）', hash: '#/voices', via: { hash: '#/practice/waltz', screen: 'S2' }, screen: 'S7', kind: 'focus', ops: 2, total: 2, focusHeading: true,
     steps: [{ click: 'a.dc-chip-row' }, { wait: '[data-screen="S7"]:not([data-loading])' }] },
   { name: 'S7 更新あり', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true, texts: ['新しい版があります。'], bannerAfter: 'h1' },
-  // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2＝標準と合わせて 23 行）。一覧は data-choices-max=24 まで。下のボタンはスクロールで届く（初期表示は固定しない）
-  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 2, rows: 23 },
+  // 段8（Ruling 103-2）: 声が多い生徒（受け取った 20＋自分の声 2）。一覧は data-choices-max=24 まで。下のボタンはスクロールで届く（初期表示は固定しない）
+  // D75: 途中の声（日本語 7/12）は出ない＝標準と合わせて 22 行
+  { name: 'S7 声が多い（受け取った 20 本）', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, ...V.received20], total: 2, rows: 22 },
   // 段8（Ruling 100-3）: 試聴で声が読めなかった時の枠（更新の帯はその間は出ない＝枠は 1 つ）
   { name: 'S7 声が端末に無い', hash: '#/voices?ui-state=voice-missing', screen: 'S7', kind: 'focus', ops: 2, total: 2, alert: true,
     texts: ['この声はまだ端末に入っていません。'] },
-  // 段5 Task 10b・D56: 声が 3 本でも「ファイルから受け取る」は 375×548 の初期表示に入る
+  // 段5 Task 10b・D56: 声が 3 本でも「ファイルから受け取る」は 375×548 の初期表示に入る。D75: 途中の声（日本語 7/12）は出さない（続き・削除は S8 の説明の画面）
   { name: 'S7 3 本', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
-    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声', '自分の声（日本語） · 7 / 12 語'], firstView: ['.dc-receive-link'] },
-  { name: 'S7 行を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
-    actions: { group: 'voice-actions', labels: ['配る', '削除'] },
+    voiceRows: ['標準の声（英語）', '自分の声（英語）', '山田さんの声'], firstView: ['.dc-receive-link'] },
+  // D75: 自分の声は選ぶだけ。選んでいる自分の声をもう一度押しても開かない（「配る」「削除」は「作る」の側）
+  { name: 'S7 自分の声は開かない', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 2,
+    absent: ['[data-group="voice-actions"]', '.dc-voice-row[data-open]'],
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' }] },
   // D37: 受け取った声は配れない（開いた行は「削除」だけ）
   { name: 'S7 受け取った声を開', hash: '#/voices', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.partialJa, V.receivedJa], total: 3,
     actions: { group: 'voice-actions', labels: ['削除'] },
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=2' }, { click: '[data-group="voice"] [role="radio"] >> nth=2' }] },
-  { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn], confirm: true },
-  { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn], failDeletes: true, alert: true,
+  // D75: S7 で消せるのは受け取った声だけ（ui-state=confirm-delete は最初の受け取った声）
+  { name: 'S7 削除の確認', hash: '#/voices?ui-state=confirm-delete', screen: 'S7', kind: 'focus', voiceSeed: [V.completeEn, V.receivedJa], confirm: true },
+  { name: 'S7 更新あり・消せなかった', hash: '#/voices?ui-state=update-ready', screen: 'S7', kind: 'focus', voiceSeed: [V.receivedJa], failDeletes: true, alert: true,
     steps: [{ click: '[data-group="voice"] [role="radio"] >> nth=1' }, { click: '[data-group="voice"] [role="radio"] >> nth=1' },
       { click: '[data-group="voice-actions"] button >> nth=-1' }, { click: 'dialog[open] .dc-primary' }, { wait: '[data-alert="save-failed"]' }],
     absent: ['[data-alert="update"]'] },
   // S8（Ruling 59-6・63-2・D30）: 偽マイク（起動引数）で「録音をはじめる」まで実経路。録音そのものは smoke:voice。
   // マイク拒否は説明の画面の中の枠（説明 3 行の場所）で、言葉の 2 択と「録音をはじめる」は残る＝説明と同じ 2（D30）。
   { name: 'S8 説明', info: true, titleRow: true, hash: '#/voices/record', screen: 'S8', kind: 'focus', ops: 2, total: 2, recordLanguage: 'en',
-    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first'] },
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }], absent: ['.dc-record-add-first', '[data-group="record-manage"]'], textKeys: ['startRecording'] },
   // 夜間便 A-1（Ruling 123・監査 #1a）: 日本語の声が途中（7/12）で、S7 の「続きを録音する」を通らずに来ても（M0 の行と同じ）日本語が選ばれている
   { name: 'S8 説明・ⓘ を開いた', info: 'open', titleRow: true, hash: '#/voices/record', screen: 'S8', kind: 'focus', total: 2, steps: [{ click: '[data-info]' }, { wait: '[data-info-pop]:not([hidden])' }] },
-  { name: 'S8 説明（日本語の途中あり）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], ops: 2, total: 2, recordLanguage: 'ja-JP',
+  // D75（ひとみうさ承認 2026-10-15）: 自分の声の続き・削除は S8 の説明の画面。録った語がある言葉を選ぶと 2 択の下に「削除」（主要操作 1 つ増えて 3）・
+  // 主ボタンは「続きを録音する」（途中）／「録音した声を開く」（12 語）。初期表示の数は固定しない: 375×548 までは 3 つとも入る（firstView）が、
+  // 320×568 の英語では説明の 3 行が折れて「削除」が下の帯の下になり 2（320 幅は崩れない幅で、初期表示の約束は 375×548）
+  { name: 'S8 説明（日本語の途中あり）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], total: 3, recordLanguage: 'ja-JP',
+    present: ['[data-group="record-manage"] button'], textKeys: ['continueRecording', 'delete'],
+    firstView: ['[data-group="record-language"]', '[data-group="record-manage"] button', '.dc-dock .dc-primary'],
     steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }] },
+  { name: 'S8 説明（英語が完成）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.completeEn], total: 3, recordLanguage: 'en',
+    present: ['[data-group="record-manage"] button'], textKeys: ['openRecordedVoice'],
+    firstView: ['[data-group="record-language"]', '[data-group="record-manage"] button', '.dc-dock .dc-primary'],
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }] },
+  // 英語は録っていない（日本語だけ途中）→ 英語を選ぶと「削除」は消え、主ボタンは「録音をはじめる」
+  { name: 'S8 説明（録っていない言葉を選んだ）', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], ops: 2, total: 2, recordLanguage: 'en',
+    absent: ['[data-group="record-manage"]'], textKeys: ['startRecording'],
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }, { click: '[data-group="record-language"] [role="radio"] >> nth=0' }] },
+  { name: 'S8 説明・削除の確認', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], confirm: true,
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }, { click: '[data-group="record-manage"] button' }] },
+  // 消すと 2 択の進み具合の行が消え、「削除」も消え、主ボタンは「録音をはじめる」に戻る
+  { name: 'S8 説明・削除した', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], ops: 2, total: 2, recordLanguage: 'ja-JP',
+    absent: ['[data-group="record-manage"]', '[data-group="record-language"] small'], textKeys: ['startRecording'],
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }, { click: '[data-group="record-manage"] button' }, { click: 'dialog[open] .dc-primary' },
+      { wait: '[data-group="record-language"]:not(:has(small))' }] },
+  // 端末から消せない時は声を残し、説明の画面に「保存できませんでした」（S7 と同じ）
+  { name: 'S8 説明・消せなかった', hash: '#/voices/record', screen: 'S8', kind: 'focus', voiceSeed: [V.partialJa], failDeletes: true, alert: true, total: 3,
+    present: ['[data-group="record-manage"] button', '[data-group="record-language"] small'],
+    steps: [{ wait: '.dc-dock .dc-primary:not([disabled])' }, { click: '[data-group="record-manage"] button' }, { click: 'dialog[open] .dc-primary' },
+      { wait: '[data-alert="save-failed"]' }] },
   // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（16px・操作ではない）。375×548 でも言葉の 2 択と主ボタンは初期表示に入る
   { name: 'S8 iPhone Safari（未録音）', hash: '#/voices/record', screen: 'S8', kind: 'focus', userAgent: IOS_SAFARI_UA, ops: 2, total: 2, recordLanguage: 'en',
     steps: [{ wait: '.dc-record-add-first' }], textKeys: ['recordAddFirst'],
@@ -1350,7 +1378,7 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (JSON.stringify(rows) !== JSON.stringify(state.voiceRows)) issues.push(`R60 voice rows ${JSON.stringify(rows)}, expected ${JSON.stringify(state.voiceRows)}`);
     const checked = [...document.querySelectorAll('[data-group="voice"] [role="radio"][aria-checked="true"]')];
     if (checked.length !== 1) issues.push(`R60 ${checked.length} chosen voices, expected 1`);
-    if (document.querySelector('[data-group="voice"] .dc-voice-partial[role="radio"]')) issues.push('R60 a partial voice is a radio (it must not be choosable)');
+    if (document.querySelector('[data-group="voice"] .dc-voice-partial')) issues.push('D75 an in-progress voice is shown on S7 (it belongs to S8)');
   }
   // 段4（Ruling 59）: 言葉の初期値は英語・録音ボタンは 144px で初期表示に入る・1 語目に「前の語」は無い・録れた語は波形と「聞く」が初期表示に入る・完成画面
   if (state.recordLanguage) {
@@ -1394,7 +1422,9 @@ function audit({ state, LIMITS, reducedMotion }) {
     if (!state.english && !other) issues.push('D60 the Japanese screen lost the small other-language word');
   }
   if (state.english && document.querySelector('[data-screen="S8"][data-step="word"], [data-screen="S8"][data-step="intro"]')) {   // 完成画面の声の名前は打った名前のまま（対象外）
-    const said = document.querySelector('main')?.innerText ?? '';
+    // D75: 説明の画面の削除の確認に出る声の名前も、端末に残った名前のまま（対象外）
+    const named = document.querySelector('[data-screen="S8"] dialog[open] .dc-dialog-detail')?.innerText ?? '';
+    const said = (document.querySelector('main')?.innerText ?? '').replace(named, '');
     if (/[\u3040-\u30ff]/.test(said) && !document.querySelector('[data-step="word"] .dc-record-main[lang="ja"]')) issues.push(`D60 the English S8 shows kana: "${said.match(/[^\n]*[\u3040-\u30ff][^\n]*/)?.[0]}"`);
   }
   // D64: 12 語のチップ。12 個・今の語は 1 つだけ（aria-current="step"）＝recordWordAt・語は 1 行でチップの中に入る・読み上げの名前は「n番目・語・状態」。

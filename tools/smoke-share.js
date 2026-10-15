@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 段5の完了条件（全体地図・Ruling 87-4）を本物の Chrome と本物のファイルで確かめる。2 つのコンテキスト＝2 台の端末（IndexedDB が別）。
-// 先生: 録音の声とルーティンを入れた端末 → S7 で声を開いて「配る」→ S9（声が選ばれている）→ 名前・同意・ルーティン →「ファイルを作る」
+// 先生: 録音の声とルーティンを入れた端末 → 表紙「作る」→ M0「配る」→ S9（声が選ばれている。D75 で S7 の「配る」は無くなった）→ 名前・同意・ルーティン →「ファイルを作る」
 //       （共有できない端末として canShare を false に＝ダウンロード）→ ファイル名・結果の 1 行・「案内文をコピー」→ 名前が次回も入っている。
 // 生徒: 何も無い端末 → 表紙「使う」→ 下の「ルーティン」→「ファイルから受け取る」→ S10「ファイルを選ぶ」に先生のファイル → 確認 →「使う」→「種目を選ぶ」（U1）→「‹ 表紙」1 回で表紙（Task 1 修正 1。ルーティンだけの時の U2 からも）→
 //       ワルツ ▶ が受け取った声で鳴る（標準の声の音声を 1 本も取りに行かない）・チップ「声: 山田さんの声」→ U2「山田さんから」→ 行を押すと S5 で鳴る。
@@ -127,13 +127,13 @@ try {
   await page.waitForSelector('[data-screen]');
   await page.evaluate(seedRoutinesInPage, [R.waltz13]);
   await page.evaluate(seedVoicePacksInPage, [V.completeEn]);
-  await openAfterSeed(page, `${BASE}#/voices`);
-  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
-  await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
-  await page.locator('[data-group="voice-actions"] button', { hasText: '配る' }).click();
+  // D75（ひとみうさ承認 2026-10-15）: 自分の声の「配る」は「作る」の側（S7 は選ぶだけ）。M0 の「配る」行から S9 へ（S8 完成の「配る ›」は下の「ほかの入口」）
+  await openAfterSeed(page, `${BASE}#/make`);
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  await page.locator('a.dc-hub[href="#/share"]').click();
   await page.waitForSelector('[data-screen="S9"]:not([data-loading])');
-  if ((await page.locator('[data-group="share-voice"] [role="radio"][aria-checked="true"]').textContent())?.trim() !== '自分の声（英語）') errors.push('S9: the voice from S7 is not chosen');
+  await page.waitForSelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]').catch(() => {});
+  if ((await page.locator('[data-group="share-voice"] [role="radio"][aria-checked="true"]').textContent())?.trim() !== '自分の声（英語）') errors.push('S9: my finished voice is not chosen');
   // 名前・同意の前でも押せる。押すと作らずに案内（名前が先）→ 名前の欄にフォーカス（ひとみうさ 2026-10-14）
   await page.locator('.dc-dock .dc-primary').click();
   if (!(await page.locator('[data-blocked="name"]').count())) errors.push('S9: pressing "Create file" without a name shows no guidance');
