@@ -85,6 +85,6 @@ test('the S13 text (about.ts) has the same keys in the same order in both langua
 
 test('S13 states what the app does, never a legal promise, and names the operator and the contact (§12・D47・D48)', () => {
   const all = Object.values(ABOUT_TEXT['ja-JP']).join('');
-  for (const fact of ['くうが株式会社', 'この端末の中にだけ', '解析ツール', '声を録音する画面でだけ', '公式のもの・監修を受けたものではありません']) assert.ok(all.includes(fact), fact);
+  for (const fact of ['くうが株式会社', 'この端末の中にだけ', 'Cloudflare Web Analytics', 'クッキーは使わず', '声を録音する画面でだけ', '公式のもの・監修を受けたものではありません']) assert.ok(all.includes(fact), fact);
   for (const promise of ['保証', '責任を負', '準拠法', '損害', '同意したものとみなし']) assert.ok(!all.includes(promise), `no legal promise: ${promise}`);
 });
