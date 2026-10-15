@@ -9,6 +9,7 @@ import { phrased } from '../i18n/phrased.tsx';
 import { canShareFile, copyText, downloadFile, shareFile } from '../platform/files.ts';
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
+import { ensureDistributorId } from '../share/distributor-id.ts';
 import { bundleFileName } from '../share/filename.ts';
 import { NOTE_MAX, cleanNote, limitNoteInput, noteLength } from '../share/note.ts';
 import { shareDefaults, shareDockNote, shareSectionOrder } from '../share/layout.ts';
@@ -41,6 +42,8 @@ export function ShareScreen() {
   // 録音が途中の自分の声（録れた語が一番多い 1 本。同数なら新しい方）。配れる声が無い時の 1 行に使う（Fable 答え 2026-10-13 §2-3）
   const [inProgress, setInProgress] = useState<VoicePackRecord | null>(null);
   const [name, setName] = useState(settings.distributorName);
+  // 見分け用の番号（D76（ひとみうさ承認 2026-10-15））。設定に無ければここで作り、初めてファイルを作った時に設定へ残す（画面には出さない）
+  const [sender] = useState(() => ensureDistributorId(settings.distributorId));
   const [note, setNote] = useState('');   // 生徒へのひとこと（D68・任意・80 字まで。端末には残さない＝ファイルごと）
   const [noteOpen, setNoteOpen] = useState(false);
   const [voiceId, setVoiceId] = useState<string | null>(null);
@@ -108,9 +111,11 @@ export function ShareScreen() {
     if (!ready) return null;
     madeNote.current = cleanNote(note);
     const now = new Date();
-    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString(), note: cleanNote(note) });
+    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString(), note: cleanNote(note), distributorId: sender.id });
     return new File([text], bundleFileName({ locale, distributorName: cleanName, hasVoice: voice !== null, now }), { type: BUNDLE_MIME });
   }, [ready, cleanName, voice, chosenKey, locale, cleanNote(note)]);
+
+  useEffect(() => { if (file && sender.isNew && settings.distributorId === null) update({ distributorId: sender.id }); }, [file !== null]);
 
   const show = (kind: Result['kind'], made: File, hasVoice: boolean) => {
     setResult({ kind, file: made, hasVoice, note: madeNote.current });

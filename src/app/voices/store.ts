@@ -1,5 +1,6 @@
 import { REQUIRED_VOICE_KEYS, createRecordedVoicePack, recordedPackProgress, validateRecordedVoicePack } from '../../engine/recorded-voice-pack.js';
 import type { AppStorage } from '../platform/storage.ts';
+import { readDistributorId } from '../share/distributor-id.ts';
 import { isVoiceId, recordedPackIdFor, toVoiceLocale, type VoiceLocale } from './ids.ts';
 
 // 声の保存（Ruling 56）。IndexedDB `dance-count-v2` v2 の voice-packs ストアに platform/storage 経由で読み書きする。
@@ -49,7 +50,7 @@ export interface VoicePackRecord {
   words: Partial<Record<VoiceKey, RecordedWord>>;
   timingAdjustments?: VoiceTimingAdjustments;
   origin: 'recorded' | 'received';
-  distributor?: { name: string };          // 受け取った声（段5が書く）
+  distributor?: { name: string; id?: string };   // 受け取った声（段5が書く）。id＝配る人の見分け用の番号（D76・旧い声には無い）
   consent?: { voiceDistribution: true; consentedAt: string };   // 段5が書く
   // 受け取った声だけ（段5・Ruling 84-1）: 先生の端末での ID と更新時刻（同じ先生の声を受け取り直した時に置き換える）・受け取った時刻
   sourceId?: string;
@@ -71,8 +72,9 @@ export function normalizeVoicePackRecord(raw: unknown): VoicePackRecord | null {
   }
   if (total > VOICE_LIMITS.packBytes) return null;
   const origin = raw.origin === 'received' ? 'received' : 'recorded';
+  const distributorId = isRecord(raw.distributor) ? readDistributorId(raw.distributor.id) : null;   // D76: 形が外れていれば持たない
   const distributor = isRecord(raw.distributor) && typeof raw.distributor.name === 'string' && raw.distributor.name.trim()
-    ? { name: [...raw.distributor.name.trim()].slice(0, VOICE_LIMITS.nameLength).join('') } : undefined;   // 文字（コードポイント）で切る（bundle.ts と同じ。最終レビュー M2）
+    ? { name: [...raw.distributor.name.trim()].slice(0, VOICE_LIMITS.nameLength).join(''), ...(distributorId ? { id: distributorId } : {}) } : undefined;   // 文字（コードポイント）で切る（bundle.ts と同じ。最終レビュー M2）
   const locale = toVoiceLocale(raw.locale);
   const { distributor: _drop, ...rest } = raw;
   return {
