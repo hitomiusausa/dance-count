@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Dance Count — 音楽とカウントの試聴</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#172747;background:#eef1f6}*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:720px;margin:auto}h1{font-size:26px;margin:12px 0}p{line-height:1.65}.card{background:white;border-radius:20px;padding:24px;margin:18px 0;box-shadow:0 6px 28px #1727470b}.tag{color:#6d4b15;font-weight:700}.count{text-align:center;font-size:100px;font-weight:750;height:140px;color:#172747}.strip{display:flex;justify-content:center;gap:14px}.strip span{padding:10px 16px;border-radius:10px;background:#edf0f6}.strip .active{background:#172747;color:white}label{display:block;margin:14px 0}select,input,button{font:inherit;min-height:46px}select{width:100%;border:1px solid #c6ccd6;border-radius:9px;padding:8px;background:white}input[type=range]{width:100%;accent-color:#172747}button{background:#172747;color:white;border:0;border-radius:12px;padding:10px 20px;cursor:pointer}button:disabled{opacity:.45;cursor:default}.row{display:flex;gap:12px;flex-wrap:wrap}.secondary{background:#e7ebf2;color:#172747}.note{font-size:14px;color:#4e5a6e}.metrics{font-variant-numeric:tabular-nums}summary{cursor:pointer;min-height:44px;padding:10px 0}output{display:block;white-space:pre-wrap;overflow-wrap:anywhere}a{color:#254f98}@media(max-width:420px){body{padding:14px}.card{padding:18px}.count{font-size:80px;height:115px}}
+</style>
+<main>
+<p class="tag">LOCAL PREVIEW · 有料機能の試作</p>
+<h1>音楽に合わせて、ルンバ。</h1>
+<p>Paper Umbrella に、いつものカウントを重ねてみる。</p>
+<div class="card">
+<div id="count" class="count">♪</div><div class="strip"><span>2</span><span>3</span><span>4</span><span>1</span></div>
+<p id="status" role="status">測定結果を読み込んでいます…</p>
+<label>試聴するところ<select id="section"><option value="20">前半 · 0:20 から32秒</option><option value="140">中盤 · 2:20 から32秒</option><option value="280">後半 · 4:40 から32秒</option></select></label>
+<div class="row"><button id="play" disabled>▶ 音楽とカウント</button><button id="stop" class="secondary" disabled>■ 止める</button></div>
+<label>音楽の大きさ <input id="music" type="range" min="0" max="0.7" value="0.32" step="0.01"></label>
+<label>声の大きさ <input id="voice" type="range" min="0" max="1.5" value="1" step="0.01"></label>
+<p class="note">試作の小節の頭は仮です。「2・3・4・1」の位置が音楽に合うか、ひちゃんの耳でも確認してね。</p>
+</div>
+<details class="card"><summary>拍の合わせ方を比べる</summary>
+<label>同期方法<select id="mode"><option value="measured">各拍の推定時刻に合わせる</option><option value="constant">一定BPMに合わせる（比較用）</option></select></label>
+<label>小節の1拍目（仮）<select id="phase"><option value="0">検出した拍を1拍目にする</option><option value="1">1拍後を1拍目にする</option><option value="2">2拍後を1拍目にする</option><option value="3">3拍後を1拍目にする</option></select></label>
+<label>拍の位置の調整 <input id="offset" type="range" min="-200" max="200" step="10" value="0"><span id="offsetValue">0 ms</span></label>
+<label><input id="click" type="checkbox"> 拍のクリックも鳴らす</label>
+<p class="note">合わせ方を変えると停止します。もう一度再生して比べられます。</p>
+<button id="export" class="secondary" disabled>試聴WAVを作る</button> <a id="download" hidden>保存する</a>
+</details>
+<div class="card note"><p id="metrics" class="metrics"></p><p>ローカル検証用。音源の利用権と小節位置は未確認。音楽を含む試作は公開用ビルドに入りません。</p><output id="verification"></output></div>
+</main>
+<script type="module" src="/tools/music-probe/lab.js"></script>
+</html>
