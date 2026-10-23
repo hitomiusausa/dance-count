@@ -234,3 +234,18 @@ test('each repeated routine clip shows its listening introduction without consum
     assert.equal(frames.at(-1).listening,false);assert.equal(frames.at(-1).event.figureIndex,0);assert.equal(frames.at(-1).event.token,'2');
   }finally{engine?.stop();globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;}
 });
+
+test('a selected figure repeats as whole units on the measured timeline, without mutating its counts',async()=>{
+  const {compileMusicProgram}=await import('../../src/engine/music-plan.js');
+  const figure={id:'fig',name:'Chasse',danceId:'waltz',counts:'12&3'},before=JSON.stringify(figure);
+  const waltz={...track,danceId:'waltz',beatsPerBar:3,counts:'123',anchorTick:0,sections:[{id:'section',startTick:3*960,endTick:21*960,anchorTick:3*960}]};
+  const plan=compileMusicProgram({track:waltz,sectionId:'section',figure,startMode:'music-first',delayBeats:6});
+  assert.equal(plan.figures.length,4);assert.equal(plan.events.length,16);
+  assert.deepEqual(plan.figures.map(f=>f.startTick/960),[9,12,15,18]);
+  assert.deepEqual(plan.events.filter(e=>e.token==='&').map(e=>e.absoluteTick/960),[10.5,13.5,16.5,19.5]);
+  assert.equal(plan.routineEndTick,21*960);assert.equal(JSON.stringify(figure),before);
+  const rumba=compileMusicProgram({track,sectionId:'section',figure:{...figure,danceId:'rumba',counts:'2341'},startMode:'music-first',delayBeats:8});
+  assert.equal(rumba.events[0].token,'2');assert.equal(rumba.events[0].absoluteTick,17*960);
+  assert.equal(rumba.figures.length,1,'do not add a partial figure beyond measured coverage');
+  assert.throws(()=>compileMusicProgram({track,sectionId:'section',figure}),e=>e.reason==='dance');
+});

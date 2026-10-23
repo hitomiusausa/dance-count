@@ -14,3 +14,6 @@ export function takeAutoplay(mark: AutoplayMark): boolean {
   pending = null;
   return matched;
 }
+
+// Leaving to choose music must discard an unconsumed automatic-start mark too.
+export function cancelAutoplay():void { pending=null; }

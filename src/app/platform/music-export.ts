@@ -29,7 +29,7 @@ export async function renderMusicFile(options: MusicOptions, signal: AbortSignal
   signal.throwIfAborted();
   const bytes=encodeMusicWav(rendered);
   signal.throwIfAborted();
-  return new File([bytes],`dance-count-${options.track.id}-${options.sectionId}-${options.rate}x-${options.repetitions}times-${options.countEnabled?'count':'music'}-${options.startMode??'together'}-${options.delayBeats??0}beats${options.routine?'-routine':''}.wav`,{type:'audio/wav'});
+  return new File([bytes],`dance-count-${options.track.id}-${options.sectionId}-${options.rate}x-${options.repetitions}times-${options.countEnabled?'count':'music'}-${options.startMode??'together'}-${options.delayBeats??0}beats${options.figure?'-figure':options.routine?'-routine':''}.wav`,{type:'audio/wav'});
 }
 
 // Return the actual saved bytes; reject clipped output instead of hiding it.

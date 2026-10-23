@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { requestAutoplay, takeAutoplay } from '../../src/app/state/autoplay.ts';
+import { requestAutoplay, takeAutoplay, cancelAutoplay } from '../../src/app/state/autoplay.ts';
 
 test('the resume mark plays once for its dance and is then gone', () => {
   requestAutoplay({ kind: 'dance', id: 'waltz' });
@@ -30,4 +30,11 @@ test('kind and id must both match (a dance id never starts a routine)', () => {
   assert.equal(takeAutoplay({ kind: 'routine', id: 'r-aaaaaaaa' }), false);
   requestAutoplay({ kind: 'routine', id: 'r-aaaaaaaa' });
   assert.equal(takeAutoplay({ kind: 'routine', id: 'r-bbbbbbbb' }), false);
+});
+
+
+test('leaving to choose music cancels a pending automatic start',()=>{
+  for(const kind of ['dance','routine'] as const){
+    requestAutoplay({kind,id:'test'});cancelAutoplay();assert.equal(takeAutoplay({kind,id:'test'}),false);
+  }
 });

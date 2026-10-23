@@ -7,7 +7,6 @@ import { LastPracticeName } from '../i18n/LastPracticeName.tsx';
 import { formatCounts } from '../lib/count-display.ts';
 import { showsInstallCard } from '../lib/install-card.ts';
 import { isStandalone, platformKind } from '../platform/pwa.ts';
-import { musicPreviewEnabled } from '../platform/music.ts';
 import { buildHash } from '../router/routes.ts';
 import { reviewedFigures } from '../routines/reviewed-counts.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -45,9 +44,6 @@ export function HomeScreen() {
           <span class="dc-resume-go"><Icon name="play" /><span>{translator.t('resume')}</span></span>
         </button>
       )}
-      {musicPreviewEnabled() && <a class="dc-link-row dc-music-entry" data-music-entry href={buildHash({screen:'U3',params:{}})}>
-        <Icon name="play" /><span class="dc-link-label">{translator.t('musicPractice')}</span><Icon name="chev-r" />
-      </a>}
       <h1 class="dc-heading">{translator.t('chooseDance')}</h1>
       <div class="dc-tiles" role="group" aria-label={translator.t('danceGroup')} data-group="dance">
         {DANCE_IDS.map(danceId => (

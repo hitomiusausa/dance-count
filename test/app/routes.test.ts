@@ -86,9 +86,10 @@ test('buildHash never writes the query, so navigating clears ui-state', () => {
   assert.equal(buildHash(route), '#/practice/waltz');
 });
 
-test('tabs show on the two "Use" roots only (D56・Ruling 116-1)', () => {
+test('tabs show on the three Use roots (music navigation, 2026-10-23)', () => {
   const visible = (Object.keys(SCREENS) as ScreenId[]).filter(showsTabs).sort();
-  assert.deepEqual(visible, ['S1', 'U2']);
+  assert.deepEqual(visible, ['S1', 'U2', 'U3']);
+  assert.equal(tabOf('U3'),'music');
   assert.equal(tabOf('S1'), 'practice');
   assert.equal(tabOf('U2'), 'routines');
   assert.equal(tabOf('M0'), null);
@@ -96,7 +97,7 @@ test('tabs show on the two "Use" roots only (D56・Ruling 116-1)', () => {
 
 test('back without history goes to the parent from the D56 route table (Ruling 116-1)', () => {
   const expected: Record<ScreenId, ScreenId | null> = {
-    S0: null, S1: 'S0', U2: 'S0', U3: 'S1', U4: 'U3', M0: 'S0', M1: 'M0', F1: 'S1', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
+    S0: null, S1: 'S0', U2: 'S0', U3: 'S0', U4: 'U3', U5: 'U3', M0: 'S0', M1: 'M0', F1: 'S1', S2: 'S1', S4: 'M1', S5: 'U2', S6: 'S0', S7: 'S1',
     S8: 'M0', S9: 'M0', S10: 'U2', S11: 'S6', S12: 'S6', S13: 'S6'
   };
   for (const screen of Object.keys(expected) as ScreenId[]) assert.equal(parentScreen(screen), expected[screen], screen);
@@ -105,7 +106,7 @@ test('back without history goes to the parent from the D56 route table (Ruling 1
 test('only the cover has no back button; the screens under the cover say "Cover" (D56・Ruling 116-2・116-3)', () => {
   const kinds = Object.fromEntries((Object.keys(SCREENS) as ScreenId[]).map(screen => [screen, SCREENS[screen].kind]));
   assert.deepEqual(Object.entries(kinds).filter(([, kind]) => kind === 'cover').map(([screen]) => screen), ['S0']);
-  assert.deepEqual((Object.keys(SCREENS) as ScreenId[]).filter(screen => parentScreen(screen) === 'S0').sort(), ['M0', 'S1', 'S6', 'U2']);
+  assert.deepEqual((Object.keys(SCREENS) as ScreenId[]).filter(screen => parentScreen(screen) === 'S0').sort(), ['M0', 'S1', 'S6', 'U2', 'U3']);
 });
 
 test('D57: F1 is #/figures/:danceId and S2 has a figure form #/practice/:danceId/:figureSlug (Ruling 119-1・120-1)', () => {

@@ -57,8 +57,8 @@ export function exitTo(target: RouteTarget): void {
 
 // 履歴があれば1つ戻る。直接開いた等で無ければ親画面へ置き換え（親は params を持たない画面だけ）。
 // 親が表紙の画面（「‹ 表紙」）は 1 回で表紙に着く: 見てきた列の一番近い表紙まで戻り、無ければ表紙へ置き換え（Fable 答え §1-1・Task 1 修正 1）。
-export function goBack(current: ScreenId): void {
-  if (parentScreen(current) === 'S0') {
+export function goBack(current: ScreenId, fallback?: RouteTarget): void {
+  if (!fallback && parentScreen(current) === 'S0') {
     const steps = stepsBackTo(visited, '#/');
     if (steps === null) {
       replaceRoute({ screen: 'S0', params: {} });
@@ -73,5 +73,5 @@ export function goBack(current: ScreenId): void {
     historyBack();
     return;
   }
-  replaceRoute({ screen: parentScreen(current) ?? 'S0', params: {} });
+  replaceRoute(fallback??{ screen: parentScreen(current) ?? 'S0', params: {} });
 }

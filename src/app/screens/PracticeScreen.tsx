@@ -1,3 +1,5 @@
+import { MusicEntry } from '../music/MusicEntry.tsx';
+import { musicPreviewEnabled } from '../platform/music.ts';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
@@ -116,7 +118,8 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+            <MusicEntry source={{danceId,...(figure?{figureSlug:figure.slug}:{})}} onLeave={()=>session.stop()}/>
             {!figure && profile.templates.length > 1 && (
               <div>
                 <div class="dc-field-label"><span>{translator.t('countPattern')}</span></div>

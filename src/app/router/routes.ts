@@ -2,11 +2,11 @@
 // D56（Ruling 116）: 表紙 S0（#/）・「使う」の U1（今の S1 の ID のまま #/use）と U2（#/use/routines）・「作る」の M0（#/make）と M1（#/make/routines）。
 // S3 は廃止（古い #/routines は U2 へ置き換え）。深い画面（S2・S4・S5・S7〜S13）の path は変えない。
 // D57（Ruling 119-1）: F1「種目のフィガー」（#/figures/:danceId）。監修済みのフィガーが 1 件以上ある種目だけ（resolve.ts）。
-export type ScreenId = 'S0' | 'S1' | 'U2' | 'U3' | 'U4' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
+export type ScreenId = 'S0' | 'S1' | 'U2' | 'U3' | 'U4' | 'U5' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
 // cover＝表紙（戻る無し・下タブ無し）。root＝側の入口（U1・U2・M0）。list＝一覧（M1・S6）。focus＝集中画面
 export type ScreenKind = 'cover' | 'root' | 'focus' | 'list';
 export type Side = 'use' | 'make';
-export type TabId = 'practice' | 'routines';
+export type TabId = 'practice' | 'routines' | 'music';
 export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: string; trackId?: string };
 // 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33。confirm-delete は S3・S7 の削除確認・Ruling 43・60-4。
 // mic-denied・no-voice・no-recorder は S8 の枠・Ruling 63-3（no-https は http で開いた時の非対応の枠・D53）。update-ready は S1・S3・S6・S7 の更新の帯・段7 Ruling 90-7）。
@@ -17,14 +17,14 @@ export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: s
 // 設定・hints・再生状態・声・マイク・Service Worker には書かない。以後の追加は裁定が要る。
 export type UiState = 'no-sound' | 'wakelock-tip' | 'confirm-delete' | 'mic-denied' | 'no-voice' | 'no-recorder' | 'update-ready' | 'confirm-delete-all'
   | 'save-failed' | 'stopped' | 'voice-missing' | 'mic-failed' | 'no-https' | 'rec-countdown' | 'rec-capture';
-export type RouteQuery = { uiState?: UiState };
+export type RouteQuery = { uiState?: UiState; from?: number; to?: number };
 // alias: 古い経路（#/routines）で来た。resolve.ts がハッシュを今の経路へ置き換える（Ruling 116-1）
 export interface Route { screen: ScreenId; params: RouteParams; query: RouteQuery; alias?: true }
-export type RouteTarget = Pick<Route, 'screen' | 'params'>;
+export type RouteTarget = Pick<Route, 'screen' | 'params'> & {query?:RouteQuery};
 // 置き換えの行き先。query は古い経路（alias）の読み替えの時だけ持ち越す（ui-state を落とさない）
 export type RedirectTarget = RouteTarget & { query?: RouteQuery };
 
-// side は表紙の「使う／作る」のどちら側か（下タブは「使う」の root だけ＝showsTabs）。tab は下タブの「今の位置」（U1・U2 だけ）。
+// side は表紙の「使う／作る」のどちら側か（下タブは「使う」の root だけ＝showsTabs）。tab は下タブの「今の位置」（U1・U2・U3）。
 // parent は履歴が無い時の「戻る」の行き先（Ruling 17・116-2。表紙が親の画面の「戻る」は「‹ 表紙」）。
 interface ScreenSpec { kind: ScreenKind; parent: ScreenId | null; side: Side | null; tab: TabId | null; path: string }
 
@@ -33,7 +33,8 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
   S0: { kind: 'cover', parent: null, side: null, tab: null, path: '/' },
   S1: { kind: 'root', parent: 'S0', side: 'use', tab: 'practice', path: '/use' },
   U2: { kind: 'root', parent: 'S0', side: 'use', tab: 'routines', path: '/use/routines' },
-  U3: { kind: 'list', parent: 'S1', side: 'use', tab: null, path: '/use/music' },
+  U3: { kind: 'root', parent: 'S0', side: 'use', tab: 'music', path: '/use/music' },
+  U5: { kind: 'list', parent: 'U3', side: 'use', tab: null, path: '/use/music/for/routine/:routineId' },
   U4: { kind: 'focus', parent: 'U3', side: 'use', tab: null, path: '/use/music/:trackId' },
   M0: { kind: 'root', parent: 'S0', side: 'make', tab: null, path: '/make' },
   M1: { kind: 'list', parent: 'M0', side: 'make', tab: null, path: '/make/routines' },
@@ -53,6 +54,11 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
 
 // S4 は「新規」と「編集」の2つの形を持つので、編集の形をここで足す。S2 はフィガーを鳴らす形（D57・Ruling 120-1）。
 const EXTRA_PATHS: Array<{ screen: ScreenId; path: string }> = [
+  {screen:'U5',path:'/use/music/for/dance/:danceId'},
+  {screen:'U5',path:'/use/music/for/figure/:danceId/:figureSlug'},
+  {screen:'U4',path:'/use/music/:trackId/routine/:routineId'},
+  {screen:'U4',path:'/use/music/:trackId/dance/:danceId'},
+  {screen:'U4',path:'/use/music/:trackId/figure/:danceId/:figureSlug'},
   { screen: 'S4', path: '/routines/:routineId/edit' },
   { screen: 'S2', path: '/practice/:danceId/:figureSlug' }
 ];
@@ -86,6 +92,10 @@ export function parseHash(hash: string): Route {
       }
       return expected === actual;
     });
+    if(matched&&(pattern.screen==='U5'||pattern.screen==='U4')&&params.routineId){
+      const values=new URLSearchParams(rawQuery);const a=values.get('from'),b=values.get('to');
+      if(a!==null&&b!==null&&/^\d{1,3}$/.test(a)&&/^\d{1,3}$/.test(b)&&Number(a)<=Number(b)){query.from=Number(a);query.to=Number(b);}
+    }
     if (matched) return ALIASES.includes(pattern) ? { screen: pattern.screen, params, query, alias: true } : { screen: pattern.screen, params, query };
   }
   return { screen: 'S0', params: {}, query };
@@ -98,7 +108,7 @@ function parseQuery(raw: string): RouteQuery {
   return uiState ? { uiState } : {};
 }
 
-// クエリは出さない（遷移すると ui-state は消える）。
+// 音楽へ渡す範囲だけを保持する。見た目用の ui-state は通常の遷移で消す。
 export function buildHash(route: RouteTarget): string {
   const params = route.params as Record<string, string | undefined>;
   const candidates = PATTERNS.filter(pattern => pattern.screen === route.screen);
@@ -107,7 +117,10 @@ export function buildHash(route: RouteTarget): string {
     const given = Object.keys(params).filter(name => params[name] !== undefined);
     if (names.length !== given.length || !names.every(name => given.includes(name))) continue;
     const path = pattern.segments.map(segment => (segment.startsWith(':') ? params[segment.slice(1)] : segment)).join('/');
-    return `#/${path}`;
+    const query=route.query;
+    const range=(route.screen==='U4'||route.screen==='U5')&&params.routineId&&Number.isInteger(query?.from)&&Number.isInteger(query?.to)&&query!.from!>=0&&query!.from!<=query!.to!&&query!.to!<=999
+      ?`?from=${query!.from}&to=${query!.to}`:'';
+    return `#/${path}${range}`;
   }
   throw new Error(`No hash for ${route.screen} with params ${JSON.stringify(route.params)}`);
 }
@@ -118,7 +131,7 @@ export function buildHashWithQuery(route: RedirectTarget): string {
   return uiState ? `${buildHash(route)}?ui-state=${uiState}` : buildHash(route);
 }
 
-// 下タブは「使う」の 2 つの入口（U1・U2）だけ（Ruling 116-1）
+// 下タブは「使う」の3入口。音楽が未解放の環境ではresolveとTabBarが入口を隠す。
 export function showsTabs(screen: ScreenId): boolean {
   return SCREENS[screen].side === 'use' && SCREENS[screen].kind === 'root';
 }

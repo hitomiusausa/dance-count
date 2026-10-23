@@ -19,7 +19,11 @@ import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.t
 import type { MusicOptions } from '../practice/session.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
-import { buildHash } from '../router/routes.ts';
+import { musicOriginTarget, musicPickerTarget, musicTrackTarget, musicRouteRange } from '../music/navigation.ts';
+import { figureDisplayName as canonicalFigureName } from '../routines/figure-names.ts';
+import { reviewedFigureBySlug } from '../routines/reviewed-counts.ts';
+import { practiceCounts, type DanceProfileLike } from '../practice/preferences.ts';
+import { buildHash, type RouteParams, type RouteQuery } from '../router/routes.ts';
 import { replaceRoute } from '../state/route.ts';
 import { useI18n } from '../state/i18n.ts';
 import { useSettings } from '../state/settings.ts';
@@ -30,32 +34,48 @@ import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 function sectionName(id:string,t:AppTranslator):string {
   return t.t(id==='early'?'musicEarly':id==='middle'?'musicMiddle':'musicLate');
 }
-export function MusicListScreen() {
-  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();
-  return <main class="dc-screen dc-screen--focus" data-screen="U3">
-    <BackButton screen="U3"/><h1 class="dc-heading">{t.t('musicList')}</h1>
-    <p class="dc-body">{t.t('musicIntro')}</p>
-    {tracks===null?<p role="status">{t.t('musicPreparing')}</p>:!tracks.length?<p role="status">{t.t(failed?'musicFailed':'musicEmpty')}</p>:
-      <div data-list="music-tracks" role="list">{tracks.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
-        href={buildHash({screen:'U4',params:{trackId:track.id}})}>
+interface MusicSourceProps { source?:RouteParams; query?:RouteQuery }
+function useMusicSource(source:RouteParams={}){
+  const {routines}=useRoutines();const {settings}=useSettings();const {translator:t}=useI18n();
+  const routine=source.routineId?routines.find(item=>item.id===source.routineId):null;
+  const danceId=routine?.danceId??source.danceId;
+  const figure=useMemo(()=>{
+    if(!source.danceId||source.routineId)return null;
+    const reviewed=reviewedFigureBySlug(source.danceId,source.figureSlug);
+    const name=reviewed?canonicalFigureName(source.danceId,reviewed.englishName,t.locale):t.t('musicBasicCount');
+    return {id:`music-${source.danceId}-${source.figureSlug??'counts'}`,danceId:source.danceId,name,
+      counts:practiceCounts(getDanceProfile(source.danceId) as DanceProfileLike,settings,reviewed)};
+  },[source.danceId,source.figureSlug,source.routineId,t.locale,settings.lastTemplateByDance[source.danceId??'']]);
+  return {danceId,figure,name:routine?.name??figure?.name};
+}
+export function MusicListScreen({source={},query={}}:MusicSourceProps) {
+  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();const context=useMusicSource(source);
+  const contextual=!!context.danceId,screen=contextual?'U5':'U3';
+  const songs=tracks?.filter(track=>!context.danceId||track.danceId===context.danceId);
+  return <main class={`dc-screen${contextual?' dc-screen--focus':''}`} data-screen={screen}>
+    <BackButton screen={screen} fallback={contextual?musicOriginTarget(source):undefined}/><h1 class="dc-heading">{t.t('musicList')}</h1>
+    <p class="dc-body" data-music-context>{context.name?t.t('musicForSelection',{name:context.name}):t.t('musicIntro')}</p>
+    {songs===undefined?<p role="status">{t.t('musicPreparing')}</p>:!songs.length?<p role="status">{t.t(failed?'musicFailed':contextual?'musicDanceEmpty':'musicEmpty')}</p>:
+      <div data-list="music-tracks" role="list">{songs.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
+        href={buildHash(musicTrackTarget(track.id,source,query))}>
         <span class="dc-link-label"><b>{track.title}</b><small>{danceName(track.danceId,t.locale)}</small></span><Icon name="chev-r"/>
       </a></div>)}</div>}
-    {tracks?.some(track=>track.preview)&&<div class="dc-music-note">{t.t('musicPreview')}</div>}
+    {songs?.some(track=>track.preview)&&<div class="dc-music-note">{t.t('musicPreview')}</div>}
   </main>;
 }
-export function MusicPracticeScreen({trackId}:{trackId:string}) {
-  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();
-  const track=tracks?.find(item=>item.id===trackId);
-  useEffect(()=>{if(tracks!==null&&!failed&&!track)replaceRoute({screen:'U3',params:{}});},[tracks,failed,track]);
-  if(!track)return <main class="dc-screen dc-screen--focus" data-screen="U4"><BackButton screen="U4"/>
+export function MusicPracticeScreen({trackId,source={},query={}}:{trackId:string}&MusicSourceProps) {
+  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();const context=useMusicSource(source);
+  const track=tracks?.find(item=>item.id===trackId&&(!context.danceId||item.danceId===context.danceId));
+  useEffect(()=>{if(tracks!==null&&!failed&&!track)replaceRoute(musicPickerTarget(source,query));},[tracks,failed,track,context.danceId]);
+  if(!track)return <main class="dc-screen dc-screen--focus" data-screen="U4"><BackButton screen="U4" fallback={musicPickerTarget(source,query)}/>
     <h1 class="dc-heading">{t.t('musicPractice')}</h1><p role="status">{t.t(tracks===null?'musicPreparing':'musicFailed')}</p></main>;
-  return <MusicPlayer key={track.revision} track={track}/>;
+  return <MusicPlayer key={track.revision} track={track} source={source} query={query} figure={context.figure}/>;
 }
-function MusicPlayer({track}:{track:MusicTrack}) {
+function MusicPlayer({track,source,query,figure}:{track:MusicTrack;source:RouteParams;query:RouteQuery;figure:MusicOptions['figure']|null}) {
   const {translator:t}=useI18n();const {settings}=useSettings();const storage=useStorage();
   const {routines}=useRoutines();
   const choices=useMemo(()=>musicRoutineChoices(routines,track.danceId),[routines,track.danceId]);
-  const [routineId,setRoutineId]=useState('');const [chosenRange,setChosenRange]=useState<MusicFigureRange|undefined>();
+  const [routineId,setRoutineId]=useState(source.routineId??'');const [chosenRange,setChosenRange]=useState<MusicFigureRange|undefined>(()=>musicRouteRange(query));
   const routine=choices.find(item=>item.id===routineId)??null;
   const range=routine?musicFigureRange(routine,chosenRange):null;
   const playback=usePlaybackVoice();const {session,view}=usePracticeSession(`music:${track.id}/${track.revision}`);
@@ -77,7 +97,7 @@ function MusicPlayer({track}:{track:MusicTrack}) {
     return()=>{alive.current=false;renderAbort.current?.abort();remove();};
   },[session]);
   const invalidate=()=>{renderAbort.current?.abort();renderAbort.current=null;setRendering(false);setFile(null);setFileStatus(null);};
-  useEffect(()=>{session.stop();invalidate();},[routine]);
+  useEffect(()=>{session.stop();invalidate();},[routine,figure]);
   const chooseRoutine=(id:string)=>{session.stop();invalidate();setRoutineId(id);setChosenRange(undefined);};
   const chooseRange=(next:MusicFigureRange)=>{session.stop();invalidate();setChosenRange(next);};
   const change=(patch:Partial<MusicPreferences>)=>{
@@ -97,6 +117,7 @@ function MusicPlayer({track}:{track:MusicTrack}) {
       repetitions:current.current.repetitions,musicVolume:current.current.musicVolume,voiceVolume:current.current.voiceVolume,
       countEnabled:current.current.countEnabled,countInBars:0,startMode:current.current.startMode,delayBeats:current.current.delayBeats,voice,voiceOffsetMs:voiceOffsetFor(settings,voice),
       metronome:false,loop:false,bpm:getDanceProfile(track.danceId).practiceBpm,
+      ...(figure&&current.current.countEnabled?{figure}:{}),
       ...(routine&&range&&current.current.countEnabled?{routine:{id:routine.id,name:routine.name,danceId:routine.danceId,figures:routine.figures,range}}:{})};
   };
   const toggle=()=>{
@@ -117,30 +138,30 @@ function MusicPlayer({track}:{track:MusicTrack}) {
   const planned=useMemo(()=>{
     try{return {plan:compileMusicProgram(options()),issue:null};}
     catch(error){return {plan:null,issue:error instanceof MusicRoutineError&&error.reason==='coverage'?'coverage':'invalid'};}
-  },[track,prefs.sectionId,prefs.rate,prefs.startMode,prefs.delayBeats,prefs.countEnabled,routine,range?.startIndex,range?.endIndex]);
+  },[track,prefs.sectionId,prefs.rate,prefs.startMode,prefs.delayBeats,prefs.countEnabled,routine,figure,range?.startIndex,range?.endIndex]);
   const routineIssue=planned.issue;
   const plan=planned.plan??compileMusicPlan(track,prefs.sectionId,prefs.rate);
   const estimate=musicJobs(plan,prefs.repetitions,{...prefs,voiceOffsetMs:playback.offsetMs,wordOffsetsMs:wordOffsetsFor(playback.voice??DEFAULT_VOICE)});
   const tooLong=estimate.end>120;
-  const startCounts=routine&&range&&prefs.countEnabled?routine.figures[range.startIndex]!.counts:track.counts;
+  const startCounts=figure&&prefs.countEnabled?figure.counts:routine&&range&&prefs.countEnabled?routine.figures[range.startIndex]!.counts:track.counts;
   const cells=useMemo(()=>stripCells(idleProgram(track.danceId,startCounts)),[track.danceId,startCounts]);
   const lit=view.playing&&!view.countIn?cells.findIndex(cell=>cell.label===displayForVoiceKey(view.voiceKey)):null;
-  const sounding=routine&&prefs.countEnabled&&view.playing&&!view.countIn?view.figureIndex:null;
-  const strip=routine&&view.program&&sounding!==null?stripView(stripCells(view.program,sounding),view.originalTick):{cells,lit:routine?null:lit===-1?null:lit};
+  const sounding=(routine||figure)&&prefs.countEnabled&&view.playing&&!view.countIn?view.figureIndex:null;
+  const strip=(routine||figure)&&view.program&&sounding!==null?stripView(stripCells(view.program,sounding),view.originalTick):{cells,lit:(routine||figure)?null:lit===-1?null:lit};
   const shownIndex=sounding??range?.startIndex??0;
   const routineEnd=(planned.plan as {routineEndTick?:number}|null)?.routineEndTick;
-  const complete=routine&&prefs.countEnabled&&view.playing&&routineEnd!==undefined&&view.originalTick!==null&&view.originalTick>=routineEnd;
+  const complete=(routine||figure)&&prefs.countEnabled&&view.playing&&routineEnd!==undefined&&view.originalTick!==null&&view.originalTick>=routineEnd;
   const busy=view.playing||view.starting;
   const received=prefs.countEnabled&&playback.voice?.kind==='pack'&&playback.voice.pack.origin==='received';
-  return <main class="dc-screen dc-screen--focus dc-screen--dock dc-practice dc-music" data-screen="U4" data-routine={routine?'true':'false'} data-playing={busy?'true':'false'}>
-    <BackButton screen="U4"/>
+  return <main class="dc-screen dc-screen--focus dc-screen--dock dc-practice dc-music" data-screen="U4" data-routine={routine||figure?'true':'false'} data-playing={busy?'true':'false'}>
+    <BackButton screen="U4" fallback={musicPickerTarget(source,query)}/>
     <div class="dc-practice-grid"><div>
       <header class="dc-playhead"><h1>{danceName(track.danceId,t.locale)}</h1><small>{track.title}</small></header>
       <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicSeconds',{seconds:Math.round(plan.transport.duration)})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
       <NoticeBox notice={saveFailed?'save-failed':view.notice} onClose={()=>{setSaveFailed(false);session.dismissNotice();}}/>
       <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText={cells[0]?.label??''} strip={strip}>
-        {routine&&prefs.countEnabled&&<div class={`dc-figure-now${sounding!==null?' dc-figure-now--on':''}`} data-figure-now data-ellipsis title={routine.figures[shownIndex]?.name}>
-          {complete?t.t('musicRoutineFinished'):<><span class="dc-figure-now-pos">{shownIndex+1} / {routine.figures.length}</span> {figureDisplayName(track.danceId,routine.figures[shownIndex]!.name,t.locale)}</>}
+        {(routine||figure)&&prefs.countEnabled&&<div class={`dc-figure-now${sounding!==null?' dc-figure-now--on':''}`} data-figure-now data-ellipsis title={figure?.name??routine?.figures[shownIndex]?.name}>
+          {complete?t.t(figure?'musicPracticeFinished':'musicRoutineFinished'):figure?figure.name:<><span class="dc-figure-now-pos">{shownIndex+1} / {routine!.figures.length}</span> {figureDisplayName(track.danceId,routine!.figures[shownIndex]!.name,t.locale)}</>}
         </div>}
       </CountBox>
       {routineIssue&&<p class="dc-music-note" role="status" data-music-routine-error>{t.t(routineIssue==='coverage'?'musicRoutineTooLong':'musicRoutineInvalid')}</p>}
@@ -152,11 +173,12 @@ function MusicPlayer({track}:{track:MusicTrack}) {
       </div>
       <VoiceChip name={voiceDisplayName(t,playback.voice??DEFAULT_VOICE,'chip')}/>
       <MoreOptions label={t.t('musicSettings')}>
-        {choices.length>0&&<div data-group="music-routine">
-          <label class="dc-music-field">{t.t('musicRoutine')}<select data-music-routine value={routine?.id??''} disabled={!ready||rendering} onChange={e=>chooseRoutine(e.currentTarget.value)}>
+        {(figure||choices.length>0)&&<div data-group="music-routine">
+          {figure?<><p class="dc-music-note" data-music-figure-name>{figure.name}</p><p class="dc-music-note">{t.t('musicFigureRepeats')}</p></>:<>
+          <label class="dc-music-field">{t.t('musicRoutine')}<select data-music-routine value={routine?.id??''} disabled={!ready||rendering||!!source.routineId} onChange={e=>chooseRoutine(e.currentTarget.value)}>
             <option value="">{t.t('musicBasicCount')}</option>
             {choices.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
-          </select></label>
+          </select></label></>}
           {routine&&range&&<>
             <p class="dc-music-note" data-music-routine-name>{routine.name}</p>
             <label class="dc-music-field">{t.t('rangeStart')}<select data-music-from value={range.startIndex} disabled={!ready||rendering}
@@ -199,7 +221,7 @@ function MusicPlayer({track}:{track:MusicTrack}) {
               {[...new Set([1,2,track.beatsPerBar,track.beatsPerBar*2])].map(beats=><option key={beats} value={beats}>
                 {t.t(beats<track.beatsPerBar?'musicWaitBeats':'musicWaitBars',{count:beats<track.beatsPerBar?beats:beats/track.beatsPerBar,beats})}</option>)}
             </select></label>
-            <div class="dc-music-note">{t.t(prefs.startMode==='music-first'?(routine?'musicRoutineListenThen':'musicListenThen'):'musicCountThen',{beats:prefs.delayBeats})}</div>
+            <div class="dc-music-note">{t.t(prefs.startMode==='music-first'?(routine?'musicRoutineListenThen':figure?'musicFigureListenThen':'musicListenThen'):'musicCountThen',{beats:prefs.delayBeats})}</div>
           </>}
         </div>
         <div class="dc-music-file" data-group="music-file">

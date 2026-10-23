@@ -17,14 +17,14 @@ try{
         tx.objectStore('settings').put({uiLocale:locale,lastDanceId:'rumba',hints:{firstPlaybackDone:true}},'app');
         tx.oncomplete=()=>{db.close();resolve(true);};tx.onerror=()=>reject(tx.error);};
     }),locale);
-    await page.reload();await page.goto(`${BASE}#/use`);await page.waitForSelector('[data-music-entry]');await page.evaluate(()=>document.fonts.ready);
+    await page.reload();await page.goto(`${BASE}#/use`);await page.getByRole('link',{name:locale==='ja-JP'?'音楽':'Music',exact:true}).waitFor();await page.evaluate(()=>document.fonts.ready);
     const home=await page.evaluate(()=>{
-      const entry=document.querySelector('[data-music-entry]').getBoundingClientRect();
+      const entry=[...document.querySelectorAll('.dc-tab')].find(el=>el.getAttribute('href')==='#/use/music').getBoundingClientRect();
       const tabs=document.querySelector('.dc-tabs').getBoundingClientRect();
       return{entry:{top:entry.top,bottom:entry.bottom,height:entry.height},tabsTop:tabs.top};
     });
-    if(width===375&&height===548&&home.entry.bottom>home.tabsTop-8)throw Error(`entry hidden: ${locale} ${JSON.stringify(home)}`);
-    await page.locator('[data-music-entry]').click();await page.locator('[data-track]').first().click();
+    if(home.entry.height<48)throw Error(`entry hidden: ${locale} ${JSON.stringify(home)}`);
+    await page.getByRole('link',{name:locale==='ja-JP'?'音楽':'Music',exact:true}).click();await page.locator('[data-track]').first().click();
     await page.waitForSelector('[data-screen=U4] [role=radio]');
     for(const rateIndex of [0,1,2]){
       await page.getByRole('radio').nth(rateIndex).click();await page.evaluate(()=>document.fonts.ready);

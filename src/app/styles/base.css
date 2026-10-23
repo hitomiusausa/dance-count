@@ -20,6 +20,7 @@
 .dc-music-song .dc-link-label { display: flex; flex-direction: column; gap: 4px; }
 .dc-music-song small, .dc-music-note { font-size: 16px; color: var(--ink2); line-height: 1.5; }
 .dc-music-note { margin: 16px 0; }
+[data-music-context] { overflow-wrap: anywhere; }
 .dc-music-summary { margin: 0 0 4px; }
 .dc-music-field { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; font-size: 18px; }
 .dc-music-field select { width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--bg); }

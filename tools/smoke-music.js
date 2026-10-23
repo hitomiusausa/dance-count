@@ -28,7 +28,7 @@ async function chooseRate(rate){await page.getByRole('radio',{name:rate===1?'も
 async function setToggle(name,enabled){const toggle=page.getByRole('switch',{name,exact:true});if((await toggle.getAttribute('aria-checked')==='true')!==enabled)await toggle.click();}
 try{
   await page.goto(BASE);await page.getByRole('link',{name:/使う/}).click();
-  await page.getByRole('link',{name:'音楽に合わせて練習',exact:true}).click();
+  await page.getByRole('link',{name:'音楽',exact:true}).click();
   await page.getByRole('link',{name:'Paper Umbrella ルンバ',exact:true}).click();
   await page.getByRole('radio',{name:'もとの速さ',exact:true}).waitFor();
   const track=await page.evaluate(async()=>{const response=await fetch('/__music/catalog');return(await response.json())[0];});

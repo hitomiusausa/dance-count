@@ -33,6 +33,7 @@ export type PracticeOptions =
 export interface MusicOptions extends Omit<CommonOptions, 'track'> {
   kind: 'music'; track: MusicTrack; sectionId: string; rate: number;
   startMode?: 'together' | 'music-first' | 'count-first'; delayBeats?: number;
+  figure?: {id:string;name:string;counts:string;danceId:string};
   routine?: { id?: string; name?: string; danceId: string; figures: readonly FigureLike[]; range?: {startIndex:number;endIndex:number} };
   repetitions: number; countEnabled: boolean; musicVolume: number; voiceVolume: number;
 }

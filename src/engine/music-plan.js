@@ -58,10 +58,22 @@ export function compileMusicRoutinePlan(track, sectionId, rate, routine, { delay
     routineStartTick:start,routineEndTick:end,routineRange:range,routineWarnings:compiled.warnings};
 }
 
-/** @param {{track:any,sectionId:string,rate?:number,routine?:{danceId:string,figures:ReadonlyArray<{id:string,name:string,counts:string}>,range?:{startIndex:number,endIndex:number}}|null,startMode?:string,delayBeats?:number}} options */
-export function compileMusicProgram({track,sectionId,rate=1,routine=null,startMode='together',delayBeats=track.beatsPerBar*2}) {
-  return routine?compileMusicRoutinePlan(track,sectionId,rate,routine,{delayBeats:startMode==='music-first'?delayBeats:0})
-    :compileMusicPlan(track,sectionId,rate);
+// Repeat a selected figure as complete units inside the measured section. The
+// routine compiler still determines its duration and subdivisions.
+export function compileMusicFigurePlan(track,sectionId,rate,figure,{delayBeats=0}={}){
+  const routine={danceId:figure.danceId,figures:[figure]};
+  const first=compileMusicRoutinePlan(track,sectionId,rate,routine,{delayBeats});
+  const length=first.routineEndTick-first.routineStartTick;
+  const repeats=Math.floor((first.endTick-first.routineStartTick)/length);
+  const plan=repeats===1?first:compileMusicRoutinePlan(track,sectionId,rate,{...routine,figures:Array.from({length:repeats},(_,i)=>({...figure,id:`${figure.id}-${i}`}))},{delayBeats});
+  return {...plan,figureMode:true};
+}
+
+/** @param {{track:any,sectionId:string,rate?:number,figure?:{id:string,name:string,counts:string,danceId:string}|null,routine?:{danceId:string,figures:ReadonlyArray<{id:string,name:string,counts:string}>,range?:{startIndex:number,endIndex:number}}|null,startMode?:string,delayBeats?:number}} options */
+export function compileMusicProgram({track,sectionId,rate=1,routine=null,figure=null,startMode='together',delayBeats=track.beatsPerBar*2}) {
+  if(routine&&figure)throw new MusicRoutineError('selection');
+  const delay={delayBeats:startMode==='music-first'?delayBeats:0};
+  return figure?compileMusicFigurePlan(track,sectionId,rate,figure,delay):routine?compileMusicRoutinePlan(track,sectionId,rate,routine,delay):compileMusicPlan(track,sectionId,rate);
 }
 
 export function musicJobs(plan, repetitions, { countInBars = 0, countEnabled = true, metronome = false, voiceOffsetMs = 0, wordOffsetsMs = {}, startMode, delayBeats = plan.profile.beatsPerBar * 2 } = {}) {

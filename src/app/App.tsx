@@ -10,7 +10,7 @@ import { isStandalone } from './platform/pwa.ts';
 import { openAppStorage, requestPersistentStorage, type AppStorage } from './platform/storage.ts';
 import { scrollPageToTop } from './platform/viewport.ts';
 import { resolveScreen } from './router/resolve.ts';
-import { buildHashWithQuery, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
+import { buildHash, buildHashWithQuery, showsTabs, tabOf, type ScreenId } from './router/routes.ts';
 import { AboutScreen } from './screens/AboutScreen.tsx';
 import { CoverScreen } from './screens/CoverScreen.tsx';
 import { FigureListScreen } from './screens/FigureListScreen.tsx';
@@ -156,8 +156,8 @@ export function App() {
             <div class="dc-shell" lang={locale} ref={shell} data-tabs={tabs ? '' : undefined}>
               <IconSprite />
               {screen === 'S2' ? <PracticeScreen key={`${route.params.danceId}/${route.params.figureSlug ?? ''}`} danceId={route.params.danceId!} figureSlug={route.params.figureSlug} uiState={route.query.uiState} />
-                : screen === 'U3' ? <MusicListScreen />
-                : screen === 'U4' ? <MusicPracticeScreen key={route.params.trackId} trackId={route.params.trackId!} />
+                : screen === 'U3'||screen === 'U5' ? <MusicListScreen source={route.params} query={route.query}/>
+                : screen === 'U4' ? <MusicPracticeScreen key={buildHash(route)} trackId={route.params.trackId!} source={route.params} query={route.query}/>
                 : screen === 'F1' ? <FigureListScreen key={route.params.danceId} danceId={route.params.danceId!} />
                 : screen === 'U2' ? <RoutinesScreen key="use" mode="use" uiState={route.query.uiState} />
                 : screen === 'M1' ? <RoutinesScreen key="make" mode="make" uiState={route.query.uiState} />
