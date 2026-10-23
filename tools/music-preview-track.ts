@@ -15,12 +15,12 @@ export interface BarAnalysis {
 
 // A creator-side adapter: source waveform -> learned beat/downbeat times ->
 // contiguous bars in the supplied dance meter. An inferred downbeat is never index%4 by assumption.
-export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'}
+export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'|'tango'}
 export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalysis, definition?:PreviewDefinition): MusicTrack {
   const settings=definition??{id:'paper-umbrella',title:'Paper Umbrella',danceId:'rumba' as const};
   if(!/^[a-z0-9-]+$/.test(settings.id)||!settings.title.trim())throw new Error('Invalid track identity');
   const profile=getDanceProfile(settings.danceId),meter=profile.beatsPerBar,counts=profile.templates[0];
-  const countStartBeat=settings.danceId==='waltz'?0:1;
+  const countStartBeat=settings.danceId==='waltz'||settings.danceId==='tango'?0:1;
   if (analysis.schemaVersion!==1 || analysis.sourceSha256!==sourceSha256 || !/^[a-f0-9]{64}$/.test(analysis.analysisId)) {
     throw new Error('Analysis identity or schema mismatch');
   }
@@ -40,15 +40,16 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
     if ((analysis.beatsMs[endBeat]!-analysis.beatsMs[startBeat]!)/1000>40) continue;
     windows.push({startBeat,endBeat,score:bars.reduce((sum,b)=>sum+b.meanBeatActivation+b.downbeatActivation,0)/(length*2)});
   }
-  const chosen=new Set<number>();
+  const chosen: {startBeat:number;endBeat:number}[]=[];
   const targets=definition?[.10,.45,.75].map(fraction=>fraction*analysis.durationSeconds):[20,140,280];
   const sections=targets.flatMap((target,index)=>{
-    const best=windows.filter(window=>!chosen.has(window.startBeat)&&Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
+    const best=windows.filter(window=>chosen.every(previous=>window.endBeat<=previous.startBeat||window.startBeat>=previous.endBeat)&&
+      Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
       const distance=(window:typeof a)=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)+2*(1-window.score);
       return distance(a)-distance(b);
     })[0];
     if(!best){if(definition)return [];throw new Error('No consistent six-bar preview near requested range');}
-    chosen.add(best.startBeat);
+    chosen.push(best);
     return [{ id:['early','middle','late'][index]!,startTick:best.startBeat*960,endTick:best.endBeat*960,
       anchorTick:(best.startBeat+countStartBeat)*960 }];
   });

@@ -25,7 +25,7 @@ try{
  for(const [label,screen] of [['ルーティン','U2'],['音楽','U3'],['フィガー','S1'],['音楽','U3']]){await page.getByRole('link',{name:label,exact:true}).click();await page.waitForSelector(`[data-screen=${screen}]`);}
  await page.waitForSelector('[data-screen=U3]');await page.waitForSelector('[data-music-genres]');
  ensure(await page.locator('[data-music-genre]').count()===2,'Latin and Standard categories missing');
- ensure(await page.locator('[data-music-genre=latin] [data-track]').count()===5&&await page.locator('[data-music-genre=standard] [data-track]').count()===1,'songs grouped under the wrong genre');
+ ensure(await page.locator('[data-music-genre=latin] [data-track]').count()===5&&await page.locator('[data-music-genre=standard] [data-track]').count()===2,'songs grouped under the wrong genre');
  ensure(await page.locator('[data-music-genre][open]').count()===0,'genre lists should start collapsed');
  await page.locator('[data-music-genre=latin] > summary').click();ensure(await page.locator('[data-music-genre=latin][open] [data-track]').count()===5,'Latin category did not expand');
  await page.locator('[data-back]').click();await page.waitForSelector('[data-screen=S0]');

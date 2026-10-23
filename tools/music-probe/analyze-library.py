@@ -6,7 +6,7 @@ import hashlib,json
 from pathlib import Path
 import subprocess,sys
 
-DANCES={'waltz':('waltz',3,'ワルツ'),'rumba':('rumba',4,'ルンバ'),'chacha':('chacha',4,'チャチャチャ')}
+DANCES={'waltz':('waltz',3,'ワルツ'),'rumba':('rumba',4,'ルンバ'),'chacha':('chacha',4,'チャチャチャ'),'tango':('tango',4,'タンゴ')}
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

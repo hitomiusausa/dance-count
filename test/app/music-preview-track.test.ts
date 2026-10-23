@@ -61,3 +61,12 @@ test('cha-cha experiments preserve the half-beat and rather than doubling the mu
   const and=plan.events.find(event=>event.token==='&')!;assert.equal(and.absoluteTick%960,480);
   assert.equal(track.beatsMs.length,data.beatsMs.length);
 });
+test('preview choices never overlap and unavailable ranges are omitted',()=>{
+  const data=analyzed(),starts=[...Array.from({length:9},(_,i)=>44+i*4),...Array.from({length:9},(_,i)=>208+i*4),...Array.from({length:5},(_,i)=>352+i*4)];
+  data.bars=starts.map(startBeat=>({startBeat,endBeat:startBeat+4,beatsPerBar:4,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  const track=buildMusicPreviewTrack(hash,data,{id:'tango-test',title:'Tango',danceId:'tango'});
+  assert.deepEqual(track.sections.map(section=>section.id),['early','middle']);
+  assert.equal(track.counts,'SSQQS');assert.equal(track.anchorTick,0);
+  for(let i=1;i<track.sections.length;i++)assert.ok(track.sections[i-1]!.endTick<=track.sections[i]!.startTick);
+});
