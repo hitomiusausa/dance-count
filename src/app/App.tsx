@@ -15,6 +15,8 @@ import { AboutScreen } from './screens/AboutScreen.tsx';
 import { CoverScreen } from './screens/CoverScreen.tsx';
 import { FigureListScreen } from './screens/FigureListScreen.tsx';
 import { HomeScreen } from './screens/HomeScreen.tsx';
+import { MusicListScreen, MusicPracticeScreen } from './screens/MusicScreen.tsx';
+import { musicPreviewEnabled } from './platform/music.ts';
 import { InstallHelpScreen } from './screens/InstallHelpScreen.tsx';
 import { MakeScreen } from './screens/MakeScreen.tsx';
 import { PracticeScreen } from './screens/PracticeScreen.tsx';
@@ -122,7 +124,7 @@ export function App() {
   // 段8（Ruling 101）: 設定を読み終えて最初の画面を DOM に入れたら、起動の殻を外す（画面を入れる前に外すと白い時間ができる）。
   // useLayoutEffect は DOM に入れた後・ブラウザが描く前に走るので、殻だけ・画面だけの間に白いフレームも、殻と画面が重なるフレームも無い
   useLayoutEffect(() => { if (settings) removeBootShell(); }, [settings !== null]);
-  const resolved = resolveScreen(route, routines);
+  const resolved = resolveScreen(route, routines, undefined, musicPreviewEnabled());
   // 段8（Ruling 102-2）: 画面が替わったら、その画面の見出し h1（無ければ main）へフォーカスを移す（VoiceOver が新しい画面の名前から読む・
   // キーボードの人は見出しから Tab を始める）。最初の表示では動かさない。スクロールさせない（preventScroll）。音には関係しない
   const shell = useRef<HTMLDivElement>(null);
@@ -154,6 +156,8 @@ export function App() {
             <div class="dc-shell" lang={locale} ref={shell} data-tabs={tabs ? '' : undefined}>
               <IconSprite />
               {screen === 'S2' ? <PracticeScreen key={`${route.params.danceId}/${route.params.figureSlug ?? ''}`} danceId={route.params.danceId!} figureSlug={route.params.figureSlug} uiState={route.query.uiState} />
+                : screen === 'U3' ? <MusicListScreen />
+                : screen === 'U4' ? <MusicPracticeScreen key={route.params.trackId} trackId={route.params.trackId!} />
                 : screen === 'F1' ? <FigureListScreen key={route.params.danceId} danceId={route.params.danceId!} />
                 : screen === 'U2' ? <RoutinesScreen key="use" mode="use" uiState={route.query.uiState} />
                 : screen === 'M1' ? <RoutinesScreen key="make" mode="make" uiState={route.query.uiState} />

@@ -888,6 +888,10 @@ function audit({ state, LIMITS, reducedMotion }) {
   const durations = value => value.split(',').map(part => parseFloat(part) * (part.trim().endsWith('ms') ? 1 : 1000));
   for (const element of document.querySelectorAll('*')) {
     const style = getComputedStyle(element);
+    // D62 explicitly chose the animated waiting coin. This narrow exception is
+    // only for a busy indicator; reduced-motion must still stop ALL animation.
+    const waitingCoin = element.closest('[data-waltz]') && element.closest('[data-preparing], .dc-loading');
+    if (!reducedMotion && waitingCoin) continue;
     for (const ms of [...durations(style.transitionDuration), ...durations(style.animationDuration)]) {
       if (reducedMotion ? ms > 0 : ms > LIMITS.motionMs) { issues.push(`U8 motion ${ms}ms ${describe(element)}`); break; }
     }

@@ -16,14 +16,14 @@ const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standa
 // 大きな現在カウント＋カウントの型の帯（操作ではない。D55・Ruling 114）。children は帯の下に置く（S5 の「3 / 13 …」の1行）。
 // 帯は型 1 周の語を 1 語 1 丸（幅は語の長さに比例＝flex-grow に拍数）。鳴っている語の丸だけ琥珀（aria-current）。読み上げは「いま {count}」で足りる（aria-hidden）
 const DENSE_STRIP = 9;   // 丸が 9 個以上は文字を 15px に（data-dense）
-export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, children }: {
-  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; children?: ComponentChildren;
+export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, leadText, children }: {
+  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; leadText?: string; children?: ComponentChildren;
 }) {
   const { translator } = useI18n();
   return (
     <div class="dc-countbox" aria-live="off" aria-label={nowText ? translator.t('nowCount', { count: nowText }) : undefined}>
       {playing && countIn
-        ? <div class="dc-now dc-now--lead">{translator.t('leadInNow')}</div>
+        ? <div class="dc-now dc-now--lead">{leadText ?? translator.t('leadInNow')}</div>
         : preparing && !playing
           ? <div class="dc-now dc-now--idle dc-now--wait" aria-hidden="true" data-preparing><WaltzSpinner /></div>
           : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
@@ -176,13 +176,13 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: numbe
 }
 
 // 下固定の ▶／■（72px 以上・幅 60% 以上）。
-export function PlayDock({ playing, onToggle }: { playing: boolean; onToggle(): void }) {
+export function PlayDock({ playing, onToggle, disabled = false, label }: { playing: boolean; onToggle(): void; disabled?: boolean; label?: string }) {
   const { translator } = useI18n();
   return (
     <div class="dc-dock">
-      <button type="button" class="dc-play dc-primary" data-play onClick={onToggle}>
+      <button type="button" class="dc-play dc-primary" data-play onClick={onToggle} disabled={disabled}>
         <Icon name={playing ? 'stop' : 'play'} />
-        <span>{playing ? translator.t('stop') : translator.t('play')}</span>
+        <span>{label ?? (playing ? translator.t('stop') : translator.t('play'))}</span>
       </button>
     </div>
   );
@@ -212,6 +212,7 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
       )}
       {notice === 'stopped' && <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'playbackStopped')}</b></div>}
       {notice === 'voice-missing' && <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'voiceMissing')}</b></div>}
+      {notice === 'music-missing' && <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'musicMissing')}</b></div>}
       {/* 段8（Ruling 103-3・段4 Task 5）: 保存失敗の枠は「閉じる」で閉じ、元の案内に戻る（ほかの案内を隠したままにしない） */}
       {notice === 'save-failed' && (
         <>

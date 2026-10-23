@@ -72,3 +72,23 @@ export function beatMapTempo(beatsMs, beatsPerBar) {
     secondsToTick: seconds => msToTick(seconds * 1000)
   });
 }
+
+// A range is a difference of absolute positions. Repetition returns to the same
+// source range, including for a nonuniform map; it never extrapolates later bars.
+export function sectionTransport(tempo, startTick, endTick, rate = 1) {
+  if (![startTick, endTick].every(Number.isInteger) || startTick < 0 || endTick <= startTick || !Number.isFinite(rate) || rate <= 0) {
+    throw new RangeError('Invalid music transport range or rate');
+  }
+  const sourceStartSeconds = tempo.tickToSeconds(startTick);
+  const sourceEndSeconds = tempo.tickToSeconds(endTick);
+  const duration = (sourceEndSeconds - sourceStartSeconds) / rate;
+  if (!(duration > 0) || !Number.isFinite(duration)) throw new RangeError('Invalid music duration');
+  return Object.freeze({
+    duration, sourceStartSeconds, sourceEndSeconds, rate,
+    timeAt: (tick, iteration = 0) => iteration * duration + (tempo.tickToSeconds(tick) - sourceStartSeconds) / rate,
+    tickAt: (localSeconds, iteration = 0) => tempo.secondsToTick(sourceStartSeconds + (localSeconds - iteration * duration) * rate),
+    // Artificial lead-in uses the selected section's first beat interval.
+    leadInBeatSeconds: (tempo.tickToSeconds(startTick + TICKS_PER_BEAT) - sourceStartSeconds) / rate,
+    leadTimeAt: offsetTicks => offsetTicks / TICKS_PER_BEAT * (tempo.tickToSeconds(startTick + TICKS_PER_BEAT) - sourceStartSeconds) / rate
+  });
+}

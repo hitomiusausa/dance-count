@@ -6,9 +6,9 @@
 
 **アプリ化v1 の引き継ぎは [`docs/app-v1/HANDOVER.md`](./docs/app-v1/HANDOVER.md) が正本。次のセッションはそこから読む。**
 
-**2026-10-23 第2弾着手**: 有料「音楽＋カウント」のローカル試作とAstra設計。
-現在の再開点・実測・ひちゃんの試聴評価は [`music-probe-2026-10-23.md`](./docs/app-v1/music-probe-2026-10-23.md)、
-仕様案は [`有料音楽同期の設計ドラフト`](./docs/superpowers/specs/2026-10-23-paid-music-count-design.md)。本番組込・課金・公開は未実施。
+**2026-10-23 第2弾・実装済みの再開点**: 「使う」内の音楽＋カウントを開発プレビューへ組込。速度・反復・開始順（曲が先／声が先／同時）・別音量・WAV保存を実装し、監査指摘の修正とローカル検証を完了。
+現在の正本は [`music-implementation-2026-10-23.md`](./docs/app-v1/music-implementation-2026-10-23.md)。枝 `agent/music-practice-20261023`、`VITE_MUSIC_PREVIEW=1`で起動。
+[Astra設計](./docs/superpowers/specs/2026-10-23-paid-music-count-design.md)／[実装設計図](./docs/superpowers/plans/2026-10-23-music-practice-implementation.md)／[UX監査](./docs/app-v1/music-ux-audit-2026-10-23.md)。本番公開・課金・音源のGitHub送信はしていない。
 
 ## 1. プロジェクトの目標
 

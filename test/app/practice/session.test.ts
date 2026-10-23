@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { PracticeSession, SOUND_CHECK_DELAY_MS, type EngineFrame, type PracticeOptions, type SessionView } from '../../../src/app/practice/session.ts';
 import { DEFAULT_VOICE, packSelection, type VoiceSelection } from '../../../src/app/voices/selection.ts';
 import { packFixture } from '../helpers/voice-fixtures.ts';
+import type { MusicAsset, MusicTrack } from '../../../src/app/music/model.ts';
 
 // 偽の端末: AudioContext・エンジン・WakeLock・タイマーを手で進める。
-function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false, stopEmitsFrame = false } = {}) {
+function harness({ wakeLock = true, voiceFails = false, tipShown = false, startThrows = false, lockHangs = false, stopEmitsFrame = false,
+  musicFails = false, musicGate = null as Promise<MusicAsset> | null } = {}) {
   const audio = { state: 'running', currentTime: 0 };
   const calls: string[] = [];
   const timers: Array<{ at: number; run: () => void; cancelled: boolean }> = [];
@@ -26,6 +28,14 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
       calls.push('createEngine');
       onFrame = frame;
       return { setVoicePack(pack) { packsSet.push(pack); }, start(options) { if (startThrows) throw new Error('boom'); starts.push(options); return 0; }, stop() { calls.push('engine.stop'); if (stopEmitsFrame) onFrame?.({ playing: false }); } };
+    },
+    async loadMusic() {
+      calls.push('loadMusic');if(musicFails)throw new Error('track unavailable');
+      return musicGate??{buffer:{duration:1} as AudioBuffer};
+    },
+    createMusicEngine(_audio,_voice,frame) {
+      calls.push('createMusicEngine');onFrame=frame;
+      return {setVoicePack(pack){packsSet.push(pack);},start(options){starts.push(options);return 0;},stop(){calls.push('music.stop');if(stopEmitsFrame)onFrame?.({playing:false});}};
     },
     keepScreenOn() { calls.push('keepScreenOn'); if (lockHangs) return new Promise<null>(() => {}); return Promise.resolve(wakeLock ? { async release() { releases += 1; } } : null); },
     onStateChange(_audio, listener) { stateListener = listener; return () => { stateListener = null; }; },
@@ -53,6 +63,40 @@ function harness({ wakeLock = true, voiceFails = false, tipShown = false, startT
 }
 
 const WALTZ: PracticeOptions = { kind: 'counts', danceId: 'waltz', counts: '123', bpm: 84, metronome: true, countInBars: 1, loop: true, track: null, voice: DEFAULT_VOICE, voiceOffsetMs: 0 };
+const MUSIC_TRACK:MusicTrack={id:'local',revision:'1',title:'Local',danceId:'rumba',counts:'2341',beatsPerBar:4,anchorTick:960,
+  beatsMs:Array.from({length:17},(_,i)=>i*500),rates:[1],sections:[{id:'early',startTick:3840,endTick:11520}],preview:true};
+const MUSIC:PracticeOptions={...WALTZ,kind:'music',danceId:'rumba',track:MUSIC_TRACK,sectionId:'early',rate:1,repetitions:2,
+  countEnabled:true,musicVolume:.32,voiceVolume:1};
+
+test('music uses the same session lifecycle, while switching back recreates the count engine',async()=>{
+  const h=harness();await h.session.play(MUSIC);
+  assert.equal(h.calls.filter(c=>c==='createMusicEngine').length,1);
+  assert.ok(h.starts[0]?.musicAsset);assert.equal(h.starts[0]?.repetitions,2);
+  assert.equal(h.session.current.playing,true);
+  await h.session.play(WALTZ);
+  assert.equal(h.calls.filter(c=>c==='createEngine').length,1);
+  assert.ok(h.calls.includes('music.stop'));
+  h.session.dispose();
+});
+test('missing music never starts a count-only fallback and releases its wake lock',async()=>{
+  const h=harness({musicFails:true});await h.session.play(MUSIC);
+  assert.equal(h.starts.length,0);assert.equal(h.session.current.notice,'music-missing');assert.equal(h.releases,1);
+});
+test('a stopped pending music request cannot restart playback after it resolves',async()=>{
+  let resolve!:(value:MusicAsset)=>void;
+  const h=harness({musicGate:new Promise<MusicAsset>(done=>{resolve=done;})});
+  const pending=h.session.play(MUSIC);await Promise.resolve();await Promise.resolve();
+  assert.equal(h.session.current.starting,true);h.session.dispose();
+  resolve({buffer:{duration:4} as AudioBuffer});await pending;
+  assert.equal(h.starts.length,0);assert.equal(h.releases,1);
+});
+test('an audio interruption during music preparation cancels the pending start',async()=>{
+  let resolve!:(value:MusicAsset)=>void;
+  const h=harness({musicGate:new Promise<MusicAsset>(done=>{resolve=done;})});
+  const pending=h.session.play(MUSIC);await Promise.resolve();await Promise.resolve();
+  h.setState('interrupted');resolve({buffer:{duration:4} as AudioBuffer});await pending;
+  assert.equal(h.starts.length,0);assert.equal(h.session.current.notice,'stopped');
+});
 
 test('unlock and the wake lock request happen synchronously inside play() (iOS tap rule)', () => {
   const h = harness();

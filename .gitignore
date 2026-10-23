@@ -10,6 +10,7 @@ dist-*/
 output/voices/
 # Local-only music experiments: source derivatives and browser evidence.
 output/music-probe/
+output/playwright/music-ux-astra-*.png
 .env
 .env.*
 *.credentials.json

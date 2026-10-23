@@ -2,12 +2,12 @@
 // D56（Ruling 116）: 表紙 S0（#/）・「使う」の U1（今の S1 の ID のまま #/use）と U2（#/use/routines）・「作る」の M0（#/make）と M1（#/make/routines）。
 // S3 は廃止（古い #/routines は U2 へ置き換え）。深い画面（S2・S4・S5・S7〜S13）の path は変えない。
 // D57（Ruling 119-1）: F1「種目のフィガー」（#/figures/:danceId）。監修済みのフィガーが 1 件以上ある種目だけ（resolve.ts）。
-export type ScreenId = 'S0' | 'S1' | 'U2' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
+export type ScreenId = 'S0' | 'S1' | 'U2' | 'U3' | 'U4' | 'M0' | 'M1' | 'F1' | 'S2' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' | 'S10' | 'S11' | 'S12' | 'S13';
 // cover＝表紙（戻る無し・下タブ無し）。root＝側の入口（U1・U2・M0）。list＝一覧（M1・S6）。focus＝集中画面
 export type ScreenKind = 'cover' | 'root' | 'focus' | 'list';
 export type Side = 'use' | 'make';
 export type TabId = 'practice' | 'routines';
-export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: string };
+export type RouteParams = { danceId?: string; routineId?: string; figureSlug?: string; trackId?: string };
 // 画面の見た目だけを強制するテスト用クエリ（Ruling 23・33。confirm-delete は S3・S7 の削除確認・Ruling 43・60-4。
 // mic-denied・no-voice・no-recorder は S8 の枠・Ruling 63-3（no-https は http で開いた時の非対応の枠・D53）。update-ready は S1・S3・S6・S7 の更新の帯・段7 Ruling 90-7）。
 // confirm-delete-all は S13 の「データを全て消す」の確認（段8・Ruling 99-3・100-2。見た目だけで、消さない）。
@@ -33,6 +33,8 @@ export const SCREENS: Record<ScreenId, ScreenSpec> = {
   S0: { kind: 'cover', parent: null, side: null, tab: null, path: '/' },
   S1: { kind: 'root', parent: 'S0', side: 'use', tab: 'practice', path: '/use' },
   U2: { kind: 'root', parent: 'S0', side: 'use', tab: 'routines', path: '/use/routines' },
+  U3: { kind: 'list', parent: 'S1', side: 'use', tab: null, path: '/use/music' },
+  U4: { kind: 'focus', parent: 'U3', side: 'use', tab: null, path: '/use/music/:trackId' },
   M0: { kind: 'root', parent: 'S0', side: 'make', tab: null, path: '/make' },
   M1: { kind: 'list', parent: 'M0', side: 'make', tab: null, path: '/make/routines' },
   F1: { kind: 'focus', parent: 'S1', side: 'use', tab: null, path: '/figures/:danceId' },

@@ -1,4 +1,6 @@
 import { PracticeAudioEngine } from '../../engine/audio-engine.js';
+import { MusicAudioEngine } from '../../engine/music-audio-engine.js';
+import { loadMusicAsset } from '../platform/music.ts';
 import { loadRecordedVoice, loadStandardVoice, type VoicePack } from '../platform/assets.ts';
 import { onAudioStateChange, outputLatencySeconds, unlockAudioInsideTap } from '../platform/audio-context.ts';
 import { keepScreenOn } from '../platform/wake-lock.ts';
@@ -20,6 +22,10 @@ export const browserSessionDeps: SessionDeps<AudioContext, VoicePack> = {
     voicePack,
     onFrame,
     displayLatencySeconds: () => outputLatencySeconds(audio)
+  }),
+  loadMusic: loadMusicAsset,
+  createMusicEngine: (audio,voicePack,onFrame) => new (MusicAudioEngine as unknown as EngineConstructor)(audio,{
+    voicePack,onFrame,displayLatencySeconds:()=>outputLatencySeconds(audio)
   }),
   keepScreenOn,
   onStateChange: onAudioStateChange,

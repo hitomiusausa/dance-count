@@ -12,15 +12,18 @@ import type { RedirectTarget, Route, ScreenId } from './routes.ts';
 // D57（Ruling 119-6・120-4）: F1 は監修済みのフィガーが 1 件以上の種目だけ（0 件なら S2 の基本へ置き換え・知らない種目は U1）。
 // S2 のフィガーの形は、監修表に無い slug（訂正で消えた・打ち間違い）なら S2 の基本へ置き換える（エラーは出さない）。
 // 古い経路（#/routines＝alias）は U2 を出し、ハッシュを #/use/routines に置き換える（ui-state は持ち越す）。
-export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S0', 'S1', 'U2', 'M0', 'M1', 'F1', 'S2', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13'];
+export const IMPLEMENTED_SCREENS: readonly ScreenId[] = ['S0', 'S1', 'U2', 'U3', 'U4', 'M0', 'M1', 'F1', 'S2', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13'];
 
 export interface Resolved { screen: ScreenId; redirect: RedirectTarget | null }
 
 const TO_MAKE_ROUTINES: Resolved = { screen: 'M1', redirect: { screen: 'M1', params: {} } };
 const TO_USE_ROUTINES: Resolved = { screen: 'U2', redirect: { screen: 'U2', params: {} } };
 
-export function resolveScreen(route: Route, routines: readonly Routine[], figures: ReviewedFigureTable = REVIEWED_FIGURES): Resolved {
+export function resolveScreen(route: Route, routines: readonly Routine[], figures: ReviewedFigureTable = REVIEWED_FIGURES, musicEnabled = false): Resolved {
   const { screen, params } = route;
+  if (screen === 'U3' || screen === 'U4') return musicEnabled
+    ? { screen, redirect: null }
+    : { screen: 'S1', redirect: { screen: 'S1', params: {} } };
   // ui-state（?ui-state=…）は置き換えた先にも持ち越す（見た目の強制を古い経路で開いても効かせる）
   if (route.alias) return { screen, redirect: route.query.uiState ? { screen, params, query: route.query } : { screen, params } };
   if (screen === 'S2' || screen === 'F1') {

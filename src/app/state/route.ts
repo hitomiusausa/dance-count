@@ -14,12 +14,19 @@ export function lastNavigationWasBack(): boolean {
 
 export function useRoute(): Route {
   const [route, setRoute] = useState<Route>(() => parseHash(readHash()));
-  useEffect(() => onHashChange(hash => {
-    const next = recordVisit(visited, hash);
-    lastMoveWasBack = wentBack(visited, next);
-    visited = next;
-    setRoute(parseHash(hash));
-  }), []);
+  useEffect(() => {
+    const accept = (hash: string) => {
+      const next = recordVisit(visited, hash);
+      lastMoveWasBack = wentBack(visited, next);
+      visited = next;
+      setRoute(parseHash(hash));
+    };
+    const unsubscribe = onHashChange(accept);
+    // A hash can change while the first render is waiting for settings, before
+    // the effect subscribes. Reconcile after subscribing so that visit is kept.
+    accept(readHash());
+    return unsubscribe;
+  }, []);
   return route;
 }
 

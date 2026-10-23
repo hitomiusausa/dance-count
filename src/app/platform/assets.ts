@@ -6,9 +6,9 @@ import type { VoicePackRecord } from '../voices/store.ts';
 // fetch はここから渡す（キャッシュ方針は段7の Service Worker で決める。段1持ち越し）。
 export type VoicePack = Awaited<ReturnType<typeof loadVoicePack>>;
 
-const loaded = new WeakMap<AudioContext, Map<string, Promise<VoicePack>>>();
+const loaded = new WeakMap<BaseAudioContext, Map<string, Promise<VoicePack>>>();
 
-export function loadStandardVoice(audio: AudioContext, packId: string): Promise<VoicePack> {
+export function loadStandardVoice(audio: BaseAudioContext, packId: string): Promise<VoicePack> {
   let packs = loaded.get(audio);
   if (!packs) loaded.set(audio, (packs = new Map()));
   let pack = packs.get(packId);
@@ -23,9 +23,9 @@ export function loadStandardVoice(audio: AudioContext, packId: string): Promise<
 
 // 録音・受け取った声（Ruling 61-3）。Blob は IndexedDB に置いたまま、decode した物を AudioContext ごと・声ごとに 1 つ記憶する。
 // 語を録り直すと updatedAt が変わるので記憶を捨てて decode し直す（タイミングのつまみは updatedAt を変えない＝decode し直さない）。
-const recorded = new WeakMap<AudioContext, Map<string, { updatedAt: string; pack: Promise<VoicePack> }>>();
+const recorded = new WeakMap<BaseAudioContext, Map<string, { updatedAt: string; pack: Promise<VoicePack> }>>();
 
-export function loadRecordedVoice(audio: AudioContext, record: VoicePackRecord): Promise<VoicePack> {
+export function loadRecordedVoice(audio: BaseAudioContext, record: VoicePackRecord): Promise<VoicePack> {
   let packs = recorded.get(audio);
   if (!packs) recorded.set(audio, (packs = new Map()));
   const known = packs.get(record.id);

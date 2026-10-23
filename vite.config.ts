@@ -5,6 +5,7 @@ import pkg from './package.json' with { type: 'json' };
 import { SHARE_TARGET_FIELD } from './src/share-inbox-contract.ts';
 import { bootMark as bootFigure } from './src/app/brand/rabbit.ts';
 import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.js';
+import { musicDevPlugin } from './tools/music-dev-plugin.ts';
 
 // 段7: index.html の <meta name="dc-build"> に入る版の印（smoke:pwa が DC_BUILD_TAG=b で別の版を作り、更新されたかを見る）。
 // 既定は package.json の版（同じ木からは同じ dist ができる）。
@@ -44,6 +45,7 @@ const fontsStylesheet: Plugin = {
 export default defineConfig({
   base: './',
   plugins: [
+    musicDevPlugin(),
     preact(),
     buildTag,
     bootMark,

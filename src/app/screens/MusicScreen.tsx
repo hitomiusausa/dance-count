@@ -1,0 +1,171 @@
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { getDanceProfile } from '../../engine/dance-profiles.js';
+import { compileMusicPlan, musicJobs } from '../../engine/music-plan.js';
+import { BackButton } from '../components/BackButton.tsx';
+import { Icon } from '../components/Icon.tsx';
+import { danceName, type AppTranslator } from '../i18n/index.ts';
+import { displayForVoiceKey } from '../lib/count-display.ts';
+import type { MusicTrack } from '../music/model.ts';
+import { loadMusicPreferences, normalizeMusicPreferences, saveMusicPreferences, type MusicPreferences } from '../music/preferences.ts';
+import { useMusicCatalog } from '../music/use-catalog.ts';
+import { downloadFile } from '../platform/files.ts';
+import { onPageHidden } from '../platform/page.ts';
+import { MusicFileError, renderMusicFile } from '../platform/music-export.ts';
+import { CountBox, MoreOptions, NoticeBox, PlayDock, VoiceChip } from '../practice/controls.tsx';
+import { idleProgram, stripCells } from '../practice/beat-indicator.ts';
+import type { MusicOptions } from '../practice/session.ts';
+import { usePracticeSession } from '../practice/use-session.ts';
+import { voiceOffsetFor } from '../practice/voice-offset.ts';
+import { buildHash } from '../router/routes.ts';
+import { replaceRoute } from '../state/route.ts';
+import { useI18n } from '../state/i18n.ts';
+import { useSettings } from '../state/settings.ts';
+import { useStorage } from '../state/storage.ts';
+import { DEFAULT_VOICE, voiceDisplayName, wordOffsetsFor } from '../voices/selection.ts';
+import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
+
+function sectionName(id:string,t:AppTranslator):string {
+  return t.t(id==='early'?'musicEarly':id==='middle'?'musicMiddle':'musicLate');
+}
+export function MusicListScreen() {
+  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();
+  return <main class="dc-screen dc-screen--focus" data-screen="U3">
+    <BackButton screen="U3"/><h1 class="dc-heading">{t.t('musicList')}</h1>
+    <p class="dc-body">{t.t('musicIntro')}</p>
+    {tracks===null?<p role="status">{t.t('musicPreparing')}</p>:!tracks.length?<p role="status">{t.t(failed?'musicFailed':'musicEmpty')}</p>:
+      <div data-list="music-tracks" role="list">{tracks.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
+        href={buildHash({screen:'U4',params:{trackId:track.id}})}>
+        <span class="dc-link-label"><b>{track.title}</b><small>{danceName(track.danceId,t.locale)}</small></span><Icon name="chev-r"/>
+      </a></div>)}</div>}
+    {tracks?.some(track=>track.preview)&&<div class="dc-music-note">{t.t('musicPreview')}</div>}
+  </main>;
+}
+export function MusicPracticeScreen({trackId}:{trackId:string}) {
+  const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();
+  const track=tracks?.find(item=>item.id===trackId);
+  useEffect(()=>{if(tracks!==null&&!failed&&!track)replaceRoute({screen:'U3',params:{}});},[tracks,failed,track]);
+  if(!track)return <main class="dc-screen dc-screen--focus" data-screen="U4"><BackButton screen="U4"/>
+    <h1 class="dc-heading">{t.t('musicPractice')}</h1><p role="status">{t.t(tracks===null?'musicPreparing':'musicFailed')}</p></main>;
+  return <MusicPlayer key={track.revision} track={track}/>;
+}
+function MusicPlayer({track}:{track:MusicTrack}) {
+  const {translator:t}=useI18n();const {settings}=useSettings();const storage=useStorage();
+  const playback=usePlaybackVoice();const {session,view}=usePracticeSession(`music:${track.id}/${track.revision}`);
+  const [prefs,setPrefs]=useState(()=>normalizeMusicPreferences(null,track));const current=useRef(prefs);current.current=prefs;
+  const [ready,setReady]=useState(false);const [saveFailed,setSaveFailed]=useState(false);
+  const [file,setFile]=useState<File|null>(null);const [rendering,setRendering]=useState(false);const [fileStatus,setFileStatus]=useState<'ready'|'failed'|'cancelled'|'volume'|'duration'|null>(null);
+  const renderAbort=useRef<AbortController|null>(null);const alive=useRef(true);
+  useEffect(()=>{
+    let active=true;
+    loadMusicPreferences(storage,track).then(value=>{if(active){current.current=value;setPrefs(value);setReady(true);}});
+    return()=>{active=false;};
+  },[storage,track.id,track.revision]);
+  useEffect(()=>{
+    alive.current=true;
+    const remove=onPageHidden(()=>{
+      session.stop();
+      if(renderAbort.current){renderAbort.current.abort();renderAbort.current=null;setRendering(false);setFile(null);setFileStatus('cancelled');}
+    });
+    return()=>{alive.current=false;renderAbort.current?.abort();remove();};
+  },[session]);
+  const invalidate=()=>{renderAbort.current?.abort();renderAbort.current=null;setRendering(false);setFile(null);setFileStatus(null);};
+  const change=(patch:Partial<MusicPreferences>)=>{
+    session.stop();invalidate();const next=normalizeMusicPreferences({...current.current,...patch},track);
+    current.current=next;setPrefs(next);void saveMusicPreferences(storage,track,next).then(ok=>{if(alive.current)setSaveFailed(!ok);});
+  };
+  const changeVolume=(patch:Partial<MusicPreferences>,save:boolean)=>{
+    invalidate();const next=normalizeMusicPreferences({...current.current,...patch},track);
+    current.current=next;setPrefs(next);session.setMusicVolumes(next.musicVolume,next.voiceVolume);
+    if(save)void saveMusicPreferences(storage,track,next).then(ok=>{if(alive.current)setSaveFailed(!ok);});
+  };
+  // A new voice invalidates an already prepared file; it never quietly exports the old one.
+  useEffect(()=>{session.stop();invalidate();},[settings.selectedVoiceId]);
+  const options=():MusicOptions=>{
+    const voice=playback.voice??DEFAULT_VOICE;
+    return {kind:'music',danceId:track.danceId,track,sectionId:current.current.sectionId,rate:current.current.rate,
+      repetitions:current.current.repetitions,musicVolume:current.current.musicVolume,voiceVolume:current.current.voiceVolume,
+      countEnabled:current.current.countEnabled,countInBars:0,startMode:current.current.startMode,delayBeats:current.current.delayBeats,voice,voiceOffsetMs:voiceOffsetFor(settings,voice),
+      metronome:false,loop:false,bpm:getDanceProfile(track.danceId).practiceBpm};
+  };
+  const toggle=()=>{
+    if(view.playing||view.starting){session.stop();return;}
+    if(!ready||rendering)return;
+    void session.play(options(),playback.pending(settings));
+  };
+  const makeFile=async()=>{
+    session.stop();invalidate();const abort=new AbortController();renderAbort.current=abort;setRendering(true);
+    try{
+      let value=options();const pending=playback.pending(settings);if(pending)value={...value,...await pending};
+      abort.signal.throwIfAborted();const result=await renderMusicFile(value,abort.signal);
+      if(alive.current&&!abort.signal.aborted){setFile(result);setFileStatus('ready');}
+    }catch(error){if(alive.current&&!abort.signal.aborted)setFileStatus(error instanceof MusicFileError&&error.reason!=='voice'?error.reason:'failed');}
+    finally{if(alive.current&&renderAbort.current===abort){setRendering(false);renderAbort.current=null;}}
+  };
+  const plan=compileMusicPlan(track,prefs.sectionId,prefs.rate);
+  const estimate=musicJobs(plan,prefs.repetitions,{...prefs,voiceOffsetMs:playback.offsetMs,wordOffsetsMs:wordOffsetsFor(playback.voice??DEFAULT_VOICE)});
+  const tooLong=estimate.end>120;
+  const cells=stripCells(idleProgram(track.danceId,track.counts));
+  const lit=view.playing&&!view.countIn?cells.findIndex(cell=>cell.label===displayForVoiceKey(view.voiceKey)):null;
+  const busy=view.playing||view.starting;
+  const received=prefs.countEnabled&&playback.voice?.kind==='pack'&&playback.voice.pack.origin==='received';
+  return <main class="dc-screen dc-screen--focus dc-screen--dock dc-practice dc-music" data-screen="U4" data-playing={busy?'true':'false'}>
+    <BackButton screen="U4"/>
+    <div class="dc-practice-grid"><div>
+      <header class="dc-playhead"><h1>{danceName(track.danceId,t.locale)}</h1><small>{track.title}</small></header>
+      <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicBars',{count:plan.durationTicks/960/track.beatsPerBar})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
+      <NoticeBox notice={saveFailed?'save-failed':view.notice} onClose={()=>{setSaveFailed(false);session.dismissNotice();}}/>
+      <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText="2" strip={{cells,lit:lit===-1?null:lit}}/>
+    </div><div>
+      <div class="dc-field-label"><span>{t.t('speed')}</span></div>
+      <div class="dc-chips" role="radiogroup" aria-label={t.t('speed')} data-group="music-speed">
+        {track.rates.map(rate=><button type="button" key={rate} class="dc-chip" role="radio" aria-checked={prefs.rate===rate?'true':'false'} disabled={!ready||rendering}
+          onClick={()=>change({rate})}>{prefs.rate===rate&&<Icon name="check"/>}{t.t(rate===1?'musicOriginal':rate<1?'musicSlower':'musicFaster')}</button>)}
+      </div>
+      <VoiceChip name={voiceDisplayName(t,playback.voice??DEFAULT_VOICE,'chip')}/>
+      <MoreOptions label={t.t('moreOptions')}>
+        <div data-group="music-range">
+          <label class="dc-music-field">{t.t('musicSection')}<select value={prefs.sectionId} disabled={!ready||rendering} onChange={e=>change({sectionId:e.currentTarget.value})}>
+            {track.sections.map(section=><option key={section.id} value={section.id}>{sectionName(section.id,t)} · {t.t('musicBars',{count:(section.endTick-section.startTick)/960/track.beatsPerBar})}</option>)}
+          </select></label>
+          <label class="dc-music-field">{t.t('musicRepetitions')}<select value={prefs.repetitions} disabled={!ready||rendering} onChange={e=>change({repetitions:Number(e.currentTarget.value)})}>
+            {[1,2,4].map(n=><option key={n} value={n}>{t.t(n===1?'musicOnce':'musicTimes',{count:n})}</option>)}
+          </select></label>
+        </div>
+        <div data-group="music-sound">
+          <label class="dc-music-field">{t.t('musicVolume')}<input aria-label={t.t('musicVolume')} type="range" min="0" max="0.7" step="0.01" value={prefs.musicVolume} disabled={!ready||rendering}
+            onInput={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},true)}/></label>
+          <label class="dc-music-field">{t.t('musicVoiceVolume')}<input aria-label={t.t('musicVoiceVolume')} type="range" min="0" max="1.2" step="0.01" value={prefs.voiceVolume} disabled={!ready||rendering}
+            onInput={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},true)}/></label>
+          <button type="button" class="dc-chip-row" role="switch" aria-label={t.t('musicCount')} aria-checked={prefs.countEnabled} disabled={!ready||rendering}
+            onClick={()=>change({countEnabled:!prefs.countEnabled})}><Icon name="voice"/><span>{t.t('musicCount')}</span><b>{t.t(prefs.countEnabled?'on':'off')}</b></button>
+        </div>
+        <div data-group="music-start">
+          <label class="dc-music-field">{t.t('musicStartOrder')}<select value={prefs.startMode} disabled={!ready||rendering||!prefs.countEnabled}
+            onChange={e=>change({startMode:e.currentTarget.value as MusicPreferences['startMode']})}>
+            <option value="music-first">{t.t('musicFirst')}</option><option value="count-first">{t.t('musicCountFirst')}</option><option value="together">{t.t('musicTogether')}</option>
+          </select></label>
+          {prefs.startMode!=='together'&&prefs.countEnabled&&<>
+            <label class="dc-music-field">{t.t('musicWait')}<select value={prefs.delayBeats} disabled={!ready||rendering}
+              onChange={e=>change({delayBeats:Number(e.currentTarget.value)})}>
+              {[...new Set([1,2,track.beatsPerBar,track.beatsPerBar*2])].map(beats=><option key={beats} value={beats}>
+                {t.t(beats<track.beatsPerBar?'musicWaitBeats':'musicWaitBars',{count:beats<track.beatsPerBar?beats:beats/track.beatsPerBar})}</option>)}
+            </select></label>
+            <div class="dc-music-note">{t.t(prefs.startMode==='music-first'?'musicListenThen':'musicCountThen')}</div>
+          </>}
+        </div>
+        <div class="dc-music-file" data-group="music-file">
+          <div class="dc-music-note">{t.t(received?'musicFileReceived':'musicFileIntro')}</div>
+          {!received&&<div class="dc-music-note">{t.t('musicFileEstimate',{seconds:Math.ceil(estimate.end),size:Math.ceil(estimate.end*48000*4/1000000)})}</div>}
+          {tooLong&&!received&&<div class="dc-body" role="status">{t.t('musicFileTooLong')}</div>}
+          {rendering?<button type="button" class="dc-button dc-button--secondary" onClick={()=>{invalidate();setFileStatus('cancelled');}}>{t.t('musicCancelFile')}</button>:
+            <button type="button" class="dc-button dc-button--secondary" disabled={!ready||received||tooLong||playback.voice===null} onClick={()=>void makeFile()}>{t.t('musicCreateFile')}</button>}
+          {file&&<button type="button" class="dc-button dc-primary" data-music-save onClick={()=>downloadFile(file)}>{t.t('saveFileAgain')}</button>}
+          {(rendering||fileStatus)&&<div class="dc-body" role="status">{t.t(rendering?'musicFilePreparing':fileStatus==='ready'?'musicFileReady':fileStatus==='cancelled'?'musicFileStopped':fileStatus==='volume'?'musicFileTooLoud':fileStatus==='duration'?'musicFileTooLong':'musicFileFailed')}</div>}
+        </div>
+      </MoreOptions>
+      {track.preview&&<div class="dc-music-note">{t.t('musicPreview')}</div>}
+      <span hidden data-music-duration={plan.transport.duration}/>
+    </div></div>
+    <PlayDock playing={busy} onToggle={toggle} disabled={!ready||rendering} label={rendering?t.t('musicFilePreparing'):!ready?t.t('musicPreparing'):undefined}/>
+  </main>;
+}

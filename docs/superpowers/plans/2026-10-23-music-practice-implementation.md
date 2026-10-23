@@ -4,6 +4,17 @@
 
 正本仕様: [有料「音楽＋カウント」](../specs/2026-10-23-paid-music-count-design.md)。この文書はコード着手・再開の手順。記載した新規ファイル名は責務の割当案であり、実装完了の記録ではない。
 
+## 現在の到達点（うさこ・2026-10-23）
+
+この下の章は着手時の設計として保持。実装・検証の最新正本は[実装引き継ぎ](../../app-v1/music-implementation-2026-10-23.md)。Astraが設計と独立UX監査を行い、うさこが修正と実測を担当。
+
+- `使う → 音楽に合わせて練習 → 曲`に組込済み。ただし`VITE_MUSIC_PREVIEW=1`の開発時のみ。公開buildでは入口・試作metadata・音源を除外。
+- 3区間は秒固定32秒から**各12小節候補（48拍）**へ変更。速度0.8／1／1.1を事前加工、反復1／2／4回、音量別、声ON/OFF、設定保存、WAV作成と明示保存まで実装。
+- 追加希望の始め方: 曲が先（既定2小節）／声が先／同時。待つ長さ1拍・2拍・1小節・2小節。再生と出力の共通planに接続。細かい意味は[仕様§1.2](../specs/2026-10-23-paid-music-count-design.md)を参照。
+- 実ファイル: 型`music/model.ts`、prefs`music/preferences.ts`、platform`music.ts`・`music-export.ts`、plan`engine/music-plan.js`、変換`engine/tempo-map.js`、音予約`engine/music-audio-engine.js`、画面`screens/MusicScreen.tsx`、開発provider`tools/music-dev-plugin.ts`。
+- 初段の形式は短い音声WAV（48kHz stereo PCM16、最大120秒）。動画・全曲・お気に入りは未実装。
+- ひちゃんの「バックアップ忘れないでね。github開いておいたよー」により今回の作業枝へのコードpushは許可済み。音源・解析データ・未追跡の監修表とフィガーは公開repoへ送らない。公開deploy・課金契約の許可とは扱わない。
+
 ## 1. 今回の完成形
 
 ひちゃんが「設計図を作って、コーディングをはじめて。最終的に『使う』セクション内に組み込む」と許可。独立labで確かめた拍地図方式を、現行アプリの「使う」から触れるところまで進める。今回の縦通しはPaper Umbrellaの短区間・元速度・既存の声で行う。

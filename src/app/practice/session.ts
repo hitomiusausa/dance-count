@@ -1,6 +1,8 @@
 import { figureRangeTicks } from '../../engine/practice-range.js';
 import { compileRhythm, compileRoutine } from '../../engine/rhythm-compiler.js';
 import type { TrackProfile } from '../../engine/tempo-map.js';
+import { compileMusicPlan } from '../../engine/music-plan.js';
+import type { MusicAsset, MusicTrack } from '../music/model.ts';
 import { wordOffsetsFor, type VoiceSelection } from '../voices/selection.ts';
 import type { StripEvent, StripProgram } from './beat-indicator.ts';
 
@@ -25,7 +27,14 @@ export interface FigureLike { id: string; name: string; counts: string }
 // 2つの形（Ruling 40）。counts＝S2 のカウントの型。routine＝S4 の試聴・S5（range はフィガーの番号、0 始まり・両端を含む）。
 export type PracticeOptions =
   | (CommonOptions & { kind: 'counts'; counts: string })
-  | (CommonOptions & { kind: 'routine'; figures: readonly FigureLike[]; range?: { startIndex: number; endIndex: number } });
+  | (CommonOptions & { kind: 'routine'; figures: readonly FigureLike[]; range?: { startIndex: number; endIndex: number } })
+  | MusicOptions;
+
+export interface MusicOptions extends Omit<CommonOptions, 'track'> {
+  kind: 'music'; track: MusicTrack; sectionId: string; rate: number;
+  startMode?: 'together' | 'music-first' | 'count-first'; delayBeats?: number;
+  repetitions: number; countEnabled: boolean; musicVolume: number; voiceVolume: number;
+}
 
 export interface CompiledProgram { compiled: unknown; rangeStartTick?: number; rangeEndTick?: number }
 
@@ -41,6 +50,7 @@ export function programView(compiled: unknown): StripProgram {
 
 // カウントをエンジンに渡す形にする。範囲は小節の位相を保つため、ルーティン全体をコンパイルしてから切り出す。
 export function compileProgram(options: PracticeOptions): CompiledProgram {
+  if (options.kind === 'music') return { compiled: compileMusicPlan(options.track, options.sectionId, options.rate) };
   if (options.kind === 'counts') return { compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }) };
   const compiled = compileRoutine({ danceId: options.danceId, figures: options.figures });
   if (!options.range) return { compiled };
@@ -49,12 +59,13 @@ export function compileProgram(options: PracticeOptions): CompiledProgram {
 }
 
 // [data-alert] の枠に出すもの（Ruling 30）。優先順位: no-sound ＞ stopped・voice-missing ＞ wake-tip。
-export type SessionNotice = 'none' | 'no-sound' | 'stopped' | 'voice-missing' | 'wake-tip';
+export type SessionNotice = 'none' | 'no-sound' | 'stopped' | 'voice-missing' | 'music-missing' | 'wake-tip';
 
 export interface SessionView {
   playing: boolean;
   starting: boolean;
   countIn: boolean;
+  listening?: boolean;
   voiceKey: string | null;     // 鳴っている語（表示は lib/count-display.ts）
   originalTick: number | null;
   figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
@@ -68,6 +79,7 @@ export interface EngineFrame {
   playing: boolean;
   event?: { voiceKey?: string | null; figureIndex?: number } | null;
   countIn?: boolean;
+  listening?: boolean;
   originalTick?: number | null;
 }
 
@@ -75,6 +87,7 @@ export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
+  setVolumes?(music: number, voice: number): void;
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -83,6 +96,8 @@ export interface SessionDeps<A extends AudioLike, V> {
   unlock(): A;                                                              // クリック処理の中で同期
   loadVoice(audio: A, voice: VoiceSelection): Promise<V>;
   createEngine(audio: A, voicePack: V, onFrame: (frame: EngineFrame) => void): EngineLike;
+  loadMusic?(audio: A, options: MusicOptions): Promise<MusicAsset>;
+  createMusicEngine?(audio: A, voicePack: V, onFrame: (frame: EngineFrame) => void): EngineLike;
   keepScreenOn(): Promise<WakeLockLike | null>;                             // クリック処理の中で同期に発行
   onStateChange(audio: A, listener: (state: string) => void): () => void;
   setTimer(callback: () => void, ms: number): () => void;                  // 戻り値で取り消し
@@ -107,6 +122,7 @@ export class PracticeSession<A extends AudioLike, V> {
   private readonly listeners = new Set<(view: SessionView) => void>();
   private audio: A | null = null;
   private engine: EngineLike | null = null;
+  private engineKind: 'music' | 'counts' | null = null;
   private wakeLock: WakeLockLike | null = null;
   private cancelSoundCheck: (() => void) | null = null;
   private unsubscribeState: (() => void) | null = null;
@@ -129,7 +145,7 @@ export class PracticeSession<A extends AudioLike, V> {
   // ▶ のクリック処理から同期で呼ぶ。unlock と WakeLock の request は最初の await より前に発行される。
   // pendingVoice: 選んだ声がまだ解けていない時の解決。解けるのを待ってその声で鳴らす。失敗した時だけ options の声（標準）で鳴らす（Ruling 61-2）。
   play(options: PracticeOptions, pendingVoice?: Promise<VoiceChoice>): Promise<void> {
-    if (options.track !== null) throw new Error('Playing with a track is not supported in v1');
+    if (options.kind !== 'music' && options.track !== null) throw new Error('Playing with a track is not supported in v1');
     if (typeof options.bpm !== 'number' || !Number.isFinite(options.bpm)) throw new TypeError('bpm must be a finite number');
     this.halt();
     const generation = ++this.generation;
@@ -149,6 +165,10 @@ export class PracticeSession<A extends AudioLike, V> {
 
   dismissNotice(): void {
     this.update({ ...this.view, notice: 'none' });
+  }
+
+  setMusicVolumes(music: number, voice: number): void {
+    if (this.engineKind === 'music') this.engine?.setVolumes?.(music, voice);
   }
 
   dispose(): void {
@@ -181,10 +201,28 @@ export class PracticeSession<A extends AudioLike, V> {
       void lockPromise.then(lock => lock?.release());
       return;
     }
+    let musicAsset: MusicAsset | undefined;
+    if (options.kind === 'music') {
+      try {
+        if (!this.deps.loadMusic || !this.deps.createMusicEngine) throw new Error('Music playback is unavailable');
+        musicAsset = await this.deps.loadMusic(audio, options);
+      } catch {
+        void lockPromise.then(lock => lock?.release());
+        if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'music-missing' });
+        return;
+      }
+      if (generation !== this.generation) { void lockPromise.then(lock => lock?.release()); return; }
+    }
     const startedAt = audio.currentTime;
     let program: StripProgram;
     try {
-      this.engine ??= this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
+      const kind = options.kind === 'music' ? 'music' : 'counts';
+      if (this.engineKind !== kind) {
+        this.engine?.stop(); this.engine = null; this.engineKind = kind;
+      }
+      this.engine ??= kind === 'music'
+        ? this.deps.createMusicEngine!(audio, voicePack, frame => this.onFrame(frame))
+        : this.deps.createEngine(audio, voicePack, frame => this.onFrame(frame));
       this.engine.setVoicePack(voicePack);
       const compiled = compileProgram(options);
       program = programView(compiled.compiled);
@@ -195,7 +233,9 @@ export class PracticeSession<A extends AudioLike, V> {
         metronome: options.metronome,
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,
-        wordOffsetsMs: wordOffsetsFor(options.voice)
+        wordOffsetsMs: wordOffsetsFor(options.voice),
+        ...(options.kind === 'music' ? { musicAsset, repetitions: options.repetitions, countEnabled: options.countEnabled,
+          musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats } : {})
       });
     } catch {
       void lockPromise.then(lock => lock?.release());
@@ -235,7 +275,7 @@ export class PracticeSession<A extends AudioLike, V> {
     this.audio = audio;
     this.engine = null;
     this.unsubscribeState = this.deps.onStateChange(audio, state => {
-      if ((state === 'suspended' || state === 'interrupted') && this.view.playing) {
+      if ((state === 'suspended' || state === 'interrupted') && (this.view.playing || this.view.starting)) {
         this.generation += 1;
         this.halt();
         this.update({ ...IDLE_VIEW, notice: this.view.notice === 'no-sound' ? 'no-sound' : 'stopped' });
@@ -253,7 +293,7 @@ export class PracticeSession<A extends AudioLike, V> {
     const countIn = frame.countIn === true;
     this.update({
       ...this.view,
-      countIn,
+      countIn, listening: frame.listening === true,
       voiceKey: countIn ? null : frame.event?.voiceKey ?? null,
       originalTick: countIn ? null : frame.originalTick ?? null,
       figureIndex: countIn ? null : frame.event?.figureIndex ?? null
