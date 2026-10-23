@@ -112,23 +112,23 @@ function MusicPlayer({track}:{track:MusicTrack}) {
     <BackButton screen="U4"/>
     <div class="dc-practice-grid"><div>
       <header class="dc-playhead"><h1>{danceName(track.danceId,t.locale)}</h1><small>{track.title}</small></header>
-      <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicBars',{count:plan.durationTicks/960/track.beatsPerBar})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
+      <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicSeconds',{seconds:Math.round(plan.transport.duration)})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
       <NoticeBox notice={saveFailed?'save-failed':view.notice} onClose={()=>{setSaveFailed(false);session.dismissNotice();}}/>
       <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText="2" strip={{cells,lit:lit===-1?null:lit}}/>
     </div><div>
-      <div class="dc-field-label"><span>{t.t('speed')}</span></div>
-      <div class="dc-chips" role="radiogroup" aria-label={t.t('speed')} data-group="music-speed">
+      <div class="dc-field-label"><span>{t.t('musicSpeed')}</span></div>
+      <div class="dc-chips" role="radiogroup" aria-label={t.t('musicSpeed')} data-group="music-speed">
         {track.rates.map(rate=><button type="button" key={rate} class="dc-chip" role="radio" aria-checked={prefs.rate===rate?'true':'false'} disabled={!ready||rendering}
           onClick={()=>change({rate})}>{prefs.rate===rate&&<Icon name="check"/>}{t.t(rate===1?'musicOriginal':rate<1?'musicSlower':'musicFaster')}</button>)}
       </div>
       <VoiceChip name={voiceDisplayName(t,playback.voice??DEFAULT_VOICE,'chip')}/>
-      <MoreOptions label={t.t('moreOptions')}>
+      <MoreOptions label={t.t('musicSettings')}>
         <div data-group="music-range">
           <label class="dc-music-field">{t.t('musicSection')}<select value={prefs.sectionId} disabled={!ready||rendering} onChange={e=>change({sectionId:e.currentTarget.value})}>
-            {track.sections.map(section=><option key={section.id} value={section.id}>{sectionName(section.id,t)} · {t.t('musicBars',{count:(section.endTick-section.startTick)/960/track.beatsPerBar})}</option>)}
+            {track.sections.map(section=><option key={section.id} value={section.id}>{t.t('musicSectionChoice',{part:sectionName(section.id,t),seconds:Math.round(compileMusicPlan(track,section.id,prefs.rate).transport.duration)})}</option>)}
           </select></label>
           <label class="dc-music-field">{t.t('musicRepetitions')}<select value={prefs.repetitions} disabled={!ready||rendering} onChange={e=>change({repetitions:Number(e.currentTarget.value)})}>
-            {[1,2,4].map(n=><option key={n} value={n}>{t.t(n===1?'musicOnce':'musicTimes',{count:n})}</option>)}
+            {[1,2,4].map(n=><option key={n} value={n}>{t.t(n===1?'musicPlayOnce':'musicRepeatTimes',{count:n})}</option>)}
           </select></label>
         </div>
         <div data-group="music-sound">
@@ -136,8 +136,8 @@ function MusicPlayer({track}:{track:MusicTrack}) {
             onInput={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},true)}/></label>
           <label class="dc-music-field">{t.t('musicVoiceVolume')}<input aria-label={t.t('musicVoiceVolume')} type="range" min="0" max="1.2" step="0.01" value={prefs.voiceVolume} disabled={!ready||rendering}
             onInput={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},true)}/></label>
-          <button type="button" class="dc-chip-row" role="switch" aria-label={t.t('musicCount')} aria-checked={prefs.countEnabled} disabled={!ready||rendering}
-            onClick={()=>change({countEnabled:!prefs.countEnabled})}><Icon name="voice"/><span>{t.t('musicCount')}</span><b>{t.t(prefs.countEnabled?'on':'off')}</b></button>
+          <button type="button" class="dc-toggle dc-music-count" role="switch" aria-label={t.t('musicCount')} aria-checked={prefs.countEnabled} disabled={!ready||rendering}
+            onClick={()=>change({countEnabled:!prefs.countEnabled})}><span class="dc-toggle-label">{t.t('musicCount')}</span><span class="dc-switch"><span class="dc-switch-knob"/><span class="dc-switch-text">{t.t(prefs.countEnabled?'musicWithCount':'musicOnly')}</span></span></button>
         </div>
         <div data-group="music-start">
           <label class="dc-music-field">{t.t('musicStartOrder')}<select value={prefs.startMode} disabled={!ready||rendering||!prefs.countEnabled}
@@ -145,15 +145,16 @@ function MusicPlayer({track}:{track:MusicTrack}) {
             <option value="music-first">{t.t('musicFirst')}</option><option value="count-first">{t.t('musicCountFirst')}</option><option value="together">{t.t('musicTogether')}</option>
           </select></label>
           {prefs.startMode!=='together'&&prefs.countEnabled&&<>
-            <label class="dc-music-field">{t.t('musicWait')}<select value={prefs.delayBeats} disabled={!ready||rendering}
+            <label class="dc-music-field">{t.t(prefs.startMode==='music-first'?'musicListenWait':'musicCountWait')}<select value={prefs.delayBeats} disabled={!ready||rendering}
               onChange={e=>change({delayBeats:Number(e.currentTarget.value)})}>
               {[...new Set([1,2,track.beatsPerBar,track.beatsPerBar*2])].map(beats=><option key={beats} value={beats}>
-                {t.t(beats<track.beatsPerBar?'musicWaitBeats':'musicWaitBars',{count:beats<track.beatsPerBar?beats:beats/track.beatsPerBar})}</option>)}
+                {t.t(beats<track.beatsPerBar?'musicWaitBeats':'musicWaitBars',{count:beats<track.beatsPerBar?beats:beats/track.beatsPerBar,beats})}</option>)}
             </select></label>
-            <div class="dc-music-note">{t.t(prefs.startMode==='music-first'?'musicListenThen':'musicCountThen')}</div>
+            <div class="dc-music-note">{t.t(prefs.startMode==='music-first'?'musicListenThen':'musicCountThen',{beats:prefs.delayBeats})}</div>
           </>}
         </div>
         <div class="dc-music-file" data-group="music-file">
+          <h2 class="dc-field-label">{t.t('musicSaveHeading')}</h2>
           <div class="dc-music-note">{t.t(received?'musicFileReceived':'musicFileIntro')}</div>
           {!received&&<div class="dc-music-note">{t.t('musicFileEstimate',{seconds:Math.ceil(estimate.end),size:Math.ceil(estimate.end*48000*4/1000000)})}</div>}
           {tooLong&&!received&&<div class="dc-body" role="status">{t.t('musicFileTooLong')}</div>}

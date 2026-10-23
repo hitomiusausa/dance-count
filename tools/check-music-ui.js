@@ -36,23 +36,42 @@ try{
         };
         const targets=[...document.querySelectorAll('main button,main a,main select,main input,main summary')].filter(visible);
         const small=targets.filter(el=>{const r=el.getBoundingClientRect();return r.width<47.9||r.height<47.9;}).map(el=>({text:el.textContent?.trim(),width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height}));
+        const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
+        const clippedSelect=targets.filter(el=>el.tagName==='SELECT').filter(el=>{
+          const style=getComputedStyle(el);ctx.font=style.font;
+          const available=el.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)-24;
+          return ctx.measureText(el.selectedOptions[0]?.textContent??'').width>available;
+        }).map(el=>el.selectedOptions[0]?.textContent);
         const fonts=[...document.querySelectorAll('main *')].filter(el=>visible(el)&&[...el.childNodes].some(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim())).filter(el=>parseFloat(getComputedStyle(el).fontSize)<16).map(el=>el.tagName);
         const more=document.querySelector('[data-more]').getBoundingClientRect(),dock=document.querySelector('.dc-dock').getBoundingClientRect();
+        const untranslated=/\bmusic[A-Z]\w+/.test(document.querySelector('main').innerText);
         const all=[...document.querySelectorAll('main button,main a,main select,main input,main summary')].filter(visible).filter(el=>!el.matches('[data-back]'));
         const groups=new Set(all.map(el=>el.closest('[data-group]')??el));
-        return{small,fonts,overflow:document.documentElement.scrollWidth>innerWidth,moreBottom:more.bottom,dockTop:dock.top,operations:groups.size};
+        return{small,fonts,clippedSelect,untranslated,overflow:document.documentElement.scrollWidth>innerWidth,moreBottom:more.bottom,dockTop:dock.top,operations:groups.size};
       });
       const closed=await measure();
-      if(closed.small.length||closed.fonts.length||closed.overflow||closed.operations>5)throw Error(`closed ${locale}/${width}/${rateIndex}: ${JSON.stringify(closed)}`);
+      if(closed.small.length||closed.fonts.length||closed.clippedSelect.length||closed.untranslated||closed.overflow||closed.operations>5)throw Error(`closed ${locale}/${width}/${rateIndex}: ${JSON.stringify(closed)}`);
       if(width===375&&height===548&&closed.moreBottom>closed.dockTop-8)throw Error(`details hidden ${locale}/${rateIndex}: ${JSON.stringify(closed)}`);
       await page.locator('[data-more]').click();const open=await measure();
-      if(open.small.length||open.fonts.length||open.overflow||open.operations>9)throw Error(`open ${locale}/${width}/${rateIndex}: ${JSON.stringify(open)}`);
+      if(open.small.length||open.fonts.length||open.clippedSelect.length||open.untranslated||open.overflow||open.operations>9)throw Error(`open ${locale}/${width}/${rateIndex}: ${JSON.stringify(open)}`);
+      const order=page.getByRole('combobox',{name:locale==='ja-JP'?'曲とカウント、どちらから始めますか？':'Which starts first?',exact:true});
+      const startModes=[];
+      for(const mode of ['count-first','together','music-first']){
+        await order.selectOption(mode);const state=await measure();
+        if(state.small.length||state.fonts.length||state.clippedSelect.length||state.untranslated||state.overflow||state.operations>9)throw Error(`start order ${locale}/${width}/${mode}: ${JSON.stringify(state)}`);
+        startModes.push({mode,...state});
+      }
       if(rateIndex===1){
+        const count=page.getByRole('switch',{name:locale==='ja-JP'?'カウントの声':'Hear the count',exact:true});
+        await count.click();
+        if(await count.getAttribute('aria-checked')!=='false'||!await order.isDisabled())throw Error('music-only state did not disable start options');
+        await count.click();
+        if(await count.getAttribute('aria-checked')!=='true'||await order.isDisabled())throw Error('count state did not restore start options');
         const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze();
         if(axe.violations.length)throw Error(`accessibility ${locale}/${width}: ${axe.violations.map(v=>v.id).join(',')}`);
         await page.screenshot({path:`output/music-probe/music-ui-${locale}-${width}x${height}.png`,fullPage:true});
       }
-      await page.locator('[data-more]').click();results.push({locale,width,height,rateIndex,home,closed,open});
+      await page.locator('[data-more]').click();results.push({locale,width,height,rateIndex,home,closed,open,startModes});
     }
     await context.close();
   }

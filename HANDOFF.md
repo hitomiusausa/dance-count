@@ -1,5 +1,7 @@
 # Dance Count for Ballroom — 作業引き継ぎ
 
+**2026-10-23 13時台の追加修正**: ひちゃんの試聴で倍速カウントを指摘。曲ごとに検出点2つを1拍とする候補へ変更し、設定の言葉を平易化。最新の修正・検証は[拍と設定の修正](./docs/app-v1/music-beat-and-settings-fix-2026-10-23.md)。以前の検証数は修正前の記録。
+
 更新日: 2026-10-11
 
 2026-10-11: アプリ化v1 段1完了。旧画面は legacy/ へ。新アプリは src/app（docs/superpowers/specs/2026-10-11-app-v1-design.md）

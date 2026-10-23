@@ -8,6 +8,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { Plugin } from 'vite';
 import type { MusicTrack } from '../src/app/music/model.ts';
+import { buildMusicPreviewTrack } from './music-preview-track.ts';
 
 const run = promisify(execFile);
 export function musicDevPlugin(): Plugin {
@@ -24,18 +25,7 @@ export function musicDevPlugin(): Plugin {
         const hash = createHash('sha256').update(await readFile(source)).digest('hex');
         if (hash !== report.sourceSha256) throw new Error('Source hash differs from analysis');
         sourceStamp = (await stat(source)).mtimeMs;
-        const beats: number[] = report.trackedBeatsSeconds;
-        const sections = [20,140,280].map((seconds,i) => {
-          const nearest = beats.findIndex(t=>t>=seconds);
-          if(nearest<0) throw new Error('Missing preview range');
-          const firstBeat = Math.ceil(nearest/4)*4;
-          const lastBeat = firstBeat+48;
-          if(lastBeat>=beats.length) throw new Error('Preview exceeds tracked coverage');
-          return { id:['early','middle','late'][i]!,startTick:firstBeat*960,endTick:lastBeat*960 };
-        });
-        track = { id:'paper-umbrella',revision:`${hash.slice(0,16)}-atempo-v2`,title:'Paper Umbrella',danceId:'rumba',
-          beatsPerBar:4,counts:'2341',anchorTick:960,beatsMs:beats.map(t=>t*1000),
-          rates:[.8,1,1.1],sections,preview:true };
+        track = buildMusicPreviewTrack(hash, report.trackedBeatsSeconds);
       } catch {
         server.config.logger.warn('Music preview needs a matching local source and analysis.json. Catalog is empty.');
       }

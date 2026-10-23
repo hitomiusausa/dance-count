@@ -39,15 +39,15 @@ try{
     window.__musicStops=[];
     MusicAudioEngine.prototype.stop=function(...args){window.__musicStops.push({time:this.audio.currentTime,cursor:this.cursor,playing:this.playing,stack:new Error().stack});return stop.apply(this,args);};
   });
-  await page.getByText('くわしく',{exact:true}).click();
-  await select('始める順番','together');await select('繰り返す回数',1);
+  await page.getByText('練習の設定',{exact:true}).click();
+  await select('曲とカウント、どちらから始めますか？','together');await select('同じところを何回くり返しますか？',1);
   for(const section of track.sections)for(const rate of track.rates){
-    await select('練習するところ',section.id);await chooseRate(rate);
+    await select('曲のどこで練習しますか？',section.id);await chooseRate(rate);
     const before=await page.evaluate(()=>window.__musicCheck.sources.length);
     await page.locator('[data-play]').click();
     await page.waitForSelector('[data-screen=U4][data-playing=true]');
     await page.waitForFunction(()=>/^[1-4]$/.test(document.querySelector('.dc-now')?.textContent??''));
-    const counts=new Set();for(let i=0;i<8;i++){counts.add(await page.locator('.dc-now').textContent());await page.waitForTimeout(250);}
+    const counts=new Set();for(let i=0;i<20;i++){counts.add(await page.locator('.dc-now').textContent());await page.waitForTimeout(250);}
     ensure(counts.size>=3,`count froze ${section.id}@${rate}`);
     const sources=await page.evaluate(i=>window.__musicCheck.sources.slice(i),before);
     const music=sources.filter(s=>s.duration>2);
@@ -58,8 +58,13 @@ try{
     await page.getByRole('slider',{name:'音楽の大きさ',exact:true}).focus();await page.keyboard.press('ArrowLeft');
     ensure(await page.locator('[data-screen=U4][data-playing=true]').count(),'volume stopped music');
     await idle();
-    evidence.playbacks.push({section:section.id,rate,counts:[...counts],music});
-    await page.getByRole('button',{name:'音声ファイルを作る',exact:true}).click();
+    const spoken=sources.filter(source=>source.duration>.1&&source.duration<2&&source.at>=music[0].at-.1);
+    ensure(spoken.length>=3,'not enough real spoken nodes for cadence verification');
+    const intervals=spoken.slice(1).map((source,index)=>source.at-spoken[index].at).sort((a,b)=>a-b);
+    const medianVoiceInterval=intervals[Math.floor(intervals.length/2)];
+    ensure(medianVoiceInterval>.65,`count is still at the old double density: ${medianVoiceInterval}`);
+    evidence.playbacks.push({section:section.id,rate,counts:[...counts],music,medianVoiceInterval});
+    await page.getByRole('button',{name:'保存する音声を作る',exact:true}).click();
     const save=page.getByRole('button',{name:'ファイルを保存する',exact:true});
     await save.waitFor({state:'visible',timeout:20000});
     const event=page.waitForEvent('download');await save.click();const download=await event;
@@ -67,7 +72,7 @@ try{
     evidence.exports.push({section:section.id,rate,file,schedule:musicJobs(plan,1,{countInBars:0,countEnabled:true}),musicVolume:.32-(evidence.playbacks.length)*.01});
   }
   // One real repeated section is allowed to reach its second music start.
-  await chooseRate(1.1);await select('練習するところ','early');await select('繰り返す回数',2);
+  await chooseRate(1.1);await select('曲のどこで練習しますか？','early');await select('同じところを何回くり返しますか？',2);
   const duration=Number(await page.locator('[data-music-duration]').getAttribute('data-music-duration'));
   const before=await page.evaluate(()=>window.__musicCheck.sources.length);
   await page.locator('[data-play]').click();await page.waitForTimeout((duration+1)*1000);
@@ -76,17 +81,17 @@ try{
   ensure(starts.length===2,'second music pass was not scheduled');
   ensure(Math.abs(starts[1].at-starts[0].at-duration)<1/44100,'loop accumulated timing error');
   await idle();evidence.checks.push('real second loop: same buffer at exact mapped interval');
-  await page.getByRole('button',{name:'音声ファイルを作る',exact:true}).click();
+  await page.getByRole('button',{name:'保存する音声を作る',exact:true}).click();
   await page.locator('[data-music-save]').waitFor({state:'visible'});
   const repeatedDownload=page.waitForEvent('download');await page.locator('[data-music-save]').click();
   const repeated=await repeatedDownload;const repeatedFile=path.join(out,repeated.suggestedFilename());await repeated.saveAs(repeatedFile);
   evidence.exports.push({section:'early',rate:1.1,file:repeatedFile,schedule:musicJobs(compileMusicPlan(track,'early',1.1),2,{countInBars:0,countEnabled:true})});
   evidence.checks.push('two-pass WAV saved from the same transport');
   // Real count-first/music-first schedules and actual downloaded files.
-  await select('繰り返す回数',1);await select('練習するところ','early');await chooseRate(1);
+  await select('同じところを何回くり返しますか？',1);await select('曲のどこで練習しますか？','early');await chooseRate(1);
   const voiceManifest=await page.evaluate(async()=>await(await fetch('/audio/default-en-female-v1/manifest.json')).json());
   for(const [startMode,delayBeats] of [['music-first',1],['music-first',4],['music-first',8],['count-first',1],['count-first',4],['count-first',8]]){
-    await select('始める順番',startMode);await select('あとから入るまで',delayBeats);
+    await select('曲とカウント、どちらから始めますか？',startMode);await select(startMode==='music-first'?'曲を何拍聞いてから数えますか？':'何拍数えてから曲を流しますか？',delayBeats);
     const plan=compileMusicPlan(track,'early',1),schedule=musicJobs(plan,1,{startMode,delayBeats});
     const firstWord=schedule.jobs.find(job=>job.kind==='voice');
     const before=await page.evaluate(()=>window.__musicCheck.sources.length);
@@ -100,33 +105,33 @@ try{
     const expectedGap=firstWord.at-schedule.start;
     ensure(Math.abs(observedGap-expectedGap)<1/44100,`start order drift: ${startMode}/${delayBeats}: ${observedGap} vs ${expectedGap}`);
     await idle();evidence.checks.push(`${startMode} ${delayBeats} beats: real nodes match the shared schedule`);
-    await page.getByRole('button',{name:'音声ファイルを作る',exact:true}).click();
+    await page.getByRole('button',{name:'保存する音声を作る',exact:true}).click();
     await page.locator('[data-music-save]').waitFor({state:'visible'});
     const event=page.waitForEvent('download');await page.locator('[data-music-save]').click();const download=await event;
     const file=path.join(out,download.suggestedFilename());await download.saveAs(file);
     evidence.exports.push({section:'early',rate:1,file,schedule,startMode,delayBeats});
   }
   // Long file prevention is visible BEFORE starting any render.
-  await select('練習するところ','late');await chooseRate(.8);await select('繰り返す回数',4);await select('始める順番','count-first');await select('あとから入るまで',8);
-  ensure(await page.getByRole('button',{name:'音声ファイルを作る',exact:true}).isDisabled(),'long file was not blocked up front');
-  ensure(await page.getByText('練習が長すぎて保存できません。繰り返す回数を減らしてください。',{exact:true}).isVisible(),'long-file advice missing');
+  await select('曲のどこで練習しますか？','late');await chooseRate(.8);await select('同じところを何回くり返しますか？',4);await select('曲とカウント、どちらから始めますか？','count-first');await select('何拍数えてから曲を流しますか？',8);
+  ensure(await page.getByRole('button',{name:'保存する音声を作る',exact:true}).isDisabled(),'long file was not blocked up front');
+  ensure(await page.getByText('練習が長すぎて保存できません。回数を少なくして、もう一度お試しください。',{exact:true}).isVisible(),'long-file advice missing');
   evidence.checks.push('long output is blocked with repeat-specific advice');
-  await select('繰り返す回数',1);await chooseRate(1);await select('練習するところ','early');
+  await select('同じところを何回くり返しますか？',1);await chooseRate(1);await select('曲のどこで練習しますか？','early');
   // Settings survive leaving and reopening the player.
   await page.getByRole('button',{name:'戻る',exact:true}).click();await page.getByRole('link',{name:'Paper Umbrella ルンバ',exact:true}).click();
-  await page.getByText('くわしく',{exact:true}).click();
-  ensure(await page.getByRole('combobox',{name:'練習するところ'}).inputValue()==='early','range was not restored');
+  await page.getByText('練習の設定',{exact:true}).click();
+  ensure(await page.getByRole('combobox',{name:'曲のどこで練習しますか？'}).inputValue()==='early','range was not restored');
   evidence.checks.push('saved preferences restored after leaving and returning');
   // During output, cancellation must discard a late result.
   await page.route('**/__music/audio/**',async route=>{await new Promise(r=>setTimeout(r,1500));await route.continue();});
-  await page.getByRole('button',{name:'音声ファイルを作る',exact:true}).click();
+  await page.getByRole('button',{name:'保存する音声を作る',exact:true}).click();
   ensure(await page.locator('[data-play]').isDisabled(),'play remains active during rendering');
   await page.getByRole('button',{name:'やめる',exact:true}).click();await page.waitForTimeout(2000);
   ensure(await page.locator('[data-music-save]').count()===0,'cancelled file reappeared');await page.unroute('**/__music/audio/**');
   evidence.checks.push('cancelled output never returns a late save button');
   // An actual interrupted preparation cannot resurrect after its request completes.
   await page.route('**/__music/audio/**',async route=>{await new Promise(r=>setTimeout(r,1500));await route.continue();});
-  await select('練習するところ','middle');await page.locator('[data-play]').click();await page.waitForTimeout(100);
+  await select('曲のどこで練習しますか？','middle');await page.locator('[data-play]').click();await page.waitForTimeout(100);
   await page.getByRole('button',{name:'戻る',exact:true}).click();await page.waitForTimeout(2000);
   ensure(await page.locator('[data-screen=U3]').count(),'navigation while preparing failed');await page.unroute('**/__music/audio/**');
   evidence.checks.push('leaving during music preparation never resumes it');
@@ -143,6 +148,8 @@ try{
   evidence.errors=errors;await fs.writeFile(path.resolve('output/music-probe/app-browser-evidence.json'),JSON.stringify(evidence,null,2)+'\n');
   console.log(`music smoke OK: ${evidence.playbacks.length} playback variants, ${evidence.exports.length} saved WAVs, ${evidence.checks.length} lifecycle checks`);
 }catch(error){
-  await fs.writeFile(path.resolve('output/music-probe/smoke-failure.json'),JSON.stringify({error:String(error),url:page.url(),diagnostics:await page.evaluate(()=>({sources:window.__musicCheck?.sources.slice(-20),stops:window.__musicStops,visibility:document.visibilityState,text:document.body.innerText}))},null,2));
+  let diagnostics=null;
+  try{if(!page.isClosed())diagnostics=await page.evaluate(()=>({sources:window.__musicCheck?.sources.slice(-20),stops:window.__musicStops,visibility:document.visibilityState,text:document.body.innerText}));}catch{}
+  await fs.writeFile(path.resolve('output/music-probe/smoke-failure.json'),JSON.stringify({error:String(error),url:page.url(),diagnostics},null,2));
   throw error;
 }finally{await browser.close();}

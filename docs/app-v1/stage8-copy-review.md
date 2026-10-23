@@ -312,163 +312,174 @@
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 210 | `musicIntro` | 曲を選ぶと、音楽と一緒にカウントが鳴ります。 | Choose a song and practice with the count. | 英語の初版 |  |  |
-| 211 | `musicPreview` | 試聴用です。曲と数える位置は確認中です。 | Practice preview · song and count positions are being checked. | 英語の初版 |  |  |
-| 212 | `musicPreparing` | 曲を準備しています… | Preparing the song… | 英語の初版 |  |  |
-| 213 | `musicEmpty` | 曲を準備しています。 | Songs are being prepared. | 英語の初版 |  |  |
-| 214 | `musicFailed` | 曲を開けませんでした。曲の一覧へ戻って、もう一度選んでください。 | This song could not be opened. Go back to the song list and choose again. | 長さ・英語の初版 |  |  |
-| 215 | `musicList` | 曲を選んでください | Choose a song | 英語の初版 |  |  |
-| 216 | `musicStartOrder` | 始める順番 | Start order | 英語の初版 |  |  |
-| 217 | `musicFirst` | 曲が先 | Music first | 英語の初版 |  |  |
-| 218 | `musicCountFirst` | カウントが先 | Count first | 英語の初版 |  |  |
-| 219 | `musicTogether` | 一緒に始める | Together | 英語の初版 |  |  |
-| 220 | `musicWait` | あとから入るまで | Time before joining | 英語の初版 |  |  |
-| 221 | `musicWaitBeats` | {count}拍あと | After {count} beats | 英語の初版 |  |  |
-| 222 | `musicWaitBars` | {count}小節あと | After {count} bars | 英語の初版 |  |  |
-| 223 | `musicListenThen` | まず曲を聞きます。選んだ長さのあと、曲の拍に声が入ります。最初の1回だけです。 | Listen first. The count joins on the music’s beat. This happens only at the beginning. | 長さ・英語の初版 |  |  |
-| 224 | `musicCountThen` | 曲につながる拍から先に数えます。選んだ長さのあと、曲が入ります。 | Hear the preceding counts first. The music joins after the selected time. | 長さ・英語の初版 |  |  |
-| 225 | `musicListening` | 曲を聞きましょう | Listen to the music | 英語の初版 |  |  |
-| 226 | `musicEarly` | 前半 | Beginning | 英語の初版 |  |  |
-| 227 | `musicMiddle` | 中盤 | Middle | 英語の初版 |  |  |
-| 228 | `musicLate` | 後半 | Later | 英語の初版 |  |  |
-| 229 | `musicSection` | 練習するところ | Practice section | 英語の初版 |  |  |
-| 230 | `musicRepetitions` | 繰り返す回数 | How many times | 英語の初版 |  |  |
-| 231 | `musicTimes` | {count}回 | {count} times | 英語の初版 |  |  |
-| 232 | `musicOnce` | 1回 | Once | 英語の初版 |  |  |
-| 233 | `musicOriginal` | もとの速さ | Original | 英語の初版 |  |  |
-| 234 | `musicSlower` | ゆっくり | Slower | 英語の初版 |  |  |
-| 235 | `musicFaster` | 少し速く | Faster | 英語の初版 |  |  |
-| 236 | `musicVolume` | 音楽の大きさ | Music volume | 英語の初版 |  |  |
-| 237 | `musicVoiceVolume` | 声の大きさ | Voice volume | 英語の初版 |  |  |
-| 238 | `musicCount` | 数える声 | Spoken count | 英語の初版 |  |  |
-| 239 | `musicCreateFile` | 音声ファイルを作る | Make an audio file | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 240 | `musicFilePreparing` | 音声ファイルを作っています… | Making the audio file… | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 241 | `musicFileReady` | 音声ファイルができました。「ファイルを保存する」を押してください。 | Your audio file is ready. Press “Save the file”. | 依頼・技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 242 | `musicFileFailed` | 音声ファイルを作れませんでした。もう一度お試しください。 | The audio file could not be made. Please try again. | 依頼・技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 243 | `musicFileTooLoud` | 音が大きすぎて保存できません。音を小さくして、もう一度お試しください。 | The sound is too loud to save. Lower the volume and try again. | 英語の初版 |  |  |
-| 244 | `musicFileTooLong` | 練習が長すぎて保存できません。繰り返す回数を減らしてください。 | This practice is too long to save. Choose fewer repeats. | 依頼・英語の初版 |  |  |
-| 245 | `musicFileEstimate` | 約{seconds}秒 · 約{size}MB | About {seconds} seconds · {size} MB | 英語の初版 |  |  |
-| 246 | `musicFileReceived` | 先生から受け取った声は、ここで聞けますが音声ファイルにはできません。 | A voice received from a teacher can be played here, but cannot be put in an audio file. | 技術語の疑い（ファイル・file）・長さ・英語の初版 |  |  |
-| 247 | `musicFileIntro` | 今の速さ・声・練習するところで音声ファイルを作れます。 | Make an audio file with this speed, voice and practice section. | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 248 | `musicFileStopped` | 音声ファイルを作るのをやめました。 | Making the file was cancelled. | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
-| 249 | `musicCancelFile` | やめる | Cancel | 英語の初版 |  |  |
-| 250 | `musicBars` | {count}小節 | {count} bars | 英語の初版 |  |  |
+| 210 | `musicSettings` | 練習の設定 | Practice settings | 英語の初版 |  |  |
+| 211 | `musicSpeed` | 曲の速さ | Music speed | 英語の初版 |  |  |
+| 212 | `musicSeconds` | 約{seconds}秒 | About {seconds} sec | 英語の初版 |  |  |
+| 213 | `musicSectionChoice` | {part}（約{seconds}秒） | {part} · {seconds}s | 英語の初版 |  |  |
+| 214 | `musicPlayOnce` | 1回だけ | Once | 英語の初版 |  |  |
+| 215 | `musicRepeatTimes` | {count}回続ける | {count} times in a row | 英語の初版 |  |  |
+| 216 | `musicListenWait` | 曲を何拍聞いてから数えますか？ | How long to listen before counting? | 英語の初版 |  |  |
+| 217 | `musicCountWait` | 何拍数えてから曲を流しますか？ | How long to count before the music? | 英語の初版 |  |  |
+| 218 | `musicSaveHeading` | 練習用の音声を保存 | Save audio for practice | 英語の初版 |  |  |
+| 219 | `musicWithCount` | 声も聞く | With the count | 英語の初版 |  |  |
+| 220 | `musicOnly` | 音楽だけ | Music only | 英語の初版 |  |  |
+| 221 | `musicIntro` | 曲を選ぶと、音楽と一緒にカウントが鳴ります。 | Choose a song and practice with the count. | 英語の初版 |  |  |
+| 222 | `musicPreview` | 試聴用です。曲と数える位置は確認中です。 | Practice preview · song and count positions are being checked. | 英語の初版 |  |  |
+| 223 | `musicPreparing` | 曲を準備しています… | Preparing the song… | 英語の初版 |  |  |
+| 224 | `musicEmpty` | 曲を準備しています。 | Songs are being prepared. | 英語の初版 |  |  |
+| 225 | `musicFailed` | 曲を開けませんでした。曲の一覧へ戻って、もう一度選んでください。 | This song could not be opened. Go back to the song list and choose again. | 長さ・英語の初版 |  |  |
+| 226 | `musicList` | 曲を選んでください | Choose a song | 英語の初版 |  |  |
+| 227 | `musicStartOrder` | 曲とカウント、どちらから始めますか？ | Which starts first? | 英語の初版 |  |  |
+| 228 | `musicFirst` | 曲を先に流す | Music first | 英語の初版 |  |  |
+| 229 | `musicCountFirst` | カウントを先に | Count first | 英語の初版 |  |  |
+| 230 | `musicTogether` | 一緒に始める | Together | 英語の初版 |  |  |
+| 231 | `musicWaitBeats` | {count}拍ぶん | {count} beats | 英語の初版 |  |  |
+| 232 | `musicWaitBars` | {beats}拍ぶん（{count}小節） | {beats} beats ({count} bars) | 英語の初版 |  |  |
+| 233 | `musicListenThen` | 曲だけを{beats}拍ぶん聞いたあと、声が入ります。この準備は最初の1回だけです。 | Listen to {beats} beats of music, then the count joins. This introduction happens once. | 長さ・英語の初版 |  |  |
+| 234 | `musicCountThen` | カウントを{beats}拍ぶん聞いたあと、曲が入ります。曲の拍に合う数字から数えます。 | Hear {beats} counts, then the music joins. The numbers lead into the music’s beat. | 長さ・英語の初版 |  |  |
+| 235 | `musicListening` | 曲を聞きましょう | Listen to the music | 英語の初版 |  |  |
+| 236 | `musicEarly` | はじめ | Beginning | 英語の初版 |  |  |
+| 237 | `musicMiddle` | まん中 | Middle | 英語の初版 |  |  |
+| 238 | `musicLate` | おわり | End | 英語の初版 |  |  |
+| 239 | `musicSection` | 曲のどこで練習しますか？ | Which part of the song? | 英語の初版 |  |  |
+| 240 | `musicRepetitions` | 同じところを何回くり返しますか？ | How many times in a row? | 英語の初版 |  |  |
+| 241 | `musicTimes` | {count}回 | {count} times | 英語の初版 |  |  |
+| 242 | `musicOnce` | 1回 | Once | 英語の初版 |  |  |
+| 243 | `musicOriginal` | もとの速さ | Original | 英語の初版 |  |  |
+| 244 | `musicSlower` | ゆっくり | Slower | 英語の初版 |  |  |
+| 245 | `musicFaster` | 少し速く | Faster | 英語の初版 |  |  |
+| 246 | `musicVolume` | 音楽の大きさ | Music volume | 英語の初版 |  |  |
+| 247 | `musicVoiceVolume` | 声の大きさ | Voice volume | 英語の初版 |  |  |
+| 248 | `musicCount` | カウントの声 | Hear the count | 英語の初版 |  |  |
+| 249 | `musicCreateFile` | 保存する音声を作る | Make audio to save | 英語の初版 |  |  |
+| 250 | `musicFilePreparing` | 音声ファイルを作っています… | Making the audio file… | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
+| 251 | `musicFileReady` | 音声ファイルができました。「ファイルを保存する」を押してください。 | Your audio file is ready. Press “Save the file”. | 依頼・技術語の疑い（ファイル・file）・英語の初版 |  |  |
+| 252 | `musicFileFailed` | 音声ファイルを作れませんでした。もう一度お試しください。 | The audio file could not be made. Please try again. | 依頼・技術語の疑い（ファイル・file）・英語の初版 |  |  |
+| 253 | `musicFileTooLoud` | 音が大きすぎて保存できません。音を小さくして、もう一度お試しください。 | The sound is too loud to save. Lower the volume and try again. | 英語の初版 |  |  |
+| 254 | `musicFileTooLong` | 練習が長すぎて保存できません。回数を少なくして、もう一度お試しください。 | This practice is too long to save. Choose fewer repeats. | 長さ・英語の初版 |  |  |
+| 255 | `musicFileEstimate` | 約{seconds}秒 · 約{size}MB | About {seconds} seconds · {size} MB | 英語の初版 |  |  |
+| 256 | `musicFileReceived` | 先生から受け取った声は、ここで聞けますが音声ファイルにはできません。 | A voice received from a teacher can be played here, but cannot be put in an audio file. | 技術語の疑い（ファイル・file）・長さ・英語の初版 |  |  |
+| 257 | `musicFileIntro` | 今の設定の音声を作ってから、スマホなどに保存できます。 | Make audio with your current settings, then choose where to save it. | 英語の初版 |  |  |
+| 258 | `musicFileStopped` | 音声ファイルを作るのをやめました。 | Making the file was cancelled. | 技術語の疑い（ファイル・file）・英語の初版 |  |  |
+| 259 | `musicCancelFile` | やめる | Cancel | 英語の初版 |  |  |
 
 ## 共通（複数の画面・部品）
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 251 | `musicPractice` | 音楽に合わせて練習 | Practice with music | 英語の初版 |  |  |
-| 252 | `musicMissing` | 曲を準備できませんでした。もう一度「再生」を押してください。 | The song could not be prepared. Press Play to try again. | 依頼・英語の初版 |  |  |
-| 253 | `documentTitle` | Dance Count — for Ballroom | Dance Count — for Ballroom | 英語の初版 | OK |  |
-| 254 | `switchLanguage` | English | 日本語 | 英語の初版 | OK |  |
-| 255 | `tabFigures` | フィガー | Figures | 英語の初版 |  |  |
-| 256 | `tabRoutines` | ルーティン | Routines | 英語の初版 | OK |  |
-| 257 | `navLabel` | メイン | Main | 英語の初版 | OK |  |
-| 258 | `back` | 戻る | Back | 英語の初版 | OK |  |
-| 259 | `backToCover` | トップ | Home | 英語の初版 |  |  |
-| 260 | `coverMake` | 作る | Make | 英語の初版 |  |  |
-| 261 | `makeRoutines` | ルーティンを作る・直す | Make and edit routines | 英語の初版 |  |  |
-| 262 | `chooseDance` | 種目を選んでください | Choose a dance | 英語の初版 | OK |  |
-| 263 | `danceGroup` | 種目 | Dances | 英語の初版 | OK |  |
-| 264 | `resume` | 続きから | Resume | 英語の初版 | OK |  |
-| 265 | `speed` | 速さ | Speed | 英語の初版 | OK |  |
-| 266 | `speedSlow` | ゆっくり | Slower | 英語の初版 | OK |  |
-| 267 | `speedStandard` | 標準 | Standard | 英語の初版 | OK |  |
-| 268 | `speedFast` | 速め | Faster | 英語の初版 | OK |  |
-| 269 | `tempoMark` | ♩={tempo} | ♩={tempo} | 英語の初版 | OK |  |
-| 270 | `metronome` | メトロノーム | Metronome | 英語の初版 | OK |  |
-| 271 | `leadIn` | はじめの合図 | Lead-in | 英語の初版 | 製品判断: “Count-in”（音楽・ダンスでより通じる語。leadInNow “Count-in…”・leadInLength “Count-in length” も一緒に） |  |
-| 272 | `leadInNow` | はじめの合図… | Lead-in… | 英語の初版 | OK |  |
-| 273 | `on` | オン | On | 英語の初版 | OK |  |
-| 274 | `off` | オフ | Off | 英語の初版 | OK |  |
-| 275 | `voiceChip` | 声: {name} | Voice: {name} | 英語の初版 | OK |  |
-| 276 | `standardVoiceShort` | 標準（英語） | Standard (English) | 英語の初版 | OK |  |
-| 277 | `moreOptions` | くわしく | More options | 英語の初版 | OK |  |
-| 278 | `moreOptionsWithTempo` | くわしく · ♩={tempo} | More options · ♩={tempo} | 英語の初版 | OK |  |
-| 279 | `fineSpeed` | 速さの細かい調整 | Fine speed | 英語の初版 | Fine-tune speed |  |
-| 280 | `competitionSpeed` | 競技の速さ（♩={min}〜{max}） | Competition speed (♩={min}–{max}) | 英語の初版 | OK |  |
-| 281 | `repeat` | 繰り返す | Repeat | 英語の初版 | OK |  |
-| 282 | `play` | 再生 | Play | 英語の初版 | OK |  |
-| 283 | `stop` | 停止 | Stop | 英語の初版 | OK |  |
-| 284 | `nowCount` | いま {count} | Now: {count} | 英語の初版 | OK |  |
-| 285 | `noSoundLink` | 音が鳴らない時は | If there is no sound | 英語の初版 | OK（ja は見出し soundHelpTitle「音が鳴らない時」にそろえて「音が鳴らない時は」に直した＝Fix round 1。en は元から同じ） |  |
-| 286 | `close` | 閉じる | Close | 英語の初版 | OK |  |
-| 287 | `standardVoiceEnglish` | 標準の声（英語） | Standard voice (English) | 英語の初版 | OK。製品判断（Fable OQ7）: どこでも短い “Standard (English)” にすれば 320px 幅の特別扱いが要らなくなる |  |
-| 288 | `soundHelpTitle` | 音が鳴らない時 | If there is no sound | 英語の初版 | OK |  |
-| 289 | `updateReady` | 新しい版があります。 | A new version is ready. | 技術語の疑い（版・version）・英語の初版 | An update is ready. |  |
-| 290 | `routineSummary` | {dance} · {count} フィガー | {dance} · {count} figures | 英語の初版 | OK |  |
-| 291 | `routineSummaryOne` | {dance} · 1 フィガー | {dance} · 1 figure | 英語の初版 | OK |  |
-| 292 | `edit` | 編集 | Edit | 英語の初版 | OK |  |
-| 293 | `delete` | 削除 | Delete | 英語の初版 | OK |  |
-| 294 | `confirmDelete` | 削除する | Delete | 英語の初版 | OK |  |
-| 295 | `cancel` | やめる | Cancel | 英語の初版 | OK |  |
-| 296 | `undo` | 元に戻す | Undo | 英語の初版 | OK |  |
-| 297 | `redo` | やり直す | Redo | 英語の初版 | OK |  |
-| 298 | `counts` | カウント | Counts | 英語の初版 | OK |  |
-| 299 | `done` | 決定 | Done | 英語の初版 | OK |  |
-| 300 | `add` | 追加する | Add | 英語の初版 | OK |  |
-| 301 | `addCopy` | {counts} で複製して追加 | Add a copy ({counts}) | 英語の初版 | OK |  |
-| 302 | `matchCounts` | カウントを合わせる | Use that count | 英語の初版 | OK |  |
-| 303 | `othersWillChange` | 同じ名前の{count}件も同じカウントになります | The other {count} will change too | 英語の初版 | Other figures with this name will change too ({count}) |  |
-| 304 | `updateAll` | {count}件まとめて決定 | Update all {count} | 英語の初版 | OK |  |
-| 305 | `settingsTitle` | 設定 | Settings | 英語の初版 | OK |  |
-| 306 | `standardVoiceJapanese` | 標準の声（日本語） | Standard voice (Japanese) | 英語の初版 | OK |  |
-| 307 | `standardVoiceJapaneseShort` | 標準（日本語） | Standard (Japanese) | 英語の初版 | OK |  |
-| 308 | `distributorVoice` | {name}の声 | {name}'s voice | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
-| 309 | `defaultVoiceNameEn` | 自分の声（英語） | My voice (English) | 英語の初版 | OK |  |
-| 310 | `defaultVoiceNameJa` | 自分の声（日本語） | My voice (Japanese) | 英語の初版 | OK |  |
-| 311 | `previewVoice` | 試聴 | Preview | 英語の初版 | OK |  |
-| 312 | `voiceTiming` | 声のタイミング | Voice timing | 英語の初版 | OK |  |
-| 313 | `voiceEarlier` | 早く | Earlier | 英語の初版 | OK |  |
-| 314 | `voiceLater` | 遅く | Later | 英語の初版 | OK |  |
-| 315 | `voiceTimingHint` | 声が遅れて聞こえたら「早く」を押します。 | If the voice sounds late, press “Earlier”. | 英語の初版 | If the voice sounds late, tap “Earlier”. |  |
-| 316 | `share` | 配る | Share | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
-| 317 | `shareRoutines` | ルーティンを配る | Share routines | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
-| 318 | `receiveFromFile` | ファイルから受け取る | Receive from a file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 319 | `saveFileAgain` | ファイルを保存する | Save the file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 320 | `instructionsCopyByHand` | 長押しで選んでコピーできます。 | Press and hold to select and copy. | 英語の初版 | Touch and hold the text to select and copy it. |  |
-| 321 | `backupTipRoutine` | ルーティンは「配る」でファイルにして、自分にも送っておけます。 | You can turn routines into a file with “Share” and send it to yourself. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | Use “Share” to save routines in a file you can send to yourself. |  |
-| 322 | `updateApp` | 更新する | Update | 英語の初版 | OK |  |
-| 323 | `languageEnglish` | 英語 | English | 英語の初版 | OK |  |
-| 324 | `languageJapanese` | 日本語 | Japanese | 英語の初版 | OK |  |
+| 260 | `musicPractice` | 音楽に合わせて練習 | Practice with music | 英語の初版 |  |  |
+| 261 | `musicMissing` | 曲を準備できませんでした。もう一度「再生」を押してください。 | The song could not be prepared. Press Play to try again. | 依頼・英語の初版 |  |  |
+| 262 | `musicWait` | あとから入るまで | Time before joining | 英語の初版 |  |  |
+| 263 | `musicBars` | {count}小節 | {count} bars | 英語の初版 |  |  |
+| 264 | `documentTitle` | Dance Count — for Ballroom | Dance Count — for Ballroom | 英語の初版 | OK |  |
+| 265 | `switchLanguage` | English | 日本語 | 英語の初版 | OK |  |
+| 266 | `tabFigures` | フィガー | Figures | 英語の初版 |  |  |
+| 267 | `tabRoutines` | ルーティン | Routines | 英語の初版 | OK |  |
+| 268 | `navLabel` | メイン | Main | 英語の初版 | OK |  |
+| 269 | `back` | 戻る | Back | 英語の初版 | OK |  |
+| 270 | `backToCover` | トップ | Home | 英語の初版 |  |  |
+| 271 | `coverMake` | 作る | Make | 英語の初版 |  |  |
+| 272 | `makeRoutines` | ルーティンを作る・直す | Make and edit routines | 英語の初版 |  |  |
+| 273 | `chooseDance` | 種目を選んでください | Choose a dance | 英語の初版 | OK |  |
+| 274 | `danceGroup` | 種目 | Dances | 英語の初版 | OK |  |
+| 275 | `resume` | 続きから | Resume | 英語の初版 | OK |  |
+| 276 | `speed` | 速さ | Speed | 英語の初版 | OK |  |
+| 277 | `speedSlow` | ゆっくり | Slower | 英語の初版 | OK |  |
+| 278 | `speedStandard` | 標準 | Standard | 英語の初版 | OK |  |
+| 279 | `speedFast` | 速め | Faster | 英語の初版 | OK |  |
+| 280 | `tempoMark` | ♩={tempo} | ♩={tempo} | 英語の初版 | OK |  |
+| 281 | `metronome` | メトロノーム | Metronome | 英語の初版 | OK |  |
+| 282 | `leadIn` | はじめの合図 | Lead-in | 英語の初版 | 製品判断: “Count-in”（音楽・ダンスでより通じる語。leadInNow “Count-in…”・leadInLength “Count-in length” も一緒に） |  |
+| 283 | `leadInNow` | はじめの合図… | Lead-in… | 英語の初版 | OK |  |
+| 284 | `on` | オン | On | 英語の初版 | OK |  |
+| 285 | `off` | オフ | Off | 英語の初版 | OK |  |
+| 286 | `voiceChip` | 声: {name} | Voice: {name} | 英語の初版 | OK |  |
+| 287 | `standardVoiceShort` | 標準（英語） | Standard (English) | 英語の初版 | OK |  |
+| 288 | `moreOptions` | くわしく | More options | 英語の初版 | OK |  |
+| 289 | `moreOptionsWithTempo` | くわしく · ♩={tempo} | More options · ♩={tempo} | 英語の初版 | OK |  |
+| 290 | `fineSpeed` | 速さの細かい調整 | Fine speed | 英語の初版 | Fine-tune speed |  |
+| 291 | `competitionSpeed` | 競技の速さ（♩={min}〜{max}） | Competition speed (♩={min}–{max}) | 英語の初版 | OK |  |
+| 292 | `repeat` | 繰り返す | Repeat | 英語の初版 | OK |  |
+| 293 | `play` | 再生 | Play | 英語の初版 | OK |  |
+| 294 | `stop` | 停止 | Stop | 英語の初版 | OK |  |
+| 295 | `nowCount` | いま {count} | Now: {count} | 英語の初版 | OK |  |
+| 296 | `noSoundLink` | 音が鳴らない時は | If there is no sound | 英語の初版 | OK（ja は見出し soundHelpTitle「音が鳴らない時」にそろえて「音が鳴らない時は」に直した＝Fix round 1。en は元から同じ） |  |
+| 297 | `close` | 閉じる | Close | 英語の初版 | OK |  |
+| 298 | `standardVoiceEnglish` | 標準の声（英語） | Standard voice (English) | 英語の初版 | OK。製品判断（Fable OQ7）: どこでも短い “Standard (English)” にすれば 320px 幅の特別扱いが要らなくなる |  |
+| 299 | `soundHelpTitle` | 音が鳴らない時 | If there is no sound | 英語の初版 | OK |  |
+| 300 | `updateReady` | 新しい版があります。 | A new version is ready. | 技術語の疑い（版・version）・英語の初版 | An update is ready. |  |
+| 301 | `routineSummary` | {dance} · {count} フィガー | {dance} · {count} figures | 英語の初版 | OK |  |
+| 302 | `routineSummaryOne` | {dance} · 1 フィガー | {dance} · 1 figure | 英語の初版 | OK |  |
+| 303 | `edit` | 編集 | Edit | 英語の初版 | OK |  |
+| 304 | `delete` | 削除 | Delete | 英語の初版 | OK |  |
+| 305 | `confirmDelete` | 削除する | Delete | 英語の初版 | OK |  |
+| 306 | `cancel` | やめる | Cancel | 英語の初版 | OK |  |
+| 307 | `undo` | 元に戻す | Undo | 英語の初版 | OK |  |
+| 308 | `redo` | やり直す | Redo | 英語の初版 | OK |  |
+| 309 | `counts` | カウント | Counts | 英語の初版 | OK |  |
+| 310 | `done` | 決定 | Done | 英語の初版 | OK |  |
+| 311 | `add` | 追加する | Add | 英語の初版 | OK |  |
+| 312 | `addCopy` | {counts} で複製して追加 | Add a copy ({counts}) | 英語の初版 | OK |  |
+| 313 | `matchCounts` | カウントを合わせる | Use that count | 英語の初版 | OK |  |
+| 314 | `othersWillChange` | 同じ名前の{count}件も同じカウントになります | The other {count} will change too | 英語の初版 | Other figures with this name will change too ({count}) |  |
+| 315 | `updateAll` | {count}件まとめて決定 | Update all {count} | 英語の初版 | OK |  |
+| 316 | `settingsTitle` | 設定 | Settings | 英語の初版 | OK |  |
+| 317 | `standardVoiceJapanese` | 標準の声（日本語） | Standard voice (Japanese) | 英語の初版 | OK |  |
+| 318 | `standardVoiceJapaneseShort` | 標準（日本語） | Standard (Japanese) | 英語の初版 | OK |  |
+| 319 | `distributorVoice` | {name}の声 | {name}'s voice | 英語の初版 | OK（D49: {name} には “Yamada”／“Yamada-sensei” のように打った名前がそのまま入る。日本語は「山田さん」「山田先生」） |  |
+| 320 | `defaultVoiceNameEn` | 自分の声（英語） | My voice (English) | 英語の初版 | OK |  |
+| 321 | `defaultVoiceNameJa` | 自分の声（日本語） | My voice (Japanese) | 英語の初版 | OK |  |
+| 322 | `previewVoice` | 試聴 | Preview | 英語の初版 | OK |  |
+| 323 | `voiceTiming` | 声のタイミング | Voice timing | 英語の初版 | OK |  |
+| 324 | `voiceEarlier` | 早く | Earlier | 英語の初版 | OK |  |
+| 325 | `voiceLater` | 遅く | Later | 英語の初版 | OK |  |
+| 326 | `voiceTimingHint` | 声が遅れて聞こえたら「早く」を押します。 | If the voice sounds late, press “Earlier”. | 英語の初版 | If the voice sounds late, tap “Earlier”. |  |
+| 327 | `share` | 配る | Share | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
+| 328 | `shareRoutines` | ルーティンを配る | Share routines | 英語の初版 | OK（製品判断: “Send” にするかは「先に決めてほしいこと」1） |  |
+| 329 | `receiveFromFile` | ファイルから受け取る | Receive from a file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 330 | `saveFileAgain` | ファイルを保存する | Save the file | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 331 | `instructionsCopyByHand` | 長押しで選んでコピーできます。 | Press and hold to select and copy. | 英語の初版 | Touch and hold the text to select and copy it. |  |
+| 332 | `backupTipRoutine` | ルーティンは「配る」でファイルにして、自分にも送っておけます。 | You can turn routines into a file with “Share” and send it to yourself. | 技術語の疑い（ファイル・file）・長さ・英語の初版 | Use “Share” to save routines in a file you can send to yourself. |  |
+| 333 | `updateApp` | 更新する | Update | 英語の初版 | OK |  |
+| 334 | `languageEnglish` | 英語 | English | 英語の初版 | OK |  |
+| 335 | `languageJapanese` | 日本語 | Japanese | 英語の初版 | OK |  |
 
 ## 生徒への案内文（S9 でコピーされる）
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 325 | `instructionsVoiceLead` | Dance Count で、私の声のカウントを使えます。 | You can practice with my voice in Dance Count. | 英語の初版 | OK |  |
-| 326 | `instructionsRoutinesLead` | Dance Count で、私のルーティンを使えます。 | You can use my routines in Dance Count. | 英語の初版 | OK |  |
-| 327 | `instructionsIphone` | 【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」 | [iPhone] 1. Open this file, tap Share (top right) → “Save to Files” | 技術語の疑い（ファイル・file）・長さ・英語の初版 | [iPhone] 1. Open this file, tap “Share” (top right) → “Save to Files” |  |
-| 328 | `instructionsStep2` | 2. Dance Count を開き「使う」→ 下の「ルーティン」→「ファイルから受け取る」→「ファイルを選ぶ」 | 2. Open Dance Count → “Use” → “Routines” (bottom tab) → “Receive from a file” → “Choose a file” | 長さ・英語の初版 | OK |  |
-| 329 | `instructionsStep3` | 3. 「最近使った項目」からこのファイルを選び「使う」 | 3. Choose this file from “Recents” and tap “Use” | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
-| 330 | `instructionsAndroid` | 【Android】このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」） | [Android] Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”) | 技術語の疑い（ファイル・file）・長さ・英語の初版 | [Android] Open this file, tap “Share” → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”) |  |
-| 331 | `instructionsPhone` | （スマホで受け取るのが便利です） | (It's easiest on your phone.) | 英語の初版 | (It's easiest to receive this on your phone.) |  |
+| 336 | `instructionsVoiceLead` | Dance Count で、私の声のカウントを使えます。 | You can practice with my voice in Dance Count. | 英語の初版 | OK |  |
+| 337 | `instructionsRoutinesLead` | Dance Count で、私のルーティンを使えます。 | You can use my routines in Dance Count. | 英語の初版 | OK |  |
+| 338 | `instructionsIphone` | 【iPhone】1. このファイルを開き、右上の共有ボタン →「"ファイル"に保存」 | [iPhone] 1. Open this file, tap Share (top right) → “Save to Files” | 技術語の疑い（ファイル・file）・長さ・英語の初版 | [iPhone] 1. Open this file, tap “Share” (top right) → “Save to Files” |  |
+| 339 | `instructionsStep2` | 2. Dance Count を開き「使う」→ 下の「ルーティン」→「ファイルから受け取る」→「ファイルを選ぶ」 | 2. Open Dance Count → “Use” → “Routines” (bottom tab) → “Receive from a file” → “Choose a file” | 長さ・英語の初版 | OK |  |
+| 340 | `instructionsStep3` | 3. 「最近使った項目」からこのファイルを選び「使う」 | 3. Choose this file from “Recents” and tap “Use” | 技術語の疑い（ファイル・file）・英語の初版 | OK |  |
+| 341 | `instructionsAndroid` | 【Android】このファイルを開き、共有 →「Dance Count」→「使う」（「Dance Count」が出てこない時は、保存してから 2・3 の手順で「ファイルを選ぶ」） | [Android] Open this file, tap Share → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”) | 技術語の疑い（ファイル・file）・長さ・英語の初版 | [Android] Open this file, tap “Share” → “Dance Count” → “Use” (if “Dance Count” is not listed, save the file and follow steps 2–3 to “Choose a file”) |  |
+| 342 | `instructionsPhone` | （スマホで受け取るのが便利です） | (It's easiest on your phone.) | 英語の初版 | (It's easiest to receive this on your phone.) |  |
 
 ## エラー・知らせ（仕様 §11）
 
 | # | 鍵 | ja | en | 印 | AI の一次案 | ひとみうさの直し |
 |---|---|---|---|---|---|---|
-| 332 | `noSoundTitle` | 音が出ていません。 | No sound is playing. | 英語の初版 | OK |  |
-| 333 | `noSoundBody` | 本体の消音スイッチを確かめて、もう一度 ▶ を押してください。 | Check the silent switch and press ▶ again. | 依頼・英語の初版 | 製品判断: Make sure your phone isn't on silent, then press ▶ again.（soundHelpSwitch と同じ理由。ja 案「消音（マナーモード）になっていないか確かめて、もう一度 ▶ を押してください。」） |  |
-| 334 | `playbackStopped` | 再生が止まりました。もう一度 ▶ を押してください。 | Playback stopped. Press ▶ again. | 依頼・英語の初版 | OK |  |
-| 335 | `voiceMissing` | この声はまだ端末に入っていません。インターネットにつないで一度再生してください。 | This voice isn't on your device yet. Connect to the internet and play once. | 依頼・長さ・英語の初版 | This voice isn't on this device yet. Go online and play it once. |  |
-| 336 | `wakeLockTip` | 練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です。 | Your screen may dim during practice. A longer Auto-Lock helps. | 長さ・英語の初版 | The screen may dim while you practice. A longer Auto-Lock helps. |  |
-| 337 | `saveFailed` | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | 依頼・英語の初版 | OK |  |
-| 338 | `clearAllFailed` | 消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。 | Couldn't delete. You can also delete the site data in your browser settings. | 技術語の疑い（ブラウザ・データ・browser・data）・長さ・英語の初版 | Couldn't delete. You can also clear site data in your browser settings. |  |
-| 339 | `noVoiceHeard` | 声が入っていませんでした。もう一度録音してください。 | We couldn't hear your voice. Please record again. | 依頼・英語の初版 | OK |  |
-| 340 | `micDenied` | マイクが使えない設定になっています。 | The microphone is turned off for this app. | 技術語の疑い（マイク・microphone）・英語の初版 | OK |  |
-| 341 | `micFailed` | マイクを使えませんでした。ほかのアプリや通話を終えてから、もう一度「録音をはじめる」を押してください。 | The microphone couldn't be used. Close other apps or end the call, then tap “Start recording” again. | 依頼・技術語の疑い（マイク・microphone）・長さ・英語の初版 | Couldn't use the microphone. End any call or close other apps, then tap “Start recording” again. |  |
-| 342 | `noRecorder` | このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。 | This browser can't record. Open this page in Safari (iPhone) or Chrome. | 技術語の疑い（ブラウザ・browser）・長さ・英語の初版 | OK |  |
-| 343 | `shareRefused` | 共有できませんでした。下の「ファイルを保存する」で保存できます。 | Sharing didn't work. You can save it with “Save the file” below. | 英語の初版 | OK |  |
-| 344 | `openedInLine` | LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。 | This is open inside LINE. Open it in Safari or Chrome so the voice stays on your phone. | 長さ・英語の初版 | You're in LINE. Open this in Safari or Chrome to keep received voices. |  |
-| 345 | `fileBroken` | このファイルは読めませんでした。先生に送り直してもらってください。（{file}） | This file couldn't be read. Ask your teacher to send it again. ({file}) | 技術語の疑い（ファイル・file）・長さ・英語の初版 | OK |  |
-| 346 | `fileTooLarge` | このファイルは大きすぎて受け取れません。 | This file is too large. | 技術語の疑い（ファイル・file）・英語の初版 | This file is too large to receive. |  |
-| 347 | `fileTooNew` | 新しいアプリで作られたファイルです。アプリを更新してください。 | This file was made by a newer version. Please update the app. | 依頼・技術語の疑い（ファイル・file・version）・英語の初版 | This file was made with a newer version of this app. Please update this app. |  |
-| 348 | `voiceLimitReached` | 声はすでに {count} あるので、受け取れません。使わない声を削除してから、もう一度選んでください。 | You already have {count} voices. Delete one you don't use, then choose the file again. | 技術語の疑い（file）・長さ・英語の初版 | You already have {count} voices. Delete one you don't use, then try again. |  |
-| 349 | `routineUnreadable` | ルーティン「{name}」は読めませんでした。 | Routine “{name}” couldn't be read. | 英語の初版 | OK |  |
-| 350 | `routinesUnreadableMore` | ほか {count} 本も読めませんでした。 | {count} more routines couldn't be read. | 英語の初版 | OK |  |
-| 351 | `routinesOverLimit` | ルーティンは {max} 本までなので、{count} 本は受け取れません。 | You can keep up to {max} routines, so {count} can't be received. | 英語の初版 | OK |  |
+| 343 | `noSoundTitle` | 音が出ていません。 | No sound is playing. | 英語の初版 | OK |  |
+| 344 | `noSoundBody` | 本体の消音スイッチを確かめて、もう一度 ▶ を押してください。 | Check the silent switch and press ▶ again. | 依頼・英語の初版 | 製品判断: Make sure your phone isn't on silent, then press ▶ again.（soundHelpSwitch と同じ理由。ja 案「消音（マナーモード）になっていないか確かめて、もう一度 ▶ を押してください。」） |  |
+| 345 | `playbackStopped` | 再生が止まりました。もう一度 ▶ を押してください。 | Playback stopped. Press ▶ again. | 依頼・英語の初版 | OK |  |
+| 346 | `voiceMissing` | この声はまだ端末に入っていません。インターネットにつないで一度再生してください。 | This voice isn't on your device yet. Connect to the internet and play once. | 依頼・長さ・英語の初版 | This voice isn't on this device yet. Go online and play it once. |  |
+| 347 | `wakeLockTip` | 練習中は画面が暗くなることがあります。自動ロックを長めにすると便利です。 | Your screen may dim during practice. A longer Auto-Lock helps. | 長さ・英語の初版 | The screen may dim while you practice. A longer Auto-Lock helps. |  |
+| 348 | `saveFailed` | 保存できませんでした。空き容量を確かめてください。 | Couldn't save. Please check free space. | 依頼・英語の初版 | OK |  |
+| 349 | `clearAllFailed` | 消せませんでした。ブラウザの設定からサイトのデータを消すこともできます。 | Couldn't delete. You can also delete the site data in your browser settings. | 技術語の疑い（ブラウザ・データ・browser・data）・長さ・英語の初版 | Couldn't delete. You can also clear site data in your browser settings. |  |
+| 350 | `noVoiceHeard` | 声が入っていませんでした。もう一度録音してください。 | We couldn't hear your voice. Please record again. | 依頼・英語の初版 | OK |  |
+| 351 | `micDenied` | マイクが使えない設定になっています。 | The microphone is turned off for this app. | 技術語の疑い（マイク・microphone）・英語の初版 | OK |  |
+| 352 | `micFailed` | マイクを使えませんでした。ほかのアプリや通話を終えてから、もう一度「録音をはじめる」を押してください。 | The microphone couldn't be used. Close other apps or end the call, then tap “Start recording” again. | 依頼・技術語の疑い（マイク・microphone）・長さ・英語の初版 | Couldn't use the microphone. End any call or close other apps, then tap “Start recording” again. |  |
+| 353 | `noRecorder` | このブラウザでは録音できません。Safari（iPhone）か Chrome で開いてください。 | This browser can't record. Open this page in Safari (iPhone) or Chrome. | 技術語の疑い（ブラウザ・browser）・長さ・英語の初版 | OK |  |
+| 354 | `shareRefused` | 共有できませんでした。下の「ファイルを保存する」で保存できます。 | Sharing didn't work. You can save it with “Save the file” below. | 英語の初版 | OK |  |
+| 355 | `openedInLine` | LINE の中で開いています。Safari か Chrome で開き直すと、受け取った声がずっと残ります。 | This is open inside LINE. Open it in Safari or Chrome so the voice stays on your phone. | 長さ・英語の初版 | You're in LINE. Open this in Safari or Chrome to keep received voices. |  |
+| 356 | `fileBroken` | このファイルは読めませんでした。先生に送り直してもらってください。（{file}） | This file couldn't be read. Ask your teacher to send it again. ({file}) | 技術語の疑い（ファイル・file）・長さ・英語の初版 | OK |  |
+| 357 | `fileTooLarge` | このファイルは大きすぎて受け取れません。 | This file is too large. | 技術語の疑い（ファイル・file）・英語の初版 | This file is too large to receive. |  |
+| 358 | `fileTooNew` | 新しいアプリで作られたファイルです。アプリを更新してください。 | This file was made by a newer version. Please update the app. | 依頼・技術語の疑い（ファイル・file・version）・英語の初版 | This file was made with a newer version of this app. Please update this app. |  |
+| 359 | `voiceLimitReached` | 声はすでに {count} あるので、受け取れません。使わない声を削除してから、もう一度選んでください。 | You already have {count} voices. Delete one you don't use, then choose the file again. | 技術語の疑い（file）・長さ・英語の初版 | You already have {count} voices. Delete one you don't use, then try again. |  |
+| 360 | `routineUnreadable` | ルーティン「{name}」は読めませんでした。 | Routine “{name}” couldn't be read. | 英語の初版 | OK |  |
+| 361 | `routinesUnreadableMore` | ほか {count} 本も読めませんでした。 | {count} more routines couldn't be read. | 英語の初版 | OK |  |
+| 362 | `routinesOverLimit` | ルーティンは {max} 本までなので、{count} 本は受け取れません。 | You can keep up to {max} routines, so {count} can't be received. | 英語の初版 | OK |  |
 
 ## 脚注: 節ごとの依頼の数（1 画面 1 つまでの材料。1 つの画面に同時に出る数ではない）
 
@@ -488,7 +499,7 @@
 - S11 音が鳴らない時: 1
 - S12 ホーム画面に追加する方法: 1
 - S13 プライバシー・アプリについて: 0
-- U3・U4 音楽練習（開発プレビュー）: 3
+- U3・U4 音楽練習（開発プレビュー）: 2
 - 共通（複数の画面・部品）: 1
 - 生徒への案内文（S9 でコピーされる）: 0
 - エラー・知らせ（仕様 §11）: 7

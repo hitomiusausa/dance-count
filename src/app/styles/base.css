@@ -24,6 +24,7 @@
 .dc-music-field { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; font-size: 18px; }
 .dc-music-field select { width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--bg); }
 .dc-music-field input[type="range"] { width: 100%; min-height: 48px; margin: 0; accent-color: var(--primary); }
+.dc-music-count { width: 100%; margin-top: 12px; }
 .dc-music-file { border-top: var(--bw) solid var(--line); margin-top: 20px; padding-top: 8px; }
 .dc-music-file .dc-button { width: 100%; margin-top: 12px; }
 .dc-music [data-group="music-speed"] { flex-wrap: wrap; }
