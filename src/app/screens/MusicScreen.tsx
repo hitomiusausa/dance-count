@@ -3,7 +3,7 @@ import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { compileMusicPlan, compileMusicProgram, MusicRoutineError, musicJobs } from '../../engine/music-plan.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { Icon } from '../components/Icon.tsx';
-import { danceName, type AppTranslator } from '../i18n/index.ts';
+import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey } from '../lib/count-display.ts';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { musicRoutineChoices, musicFigureRange, type MusicFigureRange } from '../music/routines.ts';
@@ -31,9 +31,10 @@ import { useStorage } from '../state/storage.ts';
 import { DEFAULT_VOICE, voiceDisplayName, wordOffsetsFor } from '../voices/selection.ts';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
-function sectionName(id:string,t:AppTranslator):string {
-  return t.t(id==='early'?'musicEarly':id==='middle'?'musicMiddle':'musicLate');
-}
+const MUSIC_GENRES = [
+  {id:'latin',danceIds:new Set(['samba','chacha','rumba','pasodoble','jive'])},
+  {id:'standard',danceIds:new Set(['waltz','tango','vwaltz','slowfox','quickstep'])},
+] as const;
 interface MusicSourceProps { source?:RouteParams; query?:RouteQuery }
 function useMusicSource(source:RouteParams={}){
   const {routines}=useRoutines();const {settings}=useSettings();const {translator:t}=useI18n();
@@ -52,14 +53,19 @@ export function MusicListScreen({source={},query={}}:MusicSourceProps) {
   const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();const context=useMusicSource(source);
   const contextual=!!context.danceId,screen=contextual?'U5':'U3';
   const songs=tracks?.filter(track=>!context.danceId||track.danceId===context.danceId);
+  const genres=contextual?[]:MUSIC_GENRES.map(genre=>({genre,tracks:songs?.filter(track=>genre.danceIds.has(track.danceId))??[]})).filter(item=>item.tracks.length>0);
+  const songRows=(items:MusicTrack[])=><div data-list="music-tracks" role="list">{items.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
+    href={buildHash(musicTrackTarget(track.id,source,query))}>
+    <span class="dc-link-label"><b>{track.title}</b><small>{danceName(track.danceId,t.locale)}</small></span><Icon name="chev-r"/>
+  </a></div>)}</div>;
   return <main class={`dc-screen${contextual?' dc-screen--focus':''}`} data-screen={screen}>
     <BackButton screen={screen} fallback={contextual?musicOriginTarget(source):undefined}/><h1 class="dc-heading">{t.t('musicList')}</h1>
     <p class="dc-body" data-music-context>{context.name?t.t('musicForSelection',{name:context.name}):t.t('musicIntro')}</p>
     {songs===undefined?<p role="status">{t.t('musicPreparing')}</p>:!songs.length?<p role="status">{t.t(failed?'musicFailed':contextual?'musicDanceEmpty':'musicEmpty')}</p>:
-      <div data-list="music-tracks" role="list">{songs.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
-        href={buildHash(musicTrackTarget(track.id,source,query))}>
-        <span class="dc-link-label"><b>{track.title}</b><small>{danceName(track.danceId,t.locale)}</small></span><Icon name="chev-r"/>
-      </a></div>)}</div>}
+      contextual?songRows(songs):<div data-music-genres>{genres.map(({genre,tracks:genreTracks})=><details key={genre.id} class="dc-music-genre" data-music-genre={genre.id}>
+        <summary><span>{t.t(genre.id==='latin'?'musicLatin':'musicStandard')}</span><small>{t.t('musicGenreSongCount',{count:genreTracks.length})}</small><Icon name="chev-r"/></summary>
+        {songRows(genreTracks)}
+      </details>)}</div>}
     {songs?.some(track=>track.preview)&&<div class="dc-music-note">{t.t('musicPreview')}</div>}
   </main>;
 }
@@ -157,7 +163,7 @@ function MusicPlayer({track,source,query,figure}:{track:MusicTrack;source:RouteP
     <BackButton screen="U4" fallback={musicPickerTarget(source,query)}/>
     <div class="dc-practice-grid"><div>
       <header class="dc-playhead"><h1>{danceName(track.danceId,t.locale)}</h1><small>{track.title}</small></header>
-      <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicSeconds',{seconds:Math.round(plan.transport.duration)})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
+      <div class="dc-music-note dc-music-summary">{t.t('musicSeconds',{seconds:Math.round(plan.transport.duration)})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
       <NoticeBox notice={saveFailed?'save-failed':view.notice} onClose={()=>{setSaveFailed(false);session.dismissNotice();}}/>
       <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText={cells[0]?.label??''} strip={strip}>
         {(routine||figure)&&prefs.countEnabled&&<div class={`dc-figure-now${sounding!==null?' dc-figure-now--on':''}`} data-figure-now data-ellipsis title={figure?.name??routine?.figures[shownIndex]?.name}>
@@ -195,9 +201,6 @@ function MusicPlayer({track,source,query,figure}:{track:MusicTrack;source:RouteP
         </div>}
 
         <div data-group="music-range">
-          <label class="dc-music-field">{t.t('musicSection')}<select value={prefs.sectionId} disabled={!ready||rendering} onChange={e=>change({sectionId:e.currentTarget.value})}>
-            {track.sections.map(section=><option key={section.id} value={section.id}>{t.t('musicSectionChoice',{part:sectionName(section.id,t),seconds:Math.round(compileMusicPlan(track,section.id,prefs.rate).transport.duration)})}</option>)}
-          </select></label>
           <label class="dc-music-field">{t.t('musicRepetitions')}<select value={prefs.repetitions} disabled={!ready||rendering} onChange={e=>change({repetitions:Number(e.currentTarget.value)})}>
             {[1,2,4].map(n=><option key={n} value={n}>{t.t(n===1?'musicPlayOnce':'musicRepeatTimes',{count:n})}</option>)}
           </select></label>

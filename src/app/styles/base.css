@@ -17,6 +17,12 @@
 /* Music practice uses the existing ruled rows, typography and focus controls. */
 .dc-home .dc-music-entry { margin-top: 16px; }
 .dc-music-song { min-height: 80px; border-bottom: var(--bw) solid var(--line); }
+.dc-music-genre { border-bottom: var(--bw) solid var(--line); }
+.dc-music-genre > summary { display: flex; align-items: center; gap: 12px; min-height: 72px; cursor: pointer; list-style: none; font-size: 22px; font-weight: 700; }
+.dc-music-genre > summary::-webkit-details-marker { display: none; }
+.dc-music-genre > summary small { margin-left: auto; color: var(--ink2); font-size: 16px; font-weight: 400; }
+.dc-music-genre > summary .dc-ic { color: var(--ink2); transition: transform .15s ease; }
+.dc-music-genre[open] > summary .dc-ic { transform: rotate(90deg); }
 .dc-music-song .dc-link-label { display: flex; flex-direction: column; gap: 4px; }
 .dc-music-song small, .dc-music-note { font-size: 16px; color: var(--ink2); line-height: 1.5; }
 .dc-music-note { margin: 16px 0; }

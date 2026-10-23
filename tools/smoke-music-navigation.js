@@ -23,7 +23,11 @@ try{
  await page.waitForFunction(()=>document.querySelectorAll('[data-nav] a').length===3);
  ensure((await page.locator('[data-nav] a').allTextContents()).map(x=>x.trim()).join('/')==='フィガー/ルーティン/音楽','three Use tabs missing');
  for(const [label,screen] of [['ルーティン','U2'],['音楽','U3'],['フィガー','S1'],['音楽','U3']]){await page.getByRole('link',{name:label,exact:true}).click();await page.waitForSelector(`[data-screen=${screen}]`);}
- await page.waitForSelector('[data-screen=U3]');await page.waitForSelector('[data-track]');ensure(await page.locator('[data-track]').count()===6,'root song list was filtered');
+ await page.waitForSelector('[data-screen=U3]');await page.waitForSelector('[data-music-genres]');
+ ensure(await page.locator('[data-music-genre]').count()===2,'Latin and Standard categories missing');
+ ensure(await page.locator('[data-music-genre=latin] [data-track]').count()===5&&await page.locator('[data-music-genre=standard] [data-track]').count()===1,'songs grouped under the wrong genre');
+ ensure(await page.locator('[data-music-genre][open]').count()===0,'genre lists should start collapsed');
+ await page.locator('[data-music-genre=latin] > summary').click();ensure(await page.locator('[data-music-genre=latin][open] [data-track]').count()===5,'Latin category did not expand');
  await page.locator('[data-back]').click();await page.waitForSelector('[data-screen=S0]');
  evidence.checks.push('three root tabs and one-tap return to cover');
  await page.getByRole('link',{name:/使う/}).click();await page.locator('a[href="#/figures/waltz"]').click();await page.locator('[data-figure=chasse-from-pp]').click();await page.waitForSelector('[data-screen=S2]');
@@ -66,7 +70,7 @@ try{
  for(const locale of ['ja-JP','en']){
   await page.evaluate(async locale=>{const s=await(await import('/src/app/platform/storage.ts')).openAppStorage();await s.put('settings',{uiLocale:locale,hints:{firstPlaybackDone:true}},'app');},locale);await page.reload();
   for(const hash of ['#/use','#/use/routines','#/use/music','#/use/music/for/figure/waltz/chasse-from-pp','#/use/music/waltz-33445d26a14c/figure/waltz/chasse-from-pp']){
-   await page.goto(new URL(hash,base).href);await page.waitForSelector('main h1');if(hash.includes('33445'))await page.waitForSelector('[data-figure-now]');else if(hash==='#/use/music')await page.waitForSelector('[data-track]');
+   await page.goto(new URL(hash,base).href);await page.waitForSelector('main h1');if(hash.includes('33445'))await page.waitForSelector('[data-figure-now]');else if(hash==='#/use/music')await page.waitForSelector('[data-music-genre]');
    for(const [width,height]of [[375,548],[250,445],[1280,900]]){
     await page.setViewportSize({width,height});await page.evaluate(async()=>{await document.fonts.ready;scrollTo(0,0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     const measure=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,small:[...document.querySelectorAll('[data-nav] a,[data-back],[data-track]')].filter(e=>{const r=e.getBoundingClientRect();return r.width<48||r.height<48;}).length}));ensure(!measure.overflow&&!measure.small,`layout ${locale}/${hash}/${width}: ${JSON.stringify(measure)}`);evidence.layouts.push({locale,hash,width,...measure});
