@@ -6,18 +6,19 @@ export function compileMusicPlan(track, sectionId, rate = 1) {
   const section = track.sections.find(item => item.id === sectionId);
   if (!section || !track.rates.includes(rate)) throw new RangeError('Unknown music section or speed');
   const { startTick, endTick } = section;
+  const anchorTick = section.anchorTick ?? track.anchorTick;
   const maxTick = (track.beatsMs.length - 1) * TICKS_PER_BEAT;
-  if (endTick > maxTick || !Number.isInteger(track.anchorTick)) throw new RangeError('Music range exceeds measured coverage');
+  if (endTick > maxTick || !Number.isInteger(anchorTick)) throw new RangeError('Music range exceeds measured coverage');
   const tempo = beatMapTempo(track.beatsMs, track.beatsPerBar);
   const transport = sectionTransport(tempo, startTick, endTick, rate);
   const pattern = compileRhythm({ danceId: track.danceId, counts: track.counts });
   if (pattern.profile.beatsPerBar !== track.beatsPerBar) throw new RangeError('Music meter does not match dance');
   const events = [], leadEvents = [];
-  const first = Math.floor((startTick - 2 * track.beatsPerBar * TICKS_PER_BEAT - track.anchorTick) / pattern.durationTicks) - 1;
-  const last = Math.ceil((endTick - track.anchorTick) / pattern.durationTicks);
+  const first = Math.floor((startTick - 2 * track.beatsPerBar * TICKS_PER_BEAT - anchorTick) / pattern.durationTicks) - 1;
+  const last = Math.ceil((endTick - anchorTick) / pattern.durationTicks);
   for (let cycle = first; cycle <= last; cycle++) {
     for (const event of pattern.events) {
-      const absoluteTick = track.anchorTick + cycle * pattern.durationTicks + event.absoluteTick;
+      const absoluteTick = anchorTick + cycle * pattern.durationTicks + event.absoluteTick;
       if (absoluteTick >= startTick && absoluteTick < endTick) events.push({ ...event, absoluteTick });
       if (absoluteTick < startTick && absoluteTick >= startTick - 2 * track.beatsPerBar * TICKS_PER_BEAT) leadEvents.push({ ...event, absoluteTick });
     }

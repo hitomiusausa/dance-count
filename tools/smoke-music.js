@@ -47,7 +47,7 @@ try{
     await page.locator('[data-play]').click();
     await page.waitForSelector('[data-screen=U4][data-playing=true]');
     await page.waitForFunction(()=>/^[1-4]$/.test(document.querySelector('.dc-now')?.textContent??''));
-    const counts=new Set();for(let i=0;i<20;i++){counts.add(await page.locator('.dc-now').textContent());await page.waitForTimeout(250);}
+    const counts=new Set();for(let i=0;i<24;i++){counts.add(await page.locator('.dc-now').textContent());await page.waitForTimeout(250);}
     ensure(counts.size>=3,`count froze ${section.id}@${rate}`);
     const sources=await page.evaluate(i=>window.__musicCheck.sources.slice(i),before);
     const music=sources.filter(s=>s.duration>2);
@@ -62,7 +62,9 @@ try{
     ensure(spoken.length>=3,'not enough real spoken nodes for cadence verification');
     const intervals=spoken.slice(1).map((source,index)=>source.at-spoken[index].at).sort((a,b)=>a-b);
     const medianVoiceInterval=intervals[Math.floor(intervals.length/2)];
-    ensure(medianVoiceInterval>.65,`count is still at the old double density: ${medianVoiceInterval}`);
+    const mappedIntervals=plan.events.slice(1).map((event,index)=>plan.transport.timeAt(event.absoluteTick)-plan.transport.timeAt(plan.events[index].absoluteTick)).sort((a,b)=>a-b);
+    const expectedInterval=mappedIntervals[Math.floor(mappedIntervals.length/2)];
+    ensure(Math.abs(medianVoiceInterval-expectedInterval)<.08,`spoken cadence differs from waveform map: ${medianVoiceInterval} vs ${expectedInterval}`);
     evidence.playbacks.push({section:section.id,rate,counts:[...counts],music,medianVoiceInterval});
     await page.getByRole('button',{name:'保存する音声を作る',exact:true}).click();
     const save=page.getByRole('button',{name:'ファイルを保存する',exact:true});

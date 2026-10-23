@@ -114,7 +114,7 @@ function MusicPlayer({track}:{track:MusicTrack}) {
       <header class="dc-playhead"><h1>{danceName(track.danceId,t.locale)}</h1><small>{track.title}</small></header>
       <div class="dc-music-note dc-music-summary">{sectionName(prefs.sectionId,t)} · {t.t('musicSeconds',{seconds:Math.round(plan.transport.duration)})} · {t.t(prefs.repetitions===1?'musicOnce':'musicTimes',{count:prefs.repetitions})}</div>
       <NoticeBox notice={saveFailed?'save-failed':view.notice} onClose={()=>{setSaveFailed(false);session.dismissNotice();}}/>
-      <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText="2" strip={{cells,lit:lit===-1?null:lit}}/>
+      <CountBox playing={view.playing} countIn={view.countIn} leadText={view.listening?t.t('musicListening'):undefined} preparing={view.starting} nowText={displayForVoiceKey(view.voiceKey)} idleText={cells[0]?.label??''} strip={{cells,lit:lit===-1?null:lit}}/>
     </div><div>
       <div class="dc-field-label"><span>{t.t('musicSpeed')}</span></div>
       <div class="dc-chips" role="radiogroup" aria-label={t.t('musicSpeed')} data-group="music-speed">

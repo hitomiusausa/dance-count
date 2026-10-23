@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,">
+<title>曲の拍と小節を確認 — Dance Count</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#14213d;background:white;font-size:18px;line-height:1.6}*{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:auto;padding:20px 16px 124px}h1{font-size:26px;line-height:1.4}h2{font-size:20px;margin:24px 0 12px}p{margin:12px 0}a{color:#1b2a4a;display:inline-flex;align-items:center;min-height:48px}button,select,input{font:inherit;color:inherit}button,select{min-height:56px;border:1px solid #8790a3;border-radius:4px;background:white;padding:8px 12px}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}select{width:100%;margin-top:8px}label{display:block;margin:16px 0}canvas{display:block;width:100%;border-bottom:1px solid #8790a3}#overview{height:110px}#wave{height:240px}.note{font-size:16px;color:#4a5670}.row{display:flex;gap:12px;flex-wrap:wrap}.row button{flex:1}.count{font-size:64px;font-weight:750;text-align:center;line-height:1.2;min-height:80px}summary{min-height:56px;padding:14px 0;cursor:pointer;border-bottom:1px solid #8790a3}details{margin-top:24px}.dock{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #8790a3;padding:12px 16px}.dock button{display:block;max-width:868px;width:100%;height:72px;margin:auto;background:#1b2a4a;color:white;font-weight:700;font-size:24px}#issues{max-height:300px;overflow:auto}.issue{border-bottom:1px solid #8790a3;padding:12px 0}#legend{margin-bottom:16px}button:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible,#issues:focus-visible{outline:3px solid #b45309;outline-offset:2px}#status{min-height:29px}#only{min-width:48px;min-height:48px;vertical-align:middle;margin-right:8px}
+</style></head><body><main>
+<a id="practice-link" href="/#/use/music/paper-umbrella">練習画面へ戻る</a>
+<h1>曲の拍と小節を確認</h1>
+<p>曲の波形から推定した拍に、カウントを重ねて聞けます。</p><p class="note">ここでは曲と声を一緒に始めて、拍の位置を確かめます。</p>
+<p id="status" role="status">解析を読み込んでいます…</p>
+<h2>曲全体の波形</h2><canvas id="overview" role="img" aria-label="曲全体の音の大きさと、選んだ練習区間"></canvas>
+<label>曲を選ぶ<select id="track" disabled><option>準備中</option></select></label><p id="track-title" class="note"></p>
+<label>確認するところ<select id="section" disabled><option>準備中</option></select></label>
+<p id="range" class="note"></p>
+<div id="count" class="count" aria-label="現在のカウント">—</div>
+<canvas id="wave" role="img" aria-label="2小節ずつの波形。拍と小節のはじめを表示"></canvas>
+<p id="legend" class="note">薄い線は1拍ずつ、太い線の「1」は小節のはじめです。再生中は今の位置に線が動きます。</p>
+<div class="row" role="group" aria-label="見る小節を変える"><button id="previous" disabled>前の2小節</button><button id="next" disabled>次の2小節</button></div>
+<details><summary>速さ・音の設定と、確認が必要な場所</summary>
+<label>曲の速さ<select id="rate"><option value="0.8">ゆっくり</option><option value="1" selected>もとの速さ</option><option value="1.1">少し速く</option></select></label>
+<label><input id="only" type="checkbox">音楽だけを聞く</label>
+<p class="note">声は標準の英語です。練習画面と同じ再生プログラムで鳴らします。</p>
+<h2>推定の結果</h2><p id="summary" class="note"></p>
+<p class="note">これは自動推定です。拍の数や間隔が不安定な場所は、練習区間から外しています。波形の線と音楽の区切りを聞いて確認してください。</p>
+<div id="issues" tabindex="0" role="region" aria-label="確認が必要な場所の一覧"></div>
+</details>
+<div class="dock"><button id="play" disabled>準備しています…</button></div>
+</main><script type="module" src="/tools/music-probe/waveform-review.js"></script></body></html>

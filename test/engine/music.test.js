@@ -151,3 +151,13 @@ test('display follows listening and spoken prelude phases from the same schedule
     }
   } finally {globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;}
 });
+
+test('per-section downbeats preserve number phase after earlier missing or extra detections',()=>{
+  const section={id:'section',startTick:9*960,endTick:25*960,anchorTick:10*960};
+  const plan=compileMusicPlan({...track,sections:[section]},'section');
+  assert.deepEqual(plan.events.slice(0,4).map(event=>event.token),['1','2','3','4']);
+  assert.equal(plan.events[0].absoluteTick,section.startTick);
+  const schedule=musicJobs(plan,1,{startMode:'music-first',delayBeats:8});
+  assert.equal(schedule.jobs.find(job=>job.kind==='voice').event.token,'1');
+  assert.throws(()=>compileMusicPlan({...track,sections:[{...section,anchorTick:NaN}]},'section'),/coverage/);
+});

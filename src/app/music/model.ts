@@ -1,5 +1,5 @@
 // Catalog metadata only. Source files and analysis reports stay outside public/.
-export interface MusicSection { id: string; startTick: number; endTick: number }
+export interface MusicSection { id: string; startTick: number; endTick: number; anchorTick?: number }
 export interface MusicTrack {
   id: string;
   revision: string;

@@ -18,3 +18,8 @@ output/playwright/music-ux-astra-*.png
 
 # Cloudflare（wrangler のローカルの作業場）
 .wrangler/
+
+# Creator-supplied source music and Python analysis caches stay local.
+/music/
+__pycache__/
+*.pyc
