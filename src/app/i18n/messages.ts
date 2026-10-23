@@ -2,6 +2,14 @@
 // 英語は初版。段8の監修は docs/app-v1/stage8-copy-review.md（npm run copy:sheet が作る。Ruling 96）。旧画面の文言は src/engine/ui-messages.js に残す（legacy/ が使う）。
 export const APP_MESSAGES = {
   en: {
+    musicRoutine: 'Which count?',
+    musicBasicCount: 'Basic count',
+    musicFigureNumber: 'Figure {number}',
+    musicRoutineRange: 'Figures {from}–{to}. The saved routine stays as it is.',
+    musicRoutineTooLong: 'This routine does not fit this part of the song. Choose fewer figures in Practice settings.',
+    musicRoutineInvalid: 'This count could not be played. Choose another routine in Practice settings.',
+    musicRoutineFinished: 'The routine has finished',
+    musicRoutineListenThen: 'Listen to {beats} beats, then start the first figure. Each repeat follows this order.',
     musicSettings: 'Practice settings',
     musicSpeed: 'Music speed',
     musicSeconds: 'About {seconds} sec',
@@ -356,6 +364,14 @@ export const APP_MESSAGES = {
     seeRoutines: 'See routines'
   },
   'ja-JP': {
+    musicRoutine: 'どのカウントで練習しますか？',
+    musicBasicCount: '基本のカウント',
+    musicFigureNumber: '{number}番',
+    musicRoutineRange: '{from}〜{to}番を練習します。保存したルーティンの内容は変わりません。',
+    musicRoutineTooLong: 'この曲の練習区間に入りません。「練習の設定」でフィガーを少なくしてください。',
+    musicRoutineInvalid: 'このカウントは再生できません。「練習の設定」で別のルーティンを選んでください。',
+    musicRoutineFinished: 'ルーティンが終わりました',
+    musicRoutineListenThen: '曲を{beats}拍ぶん聞いてから、最初のフィガーを始めます。くり返すときも同じ順番です。',
     musicSettings: '練習の設定',
     musicSpeed: '曲の速さ',
     musicSeconds: '約{seconds}秒',

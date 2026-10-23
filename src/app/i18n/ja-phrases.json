@@ -1,4 +1,11 @@
 {
+  "musicRoutine": ["どの","カウントで","練習しますか？"],
+  "musicBasicCount": ["基本の","カウント"],
+  "musicRoutineRange": ["{from}〜{to}番を","練習します。","保存した","ルーティンの","内容は","変わりません。"],
+  "musicRoutineTooLong": ["この","曲の","練習区間に","入りません。","「練習の","設定」で","フィガーを","少なくしてください。"],
+  "musicRoutineInvalid": ["この","カウントは","再生できません。","「練習の","設定」で","別の","ルーティンを","選んでください。"],
+  "musicRoutineFinished": ["ルーティンが","終わりました"],
+  "musicRoutineListenThen": ["曲を","{beats}拍ぶん","聞いてから、","最初の","フィガーを","始めます。","くり返すときも","同じ","順番です。"],
   "musicSettings": ["練習の","設定"],
   "musicSpeed": ["曲の","速さ"],
   "musicSectionChoice": ["{part}","（約{seconds}秒）"],

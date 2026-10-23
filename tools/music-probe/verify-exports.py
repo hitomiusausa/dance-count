@@ -56,5 +56,5 @@ for item in evidence['exports']:
     assert result['minimumWaveformCorrelation']>=.65,result
 report={'method':'matched real spoken waveform in downloaded PCM16 WAV; +/-40ms search; no music-beat correctness claim',
     'files':results,'totalWords':sum(r['words'] for r in results)}
-(OUT/('routine-export-verification.json' if len(sys.argv)>1 else 'export-verification.json')).write_text(json.dumps(report,indent=2)+'\n')
+(OUT/(evidence_path.stem.replace('-browser-evidence','-export-verification')+'.json' if len(sys.argv)>1 else 'export-verification.json')).write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))

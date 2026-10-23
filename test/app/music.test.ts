@@ -43,3 +43,17 @@ test('start order defaults to two listening bars and explicit settings take prec
   assert.equal(prefs.startMode,'music-first');assert.equal(prefs.delayBeats,1);
   assert.equal(normalizeMusicPreferences({startMode:'bad',delayBeats:Infinity},track).delayBeats,8);
 });
+
+
+test('music offers only playable routines of the same dance without mutating their stored content',async()=>{
+  const {musicRoutineChoices,musicFigureRange}=await import('../../src/app/music/routines.ts');
+  const {createRoutine}=await import('../../src/app/routines/routine.ts');
+  const make=(id:string,danceId:string,counts:string)=>({...createRoutine({id,danceId,name:id,now:'2026-10-23'}),figures:[{id:'f-test-12345678',name:'Figure',counts}]});
+  const good=make('r-good-12345678','rumba','2341'),wrong=make('r-wrong-12345678','waltz','123');
+  const bad=make('r-invalid-12345678','rumba','&2341'),empty={...good,id:'r-empty-12345678',figures:[]};
+  const original=[good,wrong,bad,empty],before=JSON.stringify(original);
+  assert.deepEqual(musicRoutineChoices(original,'rumba').map(r=>r.id),[good.id]);
+  assert.deepEqual(musicFigureRange({...good,figures:[...good.figures,...good.figures,...good.figures]}),{startIndex:0,endIndex:2});
+  assert.deepEqual(musicFigureRange(good,{startIndex:3,endIndex:10}),{startIndex:0,endIndex:0});
+  assert.equal(JSON.stringify(original),before);
+});

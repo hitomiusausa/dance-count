@@ -218,3 +218,19 @@ test('routine display clears after its own end while the remaining source music 
     engine.stop();
   }finally{globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;}
 });
+
+test('each repeated routine clip shows its listening introduction without consuming the opening figure',async()=>{
+  const {compileMusicProgram}=await import('../../src/engine/music-plan.js');
+  const oldRaf=globalThis.requestAnimationFrame,oldCancel=globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame=()=>1;globalThis.cancelAnimationFrame=()=>{};
+  let engine;
+  try{
+    const plan=compileMusicProgram({track,sectionId:'section',startMode:'music-first',delayBeats:4,routine:{danceId:'rumba',figures:[{id:'a',name:'A',counts:'2341'}]}});
+    const audio=new FakeAudioContext(),frames=[];engine=new MusicAudioEngine(audio,{voicePack:fakeVoicePack(),onFrame:f=>frames.push(f)});
+    const start=engine.start({compiled:plan,musicAsset:{buffer:{duration:plan.transport.duration}},startMode:'music-first',delayBeats:4,repetitions:2});
+    audio.currentTime=start+plan.transport.duration+.1;engine.frame();
+    assert.equal(frames.at(-1).listening,true);assert.equal(frames.at(-1).countIn,true);assert.equal(frames.at(-1).event,null);
+    audio.currentTime=start+plan.transport.duration+plan.transport.timeAt(plan.routineStartTick)+.01;engine.frame();
+    assert.equal(frames.at(-1).listening,false);assert.equal(frames.at(-1).event.figureIndex,0);assert.equal(frames.at(-1).event.token,'2');
+  }finally{engine?.stop();globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;}
+});
