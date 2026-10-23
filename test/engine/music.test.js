@@ -161,3 +161,60 @@ test('per-section downbeats preserve number phase after earlier missing or extra
   assert.equal(schedule.jobs.find(job=>job.kind==='voice').event.token,'1');
   assert.throws(()=>compileMusicPlan({...track,sections:[{...section,anchorTick:NaN}]},'section'),/coverage/);
 });
+
+test('finite routines keep figure timing, half-beats and a two-bar figure on a nonuniform music map',async()=>{
+  const {compileMusicRoutinePlan}=await import('../../src/engine/music-plan.js');
+  const waltz={...track,danceId:'waltz',beatsPerBar:3,counts:'123',anchorTick:0,
+    sections:[{id:'section',startTick:3*960,endTick:30*960,anchorTick:3*960}]};
+  const routine={danceId:'waltz',figures:[{id:'a',name:'Whisk',counts:'123'},{id:'b',name:'Chasse',counts:'12&3'},{id:'c',name:'Hesitation',counts:'123123'}]};
+  const plan=compileMusicRoutinePlan(waltz,'section',.8,routine,{delayBeats:6});
+  assert.deepEqual(plan.figures.map(f=>[f.startTick/960,f.endTick/960]),[[9,12],[12,15],[15,21]]);
+  const and=plan.events.find(event=>event.token==='&');assert.equal(and.absoluteTick,13.5*960);assert.equal(and.figureIndex,1);
+  assert.equal(plan.routineEndTick,21*960);
+  const jobs=musicJobs(plan,1,{startMode:'music-first',delayBeats:6});
+  assert.equal(jobs.jobs.find(job=>job.kind==='voice').event.figureIndex,0);
+  assert.equal(jobs.jobs.filter(job=>job.kind==='voice').length,13);
+  for(const job of jobs.jobs.filter(job=>job.kind==='voice'))assert.equal(job.at,jobs.start+plan.transport.timeAt(job.event.absoluteTick));
+});
+test('routine figure boundaries do not reset partial bars; rests are silent; source coverage is never stretched',async()=>{
+  const {compileMusicRoutinePlan,MusicRoutineError}=await import('../../src/engine/music-plan.js');
+  const routine={danceId:'rumba',figures:[{id:'a',name:'Part A',counts:'23'},{id:'b',name:'Part B',counts:'41'},{id:'c',name:'Rest',counts:'2@41'}]};
+  const plan=compileMusicRoutinePlan(track,'section',1,routine);
+  assert.deepEqual(plan.figures.map(f=>f.startTick/960),[9,11,13]);
+  assert.deepEqual(plan.events.slice(0,4).map(event=>event.token),['2','3','4','1']);
+  const jobs=musicJobs(plan,1,{startMode:'together'});
+  assert.ok(jobs.jobs.filter(job=>job.kind==='voice').every(job=>job.event.voiceKey));
+  const subset=compileMusicRoutinePlan(track,'section',1,{...routine,range:{startIndex:1,endIndex:1}});
+  assert.equal(subset.events[0].token,'4');assert.equal(subset.events[0].absoluteTick,11*960);assert.equal(subset.events[0].figureIndex,1);
+  assert.throws(()=>compileMusicRoutinePlan(track,'section',1,{...routine,danceId:'waltz'}),e=>e instanceof MusicRoutineError&&e.reason==='dance');
+  assert.throws(()=>compileMusicRoutinePlan(track,'section',1,{danceId:'rumba',figures:Array.from({length:8},(_,i)=>({id:String(i),name:'Long',counts:'2341'}))}),e=>e.reason==='coverage');
+});
+test('routine music-first retains the opening figure and count-first uses a separate preparation count',async()=>{
+  const {compileMusicProgram}=await import('../../src/engine/music-plan.js');
+  const routine={danceId:'rumba',figures:[{id:'a',name:'A',counts:'2341'}]};
+  for(const startMode of ['music-first','count-first','together']){
+    const plan=compileMusicProgram({track,sectionId:'section',routine,startMode,delayBeats:4});
+    const schedule=musicJobs(plan,2,{startMode,delayBeats:4});
+    const words=schedule.jobs.filter(job=>job.kind==='voice'&&job.event.figureIndex===0);
+    assert.equal(words.length,8);assert.equal(words[0].event.token,'2');
+    assert.equal(words[0].event.absoluteTick,track.sections[0].startTick+(startMode==='music-first'?5:1)*960);
+    if(startMode==='count-first')assert.ok(schedule.jobs.some(job=>job.kind==='voice'&&job.at<schedule.start&&job.event.figureIndex===undefined));
+  }
+});
+
+test('routine display clears after its own end while the remaining source music continues',async()=>{
+  const {compileMusicProgram}=await import('../../src/engine/music-plan.js');
+  const oldRaf=globalThis.requestAnimationFrame,oldCancel=globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame=()=>1;globalThis.cancelAnimationFrame=()=>{};
+  try{
+    const plan=compileMusicProgram({track,sectionId:'section',routine:{danceId:'rumba',figures:[{id:'a',name:'A',counts:'2341'}]}});
+    const audio=new FakeAudioContext(),frames=[];
+    const engine=new MusicAudioEngine(audio,{voicePack:fakeVoicePack(),onFrame:f=>frames.push(f)});
+    const start=engine.start({compiled:plan,musicAsset:{buffer:{duration:plan.transport.duration}}});
+    audio.currentTime=start+plan.transport.timeAt(plan.routineEndTick)-.01;engine.frame();
+    assert.equal(frames.at(-1).event.figureIndex,0);
+    audio.currentTime=start+plan.transport.timeAt(plan.routineEndTick)+.01;engine.frame();
+    assert.equal(frames.at(-1).event,null);assert.equal(frames.at(-1).playing,true);
+    engine.stop();
+  }finally{globalThis.requestAnimationFrame=oldRaf;globalThis.cancelAnimationFrame=oldCancel;}
+});

@@ -43,7 +43,8 @@
     "copy:sheet": "node tools/i18n/copy-review-sheet.js",
     "i18n:phrases": "node tools/i18n/segment-ja.js",
     "smoke:music:waveform": "node tools/smoke-waveform-review.js",
-    "smoke:music:library": "node tools/smoke-music-library.js"
+    "smoke:music:library": "node tools/smoke-music-library.js",
+    "smoke:music:routines": "node tools/smoke-music-routines.js"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

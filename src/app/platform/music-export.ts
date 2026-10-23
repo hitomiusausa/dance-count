@@ -1,4 +1,4 @@
-import { compileMusicPlan, musicJobs } from '../../engine/music-plan.js';
+import { compileMusicProgram, musicJobs } from '../../engine/music-plan.js';
 import { createMusicBuses, scheduleMusicJob } from '../../engine/music-audio-engine.js';
 import type { MusicOptions } from '../practice/session.ts';
 import { wordOffsetsFor } from '../voices/selection.ts';
@@ -12,7 +12,7 @@ export class MusicFileError extends Error {
 
 export async function renderMusicFile(options: MusicOptions, signal: AbortSignal): Promise<File> {
   if(options.countEnabled&&options.voice.kind==='pack'&&options.voice.pack.origin==='received') throw new MusicFileError('voice','Voice cannot be redistributed');
-  const compiled=compileMusicPlan(options.track,options.sectionId,options.rate);
+  const compiled=compileMusicProgram(options);
   const schedule=musicJobs(compiled,options.repetitions,{...options,wordOffsetsMs:wordOffsetsFor(options.voice)});
   if(schedule.end>120)throw new MusicFileError('duration','Export is too long');
   const audio=new OfflineAudioContext(2,Math.ceil(schedule.end*48000),48000);
@@ -29,7 +29,7 @@ export async function renderMusicFile(options: MusicOptions, signal: AbortSignal
   signal.throwIfAborted();
   const bytes=encodeMusicWav(rendered);
   signal.throwIfAborted();
-  return new File([bytes],`dance-count-${options.track.id}-${options.sectionId}-${options.rate}x-${options.repetitions}times-${options.countEnabled?'count':'music'}-${options.startMode??'together'}-${options.delayBeats??0}beats.wav`,{type:'audio/wav'});
+  return new File([bytes],`dance-count-${options.track.id}-${options.sectionId}-${options.rate}x-${options.repetitions}times-${options.countEnabled?'count':'music'}-${options.startMode??'together'}-${options.delayBeats??0}beats${options.routine?'-routine':''}.wav`,{type:'audio/wav'});
 }
 
 // Return the actual saved bytes; reject clipped output instead of hiding it.

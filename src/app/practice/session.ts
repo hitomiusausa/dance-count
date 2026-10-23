@@ -1,7 +1,7 @@
 import { figureRangeTicks } from '../../engine/practice-range.js';
 import { compileRhythm, compileRoutine } from '../../engine/rhythm-compiler.js';
 import type { TrackProfile } from '../../engine/tempo-map.js';
-import { compileMusicPlan } from '../../engine/music-plan.js';
+import { compileMusicProgram } from '../../engine/music-plan.js';
 import type { MusicAsset, MusicTrack } from '../music/model.ts';
 import { wordOffsetsFor, type VoiceSelection } from '../voices/selection.ts';
 import type { StripEvent, StripProgram } from './beat-indicator.ts';
@@ -33,6 +33,7 @@ export type PracticeOptions =
 export interface MusicOptions extends Omit<CommonOptions, 'track'> {
   kind: 'music'; track: MusicTrack; sectionId: string; rate: number;
   startMode?: 'together' | 'music-first' | 'count-first'; delayBeats?: number;
+  routine?: { id?: string; name?: string; danceId: string; figures: readonly FigureLike[]; range?: {startIndex:number;endIndex:number} };
   repetitions: number; countEnabled: boolean; musicVolume: number; voiceVolume: number;
 }
 
@@ -40,17 +41,17 @@ export interface CompiledProgram { compiled: unknown; rangeStartTick?: number; r
 
 // エンジンに渡した compiled を、画面の帯（D55・Ruling 114-5）に見せる形にする（写すだけ。第 2 のコンパイルはしない）
 export function programView(compiled: unknown): StripProgram {
-  const source = compiled as { events: readonly StripEvent[]; figures?: readonly { startTick: number; endTick: number }[]; durationTicks: number };
+  const source = compiled as { events: readonly StripEvent[]; figures?: readonly { startTick: number; endTick: number }[]; durationTicks: number; endTick?: number };
   return {
     events: source.events,
     ...(source.figures ? { figures: source.figures.map(({ startTick, endTick }) => ({ startTick, endTick })) } : {}),
-    endTick: source.durationTicks
+    endTick: source.endTick ?? source.durationTicks
   };
 }
 
 // カウントをエンジンに渡す形にする。範囲は小節の位相を保つため、ルーティン全体をコンパイルしてから切り出す。
 export function compileProgram(options: PracticeOptions): CompiledProgram {
-  if (options.kind === 'music') return { compiled: compileMusicPlan(options.track, options.sectionId, options.rate) };
+  if (options.kind === 'music') return { compiled: compileMusicProgram(options) };
   if (options.kind === 'counts') return { compiled: compileRhythm({ danceId: options.danceId, counts: options.counts }) };
   const compiled = compileRoutine({ danceId: options.danceId, figures: options.figures });
   if (!options.range) return { compiled };

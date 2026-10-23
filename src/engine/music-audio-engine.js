@@ -92,6 +92,7 @@ export class MusicAudioEngine {
       const tick = this.plan.transport.tickAt(elapsed,iteration);
       let event = null;
       for (const candidate of this.plan.events) { if(candidate.absoluteTick<=tick) event=candidate; else break; }
+      if(this.plan.routineEndTick!==undefined&&tick>=this.plan.routineEndTick)event=null;
       this.onFrame({ playing:true,countIn:false,event,originalTick:tick,iteration });
     }
     this.raf = requestAnimationFrame(()=>this.frame());

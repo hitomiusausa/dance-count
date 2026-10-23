@@ -1,5 +1,6 @@
-import { compileRhythm } from './rhythm-compiler.js';
+import { compileRhythm, compileRoutine } from './rhythm-compiler.js';
 import { beatMapTempo, sectionTransport } from './tempo-map.js';
+import { figureRangeTicks } from './practice-range.js';
 import { TICKS_PER_BEAT } from './dance-profiles.js';
 
 export function compileMusicPlan(track, sectionId, rate = 1) {
@@ -27,6 +28,40 @@ export function compileMusicPlan(track, sectionId, rate = 1) {
   leadEvents.sort((a,b) => a.absoluteTick - b.absoluteTick);
   if (!events.length) throw new RangeError('Empty music range');
   return { profile: pattern.profile, events, leadEvents, startTick, endTick, durationTicks: endTick - startTick, tempo, transport, sectionId };
+}
+
+export class MusicRoutineError extends RangeError {
+  constructor(reason) { super(`Music routine: ${reason}`); this.reason=reason; }
+}
+
+// The routine compiler remains the only source of figure durations and fractional
+// beats. Translate its absolute ticks once; never restart the beat at each figure.
+export function compileMusicRoutinePlan(track, sectionId, rate, routine, { delayBeats=0 }={}) {
+  if(routine.danceId!==track.danceId)throw new MusicRoutineError('dance');
+  if(!routine.figures?.length)throw new MusicRoutineError('empty');
+  if(!Number.isInteger(delayBeats)||delayBeats<0)throw new MusicRoutineError('delay');
+  const base=compileMusicPlan(track,sectionId,rate);
+  const compiled=compileRoutine({danceId:routine.danceId,figures:routine.figures});
+  const range=figureRangeTicks(compiled,routine.range);
+  const selected=compiled.events.filter(event=>event.absoluteTick>=range.startTick&&event.absoluteTick<range.endTick);
+  if(!selected.length||range.endTick<=range.startTick)throw new MusicRoutineError('empty');
+  const barTicks=base.profile.beatsPerBar*TICKS_PER_BEAT;
+  const firstNumber=selected.find(event=>/^[1-9]$/.test(event.token)&&Number(event.token)<=base.profile.beatsPerBar);
+  const phase=firstNumber
+    ? (((Number(firstNumber.token)-1)*TICKS_PER_BEAT-(firstNumber.absoluteTick-range.startTick))%barTicks+barTicks)%barTicks
+    : 0;
+  const start=base.startTick+delayBeats*TICKS_PER_BEAT+phase;
+  const shift=start-range.startTick,end=start+range.endTick-range.startTick;
+  if(start<base.startTick||end>base.endTick)throw new MusicRoutineError('coverage');
+  return {...base,events:selected.map(event=>({...event,absoluteTick:event.absoluteTick+shift})),
+    figures:compiled.figures.map((figure,figureIndex)=>({...figure,figureIndex,startTick:figure.startTick+shift,endTick:figure.endTick+shift})),
+    routineStartTick:start,routineEndTick:end,routineRange:range,routineWarnings:compiled.warnings};
+}
+
+/** @param {{track:any,sectionId:string,rate?:number,routine?:{danceId:string,figures:ReadonlyArray<{id:string,name:string,counts:string}>,range?:{startIndex:number,endIndex:number}}|null,startMode?:string,delayBeats?:number}} options */
+export function compileMusicProgram({track,sectionId,rate=1,routine=null,startMode='together',delayBeats=track.beatsPerBar*2}) {
+  return routine?compileMusicRoutinePlan(track,sectionId,rate,routine,{delayBeats:startMode==='music-first'?delayBeats:0})
+    :compileMusicPlan(track,sectionId,rate);
 }
 
 export function musicJobs(plan, repetitions, { countInBars = 0, countEnabled = true, metronome = false, voiceOffsetMs = 0, wordOffsetsMs = {}, startMode, delayBeats = plan.profile.beatsPerBar * 2 } = {}) {
@@ -64,7 +99,7 @@ export function musicJobs(plan, repetitions, { countInBars = 0, countEnabled = t
       const target = start + plan.transport.timeAt(event.absoluteTick, iteration);
       const next = plan.events[index+1];
       const nextTarget = next ? start + plan.transport.timeAt(next.absoluteTick, iteration) : end;
-      if (countEnabled && (iteration > 0 || target >= start + countStartOffset - 1e-9)) jobs.push({ kind: 'voice', at: target, end: nextTarget, sectionEnd: end, event, nextVoiceKey: next?.voiceKey ?? null });
+      if (countEnabled && event.voiceKey && (iteration > 0 || target >= start + countStartOffset - 1e-9)) jobs.push({ kind: 'voice', at: target, end: nextTarget, sectionEnd: end, event, nextVoiceKey: next?.voiceKey ?? null });
     });
     if (metronome) {
       for (let tick = Math.ceil(plan.startTick/TICKS_PER_BEAT)*TICKS_PER_BEAT; tick < plan.endTick; tick += TICKS_PER_BEAT) {

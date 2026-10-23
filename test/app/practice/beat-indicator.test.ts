@@ -57,3 +57,14 @@ test('S5: the cells are the sounding figure only and light on the absolute routi
   assert.equal(stripView(second, 2880 + 960).lit, 1);
   assert.deepEqual(program.figures, [{ startTick: 0, endTick: 2880 }, { startTick: 2880, endTick: 8640 }]);
 });
+
+test('music figures retain absolute source positions and the source end in the display program',async()=>{
+  const {compileMusicProgram}=await import('../../../src/engine/music-plan.js');
+  const track={danceId:'waltz',beatsPerBar:3,counts:'123',anchorTick:0,rates:[1],
+    beatsMs:Array.from({length:61},(_,i)=>i*500),sections:[{id:'middle',startTick:30*960,endTick:48*960,anchorTick:30*960}]};
+  const plan=compileMusicProgram({track,sectionId:'middle',routine:{danceId:'waltz',figures:[{id:'a',name:'A',counts:'12&3'}]}});
+  const view=programView(plan);
+  assert.equal(view.endTick,48*960);
+  assert.deepEqual(stripCells(view,0).map(cell=>[cell.label,cell.beats]),[['1',1],['2',.5],['&',.5],['3',1]]);
+  assert.equal(stripCells(view,0)[0]!.tick,30*960);
+});

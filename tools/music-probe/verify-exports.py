@@ -5,13 +5,14 @@ This checks the export's words against scheduled targets, not the correctness of
 the inferred musical beat map. Requires the local smoke:music evidence first.
 """
 from pathlib import Path
-import json,wave
+import json,wave,sys
 import numpy as np
 from scipy.signal import correlate
 
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'output/music-probe'
-evidence=json.loads((OUT/'app-browser-evidence.json').read_text())
+evidence_path=Path(sys.argv[1]) if len(sys.argv)>1 else OUT/'app-browser-evidence.json'
+evidence=json.loads(evidence_path.read_text())
 pack=ROOT/'public/audio/default-en-female-v1'
 manifest=json.loads((pack/'manifest.json').read_text())
 def load(file):
@@ -55,5 +56,5 @@ for item in evidence['exports']:
     assert result['minimumWaveformCorrelation']>=.65,result
 report={'method':'matched real spoken waveform in downloaded PCM16 WAV; +/-40ms search; no music-beat correctness claim',
     'files':results,'totalWords':sum(r['words'] for r in results)}
-(OUT/'export-verification.json').write_text(json.dumps(report,indent=2)+'\n')
+(OUT/('routine-export-verification.json' if len(sys.argv)>1 else 'export-verification.json')).write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))
