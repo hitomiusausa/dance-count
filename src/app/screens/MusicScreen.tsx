@@ -56,7 +56,7 @@ export function MusicListScreen({source={},query={}}:MusicSourceProps) {
   const genres=contextual?[]:MUSIC_GENRES.map(genre=>({genre,tracks:songs?.filter(track=>genre.danceIds.has(track.danceId))??[]})).filter(item=>item.tracks.length>0);
   const songRows=(items:MusicTrack[])=><div data-list="music-tracks" role="list">{items.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
     href={buildHash(musicTrackTarget(track.id,source,query))}>
-    <span class="dc-link-label"><b>{track.title}</b><small>{danceName(track.danceId,t.locale)}</small></span><Icon name="chev-r"/>
+    <span class="dc-link-label"><small>{danceName(track.danceId,t.locale)}</small><b>{track.title}</b></span><Icon name="chev-r"/>
   </a></div>)}</div>;
   return <main class={`dc-screen${contextual?' dc-screen--focus':''}`} data-screen={screen}>
     <BackButton screen={screen} fallback={contextual?musicOriginTarget(source):undefined}/><h1 class="dc-heading">{t.t('musicList')}</h1>

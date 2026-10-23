@@ -25,6 +25,7 @@
 .dc-music-genre > summary .dc-ic { color: var(--ink2); transition: transform .15s ease; }
 .dc-music-genre[open] > summary .dc-ic { transform: rotate(90deg); }
 .dc-music-song .dc-link-label { display: flex; flex-direction: column; gap: 4px; }
+.dc-music-song b { font-size: 17px; line-height: 1.5; }
 .dc-music-song small, .dc-music-note { font-size: 16px; color: var(--ink2); line-height: 1.5; }
 .dc-music-note { margin: 16px 0; }
 [data-music-context] { overflow-wrap: anywhere; }
