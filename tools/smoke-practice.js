@@ -132,12 +132,18 @@ try {
     strip.push(await page.evaluate(() => {
       const cells = [...document.querySelectorAll('.dc-beats li')];
       const lit = cells.findIndex(cell => cell.getAttribute('aria-current') === 'true');
-      return { lit, label: lit >= 0 ? cells[lit].textContent.trim() : null, now: document.querySelector('.dc-now')?.textContent.trim() ?? '', cells: cells.length };
+      // 夜間便 B-5: はじめの合図の間の灰の丸（.dc-beats[data-lead]）は別に数える（琥珀の丸と大きな語の一致は鳴っている間だけ）
+      const lead = document.querySelector('.dc-beats')?.hasAttribute('data-lead') ?? false;
+      return { lit: lead ? -1 : lit, lead: lead ? lit : -1, label: lit >= 0 ? cells[lit].textContent.trim() : null, now: document.querySelector('.dc-now')?.textContent.trim() ?? '', cells: cells.length };
     }));
     await page.waitForTimeout(40);
   }
   await page.locator('[data-play]').click();
   const lit = strip.filter(sample => sample.lit >= 0);
+  // 夜間便 B-5（Ruling 124）: 合図の間は灰の丸が 1 語ずつ進む（2 つ以上の丸を通る・大きな語は「はじめの合図…」のまま）
+  const leads = strip.filter(sample => sample.lead >= 0);
+  if (new Set(leads.map(sample => sample.lead)).size < 2) errors.push(`B-5: the count-in did not move the grey cell (${JSON.stringify(leads.map(sample => sample.lead))})`);
+  if (leads.some(sample => /^[1-8a&]$/.test(sample.now))) errors.push('B-5: a count number was shown during the count-in');
   if (strip.some(sample => sample.cells !== 8)) errors.push(`D55: the jive strip should have 8 cells (${[...new Set(strip.map(sample => sample.cells))].join(', ')})`);
   const steps = lit.map(sample => sample.lit).filter((index, i, all) => i === 0 || index !== all[i - 1]);
   const backwards = steps.filter((index, i) => i > 0 && index < steps[i - 1] && !(index === 0 && steps[i - 1] >= 6));
@@ -155,4 +161,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log(`practice smoke OK: ${figureNote}; the jive strip lights 1 2 3 a 4 5 a 6 in order with the big count; G1 (3 taps from the cover) and G2 (1 tap: the U1 card and the cover) play, tabs do not stack history, reload does not autoplay, back falls back to the parent`);
+console.log(`practice smoke OK: ${figureNote}; the jive strip lights 1 2 3 a 4 5 a 6 in order with the big count (the count-in moves a grey cell, B-5); G1 (3 taps from the cover) and G2 (1 tap: the U1 card and the cover) play, tabs do not stack history, reload does not autoplay, back falls back to the parent`);

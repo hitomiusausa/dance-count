@@ -66,6 +66,11 @@ test('stage 8 settled copy: the voice limit says how many voices you already hav
   assert.equal(createAppTranslator('en').t('voiceLimitReached', { count: 20 }), "You already have 20 voices. Delete one you don't use, then choose the file again.");
 });
 
+test('S10 points at the Routines tab of “Use”, the next screen — S10 itself has no tabs (夜間便 A-2・監査 #3)', () => {
+  assert.equal(APP_MESSAGES['ja-JP'].receivedRoutinesToo, 'ルーティンは、「使う」の下のタブ「ルーティン」にあります。');
+  assert.equal(APP_MESSAGES.en.receivedRoutinesToo, 'The routines are under the “Routines” tab at the bottom of “Use”.');
+});
+
 test('the S13 text (about.ts) has the same keys in the same order in both languages, none empty, no forbidden words (Ruling 99-2)', () => {
   assert.deepEqual(Object.keys(ABOUT_TEXT['ja-JP']), Object.keys(ABOUT_TEXT.en));
   for (const locale of ['en', 'ja-JP'] as const) {
@@ -80,6 +85,6 @@ test('the S13 text (about.ts) has the same keys in the same order in both langua
 
 test('S13 states what the app does, never a legal promise, and names the operator and the contact (§12・D47・D48)', () => {
   const all = Object.values(ABOUT_TEXT['ja-JP']).join('');
-  for (const fact of ['くうが株式会社', 'この端末の中にだけ', '解析ツール', '声を録音する画面でだけ', '公式のもの・監修を受けたものではありません']) assert.ok(all.includes(fact), fact);
+  for (const fact of ['くうが株式会社', 'この端末の中にだけ', 'Cloudflare Web Analytics', 'クッキーは使わず', '声を録音する画面でだけ', '公式のもの・監修を受けたものではありません']) assert.ok(all.includes(fact), fact);
   for (const promise of ['保証', '責任を負', '準拠法', '損害', '同意したものとみなし']) assert.ok(!all.includes(promise), `no legal promise: ${promise}`);
 });

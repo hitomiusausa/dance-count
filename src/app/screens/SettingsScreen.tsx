@@ -65,6 +65,12 @@ export function SettingsScreen() {
           <small class="dc-link-value">{translator.t('versionLabel', { version: APP_VERSION })}</small>
           <Icon name="chev-r" />
         </a>
+        {/* D74: 教室に貼る案内（QR つきの紙）。同じ束（U4 で 1）。「プライバシー・アプリについて」の下（320×568 の英語で初期表示の数を変えない） */}
+        <a class="dc-link-row" href={buildHash({ screen: 'S14', params: {} })} data-poster-link>
+          <Icon name="printer" />
+          <span class="dc-link-label">{phrased(translator, 'settingsPoster')}</span>
+          <Icon name="chev-r" />
+        </a>
       </div>
     </main>
   );

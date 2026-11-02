@@ -136,6 +136,18 @@ test('frames show the voice key and tick; lead-in shows neither', async () => {
   assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.originalTick], [false, 'two', 1000]);
 });
 
+// 夜間便 B-5（Ruling 124）: 合図の間は leadTick だけが進み、voiceKey は null のまま（「はじめの合図…」の描画は変えない）。鳴り始めたら leadTick は null
+test('the count-in passes the lead tick on and keeps the voice key hidden (B-5)', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  h.frame({ playing: true, countIn: true, event: null, originalTick: null, leadTick: -1920 });
+  assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.leadTick], [true, null, -1920]);
+  h.frame({ playing: true, countIn: true, event: null, originalTick: null, leadTick: -960 });
+  assert.equal(h.session.current.leadTick, -960);
+  h.frame({ playing: true, countIn: false, event: { voiceKey: 'one' }, originalTick: 0, leadTick: 3000 });
+  assert.deepEqual([h.session.current.countIn, h.session.current.voiceKey, h.session.current.leadTick], [false, 'one', null]);
+});
+
 test('no sound after 2 seconds shows the banner (context never ran)', async () => {
   const h = harness();
   h.audio.state = 'suspended';
@@ -403,4 +415,40 @@ test('the first successful start marks the first playback once; a voice that fai
   h.session.stop();
   await h.session.play(WALTZ);
   assert.equal(h.firstPlaybackMarks, 1);
+});
+
+// 夜間便 B-4（Ruling 124・監査 #12）: ■ の後は鳴っていた語・tick・フィガーを残さない（画面は初めの状態＝始めのフィガーの最初の語を灰で表示）
+test('stopping clears the sounding word, tick and figure, back to the first view', async () => {
+  const h = harness();
+  await h.session.play({ kind: 'routine', danceId: 'waltz', figures: [{ id: 'f-00000001', name: 'A', counts: '123' }, { id: 'f-00000002', name: 'B', counts: '123' }], bpm: 84, metronome: true, countInBars: 1, loop: true, track: null, voice: DEFAULT_VOICE, voiceOffsetMs: 0 });
+  h.frame({ playing: true, countIn: false, event: { voiceKey: 'three', figureIndex: 1 }, originalTick: 5000 });
+  assert.equal(h.session.current.figureIndex, 1);
+  h.session.stop();
+  const view = h.session.current;
+  assert.deepEqual([view.playing, view.voiceKey, view.originalTick, view.figureIndex, view.program], [false, null, null, null, null]);
+});
+
+test('D72: bar counting reaches the engine (off unless asked) and the bar number reaches the view, not during the lead-in', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  assert.equal(h.starts[0]!.barCounting, false);
+  await h.session.play({ ...WALTZ, barCounting: true });
+  assert.equal(h.starts[1]!.barCounting, true);
+  h.frame({ playing: true, countIn: true, leadTick: -960, bar: 1 });
+  assert.equal(h.session.current.bar, null);
+  h.frame({ playing: true, countIn: false, originalTick: 0, event: { voiceKey: 'one' }, bar: 3 });
+  assert.equal(h.session.current.bar, 3);
+  h.session.stop();
+  assert.equal(h.session.current.bar, null);
+});
+
+test('D73: volumes reach the engine at start (default 1) and can change while playing without a restart', async () => {
+  const h = harness();
+  await h.session.play(WALTZ);
+  assert.deepEqual([h.starts[0]!.voiceVolume, h.starts[0]!.clickVolume], [1, 1]);
+  await h.session.play({ ...WALTZ, voiceVolume: 0.25, clickVolume: 0 });
+  assert.deepEqual([h.starts[1]!.voiceVolume, h.starts[1]!.clickVolume], [0.25, 0]);
+  h.session.setVolumes({ voice: 0.5 });
+  assert.equal(h.starts.length, 2, 'no restart');
+  assert.equal(h.session.current.playing, true);
 });

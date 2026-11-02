@@ -18,3 +18,16 @@ export function shareDockNote(input: { needsSomething: boolean; voiceCount: numb
   if (input.voiceCount === 0 && input.routineCount === 0) return 'nothing';
   return input.needsSomething ? 'choose' : null;
 }
+
+// 夜間便 B-3（Ruling 124・監査 #5）: 開いた時に選んでおく物。同意（D37・D39・Ruling 82）は既定にしない＝声を選んでおいても「ファイルを作る」は同意を押すまで押せない。
+// ルーティン: 指定（S3 の行の「配る」）があればそれ／無ければ配れるルーティンがちょうど 1 本ならそれ／それ以外は何も選ばない。
+// 声: 指定（S7・S8 の「配る」）があり、それが配れる声ならそれ／無ければ完成した自分の録音がちょうど 1 つならそれ／それ以外は「入れない」。
+// recordedIds は完成した自分の録音だけ（受け取った声は配れない＝既定にもならない。D37）。
+export function shareDefaults(input: { intent: ShareIntent | null; recordedIds: readonly string[]; routineIds: readonly string[] }): { voiceId: string | null; routineIds: string[] } {
+  const { intent, recordedIds, routineIds } = input;
+  const routine = intent?.routineId ?? (routineIds.length === 1 ? routineIds[0]! : null);
+  const voiceId = intent?.voiceId && recordedIds.includes(intent.voiceId) ? intent.voiceId
+    : !intent?.voiceId && recordedIds.length === 1 ? recordedIds[0]!
+    : null;
+  return { voiceId, routineIds: routine ? [routine] : [] };
+}

@@ -19,7 +19,7 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // 開いた行の入力（Ruling 36-3・38・39・50・53）。名前（候補は verified 名だけ）・カウント・カウントの形・主ボタン。
 // 外側の .dc-figure-form には data-group を付けない（入れ子にすると U5 で外側が内側ぶんも数える）。中は 2〜3 グループ:
 // [data-group="figure-form"]＝名前・候補5・カウント欄（7）、[data-group="count-patterns"]＝形（≤8）＋主ボタン（≤9）、
-// 名前が空の追加の行だけ [data-group="figure-names"][data-catalog]＝種目のフィガーの一覧（下の D20 の段落）。
+// 名前が空の行（追加・編集。D70）だけ [data-group="figure-names"][data-catalog]＝種目のフィガーの一覧（下の D20 の段落）。
 // 形は countPatterns(danceId)（プロファイルの数から規則で作る。名前では変わらない＝Ruling 3 との線引き）。タップで欄を置き換える。
 // カウント欄の下には常に「使える文字：…」（Ruling 50 D14）。文字の誤りはこの行が赤くなり、ほかの理由はその下に1行。
 // 理由が無い時だけ、止めない知らせ（まとめて変更の予告 → 小節の注意の短い形。Ruling 52-3）を同じ位置に出す。
@@ -33,7 +33,9 @@ import { COUNTS_MAX, FIGURE_NAME_MAX } from './limits.ts';
 // カウントの形は出さない。タップで名前だけ入れる（counts は触らない・行は閉じない・フォーカスは動かさない）。autofocus は付けない
 // （キーボードが出て一覧が隠れるため）。すでにルーティンにある名前の印は付けない（タップすれば複製の形で分かる）。
 // 同じ名前（sameName）の注意は理由の行ではなく名前の欄の下（sameText）に出すので、ここには持たない。
-// 自動で入れたカウント（D52・Ruling 108）: 追加の行で自動入力の値に手を付けていない間だけ（autoNote＝editor.autoNote()）、
+// 編集の行（D70・ひとみうさ承認 2026-10-15）: 名前が入っていて種目に一覧がある間は、名前の欄の下に「名前を消すと、一覧から選び直せます。」
+// （.dc-hint・ボタンは増やさない＝U4/U5）。同じ名前の注意が出ている間は出さない（注意を優先・行を短く）。名前を消すと追加の行と同じ一覧。
+// 自動で入れたカウント（D52・Ruling 108・D70 で編集の行にも）: 自動入力の値に手を付けていない間だけ（autoNote＝editor.autoNote()）、
 // カウント欄 → 使える文字 → 理由／知らせ → の最後に 1 行（.dc-hint・アイコンなし・操作は増やさない）。aria-describedby は hint reason auto の順。
 // キーは文字列で書く（裸の history は platform-boundary の検査が端末の口と見なす）
 const AUTO_TEXT: Record<AutoCountsFrom, MessageKey> = { 'history': 'countsFromHistory', 'reviewed': 'countsFromReviewed' };
@@ -66,6 +68,8 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, autoNote = n
   const sameCounts = check.same ? formatCounts(danceId, check.same.counts) : '';
   const sameId = `${idPrefix}-same`;
   const renameId = `${idPrefix}-rename`;
+  const repickId = `${idPrefix}-repick`;
+  const repickHint = kind === 'edit' && hasCatalog && draft.name.trim() !== '' && !layout.sameName;
   const sameName = check.same ? figureDisplayName(danceId, check.same.name, translator.locale) : '';
   const sameText = layout.sameName === 'copy' ? translator.t('sameNameCopy', { name: sameName, counts: sameCounts })
     : layout.sameName === 'match' ? translator.t('sameNameExists', { counts: sameCounts }) : null;
@@ -109,7 +113,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, autoNote = n
         <div class="dc-field">
           <div class="dc-field-label" id={`${idPrefix}-name-label`}>{translator.t('figureName')}</div>
           <input ref={nameInput} class="dc-input" type="text" aria-labelledby={`${idPrefix}-name-label`} value={draft.name} maxLength={FIGURE_NAME_MAX}
-            aria-describedby={layout.sameName === 'copy' ? `${sameId} ${renameId}` : layout.sameName ? sameId : undefined}
+            aria-describedby={layout.sameName === 'copy' ? `${sameId} ${renameId}` : layout.sameName ? sameId : repickHint ? repickId : undefined}
             autocomplete="off" onFocus={() => setNameFocused(true)} onBlur={() => setNameFocused(false)}
             onInput={event => onDraft({ name: (event.currentTarget as HTMLInputElement).value })} />
           {sameText && (
@@ -118,6 +122,7 @@ export function FigureForm({ idPrefix, kind, danceId, draft, check, autoNote = n
             </div>
           )}
           {layout.sameName === 'copy' && <div class="dc-hint" id={renameId}>{phrased(translator, 'renameForOtherCount')}</div>}
+          {repickHint && <div class="dc-hint" id={repickId} data-repick-hint>{phrased(translator, 'clearNameToRepick')}</div>}
           {suggestions.length > 0 && (
             <div class="dc-suggestions" role="group" aria-label={translator.t('figureSuggestions')}>
               {suggestions.map(name => <button key={name} type="button" class="dc-suggestion" onClick={() => onDraft({ name })}>{name}</button>)}

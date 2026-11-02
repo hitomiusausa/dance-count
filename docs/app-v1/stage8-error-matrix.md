@@ -23,7 +23,7 @@
 | 15 | 声が 20 を超える（段5） | `voiceLimitReached`（段8 で ja を「声はすでに {count} あるので、受け取れません。…」に） | S10 選ぶ画面の枠 `[data-alert="voice-limit"]` | なし（同じ「ファイルを選ぶ」） | 受け取った声 20 本を入れてから声入りのファイルを選ぶ（実経路＝計画者の発見） | ui:check「S10 声が 20」（段8） | — |
 | 16 | ルーティンが 200 を超える（段5） | `routinesOverLimit` | S10 確認の画面の 1 行 | 「使う」（入る分だけ） | ルーティン 199 本を入れてから 2 本入りのファイルを選ぶ（実経路＝計画者の発見） | ui:check「S10 ルーティン 200 超」（段8） | — |
 | 17 | LINE のアプリ内ブラウザ（段5） | `openedInLine`・`openInSafari` | S10 選ぶ画面の枠 `[data-alert="in-line"]` | 「Safari で開く」（`?openExternalBrowser=1`） | LINE の UA | ui:check「S10 LINE の中」 | LINE で URL を開く（段5 実機確認） |
-| 18 | WakeLock 不可 | `wakeLockTip` | S2 の枠 `[data-alert="wake-tip"]`（1 回だけ） | 「閉じる」 | `?ui-state=wakelock-tip` | ui:check「S2 画面が暗くなる案内」 | iOS の Safari（http）・自動ロック（§14） |
+| 18 | WakeLock 不可 | `wakeLockTip`（iPhone・iPad）／`wakeLockTipOther`（それ以外・夜間便 A-4） | S2 の枠 `[data-alert="wake-tip"]`（1 回だけ） | 「閉じる」 | `?ui-state=wakelock-tip` | ui:check「S2 画面が暗くなる案内」「S2 画面が暗くなる案内（iPhone）」 | iOS の Safari（http）・自動ロック（§14） |
 | 19 | データを消せなかった（段8 で足す。Ruling 99-4・100-1） | `clearAllFailed` | S13 の枠 `[data-alert="clear-failed"]`（「データを全て消す」の上） | なし（同じ「データを全て消す」） | IndexedDB の clear が投げる | ui:check「S13 消せなかった」（段8）・`smoke:routines`（消せた時の実経路） | — |
 
 ## 計画者の注記

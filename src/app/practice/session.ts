@@ -16,6 +16,9 @@ interface CommonOptions {
   metronome: boolean;
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
+  voiceVolume?: number;        // D73 声の倍率 0〜1（画面が practice/volume.ts の volumeGain で直して渡す。省略＝1）
+  clickVolume?: number;        // D73 メトロノームの倍率 0〜1
+  barCounting?: boolean;       // D72 小節を数える（画面が barCountingAvailable で絞って渡す。省略＝オフ）
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
   voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
   voiceOffsetMs: number;       // 声のタイミング（practice/voice-offset.ts の voiceOffsetFor。Ruling 62）
@@ -71,8 +74,10 @@ export interface SessionView {
   voiceKey: string | null;     // 鳴っている語（表示は lib/count-display.ts）
   originalTick: number | null;
   figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
+  leadTick: number | null;     // 夜間便 B-5: はじめの合図の間だけ、最初の語までの tick（負の数。帯の丸を灰で 1 語ずつ進める＝beat-indicator.ts leadStripView。数字は出さない＝Ruling 28）
   notice: SessionNotice;
   program: StripProgram | null; // 鳴らしている型（エンジンに渡した compiled の写し。止まっている間は null。D55・Ruling 114-5）
+  bar: number | null;          // D72: 小節を数えている時だけ、今の小節の番号（1〜8。エンジンの同じ frame から）。合図の間・オフの時は null
 }
 
 export interface AudioLike { state: string; currentTime: number }
@@ -83,13 +88,16 @@ export interface EngineFrame {
   countIn?: boolean;
   listening?: boolean;
   originalTick?: number | null;
+  leadTick?: number | null;    // はじめの合図の間だけ。最初の語までの tick＝負の数（エンジンの同じ frame。夜間便 B-5）
+  bar?: number;                // D72: 小節を数えている時だけ
 }
 
 export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
-  setVolumes?(music: number, voice: number): void;
+  // 音楽のエンジンは (music, voice)、カウントだけのエンジンは D73 の { voice, click }（鳴っている最中でも止めずに効く）
+  setVolumes?(volumes: number | { voice?: number; click?: number }, voice?: number): void;
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -114,7 +122,7 @@ export interface SessionHints {
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
-  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none', program: null
+  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, leadTick: null, notice: 'none', program: null, bar: null
 }) as SessionView;
 
 export class PracticeSession<A extends AudioLike, V> {
@@ -163,6 +171,11 @@ export class PracticeSession<A extends AudioLike, V> {
     this.generation += 1;
     this.halt();
     this.update({ ...IDLE_VIEW, notice: this.view.notice });
+  }
+
+  // D73: 大きさのスライダー。再生を止めずにエンジンの出口の倍率だけを替える（次の ▶ は options の値で始まる）
+  setVolumes(volumes: { voice?: number; click?: number }): void {
+    if (this.engineKind !== 'music') this.engine?.setVolumes?.(volumes);   // 音楽のエンジンは setMusicVolumes から
   }
 
   dismissNotice(): void {
@@ -237,7 +250,8 @@ export class PracticeSession<A extends AudioLike, V> {
         voiceOffsetMs: options.voiceOffsetMs,
         wordOffsetsMs: wordOffsetsFor(options.voice),
         ...(options.kind === 'music' ? { musicAsset, repetitions: options.repetitions, countEnabled: options.countEnabled,
-          musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats } : {})
+          musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats }
+          : { barCounting: options.barCounting === true, voiceVolume: options.voiceVolume ?? 1, clickVolume: options.clickVolume ?? 1 })
       });
     } catch {
       void lockPromise.then(lock => lock?.release());
@@ -298,7 +312,9 @@ export class PracticeSession<A extends AudioLike, V> {
       countIn, listening: frame.listening === true,
       voiceKey: countIn ? null : frame.event?.voiceKey ?? null,
       originalTick: countIn ? null : frame.originalTick ?? null,
-      figureIndex: countIn ? null : frame.event?.figureIndex ?? null
+      figureIndex: countIn ? null : frame.event?.figureIndex ?? null,
+      leadTick: countIn ? frame.leadTick ?? null : null,
+      bar: countIn ? null : frame.bar ?? null
     });
   }
 

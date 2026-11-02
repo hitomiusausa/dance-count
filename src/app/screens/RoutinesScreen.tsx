@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
-import { BackButton } from '../components/BackButton.tsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import { NoticeBox } from '../practice/controls.tsx';
 import { danceName } from '../i18n/index.ts';
@@ -48,8 +48,7 @@ export function RoutinesScreen({ mode, uiState }: { mode: 'use' | 'make'; uiStat
 
   if (mode === 'use') return (
     <main class="dc-screen dc-routines-use" data-screen="U2">
-      <BackButton screen="U2" />
-      <h1 class="dc-heading">{translator.t('routinesTitle')}</h1>
+      <ScreenHeading screen="U2" title={translator.t('routinesTitle')} info="infoRoutines" />
       <UpdateBanner />
       <a class="dc-button dc-button--secondary dc-wide dc-receive-link" href={buildHash({ screen: 'S10', params: {} })}>
         <span>{translator.t('receiveFromFile')}</span>
@@ -88,8 +87,7 @@ export function RoutinesScreen({ mode, uiState }: { mode: 'use' | 'make'; uiStat
 
   return (
     <main class="dc-screen" data-screen="M1">
-      <BackButton screen="M1" />
-      <h1 class="dc-heading">{translator.t('makeRoutines')}</h1>
+      <ScreenHeading screen="M1" title={translator.t('makeRoutines')} info="infoMakeRoutines" />
       {/* 枠は同時に 1 つ（Ruling 30）: 知らせが出ている間は更新の帯を引っ込め、閉じたら戻す（段7 最終レビュー m2） */}
       {!deleteFailed && <UpdateBanner />}
       <NoticeBox notice={deleteFailed ? 'save-failed' : 'none'} onClose={() => setDeleteFailed(false)} />

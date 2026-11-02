@@ -138,16 +138,35 @@ test('I1: S0 → U2 → S10 → "Choose a dance" (U1) → tab U2 → "‹ Cover"
   assert.equal(m.entries[m.index], '#/');
 });
 
-test('T1: S7 "Record more" → S8 → finish (replace S7) leaves no dead back tap', () => {
+// D75（ひとみうさ承認 2026-10-15）: S8 の「完了」は M0（作る）へ。M0 から来た時は 1 つ戻る（M0 を 2 つ並べない）
+test('D75: M0 → S8 → "Done" (replace M0) goes back to M0 and "‹ Cover" is one tap', () => {
   let m = open('#/');
-  m = push(m, '#/settings');
-  m = push(m, '#/voices');
+  m = push(m, '#/make');
   m = push(m, '#/voices/record');
-  m = replace(m, '#/voices');                // 完成 → S7
-  assert.deepEqual(realStack(m), ['#/', '#/settings', '#/voices']);
+  m = replace(m, '#/make');                  // 完成 →「完了」→ M0
+  assert.deepEqual(realStack(m), ['#/', '#/make']);
   assert.deepEqual(m.visited, realStack(m));
-  m = back(m);                               // 「‹」1 回で S6
-  assert.equal(m.entries[m.index], '#/settings');
+  m = backToCover(m);                        // M0 の「‹ 表紙」1 回で表紙
+  assert.equal(m.entries[m.index], '#/');
+});
+
+test('D75: S8 opened directly → "Done" replaces it with M0 (no phantom entry)', () => {
+  let m = open('#/voices/record');
+  m = replace(m, '#/make');
+  assert.deepEqual(realStack(m), ['#/make']);
+  assert.deepEqual(m.visited, ['#/make']);
+});
+
+// D75: 「配る ›」は S8 を S9 に置き換える。S9 の「‹ 戻る」は来た所（M0）
+test('D75: M0 → S8 → "Share ›" (replace S9) → back lands on M0', () => {
+  let m = open('#/');
+  m = push(m, '#/make');
+  m = push(m, '#/voices/record');
+  m = replace(m, '#/share');
+  assert.deepEqual(realStack(m), ['#/', '#/make', '#/share']);
+  assert.deepEqual(m.visited, realStack(m));
+  m = back(m);
+  assert.equal(m.entries[m.index], '#/make');
 });
 
 test('T1: an invalid S5 opened from U2 redirects to U2 without a duplicate entry', () => {

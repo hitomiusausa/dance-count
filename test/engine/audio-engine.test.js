@@ -107,3 +107,34 @@ test('display latency shifts only the frame, never the schedule', () => {
     globalThis.cancelAnimationFrame = savedCancel;
   }
 });
+
+// 夜間便 B-5（Ruling 124・監査 #8）: はじめの合図の間の frame は「最初の語までの tick」（leadTick・負の数）を持つ。同じ時計から出す（第 2 の時計なし）
+test('count-in frames carry the tick since the count-in began; the schedule is unchanged', () => {
+  const savedRaf = globalThis.requestAnimationFrame;
+  const savedCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = () => 1;
+  globalThis.cancelAnimationFrame = () => {};
+  try {
+    const context = new FakeAudioContext();
+    const frames = [];
+    const engine = new PracticeAudioEngine(context, { voicePack: fakeVoicePack(), onFrame: frame => frames.push(frame) });
+    const patternStart = engine.start({ compiled: compileRhythm({ danceId: 'waltz', counts: '123' }), bpm: 60, countInBars: 1 });   // 1 拍 1 秒・合図 3 拍
+    const leadStart = patternStart - 3;
+    for (const [at, beat] of [[leadStart, -3], [leadStart + 1.5, -1.5], [leadStart + 2.9, -0.1]]) {
+      context.currentTime = at;
+      engine.frame();
+      const frame = frames.at(-1);
+      assert.equal(frame.countIn, true);
+      assert.equal(frame.originalTick, null);
+      assert.ok(Math.abs(frame.leadTick - beat * 960) < 1e-6, `${at}: ${frame.leadTick}`);
+    }
+    context.currentTime = patternStart + 0.1;
+    engine.frame();
+    assert.equal(frames.at(-1).countIn, false);
+    assert.equal(frames.at(-1).leadTick, undefined);
+    engine.stop();
+  } finally {
+    globalThis.requestAnimationFrame = savedRaf;
+    globalThis.cancelAnimationFrame = savedCancel;
+  }
+});

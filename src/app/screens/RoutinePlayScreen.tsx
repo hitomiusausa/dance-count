@@ -9,11 +9,14 @@ import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { honorific } from '../lib/honorific.ts';
-import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
+import { barCountingAvailable } from '../practice/bar-count.ts';
+import { tempoText } from '../practice/tempo.ts';
+import { volumeGain } from '../practice/volume.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -25,6 +28,7 @@ import { useI18n } from '../state/i18n.ts';
 import { useRoutines } from '../state/routines.ts';
 import { useSettings } from '../state/settings.ts';
 import { DEFAULT_VOICE, voiceDisplayName, type VoiceSelection } from '../voices/selection.ts';
+import { HEAD_FULL_MAX, TeacherNote } from '../components/TeacherNote.tsx';
 import { usePlaybackVoice } from '../voices/use-playback-voice.ts';
 
 interface Range { startIndex: number; endIndex: number }
@@ -61,9 +65,15 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, track: null,
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), clickVolume: volumeGain(next.clickVolume), barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
+  };
+
+  // 夜間便 B-1（Ruling 124）: ▶ で鳴らしたら「前回」をこのルーティンにする（トップ・U1 の前回カード。開いただけでは替えない）
+  const rememberLast = () => {
+    const now = latest.current.settings;
+    if (now.lastKind !== 'routine' || now.lastRoutineId !== routine.id) update({ lastKind: 'routine', lastRoutineId: routine.id });
   };
 
   // S3 の ▶ から来た時だけ、声が決まった時点ですぐ鳴らす（一回限りの印。Ruling 32・40・61-6）。止めるのは usePracticeSession。
@@ -71,6 +81,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     if (autoplayChecked.current || !playback.voice) return;
     autoplayChecked.current = true;
     if (takeAutoplay({ kind: 'routine', id: routine.id })) {
+      rememberLast();
       try { void session.play(optionsFrom(latest.current.settings, latest.current.range, playback.voice)); } catch { /* resolve 済みのルーティン。万一でも止まったまま */ }
     }
   }, [session, playback.voice]);
@@ -115,10 +126,23 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     restart(latest.current.settings, next);
   };
 
+  // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
+  const volumeKey = (kind: VolumeKind) => (kind === 'voice' ? 'voiceVolume' : 'clickVolume') as 'voiceVolume' | 'clickVolume';
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  const commitVolume = (kind: VolumeKind, percent: number) => {
+    const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
+    latest.current.settings = { ...latest.current.settings, ...patch };
+    update(patch);
+    session.setVolumes({ [kind]: volumeGain(percent) });
+  };
+
   const togglePlay = () => {
     setForcedDismissed(true);
     if (isPlaying()) session.stop();
-    else void start(latest.current.settings, latest.current.range);
+    else {
+      rememberLast();
+      void start(latest.current.settings, latest.current.range);
+    }
   };
 
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
@@ -126,15 +150,21 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   const sounding = view.playing && !view.countIn && view.figureIndex !== null ? view.figureIndex : null;
   const shownIndex = sounding ?? range.startIndex;
+  // 夜間便 B-4（Ruling 124・監査 #12）: 鳴っている間だけ「次: {次のフィガー}」。figureIndex（同じ frame）だけから出す。
+  // 範囲の最後のフィガーでは、繰り返しオンなら範囲の先頭・オフなら出さない（1 本だけの範囲で次も同じなら出さない）
+  const nextIndex = sounding === null ? null : sounding < range.endIndex ? sounding + 1 : settings.loop ? range.startIndex : null;
+  const nextFigure = nextIndex !== null && nextIndex !== sounding ? routine.figures[nextIndex] : undefined;
   const shownFigure = routine.figures[shownIndex]!;
   const startCounts = routine.figures[range.startIndex]!.counts;
   const idleText = view.playing ? '' : formatCounts(routine.danceId, startCounts).split(' ')[0] ?? '';
   // D55: 帯は鳴っているフィガーの型（figureIndex で絞り、ルーティン全体の tick で点ける）。止まっている間・はじめの合図の間は始めのフィガーの型を表示だけ
   // 止まっている間の帯は種目と始めのフィガーのカウントが替わった時だけ作る（はじめの合図の間に毎コマ compileRhythm しない。最終レビュー m1）
-  const idleStrip = useMemo(() => stripView(stripCells(idleProgram(routine.danceId, startCounts)), null), [routine.danceId, startCounts]);
+  const idleCells = useMemo(() => stripCells(idleProgram(routine.danceId, startCounts)), [routine.danceId, startCounts]);
+  const idleStrip = useMemo(() => stripView(idleCells, null), [idleCells]);
+  // 夜間便 B-5: はじめの合図の間は始めのフィガーの型の丸を灰で 1 語ずつ（leadStripView。数字は出さない）
   const strip = view.program && sounding !== null
     ? stripView(stripCells(view.program, sounding), view.originalTick)
-    : idleStrip;
+    : view.playing && view.countIn ? leadStripView(idleCells, view.leadTick) : idleStrip;
   const playing = view.playing || view.starting;
   const dance = danceName(routine.danceId, locale);
   const subtitle = routine.receivedFrom
@@ -149,22 +179,24 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
         <div class="dc-area-main">
           <header class="dc-playhead">
             <h1 data-ellipsis title={routine.name} aria-label={routine.name}>{routine.name}</h1>
-            <small data-ellipsis>{subtitle}</small>
+            {/* D68: 先生からのひとことがあれば、副題（種目・作成者）の 1 行の代わりに吹き出しの 1 行（初期表示の操作を押し下げない。ひとみうさ 2026-10-14「くわしくを開かなくても見える所に」） */}
+            {routine.receivedFrom?.note ? <TeacherNote note={routine.receivedFrom.note} head /> : <small data-ellipsis>{subtitle}</small>}
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting}>
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} bar={view.bar}>
             <div class={`dc-figure-now${sounding !== null ? ' dc-figure-now--on' : ''}`} data-figure-now data-ellipsis>
               <span class="dc-figure-now-pos">{shownIndex + 1} / {routine.figures.length}</span> {figureName(shownFigure.name)}
             </div>
+            {nextFigure && <div class="dc-figure-next" data-figure-next data-ellipsis>{translator.t('nextFigure', { name: figureName(nextFigure.name) })}</div>}
           </CountBox>
         </div>
         <div class="dc-area-controls">
-          <SpeedChoices presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
+          <SpeedChoices danceId={routine.danceId} presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
             onMetronome={() => change({ metronome: !current().metronome })}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <MusicEntry source={{routineId:routine.id}} range={range} onLeave={()=>session.stop()}/>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
@@ -177,13 +209,18 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
                   onStep={delta => { const now = latest.current.range; const end = now.endIndex + delta; changeRange({ startIndex: Math.min(now.startIndex, end), endIndex: end }); }} />
               </div>
             </div>
-            <FineSpeed idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
+            <FineSpeed danceId={routine.danceId} idPrefix="dc-s5" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
-            <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
-            <VoiceOffsetRow idPrefix="dc-s5" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            <PlaySwitches idPrefix="dc-s5" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
+              barCounting={barCountingAvailable(routine.danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
+            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume, click: settings.clickVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <VoiceOffsetRow idPrefix="dc-s5" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            </SoundGroup>
           </MoreOptions>
         </div>
         <div class="dc-area-list">
+          {/* D68: 見出しの下の 1〜2 行で省略される長さの時だけ、フィガーの一覧の上に全文を小さく（見返せる） */}
+          {routine.receivedFrom?.note && [...routine.receivedFrom.note].length > HEAD_FULL_MAX && <TeacherNote note={routine.receivedFrom.note} compact />}
           <h2 class="dc-list-heading">{translator.t('figuresHeading')}</h2>
           <div ref={list} class="dc-list dc-play-list" role="list" data-list>
             {routine.figures.map((figure, index) => {
