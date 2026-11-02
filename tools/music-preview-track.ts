@@ -20,6 +20,9 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
   const settings=definition??{id:'paper-umbrella',title:'Paper Umbrella',danceId:'rumba' as const};
   if(!/^[a-z0-9-]+$/.test(settings.id)||!settings.title.trim())throw new Error('Invalid track identity');
   const profile=getDanceProfile(settings.danceId),meter=profile.beatsPerBar,counts=profile.templates[0];
+  // サンバ（2/4）は解析では 4 拍のまとまり（Beat This の小節頭は 2 小節ごと）。まとまりの頭は検出した小節頭で、サンバの小節の頭でもある。
+  // 2 拍目ごとの小節頭を補って作ることはしない（区間の頭と数え始めは検出した小節頭だけ）。2026-11-02 Samba_Low_First_birds で実測: 4 拍 59・5 拍 5・1 拍 1
+  const analysisBeatsPerBar=settings.danceId==='samba'?meter*2:meter;
   // ルンバ・チャチャチャは曲の拍型「2・3・4・1」に沿って 2 拍目から。ワルツ・タンゴ・サンバは小節の 1 拍目から
   const countStartBeat=settings.danceId==='rumba'||settings.danceId==='chacha'?1:0;
   if (analysis.schemaVersion!==1 || analysis.sourceSha256!==sourceSha256 || !/^[a-f0-9]{64}$/.test(analysis.analysisId)) {
@@ -31,8 +34,8 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
   const length=6;
   for (let i=0;i<=analysis.bars.length-length;i++) {
     const bars=analysis.bars.slice(i,i+length);
-    if (bars.some(bar=>bar.status!=='candidate'||bar.issues.length||bar.beatsPerBar!==meter||
-      !Number.isInteger(bar.startBeat)||!Number.isInteger(bar.endBeat)||bar.endBeat-bar.startBeat!==meter||
+    if (bars.some(bar=>bar.status!=='candidate'||bar.issues.length||bar.beatsPerBar!==analysisBeatsPerBar||
+      !Number.isInteger(bar.startBeat)||!Number.isInteger(bar.endBeat)||bar.endBeat-bar.startBeat!==analysisBeatsPerBar||
       !Number.isFinite(bar.meanBeatActivation)||!Number.isFinite(bar.downbeatActivation)||
       bar.startBeat<0||bar.endBeat>=analysis.beatsMs.length||
       !analysis.downbeatsMs.includes(analysis.beatsMs[bar.startBeat]!))) continue;

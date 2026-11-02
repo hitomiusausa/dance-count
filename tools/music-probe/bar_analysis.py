@@ -18,8 +18,8 @@ def checked_times(values, duration, name):
 
 
 def inspect_bars(beats, downbeats, beat_activation, downbeat_activation, duration, fps=50, expected_beats_per_bar=4):
-    if expected_beats_per_bar not in [2,3,4]:   # 2 はサンバ（2/4）
-        raise ValueError('Expected meter must have two, three or four beats')
+    if expected_beats_per_bar not in [3,4]:
+        raise ValueError('Expected meter must have three or four beats')
     beats = checked_times(beats, duration, 'beats')
     downbeats = checked_times(downbeats, duration, 'downbeats')
     if any(len(a) <= round(beats[-1]*fps) for a in [beat_activation, downbeat_activation]):

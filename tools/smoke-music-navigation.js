@@ -84,8 +84,8 @@ try{
  // Each root, contextual picker and player: short phone, enlarged-text width, desktop, JA/EN.
  for(const locale of ['ja-JP','en']){
   await page.evaluate(async locale=>{const s=await(await import('/src/app/platform/storage.ts')).openAppStorage();await s.put('settings',{uiLocale:locale,hints:{firstPlaybackDone:true}},'app');},locale);await page.reload();
-  for(const hash of ['#/use','#/use/routines','#/use/music','#/use/music/for/figure/waltz/chasse-from-pp','#/use/music/waltz-33445d26a14c/figure/waltz/chasse-from-pp']){
-   await page.goto(new URL(hash,base).href);await page.waitForSelector('main h1');if(hash.includes('33445'))await page.waitForSelector('[data-figure-now]');else if(hash==='#/use/music')await page.waitForSelector('[data-music-genre]');
+  for(const hash of ['#/use','#/use/routines','#/use/music','#/use/music/for/figure/waltz/chasse-from-pp',`#/use/music/${catalog.find(track=>track.danceId==='waltz').id}/figure/waltz/chasse-from-pp`]){
+   await page.goto(new URL(hash,base).href);await page.waitForSelector('main h1');if(/^#\/use\/music\/waltz-/.test(hash))await page.waitForSelector('[data-figure-now]');else if(hash==='#/use/music')await page.waitForSelector('[data-music-genre]');
    for(const [width,height]of [[375,548],[250,445],[1280,900]]){
     await page.setViewportSize({width,height});await page.evaluate(async()=>{await document.fonts.ready;scrollTo(0,0);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     const measure=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,small:[...document.querySelectorAll('[data-nav] a,[data-back],[data-track]')].filter(e=>{const r=e.getBoundingClientRect();return r.width<48||r.height<48;}).length}));ensure(!measure.overflow&&!measure.small,`layout ${locale}/${hash}/${width}: ${JSON.stringify(measure)}`);evidence.layouts.push({locale,hash,width,...measure});

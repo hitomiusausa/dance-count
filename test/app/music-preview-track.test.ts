@@ -97,13 +97,21 @@ test('the level comes from the second word of the file name and the length from 
   assert.equal('level' in buildMusicPreviewTrack(hash,analyzed(),{id:'tango-none',title:'Tango',danceId:'tango',level:null}),false);
 });
 
-test('samba songs use two measured beats per bar and start the count on bar one',()=>{
-  const data=analyzed();data.bars=Array.from({length:200},(_,i)=>({startBeat:1+i*2,endBeat:3+i*2,beatsPerBar:2,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+test('samba songs are checked in the measured four-beat groups (two samba bars) and count in 2/4 from a detected downbeat',()=>{
+  const data=analyzed();data.bars=Array.from({length:100},(_,i)=>({startBeat:1+i*4,endBeat:5+i*4,beatsPerBar:4,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
   data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
   const track=buildMusicPreviewTrack(hash,data,{id:'samba-test',title:'Samba',danceId:'samba',level:'low'});
   assert.equal(track.beatsPerBar,2);assert.equal(track.anchorTick,0);
   for(const section of track.sections){
     assert.equal(section.anchorTick,section.startTick,'the count starts on the downbeat');
+    assert.ok(data.downbeatsMs.includes(track.beatsMs[section.startTick/960]!),'sections start on a detected downbeat');
+    assert.equal((section.endTick-section.startTick)/960,24,'six measured groups = twelve samba bars');
     const plan=compileMusicPlan(track,section.id);assert.ok(plan.events.length>0);
   }
+});
+
+test('a samba analysis with two-beat bars is not accepted as measured four-beat groups',()=>{
+  const data=analyzed();data.bars=Array.from({length:200},(_,i)=>({startBeat:1+i*2,endBeat:3+i*2,beatsPerBar:2,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  assert.throws(()=>buildMusicPreviewTrack(hash,data,{id:'samba-two',title:'Samba',danceId:'samba'}),/No consistent/);
 });

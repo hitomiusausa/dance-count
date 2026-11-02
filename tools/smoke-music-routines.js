@@ -12,7 +12,9 @@ const review=(id,program)=>new URL(`/__music/review?track=${id}&program=${progra
 try{
  const context=await browser.newContext({viewport:{width:375,height:667},locale:'ja-JP',acceptDownloads:true});
  const page=await context.newPage();page.on('pageerror',error=>evidence.errors.push(error.message));
- await page.goto(review('waltz-33445d26a14c','sample-waltz'));
+ // ワルツは入れ替わることがある（2026-11-02 Moon Steps）。カタログの最初のワルツで確かめる
+ const waltzId=(await(await fetch(new URL('/__music/catalog',base))).json()).find(track=>track.danceId==='waltz')?.id;ensure(waltzId,'no waltz in the catalog');
+ await page.goto(review(waltzId,'sample-waltz'));
  await page.waitForFunction(()=>waveformReview.plan?.routineEndTick!==undefined);
  const tracks=await page.evaluate(()=>waveformReview.catalog.filter(t=>t.id!=='paper-umbrella'));
  // All five provided songs: actual realtime frames from the production audio engine.

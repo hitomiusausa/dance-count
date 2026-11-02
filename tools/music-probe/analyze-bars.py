@@ -65,7 +65,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path)
     parser.add_argument('--output', type=Path, default=Path('output/music-probe'))
-    parser.add_argument('--beats-per-bar',type=int,choices=[2,3,4],default=4)
+    parser.add_argument('--beats-per-bar',type=int,choices=[3,4],default=4)
     parser.add_argument('--checkpoint', type=Path, help='Reuse an already verified final0 model file')
     parser.add_argument('--device', choices=['auto','cpu','mps'], default='auto')
     args = parser.parse_args()
