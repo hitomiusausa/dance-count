@@ -68,15 +68,15 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ 切り欠き・時計の下に部品が入らない（上の安全領域）・いつもライト表示
 - ✅ アイコン（うさぎのワルツ・1024・透明なし。`tools/make-icons.js --only ios`）
 - ✅ 起動画面（色だけ・起動の殻と同じ紺）
-- ✅ マイクの使い道（英語・日本語）・暗号化の申告・プライバシーの申告（`PrivacyInfo.xcprivacy`）
+- ✅ マイクの使い道（英語・日本語）・暗号化の申告・プライバシーの申告（`PrivacyInfo.xcprivacy`。Capacitor 自身の申告も「追跡なし・集めるデータなし・理由の要る API なし」）
 - ✅ アプリの中から外への通信 0 件（全画面と再生で実測）
 - ✅ 音楽の一式の仕組み（`npm run music:pack`・`DC_MUSIC_PACK`・一式が無いリリースは失敗）
 - ✅ 音楽が拍より約 21〜23ms 早く鳴っていたのを修正（§1-3）
 - 🍎 消音スイッチがオンでも鳴るか（`AppDelegate` の `.playback`）
 - 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
 - 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
-- 🍎 画面が暗くならないか（WKWebView の Wake Lock。使えなければアプリの側で点けたままにする）
-- 🍎 問い合わせのメール（`mailto:`）がメールのアプリで開くか
+- 🍎 画面が暗くならないか: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。実機で確かめ、動かなければ iOS 側で再生中だけ `isIdleTimerDisabled` を立てる小さなプラグインを足す（ここでは Xcode でビルドを確かめられないので未着手）
+- ✅ 外のリンクと `mailto:`: Capacitor 8.5.3 の `WebViewDelegationHandler.swift` は、アプリの外への移動を止めて `UIApplication.shared.open` に渡す（メールはメールのアプリ・Web は Safari）。🍎 実機で一度押して確かめる
 - 🍎 配る・受け取る（共有シート・ファイルから開く）。`.dancecount.txt` をアプリで開けるようにするか ★
 - 🍎 イヤホン・Bluetooth・電話や Siri の割り込みの後の再開
 - ⬜ 使わなくなった `LaunchScreen.storyboard` と `Splash` の画像を消すか（害は無い）
@@ -93,7 +93,7 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ `npm run typecheck` OK・`ios:build` OK
 - ✅ 画面の再現（アプリの中・日英 40 画面ずつ）: iPhone 12 mini・SE・16 Pro Max・iPad Air 縦横で、横のはみ出し 0・切り欠きの下の部品 0
 - ⬜ `ui:check` をこの版で通す（実行中）
-- 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面
+- 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面: `tools/ios-sim-check.sh`（端末を探す・無ければ作る → 署名なしでビルド → 起動 → ライトとダークで撮る。まだ Mac で一度も動かしていない）
 - 🍎 TestFlight で、ひとみうさ・ダンス仲間に試してもらう
 - ⬜ 確認されていないルーティン・フィガーの名前を、確認済みのように出していないかの最終確認
 
@@ -117,7 +117,8 @@ npm install
 ffmpeg -filters | grep rubberband
 npm run music:pack        # output/music-probe/ の台帳から output/music-pack/ を作る
 npm run ios:build         # 公開ビルド → ios/ へ写す（一式が無いと止まる）
-npm run ios:open          # Xcode が開く → Signing のチームを KUGA K.K. に → シミュレーター（iPhone 12 mini）で ▶
+tools/ios-sim-check.sh    # iPhone 12 mini のシミュレーターでビルド・起動・撮影（build/ios/screens/）
+npm run ios:open          # Xcode が開く → Signing のチームを KUGA K.K. に → 実機で ▶
 ```
 
 ## 4. 確認した値（2026-11-02〜03、Linux のクラウド環境）
