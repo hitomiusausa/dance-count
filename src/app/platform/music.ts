@@ -2,12 +2,17 @@ import type { MusicAsset, MusicTrack } from '../music/model.ts';
 import { compileMusicPlan } from '../../engine/music-plan.js';
 import type { MusicOptions } from '../practice/session.ts';
 
+// 開発の試聴（tools/music-dev-plugin.ts の /__music/）の切り替えの正本。定数にしておくと公開ビルドで false に畳まれ、
+// /__music/ の道が成果物から消える（関数の呼び出しのままだと畳まれずに残り、check-dist が落ちる＝2026-11-02 の試聴ボタンで起きた）。
+// import.meta.env は Vite だけが入れる（Node のテストでは無い）ので、無ければ false。
+const MUSIC_PREVIEW = Boolean(import.meta.env && import.meta.env.DEV && import.meta.env.VITE_MUSIC_PREVIEW === '1');
+
 export function musicPreviewEnabled(): boolean {
-  return import.meta.env.DEV && import.meta.env.VITE_MUSIC_PREVIEW === '1';
+  return MUSIC_PREVIEW;
 }
 
 export async function loadMusicCatalog(): Promise<MusicTrack[]> {
-  if (import.meta.env.DEV && import.meta.env.VITE_MUSIC_PREVIEW === '1') {
+  if (MUSIC_PREVIEW) {
     const response=await fetch('/__music/catalog',{cache:'no-store'});
     if(!response.ok) throw new Error('Music catalog is unavailable');
     const tracks: MusicTrack[]=await response.json();
@@ -23,7 +28,7 @@ export async function loadMusicCatalog(): Promise<MusicTrack[]> {
 
 // 曲を選ぶ画面の試聴: 「はじめ」の区間を元の速さで（練習と同じ切り出しを使う＝別の音源を作らない）
 function musicSampleUrl(track: MusicTrack): string | null {
-  if (!musicPreviewEnabled()) return null;
+  if (!MUSIC_PREVIEW) return null;
   const section = track.sections[0];
   return section ? `/__music/audio/${encodeURIComponent(track.id)}/${encodeURIComponent(section.id)}/1` : null;
 }
@@ -47,7 +52,7 @@ export function playMusicSample(track: MusicTrack, onEnd: (failed: boolean) => v
 // Keep only the most recently decoded segment per AudioContext (bounded memory).
 const decoded = new WeakMap<BaseAudioContext,{key:string;promise:Promise<MusicAsset>}>();
 export function loadMusicAsset(audio: BaseAudioContext, options: Pick<MusicOptions,'track'|'sectionId'|'rate'>): Promise<MusicAsset> {
-  if (import.meta.env.DEV && import.meta.env.VITE_MUSIC_PREVIEW === '1') {
+  if (MUSIC_PREVIEW) {
     compileMusicPlan(options.track,options.sectionId,options.rate);
     const key=`${options.track.id}/${options.track.revision}/${options.sectionId}/${options.rate}`;
     const known=decoded.get(audio);if(known?.key===key)return known.promise;

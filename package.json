@@ -12,6 +12,8 @@
     "preview": "vite preview",
     "deploy:cf": "RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && npx -y wrangler@latest deploy",
     "deploy:preview": "DC_PREVIEW=1 RELEASE=1 PUBLIC_APP_URL=https://dance-count-preview.hitomiusausa.workers.dev npm run build && npx -y wrangler@latest deploy -c wrangler.preview.jsonc",
+    "ios:build": "RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
+    "ios:open": "cap open ios",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
     "test": "node --test \"test/**/*.test.{js,ts}\"",
     "legacy": "python3 -m http.server 4173",
@@ -50,6 +52,8 @@
     "smoke:music:navigation": "node tools/smoke-music-navigation.js"
   },
   "dependencies": {
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@fontsource/inter": "5.3.0",
     "@fontsource/noto-sans-jp": "5.3.0",
     "preact": "10.29.8",
@@ -57,6 +61,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@capacitor/cli": "8.5.3",
     "@preact/preset-vite": "2.10.6",
     "@types/node": "24.19.2",
     "budoux": "0.9.3",
