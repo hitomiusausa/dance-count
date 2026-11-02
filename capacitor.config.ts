@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // iOS アプリ（App Store 版）の殻（docs/app-store/RELEASE-PLAN.md）。中身は Web 版と同じ dist（vite の base:'./'＝仕様 §10「Capacitor 前提」）。
 // 端末の違いは src/app/platform/ だけで吸収する（Ruling 1）。appId は App Store Connect に登録する Bundle ID と一致させる（登録後は変えられない）。
 const config: CapacitorConfig = {
-  appId: 'jp.dancemap.count',
+  appId: 'jp.dancemap.count.app',
   appName: 'Dance Count',
   webDir: 'dist',
   ios: {
