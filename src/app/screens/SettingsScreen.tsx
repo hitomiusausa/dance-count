@@ -5,6 +5,7 @@ import type { IconName } from '../components/icon-names.ts';
 import { UpdateBanner } from '../components/UpdateBanner.tsx';
 import type { AppLocale, MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
+import { isNativeApp } from '../platform/native.ts';
 import { buildHash, type ScreenId } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 
@@ -22,6 +23,7 @@ const GROUPS: Array<{ group: string; heading: MessageKey; rows: Array<{ screen: 
   ] }
 ];
 
+// App Store 版のアプリの中では「ホーム画面に追加する」（S12）の行を出さない（アプリは追加の要らない形。docs/app-store/RELEASE-PLAN.md）。
 // S6 設定（仕様 §4 S6・Ruling 60-8・98・D56 Ruling 115-4）。表紙の行から来る（左上「‹ 表紙」・下タブ無し）。上から: 言語（切替は即保存。Ruling 26）・
 // 「困った時は」（S12・S11）・「プライバシー・アプリについて」（→ S13。版を右に）＝主要操作 3。
 // 「声」は再生画面の声チップから（D56-(3)）、「先生の方へ」（録音・配る）は表紙の「作る」へ移した（Ruling 115-4）
@@ -45,7 +47,7 @@ export function SettingsScreen() {
           );
         })}
       </div>
-      {GROUPS.map(({ group, heading, rows }) => (
+      {GROUPS.map(({ group, heading, rows }) => ({ group, heading, rows: rows.filter(row => !(row.screen === 'S12' && isNativeApp())) })).map(({ group, heading, rows }) => (
         <div key={group} class="dc-settings-group" role="group" aria-labelledby={`dc-s6-${group}`} data-group={group}>
           <h2 class="dc-field-label dc-settings-section" id={`dc-s6-${group}`}>{translator.t(heading)}</h2>
           {rows.map(row => (
