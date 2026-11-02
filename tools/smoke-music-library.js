@@ -11,7 +11,9 @@ try{
  const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto(base);const tracks=await page.evaluate(async()=>await(await fetch('/__music/catalog')).json());
  const samples=tracks.filter(track=>track.id!=='paper-umbrella');
- ensure(samples.length===6,'expected six provided samples');
+ // 提供曲の数は music/ の中身で変わる（2026-11-02 にサンバを追加）。library-index.json の曲がすべてカタログに出ることを見る
+ const index=JSON.parse(await fs.readFile(path.join('output/music-probe/library-index.json'),'utf8'));
+ ensure(samples.length===index.tracks.length,`expected ${index.tracks.length} provided samples, got ${samples.length}`);
  ensure(samples.filter(track=>track.danceId==='waltz').length===1,'waltz sample missing');
  ensure(samples.filter(track=>track.danceId==='tango').length===1,'tango sample missing');
  const tango=samples.find(track=>track.danceId==='tango');

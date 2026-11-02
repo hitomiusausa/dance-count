@@ -21,6 +21,29 @@ export async function loadMusicCatalog(): Promise<MusicTrack[]> {
   return [];
 }
 
+// 曲を選ぶ画面の試聴: 「はじめ」の区間を元の速さで（練習と同じ切り出しを使う＝別の音源を作らない）
+function musicSampleUrl(track: MusicTrack): string | null {
+  if (!musicPreviewEnabled()) return null;
+  const section = track.sections[0];
+  return section ? `/__music/audio/${encodeURIComponent(track.id)}/${encodeURIComponent(section.id)}/1` : null;
+}
+export function canPlayMusicSample(track: MusicTrack): boolean {
+  return musicSampleUrl(track) !== null;
+}
+export interface MusicSamplePlayback { stop(): void }
+// 鳴らし終わり・失敗は onEnd(failed) で知らせる。stop() の後は知らせない
+export function playMusicSample(track: MusicTrack, onEnd: (failed: boolean) => void): MusicSamplePlayback | null {
+  const url = musicSampleUrl(track);
+  if (!url) return null;
+  const element = new Audio(url);
+  let active = true;
+  const finish = (failed: boolean) => { if (!active) return; active = false; element.pause(); onEnd(failed); };
+  element.onended = () => finish(false);
+  element.onerror = () => finish(true);
+  element.play().catch(() => finish(true));
+  return { stop() { active = false; element.pause(); } };
+}
+
 // Keep only the most recently decoded segment per AudioContext (bounded memory).
 const decoded = new WeakMap<BaseAudioContext,{key:string;promise:Promise<MusicAsset>}>();
 export function loadMusicAsset(audio: BaseAudioContext, options: Pick<MusicOptions,'track'|'sectionId'|'rate'>): Promise<MusicAsset> {

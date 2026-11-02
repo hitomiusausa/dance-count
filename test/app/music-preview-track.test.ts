@@ -83,3 +83,27 @@ test('the early practice range starts at the first clean bar of the song, not at
   assert.equal(skipped.sections[0]!.startTick,data.bars[2]!.startBeat*960);
   for(let i=1;i<skipped.sections.length;i++)assert.ok(skipped.sections[i-1]!.endTick<=skipped.sections[i]!.startTick);
 });
+
+// 2026-11-02 ひとみうさ: 曲を選ぶ画面にレベルと長さ。レベルはファイル名の 2 つ目（Low がいちばん初心者向け）
+test('the level comes from the second word of the file name and the length from the analysis',async()=>{
+  const {levelFromFilename}=await import('../../src/app/music/model.ts');
+  assert.equal(levelFromFilename('Waltz_Low_Moon_steps.wav'),'low');
+  assert.equal(levelFromFilename('Tango_Middle_The_Final_Posture.mp3'),'middle');
+  assert.equal(levelFromFilename('chacha_High_Fuego_en_la_eternidad.mp3'),'high');
+  assert.equal(levelFromFilename('Waltz_Slow_Low_Moon_Steps.wav'),null,'an unknown word is not a level');
+  assert.equal(levelFromFilename('ワルツ初級.m4a'),null);
+  const track=buildMusicPreviewTrack(hash,analyzed(),{id:'tango-level',title:'Tango',danceId:'tango',level:'low'});
+  assert.equal(track.level,'low');assert.equal(track.durationSeconds,400);
+  assert.equal('level' in buildMusicPreviewTrack(hash,analyzed(),{id:'tango-none',title:'Tango',danceId:'tango',level:null}),false);
+});
+
+test('samba songs use two measured beats per bar and start the count on bar one',()=>{
+  const data=analyzed();data.bars=Array.from({length:200},(_,i)=>({startBeat:1+i*2,endBeat:3+i*2,beatsPerBar:2,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  const track=buildMusicPreviewTrack(hash,data,{id:'samba-test',title:'Samba',danceId:'samba',level:'low'});
+  assert.equal(track.beatsPerBar,2);assert.equal(track.anchorTick,0);
+  for(const section of track.sections){
+    assert.equal(section.anchorTick,section.startTick,'the count starts on the downbeat');
+    const plan=compileMusicPlan(track,section.id);assert.ok(plan.events.length>0);
+  }
+});

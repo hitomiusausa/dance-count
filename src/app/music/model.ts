@@ -12,5 +12,14 @@ export interface MusicTrack {
   rates: number[];
   sections: MusicSection[];
   preview: boolean;
+  level?: MusicLevel;          // 制作者がファイル名の 2 つ目（Low／Middle／High）で付けたレベル。Low がいちばん初心者向け
+  durationSeconds?: number;    // 曲全体の長さ（解析で測った値）
+}
+export type MusicLevel = 'low' | 'middle' | 'high';
+export const MUSIC_LEVELS: readonly MusicLevel[] = ['low', 'middle', 'high'];
+// ファイル名 `<種目>_<レベル>_<曲名>` の 2 つ目からレベルを読む（大文字小文字は問わない。知らない語は null）
+export function levelFromFilename(filename: string): MusicLevel | null {
+  const token = filename.split('_')[1]?.toLowerCase();
+  return MUSIC_LEVELS.find(level => level === token) ?? null;
 }
 export interface MusicAsset { buffer: AudioBuffer }

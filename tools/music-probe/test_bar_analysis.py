@@ -23,6 +23,12 @@ class BarAnalysisTest(unittest.TestCase):
         beats=np.arange(13)*.5+.1;a=np.full(400,.95)
         bars=inspect_bars(beats,beats[[0,3,6,9,12]],a,a,8,expected_beats_per_bar=3)
         self.assertTrue(all(b['status']=='candidate' and b['beatsPerBar']==3 for b in bars))
+    def test_two_beat_samba_meter_is_checked_and_four_beat_groups_are_flagged(self):
+        beats=np.arange(13)*.6+.1;a=np.full(500,.95)
+        bars=inspect_bars(beats,beats[[0,2,4,6,8,10,12]],a,a,9,expected_beats_per_bar=2)
+        self.assertTrue(all(b['status']=='candidate' and b['beatsPerBar']==2 for b in bars))
+        grouped=inspect_bars(beats,beats[[0,4,8,12]],a,a,9,expected_beats_per_bar=2)
+        self.assertTrue(all('meter-mismatch' in b['issues'] for b in grouped),'two bars are not silently treated as one')
 
     def test_bad_coverage_and_unsorted_beats_fail(self):
         a=np.ones(500)

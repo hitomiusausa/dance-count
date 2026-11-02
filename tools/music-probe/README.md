@@ -76,7 +76,7 @@ Python／Torchの実行環境は`requirements-bars.txt`。現在の実測・バ�
 /tmp/dc-waveform-bars-venv/bin/python tools/music-probe/analyze-library.py music
 ```
 
-`Waltz_`・`Rumba_`・`chacha_`・`Tango_`で始まる提供ファイルを読み、ワルツは3拍子、残りは4拍子として解析。名前はひちゃんの指定の識別に使い、ジャンルを音楽的に認定した扱いにはしない。内容hashのsnapshotと解析を作り、最後に`library-index.json`をatomic更新する。原本の改名に影響されず、失敗途中のcatalogを公開しない。
+`Waltz_`・`Rumba_`・`chacha_`・`Tango_`・`Samba_`で始まる提供ファイル（mp3・wav・flac・ogg。m4a は読まない）を読み、ワルツは3拍子、サンバは2拍子、残りは4拍子として解析。ファイル名は `<種目>_<レベル>_<曲名>`。レベルは `Low`（いちばん初心者向け）・`Middle`・`High` で、曲を選ぶ画面に初級・中級・上級として出る（2026-11-02 ひとみうさ）。名前はひちゃんの指定の識別に使い、ジャンルを音楽的に認定した扱いにはしない。内容hashのsnapshotと解析を作り、最後に`library-index.json`をatomic更新する。原本の改名に影響されず、失敗途中のcatalogを公開しない。
 
 開発serverは、このindexの更新で実験用カタログを再読込する。現在はPaper Umbrellaと提供曲。波形画面上部の「曲を選ぶ」で切替でき、通常の「使う→音楽に合わせて練習」からも試せる。波形の2小節表示はワルツなら6拍、タンゴ／ルンバ／チャチャチャなら8拍。「&」はチャチャチャの拍の間に置く。安定区間は曲の長さの10%・45%・75%付近から選び、6小節続かない曲を無理に登録しない。
 

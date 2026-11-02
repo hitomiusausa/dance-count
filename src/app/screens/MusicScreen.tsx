@@ -8,7 +8,8 @@ import { displayForVoiceKey } from '../lib/count-display.ts';
 import { figureDisplayName } from '../../engine/figure-terminology.js';
 import { musicRoutineChoices, musicFigureRange, type MusicFigureRange } from '../music/routines.ts';
 import { useRoutines } from '../state/routines.ts';
-import type { MusicTrack } from '../music/model.ts';
+import type { MusicLevel, MusicTrack } from '../music/model.ts';
+import { canPlayMusicSample, playMusicSample, type MusicSamplePlayback } from '../platform/music.ts';
 import { loadMusicPreferences, normalizeMusicPreferences, saveMusicPreferences, type MusicPreferences } from '../music/preferences.ts';
 import { useMusicCatalog } from '../music/use-catalog.ts';
 import { onPageHidden } from '../platform/page.ts';
@@ -47,15 +48,48 @@ function useMusicSource(source:RouteParams={}){
   },[source.danceId,source.figureSlug,source.routineId,t.locale,settings.lastTemplateByDance[source.danceId??'']]);
   return {danceId,figure,name:routine?.name??figure?.name};
 }
+const LEVEL_LABEL: Record<MusicLevel, 'musicLevelLow' | 'musicLevelMiddle' | 'musicLevelHigh'> = { low: 'musicLevelLow', middle: 'musicLevelMiddle', high: 'musicLevelHigh' };
+// 曲を選ぶ画面の試聴（2026-11-02 ひとみうさ）。鳴らすのは 1 曲だけ。同じ曲をもう一度押す・別の曲を押す・画面を離れると止める
+function useSongSample(){
+  const current=useRef<MusicSamplePlayback|null>(null);
+  const [playing,setPlaying]=useState<string|null>(null);const [failed,setFailed]=useState<string|null>(null);
+  const stop=()=>{current.current?.stop();current.current=null;setPlaying(null);};
+  useEffect(()=>()=>{current.current?.stop();current.current=null;},[]);
+  useEffect(()=>onPageHidden(stop),[]);
+  const toggle=(track:MusicTrack)=>{
+    const same=playing===track.id;stop();setFailed(null);
+    if(same)return;
+    const playback=playMusicSample(track,wasFailure=>{if(current.current!==playback)return;current.current=null;setPlaying(null);if(wasFailure)setFailed(track.id);});
+    if(!playback)return;
+    current.current=playback;setPlaying(track.id);
+  };
+  return {playing,failed,toggle};
+}
 export function MusicListScreen({source={},query={}}:MusicSourceProps) {
   const {translator:t}=useI18n();const {tracks,failed}=useMusicCatalog();const context=useMusicSource(source);
   const contextual=!!context.danceId,screen=contextual?'U5':'U3';
   const songs=tracks?.filter(track=>!context.danceId||track.danceId===context.danceId);
   const genres=contextual?[]:MUSIC_GENRES.map(genre=>({genre,tracks:songs?.filter(track=>genre.danceIds.has(track.danceId))??[]})).filter(item=>item.tracks.length>0);
-  const songRows=(items:MusicTrack[])=><div data-list="music-tracks" role="list">{items.map(track=><div key={track.id} role="listitem"><a class="dc-link-row dc-music-song" data-track={track.id}
-    href={buildHash(musicTrackTarget(track.id,source,query))}>
-    <span class="dc-link-label"><small>{danceName(track.danceId,t.locale)}</small><b>{track.title}</b></span><Icon name="chev-r"/>
-  </a></div>)}</div>;
+  const sample=useSongSample();
+  const duration=(seconds:number|undefined)=>{
+    if(seconds===undefined||!Number.isFinite(seconds)||seconds<=0)return null;
+    const total=Math.round(seconds),minutes=Math.floor(total/60),rest=total%60;
+    return t.t('musicDuration',{minutes,seconds:t.locale.startsWith('ja')?rest:String(rest).padStart(2,'0')});
+  };
+  // 1 行: 種目・レベル・長さ／曲名（練習へ） ＋ 試聴ボタン。リンクの中にボタンを入れない（押せる物の入れ子にしない）
+  const songRows=(items:MusicTrack[])=><div data-list="music-tracks" role="list">{items.map(track=>{
+    const meta=[danceName(track.danceId,t.locale),track.level?t.t(LEVEL_LABEL[track.level]):null,duration(track.durationSeconds)].filter(Boolean).join(' · ');
+    const on=sample.playing===track.id,canListen=canPlayMusicSample(track);
+    return <div key={track.id} role="listitem" class="dc-music-row">
+      <a class="dc-link-row dc-music-song" data-track={track.id} data-level={track.level}
+        href={buildHash(musicTrackTarget(track.id,source,query))}>
+        <span class="dc-link-label"><small data-song-meta>{meta}</small><b>{track.title}</b></span><Icon name="chev-r"/>
+      </a>
+      {canListen&&<button type="button" class="dc-button dc-button--secondary dc-music-listen" data-listen={track.id} aria-pressed={on}
+        aria-label={t.t(on?'musicListenStopLabel':'musicListenLabel',{title:track.title})} onClick={()=>sample.toggle(track)}>
+        <Icon name={on?'stop':'play'}/></button>}
+      {sample.failed===track.id&&<p class="dc-music-listen-error" role="status">{t.t('musicListenFailed')}</p>}
+    </div>;})}</div>;
   return <main class={`dc-screen${contextual?' dc-screen--focus':''}`} data-screen={screen}>
     <BackButton screen={screen} fallback={contextual?musicOriginTarget(source):undefined}/><h1 class="dc-heading">{t.t(contextual?'musicChooseSong':'musicList')}</h1>
     <p class="dc-body" data-music-context>{context.name?t.t('musicForSelection',{name:context.name}):t.t('musicIntro')}</p>

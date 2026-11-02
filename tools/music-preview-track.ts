@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { getDanceProfile } from '../src/engine/dance-profiles.js';
 import { compileMusicPlan } from '../src/engine/music-plan.js';
-import type { MusicTrack } from '../src/app/music/model.ts';
+import type { MusicLevel, MusicTrack } from '../src/app/music/model.ts';
 
 export interface AnalyzedBar {
   startBeat: number; endBeat: number; beatsPerBar: number;
@@ -15,12 +15,13 @@ export interface BarAnalysis {
 
 // A creator-side adapter: source waveform -> learned beat/downbeat times ->
 // contiguous bars in the supplied dance meter. An inferred downbeat is never index%4 by assumption.
-export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'|'tango'}
+export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'|'tango'|'samba';level?:MusicLevel|null}
 export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalysis, definition?:PreviewDefinition): MusicTrack {
   const settings=definition??{id:'paper-umbrella',title:'Paper Umbrella',danceId:'rumba' as const};
   if(!/^[a-z0-9-]+$/.test(settings.id)||!settings.title.trim())throw new Error('Invalid track identity');
   const profile=getDanceProfile(settings.danceId),meter=profile.beatsPerBar,counts=profile.templates[0];
-  const countStartBeat=settings.danceId==='waltz'||settings.danceId==='tango'?0:1;
+  // ルンバ・チャチャチャは曲の拍型「2・3・4・1」に沿って 2 拍目から。ワルツ・タンゴ・サンバは小節の 1 拍目から
+  const countStartBeat=settings.danceId==='rumba'||settings.danceId==='chacha'?1:0;
   if (analysis.schemaVersion!==1 || analysis.sourceSha256!==sourceSha256 || !/^[a-f0-9]{64}$/.test(analysis.analysisId)) {
     throw new Error('Analysis identity or schema mismatch');
   }
@@ -62,7 +63,8 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
   const mapId=createHash('sha256').update(JSON.stringify({sourceSha256,beatsMs:analysis.beatsMs,sections,settings,counts})).digest('hex');
   const track:MusicTrack={id:settings.id,revision:`${sourceSha256.slice(0,16)}-bars-v2-${mapId.slice(0,12)}`,
     title:settings.title,danceId:settings.danceId,beatsPerBar:meter,counts,anchorTick:countStartBeat*960,
-    beatsMs:[...analysis.beatsMs],rates:[.8,1,1.1],sections,preview:true};
+    beatsMs:[...analysis.beatsMs],rates:[.8,1,1.1],sections,preview:true,durationSeconds:analysis.durationSeconds,
+    ...(definition?.level?{level:definition.level}:{})};
   for (const section of sections) for(const rate of track.rates) compileMusicPlan(track,section.id,rate);
   return track;
 }

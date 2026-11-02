@@ -26,6 +26,12 @@
 .dc-music-genre[open] > summary .dc-ic { transform: rotate(90deg); }
 .dc-music-song .dc-link-label { display: flex; flex-direction: column; gap: 4px; }
 .dc-music-song b { font-size: 17px; line-height: 1.5; }
+/* 曲を選ぶ画面の 1 行: 曲（練習へ）＋試聴ボタン。下の線は行に 1 本 */
+.dc-music-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-bottom: var(--bw) solid var(--line); }
+.dc-music-row .dc-music-song { flex: 1 1 200px; min-width: 0; border-bottom: 0; }
+.dc-music-listen { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 56px; height: 56px; margin-top: 8px; padding: 0; border-radius: 50%; }   /* アイコンだけ（▶／■）。名前は aria-label */
+.dc-music-listen[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); }
+.dc-music-listen-error { flex-basis: 100%; margin: 0 0 8px; font-size: 16px; color: var(--ink2); }
 .dc-music-song small, .dc-music-note { font-size: 16px; color: var(--ink2); line-height: 1.5; }
 .dc-music-note { margin: 16px 0; }
 [data-music-context] { overflow-wrap: anywhere; }

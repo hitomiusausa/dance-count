@@ -25,9 +25,25 @@ try{
  for(const [label,screen] of [['ルーティン','U2'],['音楽','U3'],['フィガー','S1'],['音楽','U3']]){await page.getByRole('link',{name:label,exact:true}).click();await page.waitForSelector(`[data-screen=${screen}]`);}
  await page.waitForSelector('[data-screen=U3]');await page.waitForSelector('[data-music-genres]');
  ensure(await page.locator('[data-music-genre]').count()===2,'Latin and Standard categories missing');
- ensure(await page.locator('[data-music-genre=latin] [data-track]').count()===5&&await page.locator('[data-music-genre=standard] [data-track]').count()===2,'songs grouped under the wrong genre');
+ // 曲の数はカタログから数える（music/ の中身で変わる。2026-11-02 にサンバを追加）
+ const catalog=await page.evaluate(async()=>await(await fetch('/__music/catalog')).json());
+ const LATIN=new Set(['samba','chacha','rumba','pasodoble','jive']),latinCount=catalog.filter(track=>LATIN.has(track.danceId)).length,standardCount=catalog.length-latinCount;
+ ensure(await page.locator('[data-music-genre=latin] [data-track]').count()===latinCount&&await page.locator('[data-music-genre=standard] [data-track]').count()===standardCount,'songs grouped under the wrong genre');
  ensure(await page.locator('[data-music-genre][open]').count()===0,'genre lists should start collapsed');
- await page.locator('[data-music-genre=latin] > summary').click();ensure(await page.locator('[data-music-genre=latin][open] [data-track]').count()===5,'Latin category did not expand');
+ await page.locator('[data-music-genre=latin] > summary').click();ensure(await page.locator('[data-music-genre=latin][open] [data-track]').count()===latinCount,'Latin category did not expand');
+ // 曲を選ぶ画面: レベルと長さ（2026-11-02）・試聴はアイコンだけのボタン（▶ で鳴らす／■ で止める）
+ for(const track of catalog.filter(item=>LATIN.has(item.danceId))){
+   const meta=(await page.locator(`[data-track="${track.id}"] [data-song-meta]`).textContent())??'';
+   if(track.level)ensure(meta.includes({low:'初級',middle:'中級',high:'上級'}[track.level]),`level missing for ${track.id}: ${meta}`);
+   ensure(/\d+分\d+秒/.test(meta),`length missing for ${track.id}: ${meta}`);
+ }
+ const listen=page.locator('[data-music-genre=latin][open] [data-listen]').first();
+ ensure(((await listen.textContent())??'').trim()==='','the listen button shows an icon only');
+ await listen.click();await page.waitForFunction(()=>document.querySelector('[data-music-genre=latin][open] [data-listen]')?.getAttribute('aria-pressed')==='true');
+ await page.waitForTimeout(1500);
+ ensure(await listen.getAttribute('aria-pressed')==='true'&&await page.locator('.dc-music-listen-error').count()===0,'the sample keeps playing without an error');
+ await listen.click();ensure(await listen.getAttribute('aria-pressed')==='false','the second press stops the sample');
+ evidence.checks.push('song list shows level and length, and the icon button plays and stops a sample');
  await page.locator('[data-back]').click();await page.waitForSelector('[data-screen=S0]');
  evidence.checks.push('three root tabs and one-tap return to cover');
  await page.getByRole('link',{name:/使う/}).click();await page.locator('a[href="#/figures/waltz"]').click();await page.locator('[data-figure=chasse-from-pp]').click();await page.waitForSelector('[data-screen=S2]');
