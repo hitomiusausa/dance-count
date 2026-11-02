@@ -46,62 +46,94 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - **直した後の実測**（テスト用のクリックのワルツ・Chromium の Web Audio で FLAC を読んで測定）: 0.8 倍 平均 −0.35ms・最大 2.0ms／1 倍 0.05ms・0.08ms／1.1 倍 0.70ms・3.1ms。長さは全部ぴったり。開発サーバーの音源も同じ（1 倍 0.05ms・0.8 倍 −0.37ms）。
 - 本物の曲（音楽）はクリックほど頭がはっきりしないので、Mac で一式を作った後に耳でも確かめる。
 
-## 2. 今回やったこと
+## 2. リリースまでの全体のチェックリスト（2026-11-03 更新）
 
-- Capacitor 8.5.3 を入れた（版は固定。8.6.0 は公開から 5 日しか経っていないので避けた）。`capacitor.config.ts`・`ios/`（Swift Package Manager 方式。CocoaPods は要らない）。
-- `src/app/platform/native.ts`: 「アプリの中で動いているか」の判定の正本。アプリの中は「ホーム画面から開いている」と同じ扱いにした（`pwa.ts` の `isStandalone`）。
-  - 直す前の問題: WKWebView の UA には `Safari/` が無いので、アプリの中が「iPhone の Safari 以外のブラウザ」に見え、「ホーム画面に追加すると…」のカードが出る作りだった。
-  - アプリの中では Service Worker を登録しない（中身は同梱され、更新は App Store が配る。「新しい版があります」の帯も出さない）。
-- `ios/App/App/AppDelegate.swift`: 音声セッションを `.playback` に（消音スイッチがオンでも鳴らす）。**実機で確かめていない**（§4）。
-- `ios/App/App/Info.plist`: マイクの使い道の説明（英語）・暗号化の申告（`ITSAppUsesNonExemptEncryption = false`）・対応言語（en・ja）・iPhone は縦だけ（iPad は 4 方向）。
-- `npm run ios:build`（公開用のビルド → `cap sync ios`）と `npm run ios:open`（Xcode を開く）。
-- **前からあったビルドの失敗を直した**: 11/02 夜の試聴ボタンから、`npm run build` が `check-dist` で落ちていた（開発用の `/__music/` が公開の成果物に残る）。原因は `musicSampleUrl` だけが関数の呼び出し `musicPreviewEnabled()` で判定していて、公開ビルドで畳まれなかったこと。判定をモジュールの定数 1 つにまとめた（`src/app/platform/music.ts`）。
-- 確認: `test/app/platform-native.test.ts`（Web では「アプリの中」にならない・Bundle ID が設定と Xcode で一致・iPhone と iPad・Info.plist の必須項目）。
-- 音楽を公開版に入れる仕組み（§1-2）と、音源が拍より早く鳴っていた問題の修正（§1-3）。`test/app/music-pack.test.ts`（実際の ffmpeg での切り出しの時刻の検査を含む）。
+記号: ✅ 済み（ここで確かめた） ／ 🍎 Mac・実機で行う ／ ★ ひとみうさが決める ／ ⬜ まだ
 
-## 3. 確認した値（2026-11-02、Linux のクラウド環境）
+### A. 決めること
+- ✅ 作り方（Capacitor）・課金（最初は無料）・音楽（最初の版から Web と iOS に）・法人で登録・iPad 対応・出す国・iPhone は縦だけ・Bundle ID `jp.dancemap.count.app`
+- ★ ストアの名前・サブタイトル・説明文・キーワード・カテゴリ（下書き: [`STORE-LISTING.md`](./STORE-LISTING.md)）
+- ★ プライバシーポリシーとサポートの URL（案: `count.dancemap.jp/privacy`・`/support` を作る）
+- ★ 「このアプリについて」のプライバシーの文が Web 版向け（Cloudflare の解析・配信サーバーの記録）で、iOS アプリでは当てはまらない（[`STORE-LISTING.md`](./STORE-LISTING.md) §5）
+- ★ ガイドライン 4.2 への備え: 今のままで出すか、iOS らしい機能（画面を点けたまま・触覚など）を足すか
+- ★ 版の番号（`package.json` 0.3.0 と Xcode の 1.0 (1)）の合わせ方
+
+### B. Apple 側の手続き
+- ✅ 開発者登録（KUGA K.K.・チーム `JQU8USCS8L`＝uchikare と同じ）・契約・銀行・税・Xcode（ひとみうさ: 別のアプリで済み）
+- 🍎 App Store Connect にアプリを登録（Bundle ID `jp.dancemap.count.app`・SKU 案 `dance-count-ios`・主な言語）
+
+### C. iOS アプリの中身
+- ✅ Capacitor 8.5.3・`ios/`（Swift Package Manager）・iPhone と iPad・iPhone は縦だけ
+- ✅ アプリの中は「ホーム画面から開いている」扱い（追加のカード・SW・設定の「ホーム画面に追加する」を出さない）
+- ✅ 切り欠き・時計の下に部品が入らない（上の安全領域）・いつもライト表示
+- ✅ アイコン（うさぎのワルツ・1024・透明なし。`tools/make-icons.js --only ios`）
+- ✅ 起動画面（色だけ・起動の殻と同じ紺）
+- ✅ マイクの使い道（英語・日本語）・暗号化の申告・プライバシーの申告（`PrivacyInfo.xcprivacy`）
+- ✅ アプリの中から外への通信 0 件（全画面と再生で実測）
+- ✅ 音楽の一式の仕組み（`npm run music:pack`・`DC_MUSIC_PACK`・一式が無いリリースは失敗）
+- ✅ 音楽が拍より約 21〜23ms 早く鳴っていたのを修正（§1-3）
+- 🍎 消音スイッチがオンでも鳴るか（`AppDelegate` の `.playback`）
+- 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
+- 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
+- 🍎 画面が暗くならないか（WKWebView の Wake Lock。使えなければアプリの側で点けたままにする）
+- 🍎 問い合わせのメール（`mailto:`）がメールのアプリで開くか
+- 🍎 配る・受け取る（共有シート・ファイルから開く）。`.dancecount.txt` をアプリで開けるようにするか ★
+- 🍎 イヤホン・Bluetooth・電話や Siri の割り込みの後の再開
+- ⬜ 使わなくなった `LaunchScreen.storyboard` と `Splash` の画像を消すか（害は無い）
+
+### D. 音楽
+- 🍎 `ffmpeg -filters | grep rubberband`（無ければ `brew install ffmpeg`）
+- 🍎 `npm run music:pack` → 打ち消しの量と大きさを記録 → `npm run ios:build`
+- 🍎 **直した音で聴き直す**（前に聴いたタンゴ・ワルツも）・iPhone と Safari で FLAC が鳴るか
+- 🍎 全曲そろった時の大きさ（アプリの大きさとして許せるか ★）
+- ⬜ 曲がそろった分から一覧に足し、最後に全種目を確かめる
+
+### E. 品質
+- ✅ `npm test`: Node 24 で 838 件すべて通過（Node 22 の 32 件の失敗は V8 の丸め＝音量の値の最後の 1 ビット・時刻の差 0。HANDOFF に訂正）
+- ✅ `npm run typecheck` OK・`ios:build` OK
+- ✅ 画面の再現（アプリの中・日英 40 画面ずつ）: iPhone 12 mini・SE・16 Pro Max・iPad Air 縦横で、横のはみ出し 0・切り欠きの下の部品 0
+- ⬜ `ui:check` をこの版で通す（実行中）
+- 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面
+- 🍎 TestFlight で、ひとみうさ・ダンス仲間に試してもらう
+- ⬜ 確認されていないルーティン・フィガーの名前を、確認済みのように出していないかの最終確認
+
+### F. ストアに載せる資料
+- ✅ 下書き: 名前・説明文・キーワード・審査のメモ・App Privacy・年齢区分・暗号化（[`STORE-LISTING.md`](./STORE-LISTING.md)）
+- ★ 上の下書きの確定
+- ⬜ スクリーンショット（iPhone 6.9 インチ 1320×2868・iPad 13 インチ 2064×2752・日英）。本物の曲を入れてから撮る
+- ⬜ プライバシーポリシー・サポートのページ（Web 版に作る。公開はひとみうさの許可の後）
+
+### G. 出す
+- 🍎 `npm run ios:build` → Xcode で Archive → App Store Connect へ（uchikare の記録: 会社のチームに端末が無いと Archive の署名で止まることがある）
+- 🍎 TestFlight（輸出の質問は Info.plist で答え済み）→ 審査に出す → 公開（公開はひとみうさが決める）
+
+## 3. Mac での手順
+
+```
+cd dance-count
+git fetch origin && git checkout claude/app-store-release-prep-1s6fb9
+node --version            # 24 以上（.nvmrc）
+npm install
+ffmpeg -filters | grep rubberband
+npm run music:pack        # output/music-probe/ の台帳から output/music-pack/ を作る
+npm run ios:build         # 公開ビルド → ios/ へ写す（一式が無いと止まる）
+npm run ios:open          # Xcode が開く → Signing のチームを KUGA K.K. に → シミュレーター（iPhone 12 mini）で ▶
+```
+
+## 4. 確認した値（2026-11-02〜03、Linux のクラウド環境）
 
 | 確認 | 結果 |
 |---|---|
-| `npm test` | 834 件中 802 件が通過・32 件が失敗（32 件は前からある `engine-schedule` の浮動小数の最後の 1 桁。元のコミットでも 821 件中 32 件が失敗） |
+| `npm test` | Node 24.22.1: 838 件すべて通過／Node 22.23.4: 806 件通過・32 件失敗（engine-schedule の音量の値の最後の 1 ビット。時刻の差 0） |
 | `npm run typecheck` | OK |
-| `npm run ios:build` | OK（`dist OK`・precache 185 件 3.53 MB・`/__music` は 0 件） |
-| 元のコミットの `npm run build` | **失敗**（`assets/index-*.js contains "__music/"`）→ 直した |
-| ブラウザで再現（Chromium・390×844・公開ビルド） | iPhone の Safari: カードが出る・SW 1 件／アプリの中（Capacitor の通り道を再現）: カードは出ない・SW 0 件・S12 は「追加は済んでいます」・エラー 0 |
-| 音楽の一式（テスト用のクリックのワルツ） | `npm run music:pack` → `ios:build`: `music 1 tracks 9 clips`・一式が無いリリースは失敗・一式なしの普通のビルドは `music: none`。アプリの中と Web 版で音楽のタブ・曲の一覧・▶ の再生が動く・エラー 0・9 本の拍のずれは §1-3 |
+| `npm run ios:build`（テスト用の曲の一式入り） | OK（`dist OK`・`music 1 tracks 9 clips`）・`cap sync` で pbxproj と Info.plist は変わらない |
+| 一式なしのリリース | 失敗する（`missing music-catalog.json`）＝入れ忘れを防ぐ |
+| 元のコミットの `npm run build` | 失敗していた（`/__music/` が成果物に残る）→ 直した |
+| アプリの中か Web か（Chromium・390×844） | Safari: 追加のカードあり・SW 1 件／アプリの中: カードなし・SW 0 件・エラー 0 |
+| 音楽の通し（テスト用のクリックのワルツ） | アプリの中と Web で一覧・▶ の再生・エラー 0・拍のずれは §1-3 |
+| アプリの中から外への通信 | 0 件（全 18 画面＋カウントと音楽の再生・31 件はすべて同梱のファイル） |
+| 端末ごとの画面（アプリの中・日英 40 画面ずつ・安全領域を再現） | 直す前: iPhone 12 mini で全 40 画面「戻る」かアプリ名が切り欠きの下／直した後: 12 mini・SE・16 Pro Max・iPad Air 縦横で はみ出し 0・切り欠きの下 0・スクロール時の上の帯は背景色だけ |
+| pbxproj | 参照切れ 0（pbxproj 4.2.1 で読み直し） |
+| `ui:check` | 1163 件すべて通過（音楽の一式を入れる前の版）。この版は実行中 |
 
-ここでは Xcode のビルドとシミュレーターは動かせない（Linux）。§4 は Mac で行う。
-
-## 4. 残りの作業
-
-### Mac と実機で確かめる（最優先）
-- [ ] `npm install` → `npm run ios:build` → `npm run ios:open` → Xcode でビルドしてシミュレーターと実機で起動する。署名チームは KUGA K.K.。
-- [ ] **音と表示のずれを実機で測る**（このアプリでいちばん大事。Safari の Web 版と同じであること）。
-- [ ] 消音スイッチがオンでも鳴るか・イヤホンや Bluetooth・電話や Siri の割り込みの後の再開。
-- [ ] 録音（マイクの許可の画面・録って再生）。WKWebView で `navigator.audioSession` を使えない iOS の版で録音できるか。
-- [ ] 画面が暗くならないか（WKWebView の Wake Lock は iOS の版で違う。使えなければアプリの側で画面を点けたままにする）。
-- [ ] 配る・受け取る（共有シート・ファイルから開く）。Android の受け口（SW）は iOS では使えないので、`.dancecount.txt` をアプリで開けるようにするか決める。
-- [ ] iPad（縦・横・Split View）と小さい iPhone（SE）で表示を確かめる。iPhone は縦だけになっていること。
-
-### アプリの中身
-- [ ] マイクの説明の日本語訳（`ja.lproj/InfoPlist.strings`。Xcode でローカライズを足す）。
-- [ ] アプリのアイコン（1024px。今の `AppIcon` は Capacitor の仮のもの）と起動画面（紺 `#1B2A4A`）。
-- [ ] **音楽（Mac）**: `ffmpeg -filters | grep rubberband` で rubberband があるか確かめる（無ければ `brew install ffmpeg`）→ `npm run music:pack` → 出てきた打ち消しの量と大きさを記録 → `npm run ios:build`。
-- [ ] **音楽（実機・Safari）**: FLAC を WebKit（iPhone・Mac の Safari）で読めるか、曲とカウントが合って聞こえるか（§1-3 の直した音で、タンゴなど前に聴いた曲も）。大きさ（全曲そろった時の合計）を測り、アプリの大きさとして許せるか決める。
-- [ ] 曲はそろった分から一覧に足し、最後に全種目を確かめる。
-- [ ] 外へのリンク（LINE の案内・Web の URL など）がアプリの中で正しく開くか。
-- [ ] 「ホーム画面に追加する」（S12）の行を、アプリでは設定から外すか。
-- [ ] `engine-schedule` の 32 件の失敗の原因をはっきりさせる。
-
-### ストアに載せる資料
-- [ ] プライバシーポリシーとサポートの URL（日本語・英語）。
-- [ ] App Privacy の回答（録音や設定は端末の中だけで、外へ送らないことをコードで確かめてから）。
-- [ ] 年齢区分・カテゴリ・アプリ名（30 文字）・サブタイトル・説明文・キーワード（日本語・英語）。
-- [ ] スクリーンショット: iPhone 6.9 インチ・iPad 13 インチ（日本語・英語）。
-- [ ] 審査の人へのメモ（使い方とマイクを使う理由）。
-- [ ] 出す国: 日本・アメリカ・イギリス・オーストラリア。
-- [ ] 審査ガイドライン 4.2（最小限の機能）: 同梱した音声でネットが無くても練習できることを説明に書く。
-
-### 出したあと
-- [ ] TestFlight で試してもらう → 審査に出す → 公開（公開はひとみうさが決める）。
-- [ ] 版の番号（`package.json` の version と Xcode の MARKETING_VERSION）の合わせ方を決める。
+ここでは Xcode とシミュレーターは動かせない（Linux）。🍎 の項目は Mac で行う。iPhone 12 mini の確認は、ブラウザで同じ大きさ（375×812・3 倍）と安全領域（上 50・下 34）を再現して行った。本物のシミュレーターでの確認は 🍎。
