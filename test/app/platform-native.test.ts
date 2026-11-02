@@ -46,3 +46,15 @@ test('iPhone is portrait only and iPad keeps all four orientations', async () =>
   assert.deepEqual(orientations('UISupportedInterfaceOrientations'), ['UIInterfaceOrientationPortrait']);
   assert.equal(orientations('UISupportedInterfaceOrientations~ipad').length, 4);
 });
+
+// iOS アプリは画面が時計・切り欠きの裏まで広がる（viewport-fit=cover・contentInset never）。上の安全領域のぶん下げ、帯で隠す。
+// アプリはライトの色だけなので、時計などの文字が背景に溶けないよう、いつもライト（uchikare と同じ）。
+test('the app keeps content out of the notch and stays in light appearance', async () => {
+  const css = await fs.readFile(path.join(root, 'src/app/styles/base.css'), 'utf8');
+  assert.match(css, /\.dc-shell \{[^}]*padding-top: env\(safe-area-inset-top\)/);
+  assert.match(css, /\.dc-shell::before \{[^}]*position: fixed;[^}]*height: env\(safe-area-inset-top\)/);
+  const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, /viewport-fit=cover/);
+  const plist = await fs.readFile(path.join(root, 'ios/App/App/Info.plist'), 'utf8');
+  assert.match(plist, /<key>UIUserInterfaceStyle<\/key>\s*<string>Light<\/string>/);
+});
