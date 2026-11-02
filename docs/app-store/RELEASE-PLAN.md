@@ -92,7 +92,7 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ `npm test`: Node 24 で 838 件すべて通過（Node 22 の 32 件の失敗は V8 の丸め＝音量の値の最後の 1 ビット・時刻の差 0。HANDOFF に訂正）
 - ✅ `npm run typecheck` OK・`ios:build` OK
 - ✅ 画面の再現（アプリの中・日英 40 画面ずつ）: iPhone 12 mini・SE・16 Pro Max・iPad Air 縦横で、横のはみ出し 0・切り欠きの下の部品 0
-- ⬜ `ui:check` をこの版で通す（実行中）
+- ✅ `ui:check` 1163 件すべて通過（切り欠きの修正・設定の行の変更の後の版）
 - 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面: `tools/ios-sim-check.sh`（端末を探す・無ければ作る → 署名なしでビルド → 起動 → ライトとダークで撮る。まだ Mac で一度も動かしていない）
 - 🍎 TestFlight で、ひとみうさ・ダンス仲間に試してもらう
 - ⬜ 確認されていないルーティン・フィガーの名前を、確認済みのように出していないかの最終確認
@@ -117,7 +117,7 @@ npm install
 ffmpeg -filters | grep rubberband
 npm run music:pack        # output/music-probe/ の台帳から output/music-pack/ を作る
 npm run ios:build         # 公開ビルド → ios/ へ写す（一式が無いと止まる）
-tools/ios-sim-check.sh    # iPhone 12 mini のシミュレーターでビルド・起動・撮影（build/ios/screens/）
+npm run ios:sim           # iPhone 12 mini のシミュレーターでビルド・起動・撮影（build/ios/screens/）
 npm run ios:open          # Xcode が開く → Signing のチームを KUGA K.K. に → 実機で ▶
 ```
 
@@ -135,6 +135,6 @@ npm run ios:open          # Xcode が開く → Signing のチームを KUGA K.K
 | アプリの中から外への通信 | 0 件（全 18 画面＋カウントと音楽の再生・31 件はすべて同梱のファイル） |
 | 端末ごとの画面（アプリの中・日英 40 画面ずつ・安全領域を再現） | 直す前: iPhone 12 mini で全 40 画面「戻る」かアプリ名が切り欠きの下／直した後: 12 mini・SE・16 Pro Max・iPad Air 縦横で はみ出し 0・切り欠きの下 0・スクロール時の上の帯は背景色だけ |
 | pbxproj | 参照切れ 0（pbxproj 4.2.1 で読み直し） |
-| `ui:check` | 1163 件すべて通過（音楽の一式を入れる前の版）。この版は実行中 |
+| `ui:check` | 1163 件すべて通過（`469c126` の版。1 回目は途中で開発サーバーが再起動して止まった＝点検中に `package.json` を書き換えたため。やり直して全件） |
 
 ここでは Xcode とシミュレーターは動かせない（Linux）。🍎 の項目は Mac で行う。iPhone 12 mini の確認は、ブラウザで同じ大きさ（375×812・3 倍）と安全領域（上 50・下 34）を再現して行った。本物のシミュレーターでの確認は 🍎。

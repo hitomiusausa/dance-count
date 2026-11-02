@@ -15,6 +15,7 @@
     "ios:build": "RELEASE=1 DC_REQUIRE_MUSIC=1 DC_MUSIC_PACK=${DC_MUSIC_PACK:-output/music-pack} PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
     "music:pack": "node tools/music-pack.ts",
     "ios:open": "cap open ios",
+    "ios:sim": "tools/ios-sim-check.sh",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
     "test": "node --test \"test/**/*.test.{js,ts}\"",
     "legacy": "python3 -m http.server 4173",
