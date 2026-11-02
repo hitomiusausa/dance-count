@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- アプリのプライバシーの申告（docs/app-store/RELEASE-PLAN.md）。追跡なし・集めるデータなし（アプリの中から外への通信は 0 件＝2026-11-02 に全画面と再生で実測）。
+     アプリ自身のコード（AppDelegate.swift）は理由の申告が要る API を使わない。Capacitor の分は Capacitor の申告に入る。 -->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>

@@ -58,3 +58,37 @@ test('the app keeps content out of the notch and stays in light appearance', asy
   const plist = await fs.readFile(path.join(root, 'ios/App/App/Info.plist'), 'utf8');
   assert.match(plist, /<key>UIUserInterfaceStyle<\/key>\s*<string>Light<\/string>/);
 });
+
+// App Store の決まりと、起動から最初の画面までの色のつながり（docs/app-store/RELEASE-PLAN.md）
+test('the iOS icon is a 1024 square without transparency (tools/make-icons.js)', async () => {
+  const png = await fs.readFile(path.join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png'));
+  assert.equal(png.readUInt32BE(16), 1024);
+  assert.equal(png.readUInt32BE(20), 1024);
+  assert.equal(png[25], 2, 'PNG colour type 2 = RGB without alpha (App Store rejects transparent icons)');
+  const contents = JSON.parse(await fs.readFile(path.join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json'), 'utf8'));
+  assert.ok(contents.images.some((image: { filename?: string; size?: string }) => image.filename === 'AppIcon-512@2x.png' && image.size === '1024x1024'));
+});
+
+test('the launch screen is the same navy as the boot shell and the web view background', async () => {
+  const plist = await fs.readFile(path.join(root, 'ios/App/App/Info.plist'), 'utf8');
+  assert.match(plist, /<key>UILaunchScreen<\/key>\s*<dict>\s*<key>UIColorName<\/key>\s*<string>LaunchBackground<\/string>/);
+  assert.doesNotMatch(plist, /UILaunchStoryboardName/);
+  const color = JSON.parse(await fs.readFile(path.join(root, 'ios/App/App/Assets.xcassets/LaunchBackground.colorset/Contents.json'), 'utf8')).colors[0].color.components;
+  const hex = `#${[color.red, color.green, color.blue].map((value: string) => Number(value).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, new RegExp(`\\.dc-boot\\{[^}]*background:${hex}`, 'i'));
+  assert.equal(config.ios?.backgroundColor?.toUpperCase(), hex);
+});
+
+test('the privacy manifest and the Japanese microphone text ship in the app', async () => {
+  const project = await fs.readFile(path.join(root, 'ios/App/App.xcodeproj/project.pbxproj'), 'utf8');
+  assert.match(project, /\/\* PrivacyInfo\.xcprivacy in Resources \*\/,/);
+  assert.match(project, /\/\* InfoPlist\.strings in Resources \*\/,/);
+  assert.match(project, /path = ja\.lproj\/InfoPlist\.strings;/);
+  assert.match(project, /knownRegions = \(\s*en,\s*ja,/);
+  const manifest = await fs.readFile(path.join(root, 'ios/App/App/PrivacyInfo.xcprivacy'), 'utf8');
+  assert.match(manifest, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
+  assert.match(manifest, /<key>NSPrivacyCollectedDataTypes<\/key>\s*<array\/>/);
+  const strings = await fs.readFile(path.join(root, 'ios/App/App/ja.lproj/InfoPlist.strings'), 'utf8');
+  assert.match(strings, /^"NSMicrophoneUsageDescription" = "[^"]{10,}";$/m);
+});
