@@ -452,3 +452,20 @@ test('D73・D81: volumes reach the engine at start (default 1) and can change wh
   assert.equal(h.starts.length, 2, 'no restart');
   assert.equal(h.session.current.playing, true);
 });
+
+test('the metronome switch reaches the running engine without a restart, and a switch while starting is used at start', async () => {
+  const h = harness();
+  const engineStart = h.starts;
+  await h.session.play(WALTZ);
+  // 本物のエンジン以外（偽物）には setMetronome が無いので、ここでは止めずに進むこと（start が増えない）を見る
+  h.session.setMetronome(false);
+  assert.equal(engineStart.length, 1, 'no restart');
+  assert.equal(h.session.current.playing, true);
+  const pending = h.session.play({ ...WALTZ, metronome: true });
+  h.session.setMetronome(false);
+  await pending;
+  assert.equal(engineStart[1]!.metronome, false, 'the switch pressed while starting wins');
+  await h.session.play({ ...WALTZ, metronome: true });
+  assert.equal(engineStart[2]!.metronome, true, 'a new ▶ uses the options again');
+  h.session.stop();
+});

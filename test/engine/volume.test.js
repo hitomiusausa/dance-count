@@ -72,3 +72,54 @@ test('D73: the default is today’s level and bad values are clamped', () => {
   assert.equal(clampVolume('x'), 1);
   engine.stop();
 });
+
+// 鳴らしながらメトロノームのオン/オフ（ひとみうさ 2026-11-02: 切り替えても最初からにせず、そのまま進む）
+const clicksOf = context => context.nodes.filter(node => node.kind === 'osc');
+test('metronome off while playing stops only the clicks still to come, without restarting', () => {
+  const { context, engine } = play({ countInBars: 0 });
+  const startTime = engine.state.startTime;
+  const stopped = [];
+  for (const node of clicksOf(context)) node.stop = () => stopped.push(node);
+  const scheduled = engine.metronomeClicks.size;
+  assert.ok(scheduled > 0);
+  context.currentTime = startTime + 0.5;   // 1 拍目は過ぎた
+  const pastClicks = [...engine.metronomeClicks.values()].filter(time => time <= context.currentTime).length;
+  engine.setMetronome(false);
+  assert.equal(stopped.length, scheduled - pastClicks, 'only future clicks are stopped');
+  assert.equal(engine.state.startTime, startTime, 'no restart');
+  assert.equal(engine.playing, true);
+  assert.equal(engine.state.metronome, false);
+
+  engine.stop();
+});
+
+test('metronome on while playing adds clicks only after now, on the same beat grid', () => {
+  const { context, engine } = play({ countInBars: 0, metronome: false });
+  assert.equal(clicksOf(context).length, 0);
+  const beat = 60 / 84;
+  context.currentTime = engine.state.startTime + 1.2 * beat;
+  engine.setMetronome(true);
+  const times = [...engine.metronomeClicks.values()];
+  assert.ok(times.length > 0);
+  assert.ok(times.every(time => time > context.currentTime));
+  for (const time of times) {
+    const beats = (time - engine.state.startTime) / beat;
+    assert.ok(Math.abs(beats - Math.round(beats)) < 1e-9, `click on a beat: ${beats}`);
+  }
+  assert.equal(Math.min(...times), engine.state.startTime + 2 * beat, 'resumes from the next beat');
+
+  engine.stop();
+});
+
+test('the lead-in clicks are not touched by the metronome switch', () => {
+  const { context, engine } = play({ countInBars: 1, metronome: false });
+  const leadIn = clicksOf(context).length;
+  assert.equal(leadIn, 3, 'waltz: one bar of lead-in');
+  const stopped = [];
+  for (const node of clicksOf(context)) node.stop = () => stopped.push(node);
+  engine.setMetronome(true);
+  engine.setMetronome(false);
+  assert.equal(stopped.filter(node => clicksOf(context).indexOf(node) < leadIn).length, 0);
+
+  engine.stop();
+});

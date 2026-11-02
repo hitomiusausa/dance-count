@@ -98,6 +98,7 @@ export interface EngineLike {
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
   // 音楽のエンジンは (music, voice)、カウントだけのエンジンは D73 の { voice }（鳴っている最中でも止めずに効く）
   setVolumes?(volumes: number | { voice?: number; click?: number }, voice?: number): void;
+  setMetronome?(on: boolean): void;            // 鳴らしながらメトロノームのオン/オフ（止めて最初からにしない）
   setMetronomeVolume?(volume: number): void;   // D81: メトロノームの大きさ（0〜1。消音は 0）
 }
 
@@ -134,6 +135,7 @@ export class PracticeSession<A extends AudioLike, V> {
   private audio: A | null = null;
   private engine: EngineLike | null = null;
   private engineKind: 'music' | 'counts' | null = null;
+  private metronomeOverride: boolean | undefined = undefined;
   private wakeLock: WakeLockLike | null = null;
   private cancelSoundCheck: (() => void) | null = null;
   private unsubscribeState: (() => void) | null = null;
@@ -159,6 +161,7 @@ export class PracticeSession<A extends AudioLike, V> {
     if (options.kind !== 'music' && options.track !== null) throw new Error('Playing with a track is not supported in v1');
     if (typeof options.bpm !== 'number' || !Number.isFinite(options.bpm)) throw new TypeError('bpm must be a finite number');
     this.halt();
+    this.metronomeOverride = undefined;
     const generation = ++this.generation;
     const audio = this.deps.unlock();
     this.attach(audio);
@@ -189,6 +192,12 @@ export class PracticeSession<A extends AudioLike, V> {
 
   setMetronomeVolume(volume: number): void {
     this.engine?.setMetronomeVolume?.(volume);
+  }
+
+  // メトロノームのオン/オフ。鳴っている最中は止めずにそのまま進む。▶ の直後（声を読み込み中）に押された時は、鳴り始めにその値を使う
+  setMetronome(on: boolean): void {
+    this.metronomeOverride = on;
+    if (this.engineKind !== 'music') this.engine?.setMetronome?.(on);
   }
 
   dispose(): void {
@@ -250,7 +259,7 @@ export class PracticeSession<A extends AudioLike, V> {
         ...compiled,
         bpm: options.bpm,
         loop: options.loop,
-        metronome: options.metronome,
+        metronome: options.kind === 'music' ? options.metronome : this.metronomeOverride ?? options.metronome,
         metronomeVolume: options.metronomeVolume ?? 1,
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,

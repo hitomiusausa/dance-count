@@ -112,6 +112,13 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     restart(next, latest.current.range);
   };
 
+  // メトロノームのオン/オフは鳴らし直さない（他の設定の change と違い、途中のカウントからそのまま進む）
+  const toggleMetronome = () => {
+    const metronome = !current().metronome;
+    latest.current.settings = { ...latest.current.settings, metronome };
+    update({ metronome });
+    session.setMetronome(metronome);
+  };
   // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
   const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
   const saveMetronomeVolume = (volume: number) => {
@@ -199,7 +206,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
         <div class="dc-area-controls">
           <SpeedChoices danceId={routine.danceId} presets={choice.presets} selected={choice.speed} onChoose={preset => change(chooseRoutinePreset(current(), routine.id, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
-            onMetronome={() => change({ metronome: !current().metronome })}
+            onMetronome={toggleMetronome}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
           <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>

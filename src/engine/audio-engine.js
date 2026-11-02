@@ -4,6 +4,7 @@ import { constantTempo } from './tempo-map.js';
 import { scheduleVoiceEvent } from './voice-pack-loader.js';
 
 const DEFAULT_LOOKAHEAD_SECONDS = 0.35;
+const MIN_CLICK_LEAD_SECONDS = 0.02;   // 鳴らしながらオンにした時、これより近い拍は予約しない（過去の時刻に予約すると即座に鳴ってずれる）
 
 // D72 小節を数える: 各小節の頭の「1」を小節の番号の語に替える（1-2-3 → 2-2-3 → … → 8-2-3 → 1-2-3）。
 // 語は声にもとからある数の語（one〜eight）だけ。予約の時刻は替えない（同じ event・同じ tick・同じ時刻の計算で、選ぶ語だけが替わる）。
@@ -83,6 +84,7 @@ export class PracticeAudioEngine {
     this.sources = new Set();
     this.playing = false;
     this.volumes = { voice: 1, click: 1 };
+    this.metronomeClicks = new Map();   // メトロノームのクリック（はじめの合図は入れない）→ 鳴らす時刻。鳴らしながらのオン/オフ用
     this.buses = null;
   }
 
@@ -184,6 +186,33 @@ export class PracticeAudioEngine {
     this.state && (this.state.metronomeVolume = clampMetronomeVolume(volume));
   }
 
+  // メトロノームのオン/オフを鳴らしながら替える（止めて最初から鳴らし直さない）。
+  // オフ: これから鳴る予定のクリックだけ止める。オン: 予約済みの回の、今より後の拍にクリックを足す（拍の時刻は scheduleIteration と同じ計算）。
+  // はじめの合図のクリックはメトロノームと別なので触らない。
+  setMetronome(on) {
+    if (!this.state || !this.playing || this.state.metronome === on) {
+      if (this.state) this.state.metronome = on;
+      return;
+    }
+    this.state.metronome = on;
+    const now = this.audioContext.currentTime;
+    if (!on) {
+      for (const [source, time] of this.metronomeClicks) {
+        if (time <= now) continue;
+        try { source.stop(); } catch { /* already ended */ }
+        this.metronomeClicks.delete(source);
+        this.sources.delete(source);
+      }
+      return;
+    }
+    const { bpm, tempo, startTime, rangeDurationTicks } = this.state;
+    const duration = patternDurationSeconds(rangeDurationTicks, bpm, tempo);
+    const current = Math.max(0, Math.floor((now - startTime) / duration));
+    for (let iteration = current; iteration <= this.state.scheduledThroughIteration; iteration += 1) {
+      this.scheduleMetronomeClicks(iteration, now + MIN_CLICK_LEAD_SECONDS);
+    }
+  }
+
   stop() {
     this.playing = false;
     if (this.schedulerId) clearInterval(this.schedulerId);
@@ -194,6 +223,7 @@ export class PracticeAudioEngine {
       try { source.stop(); } catch { /* source may already have ended */ }
     }
     this.sources.clear();
+    this.metronomeClicks.clear();
     this.onFrame({ playing: false, event: null, progress: 0 });
   }
 
@@ -219,17 +249,9 @@ export class PracticeAudioEngine {
   }
 
   scheduleIteration(iteration) {
-    const { compiled, bpm, tempo, loop, metronome, metronomeVolume, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
+    const { compiled, bpm, tempo, loop, metronome, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
 
-    if (metronome) {
-      const firstBeat = Math.ceil(rangeStartTick / TICKS_PER_BEAT);
-      for (let beat = firstBeat; beat * TICKS_PER_BEAT < rangeEndTick; beat += 1) {
-        const originalTick = beat * TICKS_PER_BEAT;
-        const localTick = originalTick - rangeStartTick + iteration * rangeDurationTicks;
-        const time = startTime + tempo.tickToSeconds(localTick);
-        this.scheduleClick(time, beat % compiled.profile.beatsPerBar === 0, metronomeVolume);
-      }
-    }
+    if (metronome) this.scheduleMetronomeClicks(iteration);
 
     const voiceEvents = compiled.events.filter(item => item.voiceKey && item.absoluteTick >= rangeStartTick && item.absoluteTick < rangeEndTick);
     // D72: 鳴らす語（小節を数えない時はもとの語そのもの＝予約は前と同じ）。語ごとのタイミングは鳴らす語のもの
@@ -257,6 +279,21 @@ export class PracticeAudioEngine {
     }
   }
 
+  // 1 回分のメトロノームのクリック。fromTime より前の拍は飛ばす（鳴らしながらオンにした時）
+  scheduleMetronomeClicks(iteration, fromTime = -Infinity) {
+    const { compiled, tempo, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks, metronomeVolume } = this.state;
+    const firstBeat = Math.ceil(rangeStartTick / TICKS_PER_BEAT);
+    for (let beat = firstBeat; beat * TICKS_PER_BEAT < rangeEndTick; beat += 1) {
+      const originalTick = beat * TICKS_PER_BEAT;
+      const localTick = originalTick - rangeStartTick + iteration * rangeDurationTicks;
+      const time = startTime + tempo.tickToSeconds(localTick);
+      if (time < fromTime) continue;
+      const source = this.scheduleClick(time, beat % compiled.profile.beatsPerBar === 0, metronomeVolume);
+      this.metronomeClicks.set(source, time);
+      source.addEventListener?.('ended', () => this.metronomeClicks.delete(source), { once: true });
+    }
+  }
+
   scheduleClick(time, accent, volume = this.state.metronomeVolume) {
     const oscillator = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
@@ -269,6 +306,7 @@ export class PracticeAudioEngine {
     oscillator.start(time);
     oscillator.stop(time + 0.04);
     this.trackSource(oscillator);
+    return oscillator;
   }
 
   trackSource(source) {
