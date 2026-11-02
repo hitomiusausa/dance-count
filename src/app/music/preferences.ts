@@ -3,7 +3,7 @@ import type { MusicTrack } from './model.ts';
 
 export interface MusicPreferences {
   sectionId: string; rate: number; repetitions: number;
-  musicVolume: number; voiceVolume: number; countEnabled: boolean; startMode: 'together' | 'music-first' | 'count-first'; delayBeats: number;
+  musicVolume: number; voiceVolume: number; musicMuted: boolean; countMuted: boolean; startMode: 'together' | 'music-first' | 'count-first'; delayBeats: number;
 }
 export function normalizeMusicPreferences(raw: unknown, track: MusicTrack): MusicPreferences {
   const source = raw && typeof raw==='object' ? raw as Record<string,unknown> : {};
@@ -13,9 +13,11 @@ export function normalizeMusicPreferences(raw: unknown, track: MusicTrack): Musi
     rate: track.rates.find(r=>r===source.rate) ?? 1,
     repetitions: [1,2,4].find(n=>n===source.repetitions) ?? 1,
     musicVolume: volume(source.musicVolume,.32,.7),voiceVolume:volume(source.voiceVolume,1,1.2),
-    countEnabled: source.countEnabled!==false,
+    musicMuted:source.musicMuted===true,
+    // Migrate the old count switch and voice mute into the single count mute control.
+    countMuted:source.countMuted===true||source.voiceMuted===true||source.countEnabled===false,
     startMode: source.startMode==='together'||source.startMode==='count-first'||source.startMode==='music-first'?source.startMode:source.countInBars===0?'together':'music-first',
-    delayBeats: [1,2,track.beatsPerBar,track.beatsPerBar*2].find(n=>n===source.delayBeats) ?? track.beatsPerBar*2
+    delayBeats: [track.beatsPerBar,track.beatsPerBar*2].find(n=>n===source.delayBeats) ?? track.beatsPerBar*2
   };
 }
 const writes=new Map<string,Promise<unknown>>();

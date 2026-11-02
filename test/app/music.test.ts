@@ -19,7 +19,7 @@ test('music lives under Use and direct links stay disabled when the feature is u
 });
 test('saved music settings tolerate removed ranges, bad rates and non-finite volume',()=>{
   const prefs=normalizeMusicPreferences({sectionId:'removed',rate:4,repetitions:100,musicVolume:Infinity,voiceVolume:-3,countInBars:3},track);
-  assert.deepEqual(prefs,{sectionId:'early',rate:1,repetitions:1,musicVolume:.32,voiceVolume:0,countEnabled:true,startMode:'music-first',delayBeats:8});
+  assert.deepEqual(prefs,{sectionId:'early',rate:1,repetitions:1,musicVolume:.32,voiceVolume:0,musicMuted:false,countMuted:false,startMode:'music-first',delayBeats:8});
 });
 test('rapid preference writes are serialized so the final selection wins',async()=>{
   const calls:number[]=[];
@@ -39,8 +39,11 @@ test('WAV output preserves channel order, sample count, duration and signs; clip
 test('start order defaults to two listening bars and explicit settings take precedence over old click preferences',()=>{
   assert.equal(normalizeMusicPreferences(null,track).startMode,'music-first');
   assert.equal(normalizeMusicPreferences({countInBars:0},track).startMode,'together');
-  const prefs=normalizeMusicPreferences({startMode:'music-first',delayBeats:1,countInBars:0},track);
-  assert.equal(prefs.startMode,'music-first');assert.equal(prefs.delayBeats,1);
+  const prefs=normalizeMusicPreferences({startMode:'music-first',delayBeats:1,countInBars:0,voiceMuted:true},track);
+  assert.equal(prefs.startMode,'music-first');assert.equal(prefs.delayBeats,8);assert.equal(prefs.countMuted,true);
+  assert.equal(normalizeMusicPreferences({countEnabled:false},track).countMuted,true);
+  assert.equal(normalizeMusicPreferences({musicMuted:true},track).musicMuted,true);
+  assert.equal(normalizeMusicPreferences({...prefs,delayBeats:4},track).delayBeats,4);
   assert.equal(normalizeMusicPreferences({startMode:'bad',delayBeats:Infinity},track).delayBeats,8);
 });
 

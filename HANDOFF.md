@@ -1,5 +1,14 @@
 # Dance Count for Ballroom — 作業引き継ぎ
 
+## 2026-10-24 夜 — 最新の再開点
+
+- **作業枝**: `agent/music-practice-20261023`。HEADは `e3b8620 docs(music): record tango listening feedback`。現在の作業ツリーには既存の未コミット変更と未追跡ファイルが複数ある。続きでは `git status` と差分を先に確認し、reset／clean／stashで消さない。
+- **音楽練習UI**: Chromeで `http://127.0.0.1:5195/#/use/music/waltz-33445d26a14c/routine/r-f524d447-3755-464b-8709-1c2cab263f5d?from=0&to=3` を開いて確認済み。メトロノームのON/OFF切り替えは削除し、「メトロノームの大きさ」バーと「消音」に統一。音量0または消音でクリックを止め、音量を戻すと鳴る。直近変更後の `npm run typecheck` は成功。音楽画面のメトロノーム設定は全曲共通のアプリ設定を使う。
+- **有料プラン設計**: [2026-10-24 有料プラン設計](./docs/superpowers/specs/2026-10-24-paid-subscription-design.md)を作成し、この引き継ぎへリンク。音楽練習はStripe定期購読、無料の既存練習は維持、利用者の書き出しなし。月額1プラン・オンライン利用を初回案とした。金額、地域／通貨、認証、支払失敗時の猶予、無料試聴、端末数は未決。Stripe本番設定・購入・公開は未実施。
+- **実行環境**: 開発サーバーは `127.0.0.1:5195`、PID `10015`で稼働中。起動設定は `VITE_MUSIC_PREVIEW=1`。ブラウザーでも同じローカル画面を確認できる。
+- **再開順**: (1) `git status`・差分・この項目を読む。(2) 必要なら開発サーバーと最新UIを確認。(3) 有料プラン設計の未決項目を整理。(4) 本番Stripe商品・secret・Webhookやデプロイは、実装とtest mode検証の後に別途判断する。
+- **バックアップ**: この引き継ぎ追記前は [`dance-count-before-handoff-20261024T132425Z.tar.gz`](../_backups/dance-count-before-handoff-20261024T132425Z.tar.gz)。有料設計作成前の資料一式は [`dance-count-before-subscription-design-20261024T132015Z.tar.gz`](../_backups/dance-count-before-subscription-design-20261024T132015Z.tar.gz)。
+
 **2026-10-23 タンゴ試聴曲を追加**: `Tango_Middle_The_Final_Posture.mp3`をローカルの波形・小節解析へ追加し、重ならない6小節候補2区間を開発プレビューに接続。ひちゃんがタンゴの1拍目からのカウントの入りを試聴し「大丈夫そう」と確認。対象範囲と未確認事項は[タンゴ曲の追加](./docs/app-v1/music-tango-sample-2026-10-23.md)。原曲・解析結果はGitHubへ送らず、販売向け審査・公開も未実施。
 
 **2026-10-23 音楽を第3の入口へ（D63）**: 「使う」はフィガー／ルーティン／音楽。各練習の「音楽・練習の設定」から選択を引き継いで同種目の曲へ進める。最新の再開点は[音楽の3入口](./docs/app-v1/music-navigation-2026-10-23.md)。開発previewで実装・検証、本番公開は未実施。
@@ -18,9 +27,10 @@
 
 **アプリ化v1 の引き継ぎは [`docs/app-v1/HANDOVER.md`](./docs/app-v1/HANDOVER.md) が正本。次のセッションはそこから読む。**
 
-**2026-10-23 第2弾・実装済みの再開点**: 「使う」内の音楽＋カウントを開発プレビューへ組込。速度・反復・開始順（曲が先／声が先／同時）・別音量・WAV保存を実装し、監査指摘の修正とローカル検証を完了。
+**2026-10-23 第2弾・実装済みの再開点**: 「使う」内の音楽＋カウントを開発プレビューへ組込。速度・反復・開始順（曲が先／声が先／同時）・別音量を実装。提供方針は定期購読中のアプリ内練習で、利用者向けの音声書き出しは初回提供に含めない。監査指摘を順に修正中。
 現在の正本は [`music-implementation-2026-10-23.md`](./docs/app-v1/music-implementation-2026-10-23.md)。枝 `agent/music-practice-20261023`、`VITE_MUSIC_PREVIEW=1`で起動。
 [Astra設計](./docs/superpowers/specs/2026-10-23-paid-music-count-design.md)／[実装設計図](./docs/superpowers/plans/2026-10-23-music-practice-implementation.md)／[UX監査](./docs/app-v1/music-ux-audit-2026-10-23.md)。本番公開・課金・音源のGitHub送信はしていない。
+有料プランとStripe連携の更新設計は[音楽練習の有料プラン設計](./docs/superpowers/specs/2026-10-24-paid-subscription-design.md)。
 
 ## 1. プロジェクトの目標
 

@@ -33,7 +33,11 @@
 .dc-music-field { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; font-size: 18px; }
 .dc-music-field select { width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--bg); }
 .dc-music-field input[type="range"] { width: 100%; min-height: 48px; margin: 0; accent-color: var(--primary); }
-.dc-music-count { width: 100%; margin-top: 12px; }
+.dc-music-volume-control { display: flex; align-items: center; gap: 8px; }
+.dc-music-volume-control input[type="range"] { flex: 1; width: 100%; min-width: 0; min-height: 48px; margin: 0; accent-color: var(--primary); }
+.dc-music-mute { flex: none; min-height: 48px; padding: 0 10px; white-space: nowrap; }
+.dc-metronome-volume { margin: 16px 0; }
+.dc-metronome-volume input[type="range"] { flex: 1; width: 100%; min-width: 0; min-height: 48px; margin: 0; accent-color: var(--primary); }
 .dc-music-figures { padding-left: 28px; font-size: 18px; overflow-wrap: anywhere; }
 .dc-music-figures li { margin: 8px 0; }
 .dc-music [data-music-routine-name] { overflow-wrap: anywhere; color: var(--ink); font-weight: 700; }

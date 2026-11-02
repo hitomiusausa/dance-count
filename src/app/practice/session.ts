@@ -14,6 +14,7 @@ interface CommonOptions {
   danceId: string;
   bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm・routine-preferences.ts を通す）
   metronome: boolean;
+  metronomeVolume?: number;
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
@@ -90,6 +91,7 @@ export interface EngineLike {
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
   setVolumes?(music: number, voice: number): void;
+  setMetronomeVolume?(volume: number): void;
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -173,6 +175,10 @@ export class PracticeSession<A extends AudioLike, V> {
     if (this.engineKind === 'music') this.engine?.setVolumes?.(music, voice);
   }
 
+  setMetronomeVolume(volume: number): void {
+    this.engine?.setMetronomeVolume?.(volume);
+  }
+
   dispose(): void {
     this.stop();
     this.unsubscribeState?.();
@@ -233,6 +239,7 @@ export class PracticeSession<A extends AudioLike, V> {
         bpm: options.bpm,
         loop: options.loop,
         metronome: options.metronome,
+        metronomeVolume: options.metronomeVolume ?? 1,
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,
         wordOffsetsMs: wordOffsetsFor(options.voice),

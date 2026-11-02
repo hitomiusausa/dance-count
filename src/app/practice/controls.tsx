@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
@@ -72,6 +73,27 @@ export function PracticeToggles({ metronome, leadIn, onMetronome, onLeadIn }: {
     <div class="dc-toggles">
       <Toggle icon="metronome" label={translator.t('metronome')} on={metronome} onToggle={onMetronome} />
       <Toggle icon="leadin" label={translator.t('leadIn')} on={leadIn} onToggle={onLeadIn} />
+    </div>
+  );
+}
+
+export function MetronomeVolumeControl({ value, muted, onPreview, onChange, onMute }: {
+  value: number; muted: boolean; onPreview(value: number): void; onChange(value: number): void; onMute(): void;
+}) {
+  const { translator } = useI18n();
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  useEffect(() => setDragValue(null), [value]);
+  const labelId = 'dc-metronome-volume-label';
+  return (
+    <div class="dc-metronome-volume" data-group="metronome-volume">
+      <div class="dc-field-label" id={labelId}>{translator.t('metronomeVolume')}</div>
+      <div class="dc-music-volume-control">
+        <input aria-labelledby={labelId} type="range" min="0" max="1" step="0.01" value={dragValue ?? value}
+          onInput={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(next); onPreview(next); }}
+          onChange={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(null); onChange(next); }} />
+        <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-metronome aria-label={translator.t(muted?'metronomeUnmuteLabel':'metronomeMuteLabel')} aria-pressed={muted}
+          onClick={onMute}>{translator.t(muted?'musicUnmute':'musicMute')}</button>
+      </div>
     </div>
   );
 }

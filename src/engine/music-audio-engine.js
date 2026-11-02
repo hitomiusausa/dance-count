@@ -4,7 +4,7 @@ import { musicJobs } from './music-plan.js';
 
 // Used by both realtime playback and offline export. Music buffers have already
 // been stretched at production time: playbackRate stays 1, and voices stay natural.
-export function scheduleMusicJob(audio, job, origin, { buffer, voicePack, musicBus, voiceBus, voiceOffsetMs = 0, wordOffsetsMs = {} }) {
+export function scheduleMusicJob(audio, job, origin, { buffer, voicePack, musicBus, voiceBus, voiceOffsetMs = 0, wordOffsetsMs = {}, metronomeVolume = 1 }) {
   const at = origin + job.at;
   if (job.kind === 'voice') {
     return scheduleVoiceEvent({ audioContext: audio, destination: voiceBus, voicePack, event: job.event,
@@ -13,9 +13,10 @@ export function scheduleMusicJob(audio, job, origin, { buffer, voicePack, musicB
         + (job.nextVoiceKey ? effectiveVoiceOffsetMs(voiceOffsetMs, wordOffsetsMs, job.nextVoiceKey)/1000 : 0)) });
   }
   if (job.kind === 'click') {
+    if (metronomeVolume === 0) return null;
     const source = audio.createOscillator(), gain = audio.createGain();
     source.frequency.value = job.accent ? 1320 : 880;
-    gain.gain.setValueAtTime(job.accent ? .13 : .08, at);
+    gain.gain.setValueAtTime((job.accent ? .13 : .08) * metronomeVolume, at);
     gain.gain.exponentialRampToValueAtTime(.0001, at+.035);
     source.connect(gain).connect(audio.destination); source.start(at); source.stop(at+.04); return source;
   }
@@ -47,15 +48,19 @@ export class MusicAudioEngine {
     this.context?.musicBus.gain.setTargetAtTime?.(music,this.audio.currentTime,.02);
     this.context?.voiceBus.gain.setTargetAtTime?.(voice,this.audio.currentTime,.02);
   }
+  setMetronomeVolume(volume) {
+    if(!Number.isFinite(volume)||volume<0||volume>1)throw new RangeError('Invalid metronome volume');
+    if(this.context)this.context.metronomeVolume=volume;
+  }
   start({ compiled, musicAsset, startMode, delayBeats, repetitions = 1, countInBars = 0, countEnabled = true, metronome = false,
-    voiceOffsetMs = 0, wordOffsetsMs = {}, musicVolume = .32, voiceVolume = 1 }) {
+    voiceOffsetMs = 0, wordOffsetsMs = {}, musicVolume = .32, voiceVolume = 1, metronomeVolume = 1 }) {
     this.stop();
     if (!musicAsset?.buffer || !this.voicePack) throw new Error('Music or voice is not loaded');
     if (Math.abs(musicAsset.buffer.duration-compiled.transport.duration) > .05) throw new Error('Music buffer and timing map do not match');
     const schedule = musicJobs(compiled, repetitions, { countInBars, countEnabled, metronome, voiceOffsetMs, wordOffsetsMs, startMode, delayBeats });
     this.plan = compiled; this.schedule = schedule; this.origin = this.audio.currentTime;
     this.context = { ...createMusicBuses(this.audio,musicVolume,voiceVolume), buffer: musicAsset.buffer,
-      voicePack: this.voicePack, voiceOffsetMs, wordOffsetsMs };
+      voicePack: this.voicePack, voiceOffsetMs, wordOffsetsMs, metronomeVolume };
     this.cursor = 0; this.playing = true;
     this.scheduleAhead(); this.timer = setInterval(() => this.scheduleAhead(),50); this.frame();
     return this.origin + schedule.start;

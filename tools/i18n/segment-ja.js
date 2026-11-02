@@ -38,8 +38,8 @@ export const OVERRIDES = {
   // D56: 末尾の「作る」から。を 1 行にまとめ、「から。」だけの行を作らない
   editFromMake: ['ルーティンを', '直す・消す時は、', 'トップの「作る」\u2060から。'],
   recordFromMake: ['自分の声の録音は、', 'トップの「作る」\u2060から。'],
-  // D56: 表紙の扉の説明。BudouX は「（生徒の｜方）」「・生徒に」と切る（「方）」だけの行・行頭の「・」を作らない）
-  coverUseSub: ['種目の', 'カウントで', '練習する・', '先生の', 'ルーティンを', '鳴らす'],
+  // Cover door lists practice counts, music and teacher routines without leaving a particle alone on a narrow line.
+  coverUseSub: ['カウントや', '曲、', '先生の', 'ルーティンで', '練習'],
   coverMakeSub: ['自分の', '声を', '録音する・', 'ルーティンを', '作る・', '生徒に', '配る'],
   // 使いやすさの通し確認（Task 7）: BudouX は「・アプリに｜ついて」（320 で「ついて」だけの行）・「作る｜・直す」（行頭の「・」）と切る
   coverSettingsSub: ['言語・', '困った時は・', 'アプリについて'],

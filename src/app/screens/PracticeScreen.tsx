@@ -7,7 +7,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MetronomeVolumeControl, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
@@ -46,7 +46,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, metronomeVolume: next.metronomeMuted?0:next.metronomeVolume, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -73,6 +73,15 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     latest.current.settings = next;
     update(patch);
     if (isPlaying()) void start(next);
+  };
+
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(current().metronomeMuted?0:volume);
+  const saveMetronomeVolume = (volume: number) => {
+    latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+  const toggleMetronomeMute = () => {
+    const metronomeMuted=!current().metronomeMuted;latest.current.settings={...latest.current.settings,metronomeMuted};update({metronomeMuted});
+    session.setMetronomeVolume(metronomeMuted?0:current().metronomeVolume);
   };
 
   // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
@@ -120,6 +129,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
           <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
             <MusicEntry source={{danceId,...(figure?{figureSlug:figure.slug}:{})}} onLeave={()=>session.stop()}/>
+            <MetronomeVolumeControl value={settings.metronomeVolume} muted={settings.metronomeMuted} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} onMute={toggleMetronomeMute}/>
             {!figure && profile.templates.length > 1 && (
               <div>
                 <div class="dc-field-label"><span>{translator.t('countPattern')}</span></div>

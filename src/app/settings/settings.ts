@@ -28,6 +28,8 @@ export interface AppSettings {
   speedPresetByRoutine: Record<string, SpeedChoice>;   // S5 の速さはルーティンごと（Ruling 40）。キーはルーティンID
   customBpmByRoutine: Record<string, number>;
   metronome: boolean;
+  metronomeVolume: number;
+  metronomeMuted: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
@@ -50,6 +52,8 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   speedPresetByRoutine: {},
   customBpmByRoutine: {},
   metronome: true,
+  metronomeVolume: 1,
+  metronomeMuted: false,
   countInBars: 1,
   loop: true,
   distributorName: '',
@@ -78,6 +82,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     speedPresetByRoutine: pickByRoutine(source.speedPresetByRoutine, value => SPEED_CHOICES.find(choice => choice === value)),
     customBpmByRoutine: pickByRoutine(source.customBpmByRoutine, value => clampBpm(value) ?? undefined),
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
+    metronomeVolume: typeof source.metronomeVolume === 'number' && Number.isFinite(source.metronomeVolume) ? Math.min(1, Math.max(0, source.metronomeVolume)) : DEFAULT_SETTINGS.metronomeVolume,
+    metronomeMuted: typeof source.metronomeMuted === 'boolean' ? source.metronomeMuted : DEFAULT_SETTINGS.metronomeMuted,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',

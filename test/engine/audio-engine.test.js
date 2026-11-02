@@ -67,6 +67,18 @@ test('count-in supports none, one bar, or two bars', () => {
   assert.throws(() => countInBeatCount(4, 3), /0, 1, or 2/);
 });
 
+test('metronome volume scales the click and can be changed on a running engine', () => {
+  const context = new FakeAudioContext();
+  const engine = new PracticeAudioEngine(context, { voicePack: fakeVoicePack() });
+  engine.state = { metronomeVolume: .5 };
+  engine.scheduleClick(1, true);
+  assert.ok(context.log.some(([name, action, value]) => name === 'gain.gain' && action === 'set' && value === .09));
+  engine.setMetronomeVolume(0);
+  engine.scheduleClick(2, true);
+  assert.ok(context.log.some(([name, action, value, time]) => name === 'gain.gain' && action === 'set' && value === .00001 && time === 2));
+  assert.throws(() => engine.setMetronomeVolume(1.1), /between 0 and 1/);
+});
+
 test('word timing adjustment is added to the global voice adjustment', () => {
   assert.equal(effectiveVoiceOffsetMs(10, { six: -15 }, 'six'), -5);
   assert.equal(effectiveVoiceOffsetMs(10, { six: -15 }, 'one'), 10);
