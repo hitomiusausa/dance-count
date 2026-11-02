@@ -70,3 +70,16 @@ test('preview choices never overlap and unavailable ranges are omitted',()=>{
   assert.equal(track.counts,'SSQQS');assert.equal(track.anchorTick,0);
   for(let i=1;i<track.sections.length;i++)assert.ok(track.sections[i-1]!.endTick<=track.sections[i]!.startTick);
 });
+
+// 2026-11-02 ひとみうさ「出だしが途中から」: 「はじめ」は曲の頭から最初のきれいな 6 小節（長さの 10% の位置ではない）
+test('the early practice range starts at the first clean bar of the song, not at ten percent of its length',()=>{
+  const data=analyzed();data.bars=Array.from({length:64},(_,i)=>({startBeat:1+i*3,endBeat:4+i*3,beatsPerBar:3,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  const track=buildMusicPreviewTrack(hash,data,{id:'waltz-top',title:'Waltz',danceId:'waltz'});
+  assert.equal(track.sections[0]!.id,'early');assert.equal(track.sections[0]!.startTick,1*960,'bar one of the song');
+  // 頭の 2 小節が要確認なら、それを飛ばした最初のきれいな小節から
+  data.bars[0]!.status='uncertain';data.bars[1]!.issues=['meter-mismatch'];
+  const skipped=buildMusicPreviewTrack(hash,data,{id:'waltz-top',title:'Waltz',danceId:'waltz'});
+  assert.equal(skipped.sections[0]!.startTick,data.bars[2]!.startBeat*960);
+  for(let i=1;i<skipped.sections.length;i++)assert.ok(skipped.sections[i-1]!.endTick<=skipped.sections[i]!.startTick);
+});

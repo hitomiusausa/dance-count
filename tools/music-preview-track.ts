@@ -41,13 +41,18 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
     windows.push({startBeat,endBeat,score:bars.reduce((sum,b)=>sum+b.meanBeatActivation+b.downbeatActivation,0)/(length*2)});
   }
   const chosen: {startBeat:number;endBeat:number}[]=[];
-  const targets=definition?[.10,.45,.75].map(fraction=>fraction*analysis.durationSeconds):[20,140,280];
+  // 「はじめ」は曲の出だし: 頭からいちばん早い、拍がきれいに取れた 6 小節（2026-11-02 ひとみうさ「出だしが途中から」。
+  // 以前は曲の長さの 10% に近い所から選んでいて、2 分 14 秒の曲では 7 小節目＝8 小節のまとまりの途中から始まっていた）。
+  // Paper Umbrella（definition なし）は頭の拍が不安定なため従来の秒数のまま。
+  const targets=definition?[null,.45*analysis.durationSeconds,.75*analysis.durationSeconds]:[20,140,280];
   const sections=targets.flatMap((target,index)=>{
-    const best=windows.filter(window=>chosen.every(previous=>window.endBeat<=previous.startBeat||window.startBeat>=previous.endBeat)&&
-      Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
-      const distance=(window:typeof a)=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)+2*(1-window.score);
-      return distance(a)-distance(b);
-    })[0];
+    const open=windows.filter(window=>chosen.every(previous=>window.endBeat<=previous.startBeat||window.startBeat>=previous.endBeat));
+    const best=target===null
+      ? open.sort((a,b)=>a.startBeat-b.startBeat)[0]
+      : open.filter(window=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
+        const distance=(window:typeof a)=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)+2*(1-window.score);
+        return distance(a)-distance(b);
+      })[0];
     if(!best){if(definition)return [];throw new Error('No consistent six-bar preview near requested range');}
     chosen.push(best);
     return [{ id:['early','middle','late'][index]!,startTick:best.startBeat*960,endTick:best.endBeat*960,
