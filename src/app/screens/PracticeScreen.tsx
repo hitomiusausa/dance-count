@@ -6,11 +6,14 @@ import { getDanceProfile } from '../../engine/dance-profiles.js';
 import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
-import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, RepeatRow, SpeedChoices, VoiceChip, VoiceOffsetRow } from '../practice/controls.tsx';
+import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MetronomeVolumeControl, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
+import { barCountingAvailable } from '../practice/bar-count.ts';
+import { tempoText } from '../practice/tempo.ts';
+import { volumeGain } from '../practice/volume.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import { voiceOffsetFor } from '../practice/voice-offset.ts';
 import type { UiState } from '../router/routes.ts';
@@ -46,13 +49,13 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), metronomeVolume: next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
 
   // 開いた時点で「前回」を書く（Ruling 26）。フィガーも同じ 1 回で（D57・Ruling 121-1。基本なら null）
-  useEffect(() => { update({ lastDanceId: danceId, lastFigure: figure?.slug ?? null }); }, [session]);
+  useEffect(() => { update({ lastDanceId: danceId, lastFigure: figure?.slug ?? null, lastKind: 'dance' }); }, [session]);
   // 前回カードの印があれば、声が決まった時点ですぐ鳴らす（Ruling 32・61-6）。止めるのは usePracticeSession。
   useEffect(() => {
     if (autoplayChecked.current || !playback.voice) return;
@@ -75,6 +78,19 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     if (isPlaying()) void start(next);
   };
 
+  // メトロノームのオン/オフは鳴らし直さない（他の設定の change と違い、途中のカウントからそのまま進む）
+  const toggleMetronome = () => {
+    const metronome = !current().metronome;
+    latest.current.settings = { ...latest.current.settings, metronome };
+    update({ metronome });
+    session.setMetronome(metronome);
+  };
+  // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
+  const saveMetronomeVolume = (volume: number) => {
+    latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+
   // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
   const stepVoiceOffset = (direction: -1 | 1) => {
     const result = playback.step(latest.current.settings, direction);
@@ -82,6 +98,16 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     latest.current.voice = result.voice;
     if (Object.keys(result.patch).length > 0) change(result.patch);
     else if (isPlaying()) void start(latest.current.settings);
+  };
+
+  // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
+  const volumeKey = (_kind: VolumeKind) => 'voiceVolume' as const;
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  const commitVolume = (kind: VolumeKind, percent: number) => {
+    const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
+    latest.current.settings = { ...latest.current.settings, ...patch };
+    update(patch);
+    session.setVolumes({ [kind]: volumeGain(percent) });
   };
 
   const togglePlay = () => {
@@ -94,7 +120,9 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const forced = uiState ? FORCED_NOTICE[uiState] : undefined;
   const notice: AlertNotice = forced && !forcedDismissed ? forced : playback.saveFailed ? 'save-failed' : view.notice;
   // D55: 帯は鳴っている型（セッションの program）。止まっている間は今の型を表示のためだけに語にする。はじめの合図の間は点けない
-  const strip = stripView(stripCells(view.program ?? idleProgram(danceId, counts)), view.playing && !view.countIn ? view.originalTick : null);
+  // 夜間便 B-5: はじめの合図の間は丸を灰で 1 語ずつ（leadStripView）。数字は出さない
+  const cells = stripCells(view.program ?? idleProgram(danceId, counts));
+  const strip = view.playing && view.countIn ? leadStripView(cells, view.leadTick) : stripView(cells, view.playing && !view.countIn ? view.originalTick : null);
   const nowText = view.playing && !view.countIn ? displayForVoiceKey(view.voiceKey) : '';
   // 止まっている間は「最初に鳴るカウント」を灰色で出す（空白にしない。琥珀は鳴っている時だけ）。
   const idleText = view.playing ? '' : formatCounts(danceId, counts).split(' ')[0] ?? '';
@@ -110,15 +138,15 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
             <small>{figure ? `${figureDisplayName(danceId, figure.englishName, translator.locale)} · ${formatCounts(danceId, counts)}` : formatCounts(danceId, counts)}</small>
           </header>
           <NoticeBox notice={notice} onClose={() => { setForcedDismissed(true); if (closeTarget(notice) === 'save-failed') playback.dismissSaveFailed(); else session.dismissNotice(); }} />
-          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} />
+          <CountBox playing={view.playing} countIn={view.countIn} nowText={nowText} idleText={idleText} strip={strip} preparing={view.starting} bar={view.bar} />
         </div>
         <div>
-          <SpeedChoices presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
+          <SpeedChoices danceId={danceId} presets={speedPresetBpms(profile)} selected={choice.speed} onChoose={preset => change(choosePreset(current(), danceId, preset))} />
           <PracticeToggles metronome={settings.metronome} leadIn={settings.countInBars === 1}
-            onMetronome={() => change({ metronome: !current().metronome })}
+            onMetronome={toggleMetronome}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm }) : translator.t('moreOptions')}>
+          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <MusicEntry source={{danceId,...(figure?{figureSlug:figure.slug}:{})}} onLeave={()=>session.stop()}/>
             {!figure && profile.templates.length > 1 && (
               <div>
@@ -133,10 +161,14 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
                 </div>
               </div>
             )}
-            <FineSpeed idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
+            <FineSpeed danceId={danceId} idPrefix="dc-s2" bpm={choice.bpm} dragBpm={dragBpm} competition={profile.competitionBpm} onDrag={setDragBpm}
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
-            <RepeatRow loop={settings.loop} onToggle={() => change({ loop: !current().loop })} />
-            <VoiceOffsetRow idPrefix="dc-s2" offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            <PlaySwitches idPrefix="dc-s2" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
+              barCounting={barCountingAvailable(danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
+            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} />
+              <VoiceOffsetRow idPrefix="dc-s2" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
+            </SoundGroup>
           </MoreOptions>
         </div>
       </div>

@@ -5,13 +5,13 @@ import { packFixture } from '../helpers/voice-fixtures.ts';
 import { createAppTranslator } from '../../../src/app/i18n/index.ts';
 import { saveVoicePack } from '../../../src/app/voices/store.ts';
 import {
-  DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packSelection, resolveVoiceSelection, standardSelection, voiceDisplayName, wordOffsetsFor
+  DEFAULT_VOICE, chooseVoice, forgetVoiceSettings, packSelection, resolveVoiceSelection, standardSelection, standardSelectionFor, voiceDisplayName, wordOffsetsFor
 } from '../../../src/app/voices/selection.ts';
 
 test('a standard id resolves without touching the device', async () => {
   assert.deepEqual(standardSelection('default-en-female-v1'), { kind: 'standard', id: 'default-en-female-v1', locale: 'en' });
   assert.equal(standardSelection('user-recorded-v1'), null);
-  assert.equal(standardSelection('default-ja-female-v1'), null, 'not in standard-voices.json until stage 6c');
+  assert.deepEqual(standardSelection('default-ja-female-v1'), { kind: 'standard', id: 'default-ja-female-v1', locale: 'ja-JP' }, 'stage 6c (D78)');
   assert.deepEqual(await resolveVoiceSelection(null, 'default-en-female-v1'), DEFAULT_VOICE);
 });
 
@@ -24,8 +24,14 @@ test('a complete recorded voice resolves to its pack; missing, partial or broken
   assert.equal(complete.kind === 'pack' && complete.pack.words.ah !== undefined, true);
   assert.deepEqual(await resolveVoiceSelection(storage, 'user-recorded-ja-v1'), DEFAULT_VOICE, 'partial');
   assert.deepEqual(await resolveVoiceSelection(storage, 'v-gone'), DEFAULT_VOICE, 'deleted');
-  assert.deepEqual(await resolveVoiceSelection(storage, 'default-ja-female-v1'), DEFAULT_VOICE, 'Japanese standard before stage 6c');
+  assert.deepEqual(await resolveVoiceSelection(storage, 'default-ja-female-v1'), { kind: 'standard', id: 'default-ja-female-v1', locale: 'ja-JP' }, 'Japanese standard (D78)');
   assert.deepEqual(await resolveVoiceSelection(memoryStorage({}, { failReads: true }).storage, 'user-recorded-v1'), DEFAULT_VOICE);
+});
+
+test('the S8 comparison uses the standard voice of the recorded language (D78)', () => {
+  assert.deepEqual(standardSelectionFor('en'), DEFAULT_VOICE);
+  assert.deepEqual(standardSelectionFor('ja-JP'), { kind: 'standard', id: 'default-ja-female-v1', locale: 'ja-JP' });
+  assert.deepEqual(chooseVoice(standardSelectionFor('ja-JP')), { selectedVoiceId: 'default-ja-female-v1', voiceLocale: 'ja-JP' });
 });
 
 test('choosing writes the id and the derived voice language together (Ruling 60-3)', () => {

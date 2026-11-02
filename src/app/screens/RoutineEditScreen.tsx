@@ -319,7 +319,7 @@ export function RoutineEditScreen({ routineId, uiState }: { routineId?: string; 
                 {isOpen && open.kind === 'edit' && (
                   <div class="dc-row-body" data-row-body>
                     <FigureForm idPrefix={`dc-f${index}`} kind="edit" danceId={routine.danceId} draft={open.draft} check={current.check()}
-                      onDraft={patch => { current.setDraft(patch); rerender(0); }} onPrimary={primaryAction} />
+                      autoNote={current.autoNote()} onDraft={patch => { current.setDraft(patch); rerender(0); }} onPrimary={primaryAction} />
                     <div class="dc-figure-actions" data-group="figure-actions">
                       <button type="button" class="dc-button dc-button--secondary dc-span3" disabled={!current.previewOpen()} onClick={previewOpen}>
                         <Icon name={playing ? 'stop' : 'play'} /><span>{playing ? translator.t('stop') : translator.t('previewFigure')}</span>

@@ -1,8 +1,28 @@
 # Dance Count for Ballroom — 作業引き継ぎ
 
+**2026-11-02 夜 音楽の一覧（レベル・長さ・試聴）とサンバ**: 曲を選ぶ画面の 1 行を「種目 · レベル · 長さ」＋曲名にし、アイコンだけの試聴ボタン（▶／■、「はじめ」の区間を元の速さ・1 曲だけ）を足した（日本語・英語）。レベルはファイル名 `<種目>_<レベル>_<曲名>` の 2 つ目（`Low`＝初級／Beginner がいちばん初心者向け・`Middle`＝中級・`High`＝上級。ひとみうさ）。サンバ `Samba_Low_First_birds.wav`（2:37・99.4 BPM＝50 小節/分・初級。テンポはこのままでよい＝ひとみうさ）を追加: Beat This はサンバの小節頭を 4 拍ごと（2 小節ごと）に出すため、解析は 4 拍で確かめ、アプリでは 2 拍子で数える（検出した小節頭だけを使う）。ワルツは `Waltz_Low_Moon_Steps.wav`（曲名 Moon Steps・初級）に改名。今の `music/` は 7 曲（チャチャチャ 2・ルンバ 2・タンゴ 1・ワルツ 1・サンバ 1）＋試作の Paper Umbrella。`ワルツ初級.m4a` などはお手本の録音で解析の対象外。
+- Mac の確認（Remote Control の分身セッション経由）: サンバ 確定 59・要確認 6 小節、「はじめ」1.72 秒。一覧 8 曲で表示の切れ・はみ出し 0（375×667・日英）。`smoke:music:navigation`・`ui:check:music`（30 パターン）・`smoke-music-library`・`smoke-music-routines` すべて通過。ひとみうさが試聴・Moon Steps の出だし・サンバの「1 a 2」を耳で確認。
+- 通し確認の直し: 前のワルツの id の決め打ちを外す・10/24 に変わった文言を messages.ts から読む・書き出しが無いことを確かめる・お手本ルーティンの無いタンゴ／サンバは飛ばして記録する。
+- Mac の開発サーバーは分身セッションが `nohup` で起動（ログ `/tmp/dc-dev-5195.log`）。解析用の Python は `/tmp/dc-waveform-bars-venv`（Mac を再起動すると消えるので、作り直しは README のとおり）。
+
+**2026-11-02 音楽の「はじめ」を曲の出だしから**: ワルツを Suno の新曲 `Waltz_Slow_Low_Moon_Steps.wav`（2:14・最後の 4 小節でフェードアウト・85.7 BPM・64 小節）に入れ替え（前の `Waltz_High_The_Sweetest_Dance.mp3` は `../_backups/music-removed-20261102/`）。ひとみうさ「出だしが途中から」→ 原因は `tools/music-preview-track.ts` が「はじめ」を曲の長さの 10% に近い所（この曲では 13.4 秒＝7 小節目）から選んでいたこと。曲の頭からいちばん早い、拍がきれいに取れた 6 小節に変えた（まん中・おわり・Paper Umbrella は従来どおり）。単体検査は直す前に落ち・直した後に通ることを確認。Mac の開発サーバーで確認: 「はじめ」の開始は Low Moon Steps 1.0 秒（最初の小節の頭）・タンゴ 2.78 秒・チャチャチャ／ルンバ 0.56〜2.12 秒。**Paper Umbrella は 20.02 秒からのままがちょうどいい出だし（ひとみうさ 2026-11-02 確認・維持）**。`music/` の `ワルツ初級.m4a` などはお手本の録音で、解析の対象外（m4a は読まない・一度も一覧に入っていない）。
+
+**2026-11-02 Mac に残っていた 10/24 の作業も統合**: Mac に未コミットで残っていた 10/24 の作業（音楽の画面・音量・戻る・有料プラン設計・Suno 調査など 33 ファイル）をひとみうさが枝 `agent/music-wip-20261024` に保存（作業前の全体は `../_backups/dance-count-before-merge-20261102-210113.tar.gz`、6.1GB）。それを枝 `claude/kind-babbage-44h53e` にマージ。メトロノームの大きさは D73 と 10/24 の二重を **D81** で 10/24 のバーに一本化（普通の練習の消音は「オン/オフ」が兼ねる）。検証: `typecheck` OK・`build` OK（precache 185 件。10/24 の文言の変更で日本語フォントのサブセット 59 が要らなくなった分の 4 件減）・`ui:check` 1163 件すべて PASS・`npm test` 813 件中 781 pass／32 fail（32 は前と同じ engine-schedule の浮動小数の最後の 1 桁。4 本の枝で同じ）。`ui:check:music` はこの環境に曲の原本が無いため未確認（Mac で要確認）。
+
+**2026-11-02 音楽の枝を本番の系列に追いつかせた**: 枝 `claude/kind-babbage-44h53e` で `agent/music-practice-20261023` に `agent/preview-1014`（本番の系列・D63〜D79）をマージ。ぶつかった 12 ファイルは両方を残して解決（`CountBox` は `bar` と `leadText` の両方・`setVolumes` は音楽のエンジン `(music, voice)` とカウントだけのエンジン `{ voice, click }` の両方を受け、D73 の方は音楽のエンジンには渡さない・画面 ID は U3〜U5 と S14 の両方・「音楽・練習の設定」の見出しは D71 の `mpm` つき）。音楽の **D63 は本番側の D63（夜間便 A）と重なったので D80 に付け替え**。`stage8-copy-review.md` は `npm run copy:sheet` で作り直し（手書きの 2 列は鍵で残ったことを確認）。検証: `typecheck` OK・`build` OK・`npm test` 809 件中 777 pass／32 fail（32 は全部 `test/engine/engine-schedule.test.js` の浮動小数の最後の 1 桁。マージ前の 2 本の枝でも同じ 32 件が落ちる＝Linux と Mac の差で、マージとは関係なし）・`ui:check` 1163 件すべて PASS（本番の系列と同じ数）・`ui:check:music` はこの環境に曲の原本（Git 対象外の `music/`・`output/music-probe/`）が無く「曲を準備しています」で止まるため未確認（Mac で要確認）。本番公開・push 先の枝の切り替えはしていない。
+
+## 2026-10-24 夜 — 最新の再開点
+
+- **作業枝**: `agent/music-practice-20261023`。HEADは `e3b8620 docs(music): record tango listening feedback`。現在の作業ツリーには既存の未コミット変更と未追跡ファイルが複数ある。続きでは `git status` と差分を先に確認し、reset／clean／stashで消さない。
+- **音楽練習UI**: Chromeで `http://127.0.0.1:5195/#/use/music/waltz-33445d26a14c/routine/r-f524d447-3755-464b-8709-1c2cab263f5d?from=0&to=3` を開いて確認済み。メトロノームのON/OFF切り替えは削除し、「メトロノームの大きさ」バーと「消音」に統一。音量0または消音でクリックを止め、音量を戻すと鳴る。直近変更後の `npm run typecheck` は成功。音楽画面のメトロノーム設定は全曲共通のアプリ設定を使う。
+- **有料プラン設計**: [2026-10-24 有料プラン設計](./docs/superpowers/specs/2026-10-24-paid-subscription-design.md)を作成し、この引き継ぎへリンク。音楽練習はStripe定期購読、無料の既存練習は維持、利用者の書き出しなし。月額1プラン・オンライン利用を初回案とした。金額、地域／通貨、認証、支払失敗時の猶予、無料試聴、端末数は未決。Stripe本番設定・購入・公開は未実施。
+- **実行環境**: 開発サーバーは `127.0.0.1:5195`、PID `10015`で稼働中。起動設定は `VITE_MUSIC_PREVIEW=1`。ブラウザーでも同じローカル画面を確認できる。
+- **再開順**: (1) `git status`・差分・この項目を読む。(2) 必要なら開発サーバーと最新UIを確認。(3) 有料プラン設計の未決項目を整理。(4) 本番Stripe商品・secret・Webhookやデプロイは、実装とtest mode検証の後に別途判断する。
+- **バックアップ**: この引き継ぎ追記前は [`dance-count-before-handoff-20261024T132425Z.tar.gz`](../_backups/dance-count-before-handoff-20261024T132425Z.tar.gz)。有料設計作成前の資料一式は [`dance-count-before-subscription-design-20261024T132015Z.tar.gz`](../_backups/dance-count-before-subscription-design-20261024T132015Z.tar.gz)。
+
 **2026-10-23 タンゴ試聴曲を追加**: `Tango_Middle_The_Final_Posture.mp3`をローカルの波形・小節解析へ追加し、重ならない6小節候補2区間を開発プレビューに接続。ひちゃんがタンゴの1拍目からのカウントの入りを試聴し「大丈夫そう」と確認。対象範囲と未確認事項は[タンゴ曲の追加](./docs/app-v1/music-tango-sample-2026-10-23.md)。原曲・解析結果はGitHubへ送らず、販売向け審査・公開も未実施。
 
-**2026-10-23 音楽を第3の入口へ（D63）**: 「使う」はフィガー／ルーティン／音楽。各練習の「音楽・練習の設定」から選択を引き継いで同種目の曲へ進める。最新の再開点は[音楽の3入口](./docs/app-v1/music-navigation-2026-10-23.md)。開発previewで実装・検証、本番公開は未実施。
+**2026-10-23 音楽を第3の入口へ（D80・旧 D63）**: 「使う」はフィガー／ルーティン／音楽。各練習の「音楽・練習の設定」から選択を引き継いで同種目の曲へ進める。最新の再開点は[音楽の3入口](./docs/app-v1/music-navigation-2026-10-23.md)。開発previewで実装・検証、本番公開は未実施。
 
 **2026-10-23 利用者向けのルーティン接続**: 「使う」の音楽画面に保存済みルーティン選択を追加。波形・解析は制作専用のまま。現在の運用と再開点は[準備した曲で使う運用](./docs/app-v1/music-prepared-operation-2026-10-23.md)。完成曲の本番カタログ登録・課金・公開は未実施。
 
@@ -18,9 +38,10 @@
 
 **アプリ化v1 の引き継ぎは [`docs/app-v1/HANDOVER.md`](./docs/app-v1/HANDOVER.md) が正本。次のセッションはそこから読む。**
 
-**2026-10-23 第2弾・実装済みの再開点**: 「使う」内の音楽＋カウントを開発プレビューへ組込。速度・反復・開始順（曲が先／声が先／同時）・別音量・WAV保存を実装し、監査指摘の修正とローカル検証を完了。
+**2026-10-23 第2弾・実装済みの再開点**: 「使う」内の音楽＋カウントを開発プレビューへ組込。速度・反復・開始順（曲が先／声が先／同時）・別音量を実装。提供方針は定期購読中のアプリ内練習で、利用者向けの音声書き出しは初回提供に含めない。監査指摘を順に修正中。
 現在の正本は [`music-implementation-2026-10-23.md`](./docs/app-v1/music-implementation-2026-10-23.md)。枝 `agent/music-practice-20261023`、`VITE_MUSIC_PREVIEW=1`で起動。
 [Astra設計](./docs/superpowers/specs/2026-10-23-paid-music-count-design.md)／[実装設計図](./docs/superpowers/plans/2026-10-23-music-practice-implementation.md)／[UX監査](./docs/app-v1/music-ux-audit-2026-10-23.md)。本番公開・課金・音源のGitHub送信はしていない。
+有料プランとStripe連携の更新設計は[音楽練習の有料プラン設計](./docs/superpowers/specs/2026-10-24-paid-subscription-design.md)。
 
 ## 1. プロジェクトの目標
 

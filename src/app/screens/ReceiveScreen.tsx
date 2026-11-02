@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { FocusHeader } from '../components/FocusHeader.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
+import { TeacherNote } from '../components/TeacherNote.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { AppTranslator } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
@@ -120,23 +121,34 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
   };
 
   // 確認・受け取ったの画面は本文に見出しがあるので、上の行の名前は選ぶ画面でだけ h1（Ruling 102-3）
-  const header = <FocusHeader screen="S10" title={translator.t('receiveTitle')} heading={!plan || step === 'pick'} />;
+  // D67: 見出しは M1 と同じ形。確認・受け取ったの画面は見出しが「このファイルの中身」「受け取りました」（h1 は 1 つ。Ruling 102-3）
+  const header = <ScreenHeading screen="S10" info="infoReceive"
+    title={translator.t(plan && step === 'done' ? 'receivedTitle' : plan && step === 'confirm' ? 'inThisFile' : 'receiveTitle')} />;
 
   if (step === 'done' && plan) {
     const voice = plan.voice?.pack;
+    // 夜間便 B-2（Ruling 124・監査 #3・po-checklist A-15 の読み替え）: 束にルーティンが入っていたら主ボタンはルーティン（1 本ならその S5 へ・自動では鳴らさない／
+    // 2 本以上は U2 へ）。声だけの束は今のまま（種目を選ぶ）。ルーティンの在りかの 1 文（A-2）はボタンが答えなので出さない。
+    // D69: 声も入っていた時の 2 番目の行「種目を選ぶ ›」はやめた（本文が主ボタンを指し、種目の練習のことは文 1 つ）
+    const received = plan.routines.map(item => item.routine);
+    const only = received.length === 1 ? received[0]! : null;
+    const exit = received.length === 0 ? { screen: voice ? 'S1' as const : 'U2' as const, label: voice ? 'goHome' as const : 'seeRoutines' as const }
+      : only ? { screen: 'S5' as const, label: 'playRoutine' as const }
+      : { screen: 'U2' as const, label: 'seeRoutines' as const };
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="done">
         {header}
-        <h1 class="dc-heading">{translator.t('receivedTitle')}</h1>
         <p class="dc-body">
-          {voice ? voiceNext(translator, voice) : phrased(translator, 'receivedRoutines')}
+          {voice ? voiceNext(translator, voice, received.length) : phrased(translator, 'receivedRoutines')}
         </p>
-        {/* Fable 答え 2026-10-13 §2-2: 声＋ルーティンの束は、出口（種目を選ぶ）は 1 つのまま、ルーティンの在りかを 1 文で */}
-        {voice && plan.routines.length > 0 && <p class="dc-body">{phrased(translator, 'receivedRoutinesToo')}</p>}
+        {/* D68: 先生からのひとこと（ファイルにあれば）。文字としてだけ出す（HTML として読まない） */}
+        {plan.note && <TeacherNote note={plan.note} />}
+        {/* D69（案 A）: 2 番目の出口「種目を選ぶ ›」はやめ、種目の練習にも使えることは文 1 つで（ボタンにしない） */}
+        {voice && received.length > 0 && <p class="dc-body" data-voice-dances-too>{phrased(translator, 'receivedVoiceDancesToo')}</p>}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button"
-            onClick={() => exitTo({ screen: voice ? 'S1' : 'U2', params: {} })}>
-            <span>{translator.t(voice ? 'goHome' : 'seeRoutines')}</span><Icon name="chev-r" />
+            onClick={() => exitTo(exit.screen === 'S5' && only ? { screen: 'S5', params: { routineId: only.id } } : { screen: exit.screen, params: {} })}>
+            <span>{translator.t(exit.label)}</span><Icon name="chev-r" />
           </button>
         </div>
       </main>
@@ -150,7 +162,6 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-receive" data-screen="S10" data-step="confirm">
         {header}
-        <h1 class="dc-heading">{translator.t('inThisFile')}</h1>
         {saveFailed && (
           <div class="dc-alert" role="status" data-alert="save-failed">
             <div class="dc-alert-text dc-alert-text--solo"><b>{phrased(translator, 'saveFailed')}</b></div>
@@ -163,7 +174,7 @@ export function ReceiveScreen({ uiState }: { uiState?: UiState }) {
             <div key={index} class="dc-receive-note">{phrased(translator, 'routineUnreadable', { name: item.name ?? translator.t('routineNoName') })}</div>
           ))}
           {plan.rejected.length > NAMES_SHOWN && <div class="dc-receive-note">{phrased(translator, 'routinesUnreadableMore', { count: plan.rejected.length - NAMES_SHOWN })}</div>}
-          {voice?.replaces && <div class="dc-receive-note">{replaceLine(translator, voice.pack, plan.distributor)}</div>}
+          {voice?.replaces && <div class="dc-receive-note">{replaceLine(translator, voice.replaces)}</div>}
           {replacesRoutines && <div class="dc-receive-note">{phrased(translator, 'replaceRoutines')}</div>}
           {plan.routinesOverLimit > 0 && <div class="dc-receive-note">{phrased(translator, 'routinesOverLimit', { max: ROUTINES_MAX, count: plan.routinesOverLimit })}</div>}
         </div>
@@ -226,12 +237,18 @@ function voiceLine(translator: AppTranslator, pack: VoicePackRecord, distributor
   return distributor ? phrased(translator, 'fileVoiceFrom', { name: honorific(distributor.name, translator.locale), ...values }) : phrased(translator, 'fileVoiceNamed', { name: pack.name, ...values });
 }
 
-function replaceLine(translator: AppTranslator, pack: VoicePackRecord, distributor: { name: string } | null) {
-  return distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: pack.name });
+// 置き換わる方（端末にある声）の名前で言う。D76（ひとみうさ承認 2026-10-15）: 見分け用の番号が同じなら名前を変えた先生の声も置き換わるので、
+// ファイルの新しい名前ではなく生徒の一覧に出ている名前（「山田さんの声はすでにあります」）
+function replaceLine(translator: AppTranslator, replaces: VoicePackRecord) {
+  return replaces.distributor ? phrased(translator, 'replaceVoiceFrom', { name: honorific(replaces.distributor.name, translator.locale) }) : phrased(translator, 'replaceVoiceNamed', { name: replaces.name });
 }
 
-function voiceNext(translator: AppTranslator, pack: VoicePackRecord) {
-  return pack.distributor ? phrased(translator, 'receivedVoiceFrom', { name: honorific(pack.distributor.name, translator.locale) }) : phrased(translator, 'receivedVoiceNamed', { name: pack.name });
+// D69（案 A）: ルーティンも入っていたら、本文は主ボタンを指す（1 本＝「ルーティンを再生する」・2 本以上＝「ルーティンを見る」）。声だけは今のまま
+function voiceNext(translator: AppTranslator, pack: VoicePackRecord, routines: number) {
+  const [from, named] = routines === 0 ? ['receivedVoiceFrom', 'receivedVoiceNamed'] as const
+    : routines === 1 ? ['receivedVoicePlayFrom', 'receivedVoicePlayNamed'] as const
+    : ['receivedVoiceSeeFrom', 'receivedVoiceSeeNamed'] as const;
+  return pack.distributor ? phrased(translator, from, { name: honorific(pack.distributor.name, translator.locale) }) : phrased(translator, named, { name: pack.name });
 }
 
 // 「ルーティン 2 本: ワルツのルーティン、タンゴ前のワルツ」。3 本目からは「ほか N 本」。

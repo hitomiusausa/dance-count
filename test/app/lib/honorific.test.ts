@@ -28,5 +28,7 @@ test('the six keys read naturally with both forms (D49)', () => {
   assert.equal(ja.t('fileVoiceFrom', { name: name('山田先生'), language: '日本語', count: 12 }), '山田先生の声（日本語）· 12 語');
   assert.equal(ja.t('replaceVoiceFrom', { name: name('山田') }), '山田さんの声はすでにあります。「使う」で新しい方に置き換わります。');
   assert.equal(ja.t('receivedVoiceFrom', { name: name('山田先生') }), '「使う」で種目を選んで ▶ を押すと、山田先生の声で鳴ります。');
+  assert.equal(ja.t('receivedVoicePlayFrom', { name: name('山田先生') }), '下の「ルーティンを再生する」を押すと、山田先生の声で再生されます。');   // D69
+  assert.equal(ja.t('receivedVoiceSeeFrom', { name: name('山田') }), '下の「ルーティンを見る」からルーティンを選ぶと、山田さんの声で再生されます。');   // D69
   assert.equal(createAppTranslator('en').t('distributorVoice', { name: honorific('Yamada-sensei', 'en') }), "Yamada-sensei's voice");
 });

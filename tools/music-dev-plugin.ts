@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { Plugin } from 'vite';
-import type { MusicTrack } from '../src/app/music/model.ts';
+import { levelFromFilename, type MusicTrack } from '../src/app/music/model.ts';
 import { buildMusicPreviewTrack, type PreviewDefinition } from './music-preview-track.ts';
 const run=promisify(execFile);
 interface LocalEntry {id:string;title:string;label:string;danceId:string;source:string;stamp:number;analysis:any;track:MusicTrack|null}
@@ -34,8 +34,8 @@ export function musicDevPlugin():Plugin{return{name:'local-music-preview',apply:
       const index=JSON.parse(await readFile(indexPath,'utf8'));
       if(index.schemaVersion!==1||!Array.isArray(index.tracks)||index.tracks.length>29)throw Error('Invalid library');
       for(const item of index.tracks){
-        if(!['waltz','rumba','chacha','tango'].includes(item.danceId)||!/^local-inputs\/[a-f0-9]{64}\.(mp3|wav|flac|ogg)$/.test(item.sourcePath)||!/^library\/[a-f0-9]{16}\/bar-analysis\.json$/.test(item.analysisPath))continue;
-        await add(item.id,item.title,item.label,item.danceId,path.join(output,item.sourcePath),path.join(output,item.analysisPath),{id:item.id,title:item.title,danceId:item.danceId},item.sourceSha256);
+        if(!['waltz','rumba','chacha','tango','samba'].includes(item.danceId)||!/^local-inputs\/[a-f0-9]{64}\.(mp3|wav|flac|ogg)$/.test(item.sourcePath)||!/^library\/[a-f0-9]{16}\/bar-analysis\.json$/.test(item.analysisPath))continue;
+        await add(item.id,item.title,item.label,item.danceId,path.join(output,item.sourcePath),path.join(output,item.analysisPath),{id:item.id,title:item.title,danceId:item.danceId,level:levelFromFilename(String(item.filenameAtSnapshot??''))},item.sourceSha256);
       }
     }catch{ /* A library is optional until the creator prepares the samples. */ }
     if(mine===generation)entries=next;

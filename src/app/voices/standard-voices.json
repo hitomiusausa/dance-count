@@ -1,3 +1,4 @@
 [
-  { "id": "default-en-female-v1", "locale": "en" }
+  { "id": "default-en-female-v1", "locale": "en" },
+  { "id": "default-ja-female-v1", "locale": "ja-JP" }
 ]

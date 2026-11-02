@@ -4,12 +4,15 @@ import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
 import { isFigureSlug } from '../routines/figure-names.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
+import { VOLUME_DEFAULT, clampVolumePercent, volumeGain } from '../practice/volume.ts';
+import { readDistributorId } from '../share/distributor-id.ts';
 import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { isVoiceId } from '../voices/ids.ts';
 
 // 設定（仕様 §7）。保存先は IndexedDB の settings ストア、キーは SETTINGS_KEY の1件だけ。
 // selectedVoiceId は録音・受け取った声の ID も残す（段4・Ruling 61-1）。voiceOffsetMsByVoiceId は標準の声のタイミング（Ruling 62-3。
 // 録音の声は声そのものの timingAdjustments に持つ）。distributorName は S9 の「あなたの名前」（次回から入っている。Ruling 82-2）。
+// distributorId は配る人の見分け用の番号（D76（ひとみうさ承認 2026-10-15）。初めて配布ファイルを作る時に作る・画面には出さない。share/distributor-id.ts）。
 // hints.backupTip* はバックアップの 1 行を出したか（S8 完成・S4 の最初の保存で各 1 回。Ruling 86-2・86-3）。
 // hints.firstPlaybackDone は初めて鳴った印・homeScreenCardDismissed は S1 の「ホーム画面に追加」カードを × で閉じた印（段7・Ruling 92-7・D42）。
 export const SETTINGS_KEY = 'app';
@@ -22,15 +25,22 @@ export interface AppSettings {
   voiceOffsetMsByVoiceId: Record<string, number>;   // 標準の声のタイミング（ms・±200・0 は持たない）
   lastDanceId: string | null;               // 「前回」カード（無ければ出さない）
   lastFigure: string | null;                // 前回のフィガー（D57・Ruling 121。監修表の slug。基本のカウントなら null。lastDanceId と組）
+  lastKind: 'dance' | 'routine';            // 夜間便 B-1（Ruling 124）: 前回が種目（S2）かルーティン（S5）か。版は上げない（欠けていれば 'dance'）
+  lastRoutineId: string | null;             // 夜間便 B-1: 前回鳴らしたルーティン（S5 の ▶）。消えていれば種目の記憶へ落ちる（state/resume.ts）
   lastTemplateByDance: Record<string, string>;
   speedPresetByDance: Record<string, SpeedChoice>;
   customBpmByDance: Record<string, number>;
   speedPresetByRoutine: Record<string, SpeedChoice>;   // S5 の速さはルーティンごと（Ruling 40）。キーはルーティンID
   customBpmByRoutine: Record<string, number>;
   metronome: boolean;
+  metronomeVolume: number;
+  metronomeMuted: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
+  voiceVolume: number;                      // D73 声の大きさ（0〜100 %・既定 100＝今までと同じ。practice/volume.ts）
+  barCounting: boolean;                     // D72 小節を数える（くわしく。S2・S5 共通・既定オフ。出す種目は practice/bar-count.ts）
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
+  distributorId: string | null;             // D76 見分け用の番号（null＝まだ配っていない。版は上げない＝無ければ null）
   hints: {
     wakeLockTipShown: boolean; backupTipShownForRecording: boolean; backupTipShownForRoutine: boolean;
     firstPlaybackDone: boolean; homeScreenCardDismissed: boolean;
@@ -44,15 +54,22 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   voiceOffsetMsByVoiceId: {},
   lastDanceId: null,
   lastFigure: null,
+  lastKind: 'dance',
+  lastRoutineId: null,
   lastTemplateByDance: {},
   speedPresetByDance: {},
   customBpmByDance: {},
   speedPresetByRoutine: {},
   customBpmByRoutine: {},
   metronome: true,
+  metronomeVolume: 1,
+  metronomeMuted: false,
   countInBars: 1,
   loop: true,
+  voiceVolume: 100,
+  barCounting: false,
   distributorName: '',
+  distributorId: null,
   hints: { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false }
 }) as AppSettings;
 
@@ -70,6 +87,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
     voiceOffsetMsByVoiceId: pickVoiceOffsets(source.voiceOffsetMsByVoiceId),
     lastDanceId: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) ? source.lastDanceId : null,
     lastFigure: typeof source.lastDanceId === 'string' && Object.hasOwn(DANCES, source.lastDanceId) && isFigureSlug(source.lastFigure) ? source.lastFigure : null,
+    lastKind: source.lastKind === 'routine' ? 'routine' : 'dance',
+    lastRoutineId: isRoutineId(source.lastRoutineId) ? source.lastRoutineId : null,
     lastTemplateByDance: pickByDance(source.lastTemplateByDance, (danceId, value) =>
       typeof value === 'string' && DANCES[danceId]!.templates.includes(value) ? value : undefined),
     speedPresetByDance: pickByDance(source.speedPresetByDance, (_danceId, value) =>
@@ -78,9 +97,16 @@ export function normalizeSettings(raw: unknown): AppSettings {
     speedPresetByRoutine: pickByRoutine(source.speedPresetByRoutine, value => SPEED_CHOICES.find(choice => choice === value)),
     customBpmByRoutine: pickByRoutine(source.customBpmByRoutine, value => clampBpm(value) ?? undefined),
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
+    // D81: メトロノームの大きさは 0〜1（10/24 の「大きさ」バー＋「消音」に統一）。D73 の clickVolume（0〜100 %）だけが残っている時は、同じ聞こえ方の倍率に直して引き継ぐ
+    metronomeVolume: typeof source.metronomeVolume === 'number' && Number.isFinite(source.metronomeVolume) ? Math.min(1, Math.max(0, source.metronomeVolume))
+      : clampVolumePercent(source.clickVolume) !== null ? volumeGain(clampVolumePercent(source.clickVolume)!) : DEFAULT_SETTINGS.metronomeVolume,
+    metronomeMuted: typeof source.metronomeMuted === 'boolean' ? source.metronomeMuted : DEFAULT_SETTINGS.metronomeMuted,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
+    voiceVolume: clampVolumePercent(source.voiceVolume) ?? VOLUME_DEFAULT,
+    barCounting: source.barCounting === true,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
+    distributorId: readDistributorId(source.distributorId),
     hints: {
       wakeLockTipShown: hints.wakeLockTipShown === true,
       backupTipShownForRecording: hints.backupTipShownForRecording === true,

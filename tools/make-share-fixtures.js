@@ -2,8 +2,10 @@
 // 段5の検査用の配布ファイル（Ruling 87-3）を test/fixtures/share/ に作る。アプリの buildBundle・エンジンの exportRecordedVoicePack を
 // そのまま使う（形を手で書かない）。時刻は固定なので何度作っても同じバイト列。public/ には置かない（check-dist の外）。
 //   bundle-voice-routine.dancecount.txt … 山田・日本語の声（12 語・各 0.3 秒の合成音）＋ワルツ 2 本（ui:check の S10・smoke:share）
+//   bundle-voice-one-routine.dancecount.txt … 山田・日本語の声＋ワルツ 1 本（夜間便 B-2・D69: 主ボタンが「ルーティンを再生する」）
 //   bundle-routines-only.dancecount.txt … 山田・ワルツ 1 本（声なし）
 //   bundle-voice-only.dancecount.txt … 山田・日本語の声だけ（ルーティンなし。ui:check の「S10 受け取った・声だけ」＝Fable 答え 2026-10-13 §2-2）
+//   bundle-note-routine.dancecount.txt … 山田・ワルツ 1 本＋生徒へのひとこと（D68。ui:check の「S10 受け取った・ひとこと」・smoke:share）
 //   bundle-one-broken-routine.dancecount.txt … 山田・ワルツ 1 本＋読めないルーティン「こわれたルーティン」1 本
 //   legacy-voice-pack.json … 旧画面の単体パック（dance-count-recorded-voice-pack・英語・名前「My recorded voice」）
 //   broken.txt … 途中で切れた JSON／too-new.txt … schemaVersion 2 の束
@@ -53,8 +55,10 @@ const japanese = await exported(voicePack('user-recorded-ja-v1', '自分の声�
 const routines = [waltz('r-fixture-0001', 'ワルツのルーティン', 1), waltz('r-fixture-0002', 'タンゴ前のワルツ', 2)];
 
 write('bundle-voice-routine.dancecount.txt', buildBundle({ distributorName: '山田', voice: japanese, routines, now: AT }));
+write('bundle-voice-one-routine.dancecount.txt', buildBundle({ distributorName: '山田', voice: japanese, routines: routines.slice(0, 1), now: AT }));   // 夜間便 B-2
 write('bundle-voice-only.dancecount.txt', buildBundle({ distributorName: '山田', voice: japanese, routines: [], now: AT }));
 write('bundle-routines-only.dancecount.txt', buildBundle({ distributorName: '山田', voice: null, routines: routines.slice(0, 1), now: AT }));
+write('bundle-note-routine.dancecount.txt', buildBundle({ distributorName: '山田', voice: null, routines: routines.slice(0, 1), now: AT, note: '来週の練習日までに覚えてきてね。最後のウィスクはゆっくり！' }));   // D68
 const oneBroken = JSON.parse(buildBundle({ distributorName: '山田', voice: null, routines: routines.slice(0, 1), now: AT }));
 oneBroken.routines.push({ ...waltz('r-fixture-0003', 'こわれたルーティン', 3), figures: [{ id: 'f-fixture-0003-1', name: 'x', counts: '12a3' }] });
 write('bundle-one-broken-routine.dancecount.txt', JSON.stringify(oneBroken));

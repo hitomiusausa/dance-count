@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 段5の完了条件（全体地図・Ruling 87-4）を本物の Chrome と本物のファイルで確かめる。2 つのコンテキスト＝2 台の端末（IndexedDB が別）。
-// 先生: 録音の声とルーティンを入れた端末 → S7 で声を開いて「配る」→ S9（声が選ばれている）→ 名前・同意・ルーティン →「ファイルを作る」
+// 先生: 録音の声とルーティンを入れた端末 → 表紙「作る」→ M0「配る」→ S9（声が選ばれている。D75 で S7 の「配る」は無くなった）→ 名前・同意・ルーティン →「ファイルを作る」
 //       （共有できない端末として canShare を false に＝ダウンロード）→ ファイル名・結果の 1 行・「案内文をコピー」→ 名前が次回も入っている。
 // 生徒: 何も無い端末 → 表紙「使う」→ 下の「ルーティン」→「ファイルから受け取る」→ S10「ファイルを選ぶ」に先生のファイル → 確認 →「使う」→「種目を選ぶ」（U1）→「‹ 表紙」1 回で表紙（Task 1 修正 1。ルーティンだけの時の U2 からも）→
 //       ワルツ ▶ が受け取った声で鳴る（標準の声の音声を 1 本も取りに行かない）・チップ「声: 山田さんの声」→ U2「山田さんから」→ 行を押すと S5 で鳴る。
@@ -23,6 +23,7 @@ const WRITE_SETTLE_MS = 500;       // 書き込みの確定を待ってから再
 const STANDARD_AUDIO = '/audio/default-en-female-v1/';
 const TOO_LARGE = { name: 'big.dancecount.txt', mimeType: 'text/plain', buffer: Buffer.alloc(20 * 1024 * 1024 + 1, 32) };
 const errors = [];
+const TEACHER_NOTE = '来週までに覚えてきてね <b>大事</b>';   // D68（HTML に見える字も文字のまま）
 
 function today() {
   const now = new Date();
@@ -86,8 +87,8 @@ async function readStores(page) {
       transaction.oncomplete = () => {
         db.close();
         resolve({
-          packs: packs.result.map(pack => ({ id: pack.id, origin: pack.origin, name: pack.name, distributor: pack.distributor?.name ?? null, sourceId: pack.sourceId ?? null })),
-          routines: routines.result.map(routine => ({ id: routine.id, source: routine.source, from: routine.receivedFrom?.distributor ?? null }))
+          packs: packs.result.map(pack => ({ id: pack.id, origin: pack.origin, name: pack.name, distributor: pack.distributor?.name ?? null, distributorId: pack.distributor?.id ?? null, sourceId: pack.sourceId ?? null })),
+          routines: routines.result.map(routine => ({ id: routine.id, source: routine.source, from: routine.receivedFrom?.distributor ?? null, distributorId: routine.receivedFrom?.distributorId ?? null }))
         });
       };
     };
@@ -126,18 +127,31 @@ try {
   await page.waitForSelector('[data-screen]');
   await page.evaluate(seedRoutinesInPage, [R.waltz13]);
   await page.evaluate(seedVoicePacksInPage, [V.completeEn]);
-  await openAfterSeed(page, `${BASE}#/voices`);
-  await page.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
-  await page.locator('[data-group="voice"] [role="radio"]', { hasText: '自分の声（英語）' }).click();
-  await page.locator('[data-group="voice-actions"] button', { hasText: '配る' }).click();
+  // D75（ひとみうさ承認 2026-10-15）: 自分の声の「配る」は「作る」の側（S7 は選ぶだけ）。M0 の「配る」行から S9 へ（S8 完成の「配る ›」は下の「ほかの入口」）
+  await openAfterSeed(page, `${BASE}#/make`);
+  await page.waitForSelector('[data-screen="M0"]:not([data-loading])');
+  await page.locator('a.dc-hub[href="#/share"]').click();
   await page.waitForSelector('[data-screen="S9"]:not([data-loading])');
-  if ((await page.locator('[data-group="share-voice"] [role="radio"][aria-checked="true"]').textContent())?.trim() !== '自分の声（英語）') errors.push('S9: the voice from S7 is not chosen');
-  if (!(await page.locator('.dc-dock .dc-primary').isDisabled())) errors.push('S9: "Create file" is pressable before the name and the consent');
+  await page.waitForSelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]').catch(() => {});
+  if ((await page.locator('[data-group="share-voice"] [role="radio"][aria-checked="true"]').textContent())?.trim() !== '自分の声（英語）') errors.push('S9: my finished voice is not chosen');
+  // 名前・同意の前でも押せる。押すと作らずに案内（名前が先）→ 名前の欄にフォーカス（ひとみうさ 2026-10-14）
+  await page.locator('.dc-dock .dc-primary').click();
+  if (!(await page.locator('[data-blocked="name"]').count())) errors.push('S9: pressing "Create file" without a name shows no guidance');
+  if (!(await page.evaluate(() => document.activeElement?.getAttribute('aria-labelledby') === 'dc-s9-name-label'))) errors.push('S9: the name field is not focused after the guidance');
   await page.locator('[data-group="distributor"] input').fill('山田');
   await page.locator('[data-group="distributor"] input').press('Enter');
   await page.locator('.dc-consent-box').click();
-  await page.locator('.dc-share-list [role="checkbox"]', { hasText: 'ワルツの練習' }).click();
+  // 夜間便 B-3（Ruling 124）: ルーティンが 1 本だけなら開いた時に選ばれている（押すと外れる）
+  if ((await page.locator('.dc-share-list [role="checkbox"]', { hasText: 'ワルツの練習' }).getAttribute('aria-checked')) !== 'true') errors.push('S9: the only routine is not chosen by default (B-3)');
+  // D68: 生徒へのひとこと（いちばん下にたたんである・任意）。開いて 90 字を打つと 80 字で止まり「80 / 80 字」→ 打ち直して短い文に。
+  // 文は HTML のように見える字も含める（受け取る側で文字のまま出ること）
+  if (await page.locator('.dc-share-note[open]').count()) errors.push('S9: the note should start folded');
+  await page.locator('.dc-share-note summary').click();
+  const noteInput = page.locator('.dc-share-note input');
+  await noteInput.fill('あ'.repeat(90));
+  if ((await noteInput.inputValue()).length !== 80) errors.push(`S9 note: typing 90 characters should stop at 80 (${(await noteInput.inputValue()).length})`);
+  if ((await text(page, '[data-note-count]')) !== '80 / 80 字') errors.push(`S9 note: the counter reads "${await text(page, '[data-note-count]')}"`);
+  await noteInput.fill(TEACHER_NOTE);
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.dc-dock .dc-primary').click()]);
   const expectedName = `声-山田-${today()}.dancecount.txt`;
   if (download.suggestedFilename() !== expectedName) errors.push(`S9: file name "${download.suggestedFilename()}", expected "${expectedName}"`);
@@ -145,22 +159,43 @@ try {
   await download.saveAs(teacherFile);
   await page.waitForSelector('.dc-result');
   await expectText(page, `「${expectedName}」を保存しました。`, 'S9 result');
+  await expectText(page, `ひとこと：「${TEACHER_NOTE}」`, 'S9 result (D68)');
+  if (await page.locator('.dc-share-note').count()) errors.push('S9 result: the note fold should give way to the result line (one "more" at a time)');
   await page.locator('.dc-share-done button', { hasText: '生徒への案内文をコピー' }).click();
   await page.waitForSelector('.dc-result-sub, textarea.dc-instructions');
   if (await page.locator('textarea.dc-instructions').count()) {
     if (!(await page.locator('textarea.dc-instructions').inputValue()).includes('【iPhone】')) errors.push('S9: the instructions box does not hold the instructions');
+    if (!(await page.locator('textarea.dc-instructions').inputValue()).split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   } else {
     const copied = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
     if (!copied.includes('【iPhone】')) errors.push('S9: the copied text is not the instructions');
+    else if (!copied.split('\n').includes('【iPhone】')) errors.push('S9: 【iPhone】 is not a line of its own (夜間便 A-6)');
   }
   await page.waitForTimeout(WRITE_SETTLE_MS);
   await page.reload();
   await page.waitForSelector('[data-screen="S9"]:not([data-loading])');
   if ((await page.locator('[data-group="distributor"] input').inputValue()) !== '山田') errors.push('S9: the name is not remembered');
   const bundle = JSON.parse(fs.readFileSync(teacherFile, 'utf8'));
+  if (bundle.note !== TEACHER_NOTE || bundle.schemaVersion !== 1) errors.push(`teacher file: note ${JSON.stringify(bundle.note)} / schemaVersion ${bundle.schemaVersion} (D68: the optional "note", version unchanged)`);
   if (bundle.type !== 'dance-count-bundle' || bundle.distributor?.name !== '山田' || !bundle.consent?.voiceDistribution || bundle.routines?.length !== 1) {
     errors.push(`teacher file: ${JSON.stringify({ type: bundle.type, distributor: bundle.distributor, consent: bundle.consent, routines: bundle.routines?.length })}`);
   }
+  // D76（ひとみうさ承認 2026-10-15）: 見分け用の番号（distributor.id・16 進 32 字）。画面には出さない。
+  // 再読み込みの後に名前を変えて作った 2 本目も同じ番号（端末の設定に残っている）
+  const senderId = bundle.distributor?.id;
+  if (!/^[0-9a-f]{32}$/.test(senderId ?? '')) errors.push(`teacher file: distributor.id ${JSON.stringify(senderId)} (D76)`);
+  await page.locator('[data-group="distributor"] input').fill('山田花子');
+  await page.locator('[data-group="distributor"] input').press('Enter');
+  await page.locator('.dc-consent-box').click();
+  const [download2] = await Promise.all([page.waitForEvent('download'), page.locator('.dc-dock .dc-primary').click()]);
+  const renamedFile = path.join(workDir, `renamed-${download2.suggestedFilename()}`);
+  await download2.saveAs(renamedFile);
+  await page.waitForSelector('.dc-result');
+  const renamed = JSON.parse(fs.readFileSync(renamedFile, 'utf8'));
+  if (renamed.distributor?.name !== '山田花子' || renamed.distributor?.id !== senderId || !renamed.voicePack || renamed.routines?.length !== 1) {
+    errors.push(`second file from the same device: ${JSON.stringify({ distributor: renamed.distributor, voice: Boolean(renamed.voicePack), routines: renamed.routines?.length })} (D76: same id)`);
+  }
+  if (senderId && (await page.locator('body').innerText()).includes(senderId)) errors.push('S9: the sender id is shown on screen (D76)');
 
   // ---- 先生: ほかの入口から S9 へ（段5 Task 9 I1・Task 10b） ----
   const entry = await openPage(browser, { canShare: false, microphone: true });
@@ -178,14 +213,15 @@ try {
   await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
   await e.waitForSelector('[data-group="share-voice"] [role="radio"][aria-checked="true"]');
   const fromS8 = await shareState(e);
-  if (fromS8.voice !== '自分の声（英語）' || fromS8.routines.length !== 0 || JSON.stringify(fromS8.order) !== '["voice","routines"]') errors.push(`S9 from S8 "Share": ${JSON.stringify(fromS8)}`);
+  // 夜間便 B-3（Ruling 124）: ルーティンが 1 本・完成した自分の録音が 1 つなら、どこから来ても両方選ばれている（同意は既定にしない）
+  if (fromS8.voice !== '自分の声（英語）' || JSON.stringify(fromS8.routines) !== '["ワルツの練習"]' || JSON.stringify(fromS8.order) !== '["voice","routines"]') errors.push(`S9 from S8 "Share": ${JSON.stringify(fromS8)}`);
   await e.goto(`${BASE}#/make/routines`);
   await e.waitForSelector('[data-screen="M1"]');
   await e.locator('.dc-row-head', { hasText: 'ワルツの練習' }).click();
   await e.locator('[data-group="routine-actions"] button', { hasText: '配る' }).click();
   await e.waitForSelector('[data-screen="S9"]:not([data-loading])');
   const fromM1 = await shareState(e);
-  if (fromM1.voice !== '入れない' || JSON.stringify(fromM1.routines) !== '["ワルツの練習"]' || JSON.stringify(fromM1.order) !== '["routines","voice"]') errors.push(`S9 from the M1 row "Share": ${JSON.stringify(fromM1)}`);
+  if (fromM1.voice !== '自分の声（英語）' || JSON.stringify(fromM1.routines) !== '["ワルツの練習"]' || JSON.stringify(fromM1.order) !== '["routines","voice"]') errors.push(`S9 from the M1 row "Share": ${JSON.stringify(fromM1)}`);
   await entry.context.close();
 
   // ---- 生徒（別の端末） ----
@@ -205,18 +241,32 @@ try {
   await expectText(s, 'ルーティン 1 本: ワルツの練習', 'S10 confirm');
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
-  await expectText(s, '「使う」で種目を選んで ▶ を押すと、山田さんの声で鳴ります。', 'S10 done');
-  await expectText(s, 'ルーティンは、下の「ルーティン」にあります。', 'S10 done routines');   // Fable 答え 2026-10-13 §2-2
+  // D69（案 A）: 声＋ルーティン 1 本は、本文が主ボタン「ルーティンを再生する」を指す。種目の練習のことは文 1 つ（ボタンではない）
+  await expectText(s, '下の「ルーティンを再生する」を押すと、山田さんの声で再生されます。', 'S10 done');
+  await expectText(s, '種目ごとのカウント練習でも、この声を使えます。', 'S10 done');
+  // D68: 先生からのひとこと（文字のまま。<b> は太字にならず字として出る）
+  if ((await text(s, '[data-teacher-note] .dc-teacher-note-text')) !== TEACHER_NOTE) errors.push(`S10 done: the teacher note reads "${await text(s, '[data-teacher-note] .dc-teacher-note-text')}"`);
+  if (await s.locator('[data-teacher-note] b').count()) errors.push('S10 done: the note was read as HTML');
+  // 夜間便 B-2（Ruling 124）・D69: ルーティンが 1 本入っていたら主ボタンは「ルーティンを再生する」。2 番目の行「種目を選ぶ」は無い（在りかの 1 文も出さない）
+  if ((await s.locator('.dc-dock .dc-primary').textContent())?.trim() !== 'ルーティンを再生する') errors.push(`S10 done: the main button reads "${(await s.locator('.dc-dock .dc-primary').textContent())?.trim()}", expected "ルーティンを再生する" (D69)`);
+  if ((await s.locator('main').textContent())?.includes('ルーティンは、「使う」の下のタブ「ルーティン」にあります。')) errors.push('S10 done: the routines sentence is shown next to the routine button (B-2)');
+  if (await s.locator('[data-second-exit]').count()) errors.push('S10 done: the second exit "Choose a dance" is still there (D69)');
+  if (await s.locator('main button, main a').filter({ hasText: '種目を選ぶ' }).count()) errors.push('S10 done: a "Choose a dance" button is still there (D69)');
+  // 主ボタン → その S5（自動では鳴らさない）→ 戻ると U2 → タブで U1 → 「‹ 表紙」1 回で表紙
+  // （前は 2 番目の行で U1 へ出ていた。Task 1 修正 1・Repro B の S0 → U2 → S10 → … の列で、受け取った後のタブ移動の後も 1 回で表紙に戻ることを見る。U1 からの 1 回は router-back のテスト）
   await s.locator('.dc-dock .dc-primary').click();
-  await s.waitForSelector('[data-screen="S1"]');
-  if (!s.url().endsWith('#/use')) errors.push(`S10 "Choose a dance" should land on U1 (url ${s.url()})`);
+  await s.waitForSelector('[data-screen="S5"]');
   await s.waitForTimeout(WRITE_SETTLE_MS);
-  // 最終レビュー I1: S10 の文のとおり下の「ルーティン」へ（U2）。その後も「‹ 表紙」1 回で表紙
-  // （Task 1 修正 1・Repro B の S0 → U1 → U2 → S10 → U1 の列に、タブ U2 を足した形。U1 からの 1 回は router-back のテスト）
-  await s.locator('[data-nav] a').nth(1).click();
-  await s.waitForSelector('[data-screen="U2"]');
+  if ((await s.locator('[data-screen="S5"]').getAttribute('data-playing')) !== 'false') errors.push('S10 "Play the routine" (voice + 1 routine) started playing by itself (B-2: only after ▶)');
   await s.locator('[data-back]').click();
-  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 (tab) after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
+  await s.waitForSelector('[data-screen="U2"]');
+  if (!s.url().endsWith('#/use/routines')) errors.push(`back from S5 after receiving (voice + 1 routine) should land on U2 (url ${s.url()})`);
+  await s.locator('[data-nav] a').nth(0).click();
+  await s.waitForSelector('[data-screen="S1"]');
+  if (!s.url().endsWith('#/use')) errors.push(`the "Figures" tab after receiving should land on U1 (url ${s.url()})`);
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  await s.locator('[data-back]').click();
+  await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U1 (tab) after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 
   // ワルツ ▶ が受け取った声で鳴る: 読み直した S2 で ▶ の間、標準の声の音声は 1 本も要求されない（smoke-voice.js と同じ証明）
   await s.goto(`${BASE}#/practice/waltz`);
@@ -245,6 +295,7 @@ try {
   await s.waitForSelector('[data-screen="S5"]');
   await expectSounding(s, 'S5 received routine');
   await s.locator('[data-play]').click();
+  if ((await text(s, '[data-teacher-note] .dc-teacher-note-text')) !== TEACHER_NOTE) errors.push(`S5: the teacher note should stay on the received routine ("${await text(s, '[data-teacher-note] .dc-teacher-note-text')}")`);
 
   // 同じファイルをもう一度 → 置き換え（増えない。D38）
   await openReceive(s);
@@ -259,6 +310,22 @@ try {
   if (afterAgain.packs.filter(pack => pack.origin === 'received').length !== 1) errors.push(`after the same file again: voices ${JSON.stringify(afterAgain.packs)}`);
   if (afterAgain.routines.length !== 1 || afterAgain.routines[0].source !== 'received' || afterAgain.routines[0].from !== '山田') errors.push(`after the same file again: routines ${JSON.stringify(afterAgain.routines)}`);
   if (afterAgain.packs[0]?.sourceId !== 'user-recorded-v1' || !/^v-/.test(afterAgain.packs[0]?.id ?? '')) errors.push(`received voice ids: ${JSON.stringify(afterAgain.packs)}`);
+  if (afterAgain.packs[0]?.distributorId !== senderId || afterAgain.routines[0]?.distributorId !== senderId) errors.push(`received voice / routine should keep the sender id (D76): ${JSON.stringify(afterAgain)}`);
+
+  // D76: 名前を変えた同じ先生（同じ番号）のファイル → 声もルーティンも置き換え（2 つにならない）。確認の 1 行は生徒の一覧にある名前で
+  await openReceive(s);
+  await pickFile(s, renamedFile);
+  await s.waitForSelector('[data-step="confirm"]');
+  await expectText(s, '山田花子さんの声（英語）· 12 語', 'S10 renamed teacher');
+  await expectText(s, '山田さんの声はすでにあります。「使う」で新しい方に置き換わります。', 'S10 renamed teacher');
+  await expectText(s, '同じルーティンは新しい方に置き換わります。', 'S10 renamed teacher');
+  await s.locator('.dc-receive-dock .dc-primary').click();
+  await s.waitForSelector('[data-step="done"]');
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  const afterRenamed = await readStores(s);
+  const receivedPacks = afterRenamed.packs.filter(pack => pack.origin === 'received');
+  if (receivedPacks.length !== 1 || receivedPacks[0].distributor !== '山田花子' || receivedPacks[0].distributorId !== senderId) errors.push(`after the renamed teacher's file: voices ${JSON.stringify(afterRenamed.packs)} (D76)`);
+  if (afterRenamed.routines.length !== 1 || afterRenamed.routines[0].from !== '山田花子') errors.push(`after the renamed teacher's file: routines ${JSON.stringify(afterRenamed.routines)} (D76)`);
 
   // 旧画面の単体パック（名前の無いファイル）は声の名前で受け取れる
   await openReceive(s);
@@ -322,16 +389,21 @@ try {
   await s.waitForSelector('[data-step="confirm"]');
   await s.locator('.dc-receive-dock .dc-primary').click();
   await s.waitForSelector('[data-step="done"]');
+  // 夜間便 B-2: ルーティン 1 本だけの束は「ルーティンを再生する」→ その S5（自動では鳴らさない）→ 戻ると U2 →「‹ 表紙」1 回で表紙
   await s.locator('.dc-dock .dc-primary').click();
+  await s.waitForSelector('[data-screen="S5"]');
+  await s.waitForTimeout(WRITE_SETTLE_MS);
+  if ((await s.locator('[data-screen="S5"]').getAttribute('data-playing')) !== 'false') errors.push('S10 "Play the routine" started playing by itself (B-2: only after ▶)');
+  await s.locator('[data-back]').click();
   await s.waitForSelector('[data-screen="U2"]');
-  if (!s.url().endsWith('#/use/routines')) errors.push(`S10 "See routines" should land on U2 (url ${s.url()})`);
+  if (!s.url().endsWith('#/use/routines')) errors.push(`back from S5 after receiving should land on U2 (url ${s.url()})`);
   await s.locator('[data-back]').click();
   await s.waitForSelector('[data-screen="S0"]', { timeout: 3000 }).catch(() => errors.push(`U2 after receiving: one "‹ Cover" tap did not reach the cover (url ${s.url()})`));
 
   // 受け取った声は配れない（D37）・消すと標準（英語）に戻る
   await s.goto(`${BASE}#/voices`);
   await s.waitForSelector('[data-screen="S7"]:not([data-loading])');
-  const yamada = s.locator('[data-group="voice"] [role="radio"]', { hasText: '山田さんの声' });
+  const yamada = s.locator('[data-group="voice"] [role="radio"]', { hasText: '山田花子さんの声' });   // D76: 名前を変えた先生の声に置き換わった
   await yamada.click();
   await yamada.click();
   const actions = await s.locator('[data-group="voice-actions"] button').allTextContents();
@@ -350,4 +422,4 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted; one "‹ Cover" tap reaches the cover after receiving');
+console.log('share smoke OK: S8 "Share" and the M1 row "Share" open S9 with that voice / routine chosen; teacher file made (download) → student received it → S2 played the received voice, U2/S5 the routine; same file replaced, a renamed teacher (same sender id) replaced, legacy file received, broken / too new / too large / one broken routine handled, inbox taken once, a too-new shared file survives 「更新する」, received voice not shareable and deleted; one "‹ Cover" tap reaches the cover after receiving');

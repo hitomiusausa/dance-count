@@ -67,6 +67,15 @@ test('after going back n steps the stack ends at the cover and the hashchange ke
   assert.deepEqual(dropLast(['#/', '#/use'], 5), ['#/']);
 });
 
+test('music player back can skip the picker and return to the exact figure or routine source',()=>{
+  const figure=['#/practice/waltz/whisk','#/use/music/for/figure/waltz/whisk','#/use/music/sweetest-dance/figure/waltz/whisk'];
+  const routine=['#/routines/r-test-12345678/play','#/use/music/for/routine/r-test-12345678?from=0&to=2','#/use/music/paper-umbrella/routine/r-test-12345678?from=0&to=2'];
+  for(const [visited,origin] of [[figure,'#/practice/waltz/whisk'],[routine,'#/routines/r-test-12345678/play']] as const){
+    const steps=stepsBackTo(visited,origin);assert.equal(steps,2);
+    const returned=dropLast(visited,steps!);assert.deepEqual(recordVisit(returned,origin),[origin]);
+  }
+});
+
 test('an exit whose target is the previous screen goes back instead of stacking a duplicate (Repro A)', () => {
   // S0 → U1 →（タブ・置き換え）U2 → S10 →「ルーティンを見る」
   const stack = walk(['#/', '#/use']);
@@ -138,16 +147,35 @@ test('I1: S0 → U2 → S10 → "Choose a dance" (U1) → tab U2 → "‹ Cover"
   assert.equal(m.entries[m.index], '#/');
 });
 
-test('T1: S7 "Record more" → S8 → finish (replace S7) leaves no dead back tap', () => {
+// D75（ひとみうさ承認 2026-10-15）: S8 の「完了」は M0（作る）へ。M0 から来た時は 1 つ戻る（M0 を 2 つ並べない）
+test('D75: M0 → S8 → "Done" (replace M0) goes back to M0 and "‹ Cover" is one tap', () => {
   let m = open('#/');
-  m = push(m, '#/settings');
-  m = push(m, '#/voices');
+  m = push(m, '#/make');
   m = push(m, '#/voices/record');
-  m = replace(m, '#/voices');                // 完成 → S7
-  assert.deepEqual(realStack(m), ['#/', '#/settings', '#/voices']);
+  m = replace(m, '#/make');                  // 完成 →「完了」→ M0
+  assert.deepEqual(realStack(m), ['#/', '#/make']);
   assert.deepEqual(m.visited, realStack(m));
-  m = back(m);                               // 「‹」1 回で S6
-  assert.equal(m.entries[m.index], '#/settings');
+  m = backToCover(m);                        // M0 の「‹ 表紙」1 回で表紙
+  assert.equal(m.entries[m.index], '#/');
+});
+
+test('D75: S8 opened directly → "Done" replaces it with M0 (no phantom entry)', () => {
+  let m = open('#/voices/record');
+  m = replace(m, '#/make');
+  assert.deepEqual(realStack(m), ['#/make']);
+  assert.deepEqual(m.visited, ['#/make']);
+});
+
+// D75: 「配る ›」は S8 を S9 に置き換える。S9 の「‹ 戻る」は来た所（M0）
+test('D75: M0 → S8 → "Share ›" (replace S9) → back lands on M0', () => {
+  let m = open('#/');
+  m = push(m, '#/make');
+  m = push(m, '#/voices/record');
+  m = replace(m, '#/share');
+  assert.deepEqual(realStack(m), ['#/', '#/make', '#/share']);
+  assert.deepEqual(m.visited, realStack(m));
+  m = back(m);
+  assert.equal(m.entries[m.index], '#/make');
 });
 
 test('T1: an invalid S5 opened from U2 redirects to U2 without a duplicate entry', () => {

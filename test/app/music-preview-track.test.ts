@@ -70,3 +70,48 @@ test('preview choices never overlap and unavailable ranges are omitted',()=>{
   assert.equal(track.counts,'SSQQS');assert.equal(track.anchorTick,0);
   for(let i=1;i<track.sections.length;i++)assert.ok(track.sections[i-1]!.endTick<=track.sections[i]!.startTick);
 });
+
+// 2026-11-02 ひとみうさ「出だしが途中から」: 「はじめ」は曲の頭から最初のきれいな 6 小節（長さの 10% の位置ではない）
+test('the early practice range starts at the first clean bar of the song, not at ten percent of its length',()=>{
+  const data=analyzed();data.bars=Array.from({length:64},(_,i)=>({startBeat:1+i*3,endBeat:4+i*3,beatsPerBar:3,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  const track=buildMusicPreviewTrack(hash,data,{id:'waltz-top',title:'Waltz',danceId:'waltz'});
+  assert.equal(track.sections[0]!.id,'early');assert.equal(track.sections[0]!.startTick,1*960,'bar one of the song');
+  // 頭の 2 小節が要確認なら、それを飛ばした最初のきれいな小節から
+  data.bars[0]!.status='uncertain';data.bars[1]!.issues=['meter-mismatch'];
+  const skipped=buildMusicPreviewTrack(hash,data,{id:'waltz-top',title:'Waltz',danceId:'waltz'});
+  assert.equal(skipped.sections[0]!.startTick,data.bars[2]!.startBeat*960);
+  for(let i=1;i<skipped.sections.length;i++)assert.ok(skipped.sections[i-1]!.endTick<=skipped.sections[i]!.startTick);
+});
+
+// 2026-11-02 ひとみうさ: 曲を選ぶ画面にレベルと長さ。レベルはファイル名の 2 つ目（Low がいちばん初心者向け）
+test('the level comes from the second word of the file name and the length from the analysis',async()=>{
+  const {levelFromFilename}=await import('../../src/app/music/model.ts');
+  assert.equal(levelFromFilename('Waltz_Low_Moon_steps.wav'),'low');
+  assert.equal(levelFromFilename('Tango_Middle_The_Final_Posture.mp3'),'middle');
+  assert.equal(levelFromFilename('chacha_High_Fuego_en_la_eternidad.mp3'),'high');
+  assert.equal(levelFromFilename('Waltz_Slow_Low_Moon_Steps.wav'),null,'an unknown word is not a level');
+  assert.equal(levelFromFilename('ワルツ初級.m4a'),null);
+  const track=buildMusicPreviewTrack(hash,analyzed(),{id:'tango-level',title:'Tango',danceId:'tango',level:'low'});
+  assert.equal(track.level,'low');assert.equal(track.durationSeconds,400);
+  assert.equal('level' in buildMusicPreviewTrack(hash,analyzed(),{id:'tango-none',title:'Tango',danceId:'tango',level:null}),false);
+});
+
+test('samba songs are checked in the measured four-beat groups (two samba bars) and count in 2/4 from a detected downbeat',()=>{
+  const data=analyzed();data.bars=Array.from({length:100},(_,i)=>({startBeat:1+i*4,endBeat:5+i*4,beatsPerBar:4,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  const track=buildMusicPreviewTrack(hash,data,{id:'samba-test',title:'Samba',danceId:'samba',level:'low'});
+  assert.equal(track.beatsPerBar,2);assert.equal(track.anchorTick,0);
+  for(const section of track.sections){
+    assert.equal(section.anchorTick,section.startTick,'the count starts on the downbeat');
+    assert.ok(data.downbeatsMs.includes(track.beatsMs[section.startTick/960]!),'sections start on a detected downbeat');
+    assert.equal((section.endTick-section.startTick)/960,24,'six measured groups = twelve samba bars');
+    const plan=compileMusicPlan(track,section.id);assert.ok(plan.events.length>0);
+  }
+});
+
+test('a samba analysis with two-beat bars is not accepted as measured four-beat groups',()=>{
+  const data=analyzed();data.bars=Array.from({length:200},(_,i)=>({startBeat:1+i*2,endBeat:3+i*2,beatsPerBar:2,meanBeatActivation:.95,downbeatActivation:.9,status:'candidate' as const,issues:[] as string[]}));
+  data.downbeatsMs=data.bars.map(bar=>data.beatsMs[bar.startBeat]!);
+  assert.throws(()=>buildMusicPreviewTrack(hash,data,{id:'samba-two',title:'Samba',danceId:'samba'}),/No consistent/);
+});

@@ -6,7 +6,7 @@ import hashlib,json
 from pathlib import Path
 import subprocess,sys
 
-DANCES={'waltz':('waltz',3,'ワルツ'),'rumba':('rumba',4,'ルンバ'),'chacha':('chacha',4,'チャチャチャ'),'tango':('tango',4,'タンゴ')}
+DANCES={'waltz':('waltz',3,'ワルツ'),'rumba':('rumba',4,'ルンバ'),'chacha':('chacha',4,'チャチャチャ'),'tango':('tango',4,'タンゴ'),'samba':('samba',4,'サンバ')}   # サンバ（2/4）は拍・小節の推定が 4 拍のまとまり（＝サンバの 2 小節）で出るので、解析は 4 拍で確かめる
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

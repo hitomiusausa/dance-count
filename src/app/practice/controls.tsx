@@ -1,14 +1,20 @@
 import type { ComponentChildren } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
 import { phrased } from '../i18n/phrased.tsx';
+import { platformKind } from '../platform/pwa.ts';
 import { buildHash, type UiState } from '../router/routes.ts';
 import type { StripView } from './beat-indicator.ts';
 import { useI18n } from '../state/i18n.ts';
 import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
+import { BARS_PER_CYCLE } from './bar-count.ts';
+import { tempoText } from './tempo.ts';
+import { VOLUME_MAX, VOLUME_MIN, VOLUME_STEP } from './volume.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
+import { wakeLockTipKey } from './wake-tip.ts';
 
 // S2・S5 が共通で組む部品（Ruling 42）。記憶の単位（種目ごと・ルーティンごと）は各画面が持ち、部品は値と操作だけを受け取る。
 const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standard: 'speedStandard', fast: 'speedFast' };
@@ -16,18 +22,20 @@ const SPEED_LABEL: Record<SpeedPreset, MessageKey> = { slow: 'speedSlow', standa
 // 大きな現在カウント＋カウントの型の帯（操作ではない。D55・Ruling 114）。children は帯の下に置く（S5 の「3 / 13 …」の1行）。
 // 帯は型 1 周の語を 1 語 1 丸（幅は語の長さに比例＝flex-grow に拍数）。鳴っている語の丸だけ琥珀（aria-current）。読み上げは「いま {count}」で足りる（aria-hidden）
 const DENSE_STRIP = 9;   // 丸が 9 個以上は文字を 15px に（data-dense）
-export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, leadText, children }: {
-  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; leadText?: string; children?: ComponentChildren;
+// D72: bar は小節を数えている間だけの番号（1〜8）。箱の右上に重ねて出す（高さを足さない＝375×548 の初期表示の速さと ▶ を押し下げない）
+export function CountBox({ playing, countIn, nowText, idleText, strip, preparing = false, bar = null, leadText, children }: {
+  playing: boolean; countIn: boolean; nowText: string; idleText: string; strip: StripView; preparing?: boolean; bar?: number | null; leadText?: string; children?: ComponentChildren;
 }) {
   const { translator } = useI18n();
   return (
     <div class="dc-countbox" aria-live="off" aria-label={nowText ? translator.t('nowCount', { count: nowText }) : undefined}>
+      {playing && !countIn && bar !== null && <div class="dc-bar-count" data-bar-count>{translator.t('barOfCycle', { bar, total: BARS_PER_CYCLE })}</div>}
       {playing && countIn
         ? <div class="dc-now dc-now--lead">{leadText ?? translator.t('leadInNow')}</div>
         : preparing && !playing
           ? <div class="dc-now dc-now--idle dc-now--wait" aria-hidden="true" data-preparing><WaltzSpinner /></div>
           : <div class={`dc-now${playing ? '' : ' dc-now--idle'}`} aria-hidden="true">{playing ? nowText : idleText}</div>}
-      <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined}>
+      <ol class="dc-beats" aria-hidden="true" data-dense={strip.cells.length >= DENSE_STRIP ? '' : undefined} data-lead={strip.lead ? '' : undefined}>
         {strip.cells.map((cell, index) => (
           <li key={`${index}-${cell.tick}`} data-cell={cell.kind} style={{ '--beats': cell.beats }}
             data-fineprint={cell.kind === 'sub' || strip.cells.length >= DENSE_STRIP ? '' : undefined} aria-current={strip.lit === index ? 'true' : undefined}>{cell.label}</li>
@@ -38,9 +46,9 @@ export function CountBox({ playing, countIn, nowText, idleText, strip, preparing
   );
 }
 
-// 速さの選択肢（S2 は3択、S5 は端で2択になることがある。Ruling 24・40）。選択中だけ「♩=値」を併記。
-export function SpeedChoices({ presets, selected, onChoose }: {
-  presets: Partial<Record<SpeedPreset, number>>; selected: SpeedChoice; onChoose(preset: SpeedPreset): void;
+// 速さの選択肢（S2 は3択、S5 は端で2択になることがある。Ruling 24・40）。選択中だけ速さを併記（D71: 日本語は「テンポ28」、英語は「♩=84」）。
+export function SpeedChoices({ danceId, presets, selected, onChoose }: {
+  danceId: string; presets: Partial<Record<SpeedPreset, number>>; selected: SpeedChoice; onChoose(preset: SpeedPreset): void;
 }) {
   const { translator } = useI18n();
   const shown = SPEED_PRESETS.filter(preset => presets[preset] !== undefined);
@@ -54,7 +62,7 @@ export function SpeedChoices({ presets, selected, onChoose }: {
             <button key={preset} type="button" class="dc-opt" role="radio" aria-checked={checked ? 'true' : 'false'}
               onClick={() => { if (!checked) onChoose(preset); }}>
               <b class="dc-opt-label">{checked && <Icon name="check" />}{translator.t(SPEED_LABEL[preset])}</b>
-              {checked && <small>{translator.t('tempoMark', { tempo: presets[preset]! })}</small>}
+              {checked && <small data-preset-tempo>{translator.t('presetTempo', { tempo: presets[preset]!, mpm: tempoText(danceId, presets[preset]!) })}</small>}
             </button>
           );
         })}
@@ -72,6 +80,29 @@ export function PracticeToggles({ metronome, leadIn, onMetronome, onLeadIn }: {
     <div class="dc-toggles">
       <Toggle icon="metronome" label={translator.t('metronome')} on={metronome} onToggle={onMetronome} />
       <Toggle icon="leadin" label={translator.t('leadIn')} on={leadIn} onToggle={onLeadIn} />
+    </div>
+  );
+}
+
+// D81: メトロノームの大きさ（0〜1）。「消音」は onMute を渡した画面（音楽）だけ。普通の練習は「メトロノーム オン/オフ」が消音を兼ねる（U4 の操作の数を増やさない）
+// inGroup: S2・S5 では D73 の「音」の束（SoundGroup）の中に入れるので自分の data-group を持たない（束が U4 の 1 つ。VoiceOffsetRow と同じ）
+export function MetronomeVolumeControl({ value, muted = false, inGroup = false, onPreview, onChange, onMute }: {
+  value: number; muted?: boolean; inGroup?: boolean; onPreview(value: number): void; onChange(value: number): void; onMute?(): void;
+}) {
+  const { translator } = useI18n();
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  useEffect(() => setDragValue(null), [value]);
+  const labelId = 'dc-metronome-volume-label';
+  return (
+    <div class="dc-metronome-volume" data-metronome-volume data-group={inGroup ? undefined : 'metronome-volume'}>
+      <div class="dc-field-label" id={labelId}>{translator.t('metronomeVolume')}</div>
+      <div class="dc-music-volume-control">
+        <input aria-labelledby={labelId} type="range" min="0" max="1" step="0.01" value={dragValue ?? value}
+          onInput={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(next); onPreview(next); }}
+          onChange={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(null); onChange(next); }} />
+        {onMute && <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-metronome aria-label={translator.t(muted?'metronomeUnmuteLabel':'metronomeMuteLabel')} aria-pressed={muted}
+          onClick={onMute}>{translator.t(muted?'musicUnmute':'musicMute')}</button>}
+      </div>
     </div>
   );
 }
@@ -115,8 +146,9 @@ export function MoreOptions({ label, open, onToggle, children }: {
 }
 
 // 速さの細かい調整（スライダー 40〜220）と「競技の速さ」（Ruling 13・31）。1つのグループ。
-export function FineSpeed({ bpm, dragBpm, competition, onDrag, onCommit, idPrefix }: {
-  bpm: number; dragBpm: number | null; competition: { min: number; max: number };
+// D71: 値は「♩=84（テンポ28）」／“♩=84 · 28 MPM”、競技の速さにもテンポを添える。
+export function FineSpeed({ danceId, bpm, dragBpm, competition, onDrag, onCommit, idPrefix }: {
+  danceId: string; bpm: number; dragBpm: number | null; competition: { min: number; max: number };
   onDrag(value: number | null): void; onCommit(value: unknown): void; idPrefix: string;
 }) {
   const { translator } = useI18n();
@@ -126,26 +158,48 @@ export function FineSpeed({ bpm, dragBpm, competition, onDrag, onCommit, idPrefi
     <div class="dc-fine" data-group="speed-fine">
       <div class="dc-field-label" id={labelId}>
         <span>{translator.t('fineSpeed')}</span>
-        <span>{translator.t('tempoMark', { tempo: shown })}</span>
+        <span data-fine-tempo>{translator.t('fineTempo', { tempo: shown, mpm: tempoText(danceId, shown) })}</span>
       </div>
       <input aria-labelledby={labelId} type="range" min={BPM_MIN} max={BPM_MAX} step={1} value={shown}
         onInput={event => onDrag(Number((event.currentTarget as HTMLInputElement).value))}
         onChange={event => { onDrag(null); onCommit((event.currentTarget as HTMLInputElement).value); }} />
-      <button type="button" class="dc-chip" onClick={() => onCommit(competition.min)}>
-        {translator.t('competitionSpeed', { min: competition.min, max: competition.max })}
+      {/* D71: テンポを添えて 1 行に入らなくなったので、句の境で 2 行に折る（「競技の速さ／（♩=84〜90・テンポ28〜30）」） */}
+      <button type="button" class="dc-chip dc-chip--wrap" data-competition-speed onClick={() => onCommit(competition.min)}>
+        {phrased(translator, 'competitionSpeed', { min: competition.min, max: competition.max, mpmMin: tempoText(danceId, competition.min), mpmMax: tempoText(danceId, competition.max) })}
       </button>
     </div>
   );
 }
 
-// 繰り返す（くわしくの中。Ruling 19）。
-export function RepeatRow({ loop, onToggle }: { loop: boolean; onToggle(): void }) {
+// 繰り返す（くわしくの中。Ruling 19）＋ D72 小節を数える（出す種目だけ）。2 つのオン・オフは「鳴らし方」の 1 つの束（[data-group]＝U4 で 1）。
+// barCounting が null の種目（S・Q で数える種目など。practice/bar-count.ts）は「繰り返す」だけ。
+export function PlaySwitches({ loop, onLoop, barCounting, onBarCounting, idPrefix }: {
+  loop: boolean; onLoop(): void; barCounting: boolean | null; onBarCounting(): void; idPrefix: string;
+}) {
+  const { translator } = useI18n();
+  const hintId = `${idPrefix}-bar-count-hint`;
+  return (
+    <div class="dc-play-switches" data-group="play-switches">
+      <SwitchRow id={`${idPrefix}-repeat`} label={translator.t('repeat')} on={loop} onToggle={onLoop} />
+      {barCounting !== null && (
+        <>
+          <SwitchRow id={`${idPrefix}-bar-count`} label={translator.t('barCounting')} on={barCounting} onToggle={onBarCounting} describedBy={hintId} data-bar-counting />
+          <div class="dc-offset-hint" id={hintId}>{phrased(translator, 'barCountingHint', { total: BARS_PER_CYCLE })}</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// 名前は「行の名前＋今の値」（aria-labelledby。見えている「オン」も名前に入る＝WCAG 2.5.3）
+function SwitchRow({ id, label, on, onToggle, describedBy, ...rest }: { id: string; label: string; on: boolean; onToggle(): void; describedBy?: string; 'data-bar-counting'?: boolean }) {
   const { translator } = useI18n();
   return (
     <div class="dc-more-row">
-      <span>{translator.t('repeat')}</span>
-      <button type="button" class="dc-chip" role="switch" aria-checked={loop ? 'true' : 'false'} onClick={onToggle}>
-        {loop ? translator.t('on') : translator.t('off')}
+      <span id={`${id}-label`}>{label}</span>
+      <button type="button" id={id} class="dc-chip" role="switch" aria-checked={on ? 'true' : 'false'} aria-labelledby={`${id}-label ${id}`} aria-describedby={describedBy}
+        onClick={onToggle} {...(rest['data-bar-counting'] ? { 'data-bar-counting': '' } : {})}>
+        {on ? translator.t('on') : translator.t('off')}
       </button>
     </div>
   );
@@ -153,16 +207,17 @@ export function RepeatRow({ loop, onToggle }: { loop: boolean; onToggle(): void 
 
 // 声のタイミング（くわしくの最後の行。Ruling 62・D24）。1 行目にラベルと値、2 行目に「‹ 早く」「遅く ›」（320 幅でも横に溢れない）。
 // 端では押せない。スライダーは使わない（10ms を指で合わせられない）。
-export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: number; onStep(direction: -1 | 1): void; idPrefix: string }) {
+// inGroup: S2・S5 では D73 の「音」の束（SoundGroup）の中に入れる（束が U4 の 1 つ。S4 は今までどおり単独の束）
+export function VoiceOffsetRow({ offsetMs, onStep, idPrefix, inGroup = false }: { offsetMs: number; onStep(direction: -1 | 1): void; idPrefix: string; inGroup?: boolean }) {
   const { translator } = useI18n();
   const labelId = `${idPrefix}-voice-offset-label`;
   return (
-    <div class="dc-voice-offset" role="group" aria-labelledby={labelId} data-group="voice-offset">
+    <div class="dc-voice-offset" role="group" aria-labelledby={labelId} data-group={inGroup ? undefined : 'voice-offset'}>
       <div class="dc-field-label" id={labelId}>
         <span>{translator.t('voiceTiming')}</span>
         <span class="dc-offset-value" data-voice-offset>{formatVoiceOffset(offsetMs)}</span>
       </div>
-      <div class="dc-offset-buttons">
+      <div class="dc-offset-buttons" data-voice-offset-buttons>
         <button type="button" class="dc-chip" disabled={!canStep(offsetMs, -1)} onClick={() => onStep(-1)}>
           <Icon name="chev-l" /><span>{translator.t('voiceEarlier')}</span>
         </button>
@@ -171,6 +226,46 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix }: { offsetMs: numbe
         </button>
       </div>
       <div class="dc-offset-hint">{phrased(translator, 'voiceTimingHint')}</div>
+    </div>
+  );
+}
+
+// D73 声とメトロノームの大きさ（くわしく）。2 本のスライダーと声のタイミングを「音」の 1 つの束にする（[data-group="sound"]＝U4 で 1）。
+// 動かしている間は再生を止めずにすぐ効き（onPreview）、指を離した・キーを放した時に端末へ残す（onCommit）。
+// D81: メトロノームの大きさは MetronomeVolumeControl（バー＋消音）に統一したので、この束のスライダーは声だけ
+export type VolumeKind = 'voice';
+const VOLUME_LABEL: Record<VolumeKind, MessageKey> = { voice: 'voiceVolume' };
+
+export function SoundGroup({ idPrefix, volumes, onPreview, onCommit, children }: {
+  idPrefix: string; volumes: Record<VolumeKind, number>;
+  onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void; children?: ComponentChildren;
+}) {
+  return (
+    <div class="dc-sound" data-group="sound">
+      {(['voice'] as const).map(kind => (
+        <VolumeSlider key={kind} id={`${idPrefix}-${kind}-volume`} kind={kind} percent={volumes[kind]} onPreview={onPreview} onCommit={onCommit} />
+      ))}
+      {children}
+    </div>
+  );
+}
+
+function VolumeSlider({ id, kind, percent, onPreview, onCommit }: {
+  id: string; kind: VolumeKind; percent: number; onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void;
+}) {
+  const { translator } = useI18n();
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? percent;
+  const valueText = translator.t('volumePercent', { percent: shown });
+  return (
+    <div class="dc-volume" data-volume={kind}>
+      <div class="dc-field-label">
+        <span id={`${id}-label`}>{translator.t(VOLUME_LABEL[kind])}</span>
+        <span data-volume-value>{valueText}</span>
+      </div>
+      <input id={id} aria-labelledby={`${id}-label`} type="range" min={VOLUME_MIN} max={VOLUME_MAX} step={VOLUME_STEP} value={shown} aria-valuetext={valueText}
+        onInput={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(value); onPreview(kind, value); }}
+        onChange={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(null); onCommit(kind, value); }} />
     </div>
   );
 }
@@ -228,7 +323,7 @@ export function NoticeBox({ notice, onClose }: { notice: AlertNotice; onClose():
       )}
       {notice === 'wake-tip' && (
         <>
-          <div class="dc-alert-text">{phrased(translator, 'wakeLockTip')}</div>
+          <div class="dc-alert-text">{phrased(translator, wakeLockTipKey(platformKind()))}</div>
           <button type="button" class="dc-alert-action" data-alert-action onClick={onClose}>{translator.t('close')}</button>
         </>
       )}

@@ -3,7 +3,7 @@ import { honorific } from '../lib/honorific.ts';
 import type { AppStorage } from '../platform/storage.ts';
 import { STANDARD_VOICE_ID, type AppSettings } from '../settings/settings.ts';
 import type { VoiceLocale } from './ids.ts';
-import { findStandardVoice } from './standard.ts';
+import { findStandardVoice, standardVoiceFor } from './standard.ts';
 import { isCompletePack, loadVoicePack, type VoicePackRecord } from './store.ts';
 
 // 選んだ声（Ruling 60-3・61）。再生・声チップ・S7 の選択中の行は、保存された selectedVoiceId をここで解いた物だけを使う。
@@ -25,6 +25,12 @@ export async function resolveVoiceSelection(storage: AppStorage | null, selected
   if (standard) return standard;
   const pack = await loadVoicePack(storage, selectedVoiceId);
   return pack && isCompletePack(pack) ? { kind: 'pack', id: pack.id, pack } : DEFAULT_VOICE;
+}
+
+// 録った言葉の標準の声（D78。S8 の聞き比べ）。その言葉の標準の声が無ければ標準（英語）。
+export function standardSelectionFor(locale: VoiceLocale): VoiceSelection {
+  const voice = standardVoiceFor(locale);
+  return voice ? { kind: 'standard', id: voice.id, locale: voice.locale } : DEFAULT_VOICE;
 }
 
 export function packSelection(pack: VoicePackRecord): VoiceSelection {

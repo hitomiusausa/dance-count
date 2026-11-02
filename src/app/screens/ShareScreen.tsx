@@ -1,7 +1,7 @@
 import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { PUBLIC_APP_URL } from '../app-url.ts';
-import { FocusHeader } from '../components/FocusHeader.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { danceName } from '../i18n/index.ts';
 import type { AppTranslator } from '../i18n/index.ts';
@@ -9,8 +9,10 @@ import { phrased } from '../i18n/phrased.tsx';
 import { canShareFile, copyText, downloadFile, shareFile } from '../platform/files.ts';
 import { routinePlayability, type Routine } from '../routines/routine.ts';
 import { buildBundle, cleanDistributorName, exportVoiceForBundle, type ExportedVoice } from '../share/bundle.ts';
+import { ensureDistributorId } from '../share/distributor-id.ts';
 import { bundleFileName } from '../share/filename.ts';
-import { shareDockNote, shareSectionOrder } from '../share/layout.ts';
+import { NOTE_MAX, cleanNote, limitNoteInput, noteLength } from '../share/note.ts';
+import { shareDefaults, shareDockNote, shareSectionOrder } from '../share/layout.ts';
 import { studentInstructions } from '../share/instructions.ts';
 import { BUNDLE_MIME, BUNDLE_ROUTINES_MAX, DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { useI18n } from '../state/i18n.ts';
@@ -27,7 +29,7 @@ import { WaltzSpinner } from '../brand/BrandMark.tsx';
 // 押せない理由はボタンの近くに 1 行（依頼形にしない）。ファイルはタップの前に作っておき、タップでは共有を同期に呼ぶ（F22・Ruling 81-2）。
 // 作った後は上に結果の 1 行と「生徒への案内文をコピー」（初期表示の 5 を超えないため・「ファイル → 案内」の順。Ruling 82-4・82-5）。
 // 受け取った声は配れない（D37）。鳴らさない（Ruling 82-8）。
-type Result = { kind: 'sent' | 'saved' | 'refused'; file: File; hasVoice: boolean };
+type Result = { kind: 'sent' | 'saved' | 'refused'; file: File; hasVoice: boolean; note: string | null };
 
 export function ShareScreen() {
   const { translator } = useI18n();
@@ -40,6 +42,10 @@ export function ShareScreen() {
   // 録音が途中の自分の声（録れた語が一番多い 1 本。同数なら新しい方）。配れる声が無い時の 1 行に使う（Fable 答え 2026-10-13 §2-3）
   const [inProgress, setInProgress] = useState<VoicePackRecord | null>(null);
   const [name, setName] = useState(settings.distributorName);
+  // 見分け用の番号（D76（ひとみうさ承認 2026-10-15））。設定に無ければここで作り、初めてファイルを作った時に設定へ残す（画面には出さない）
+  const [sender] = useState(() => ensureDistributorId(settings.distributorId));
+  const [note, setNote] = useState('');   // 生徒へのひとこと（D68・任意・80 字まで。端末には残さない＝ファイルごと）
+  const [noteOpen, setNoteOpen] = useState(false);
   const [voiceId, setVoiceId] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [chosen, setChosen] = useState<string[]>(() => (intent?.routineId ? [intent.routineId] : []));
@@ -48,6 +54,12 @@ export function ShareScreen() {
   const [result, setResult] = useState<Result | null>(null);
   const [copy, setCopy] = useState<'idle' | 'copied' | 'manual'>('idle');
   const resultRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLButtonElement>(null);
+  // 名前・同意が足りないまま「ファイルを作る」を押した時の案内（ひとみうさ 2026-10-14「見逃しやすい」）。足りた所で消える
+  const [blocked, setBlocked] = useState<'name' | 'consent' | null>(null);
+  const latestRoutines = useRef(routines);
+  latestRoutines.current = routines;
 
   // 配れる声＝録音した完成の声（最大 2）。S7・S8 から来た時はその声を選んだ状態で始める（同意はまだ）。
   useEffect(() => {
@@ -59,7 +71,10 @@ export function ShareScreen() {
       const partial = list.filter(pack => pack.origin === 'recorded' && !isCompletePack(pack) && packProgress(pack).recorded > 0)
         .sort((a, b) => packProgress(b).recorded - packProgress(a).recorded || b.updatedAt.localeCompare(a.updatedAt));
       setInProgress(partial[0] ?? null);
-      if (intent?.voiceId && recorded.some(pack => pack.id === intent.voiceId)) setVoiceId(intent.voiceId);
+      // 夜間便 B-3: 開いた時の既定（声・ルーティン）。同意は既定にしない（share/layout.ts shareDefaults）。読み込み中は画面が出ていない＝人の選択を上書きしない
+      const defaults = shareDefaults({ intent, recordedIds: recorded.map(pack => pack.id), routineIds: latestRoutines.current.filter(routine => routinePlayability(routine) === 'ok').map(routine => routine.id) });
+      setVoiceId(defaults.voiceId);
+      setChosen(defaults.routineIds);
     });
     return () => { alive = false; };
   }, [storage]);
@@ -91,19 +106,28 @@ export function ShareScreen() {
   const chosenKey = chosenRoutines.map(routine => `${routine.id}:${routine.updatedAt}`).join(',');
 
   // 選択・名前・同意が変わるたびにファイルを作り直す（タップの中で作らない＝共有をタップの最初の文で呼べる。Ruling 81-2）。
+  const madeNote = useRef<string | null>(null);   // 今のファイルに入れたひとこと（結果の枠に出す）
   const file = useMemo(() => {
     if (!ready) return null;
+    madeNote.current = cleanNote(note);
     const now = new Date();
-    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString() });
+    const text = buildBundle({ distributorName: cleanName, voice, routines: chosenRoutines, now: now.toISOString(), note: cleanNote(note), distributorId: sender.id });
     return new File([text], bundleFileName({ locale, distributorName: cleanName, hasVoice: voice !== null, now }), { type: BUNDLE_MIME });
-  }, [ready, cleanName, voice, chosenKey, locale]);
+  }, [ready, cleanName, voice, chosenKey, locale, cleanNote(note)]);
+
+  useEffect(() => { if (file && sender.isNew && settings.distributorId === null) update({ distributorId: sender.id }); }, [file !== null]);
 
   const show = (kind: Result['kind'], made: File, hasVoice: boolean) => {
-    setResult({ kind, file: made, hasVoice });
+    setResult({ kind, file: made, hasVoice, note: madeNote.current });
     setCopy('idle');
   };
 
+  useEffect(() => { if ((blocked === 'name' && !needsName) || (blocked === 'consent' && !needsConsent)) setBlocked(null); }, [blocked, needsName, needsConsent]);
+
   const create = () => {
+    // 名前か同意が足りない: 押せるが作らず、帯に案内を出して足りない所へ（名前が先＝画面の上から）
+    if (!file && needsName) { setBlocked('name'); nameRef.current?.focus(); nameRef.current?.scrollIntoView({ block: 'center' }); return; }
+    if (!file && needsConsent) { setBlocked('consent'); consentRef.current?.focus(); consentRef.current?.scrollIntoView({ block: 'center' }); return; }
     if (!file) return;
     const made = file;
     const hasVoice = voice !== null;
@@ -142,7 +166,7 @@ export function ShareScreen() {
   };
 
   // 段8 Task 6 fix 1（レビュー I-1）: 読み込み中の形にも、読み終えた後と同じ上の行（名前の h1）を出す（フォーカスが h1 に残る）
-  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><FocusHeader screen="S9" title={translator.t('shareTitle')} heading /><div class="dc-loading"><WaltzSpinner /></div></main>;
+  if (voices === null) return <main class="dc-screen dc-screen--focus" data-screen="S9" data-loading><ScreenHeading screen="S9" title={translator.t('shareTitle')} info="infoShare" /><div class="dc-loading"><WaltzSpinner /></div></main>;
 
   const atLimit = chosenRoutines.length >= BUNDLE_ROUTINES_MAX;
   const dockNote = shareDockNote({ needsSomething, voiceCount: voices.length, routineCount: shareable.length });
@@ -170,7 +194,7 @@ export function ShareScreen() {
         // 同意の文は 2 文と長いので、ボタン（四角）の外に置き、文を押しても切り替わる（ボタン文言は 2 行まで・U10）。
         <div class="dc-consent" data-group="consent">
           <div class="dc-consent-row">
-            <button type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
+            <button ref={consentRef} type="button" class="dc-consent-box" role="checkbox" aria-checked={consent ? 'true' : 'false'} aria-labelledby="dc-s9-consent"
               onClick={() => setConsent(!consent)}>
               <span class="dc-checkbox" aria-hidden="true">{consent && <Icon name="check" />}</span>
             </button>
@@ -211,7 +235,7 @@ export function ShareScreen() {
   );
   return (
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-share" data-screen="S9" data-result={result ? result.kind : undefined}>
-      <FocusHeader screen="S9" title={translator.t('shareTitle')} heading />
+      <ScreenHeading screen="S9" title={translator.t('shareTitle')} info="infoShare" />
       {result && (
         <div class="dc-share-done" ref={resultRef}>
           <div class="dc-result" role="status">
@@ -219,6 +243,7 @@ export function ShareScreen() {
               : result.kind === 'refused' ? phrased(translator, 'shareRefused')
               : phrased(translator, 'shareSaved', { file: result.file.name })}</div>
             {copy === 'copied' && <div class="dc-result-sub">{phrased(translator, 'instructionsCopied')}</div>}
+            {result.note && <div class="dc-result-sub" data-note-sent>{translator.t('shareNoteSent', { note: result.note })}</div>}
           </div>
           {result.kind === 'refused' && (
             <button type="button" class="dc-button dc-button--secondary dc-wide" onClick={saveRefused}>
@@ -228,6 +253,14 @@ export function ShareScreen() {
           <button type="button" class="dc-button dc-button--secondary dc-wide" onClick={copyInstructions}>
             <Icon name="copy" /><span>{translator.t('copyInstructions')}</span>
           </button>
+          {/* 夜間便 B-6（Ruling 124・監査 #9a）: 送る前に中身を確かめられるよう、たたんだ枠で案内文そのものを見せる（読む専用・コピーの動きは変えない）。
+              「くわしく」と同じ型（summary[data-more]）＝たたんだ状態は主要操作に数えない（Ruling 18 の読み替え）。手でコピーの枠が出ている時は重ねない */}
+          {copy !== 'manual' && (
+            <details class="dc-more dc-instructions-more">
+              <summary data-more><span>{translator.t('showInstructions')}</span><Icon name="chevron" /></summary>
+              <div class="dc-more-body"><div class="dc-instructions-view" data-instructions-view>{instructions}</div></div>
+            </details>
+          )}
           {copy === 'manual' && (
             <div class="dc-field">
               <textarea class="dc-input dc-instructions" readOnly rows={8} value={instructions} aria-label={translator.t('instructionsLabel')} />
@@ -238,16 +271,35 @@ export function ShareScreen() {
       )}
       <div class="dc-field" data-group="distributor">
         <div class="dc-field-label" id="dc-s9-name-label">{translator.t('shareYourName')}</div>
-        <input class="dc-input" type="text" maxLength={DISTRIBUTOR_NAME_MAX} value={name} enterKeyHint="done" autoComplete="name" aria-labelledby="dc-s9-name-label"
+        <input ref={nameRef} class="dc-input" type="text" maxLength={DISTRIBUTOR_NAME_MAX} value={name} enterKeyHint="done" autoComplete="name" aria-labelledby="dc-s9-name-label"
           onInput={event => setName((event.currentTarget as HTMLInputElement).value)}
           onBlur={event => saveName(event.currentTarget as HTMLInputElement)}
           onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
         {needsName && <div class="dc-hint">{phrased(translator, 'shareNameNeeded')}</div>}
       </div>
       {shareSectionOrder(intent).map(section => <Fragment key={section}>{section === 'voice' ? voiceSection : routineSection}</Fragment>)}
+      {/* D68（ひとみうさ指示 2026-10-14）: 生徒へのひとこと（任意）。いちばん下にたたんで置く（「くわしく」と同じ型＝summary[data-more]。たたんだ状態は
+          主要操作に数えない＝初期表示の 5 を超えない・名前・声・同意・主ボタンを押し下げない）。80 字（書記素）で入力を止め、下に「n / 80 字」。
+          配る物が何も無い時は出さない。ファイルを作った後は、たたみを消して結果の枠に「ひとこと：…」を出す（「案内文を見る」と合わせて「くわしく」は 1 つ＝U6） */}
+      {!result && (voices.length > 0 || shareable.length > 0) && (
+        <details class="dc-more dc-share-note" open={noteOpen} onToggle={event => setNoteOpen((event.currentTarget as HTMLDetailsElement).open)}>
+          <summary data-more><span>{translator.t('shareNoteLabel')}</span><Icon name="chevron" /></summary>
+          <div class="dc-more-body">
+            <div class="dc-field" data-group="share-note">
+              <input class="dc-input" type="text" value={note} enterKeyHint="done" autoComplete="off" aria-label={translator.t('shareNoteLabel')} aria-describedby="dc-s9-note-count"
+                placeholder={translator.t('shareNotePlaceholder')}
+                onInput={event => { const input = event.currentTarget as HTMLInputElement; const next = limitNoteInput(input.value); if (next !== input.value) input.value = next; setNote(next); }}
+                onKeyDown={event => { if (event.key === 'Enter') (event.currentTarget as HTMLInputElement).blur(); }} />
+              <div class="dc-hint" id="dc-s9-note-count" data-note-count>{translator.t('shareNoteCount', { count: noteLength(note), max: NOTE_MAX })}</div>
+            </div>
+          </div>
+        </details>
+      )}
       <div class="dc-dock dc-share-dock">
         {dockNote && <div class="dc-dock-note">{phrased(translator, dockNote === 'nothing' ? 'shareNothingYet' : 'shareChooseSomething')}</div>}
-        <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file} onClick={create}>
+        {!dockNote && blocked && <div class="dc-dock-note dc-dock-note--ask" role="alert" data-blocked={blocked}>{phrased(translator, blocked === 'name' ? 'shareAskName' : 'shareAskConsent')}</div>}
+        {/* 名前・同意だけが足りない時は押せる（押すと上の案内）。配る物が無い・声の準備中は押せない */}
+        <button type="button" class="dc-button dc-primary dc-dock-button" disabled={!file && !((needsName || needsConsent) && !needsSomething)} onClick={create}>
           <Icon name="share" /><span>{translator.t('createFile')}</span>
         </button>
       </div>

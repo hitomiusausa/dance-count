@@ -6,6 +6,8 @@ test('nothing saved yet gives the spec defaults (Ruling 13・D3)', () => {
   for (const raw of [undefined, null, 'x', 3, [], {}]) assert.deepEqual(normalizeSettings(raw), DEFAULT_SETTINGS, JSON.stringify(raw));
   assert.equal(DEFAULT_SETTINGS.voiceLocale, 'en');
   assert.equal(DEFAULT_SETTINGS.metronome, true);
+  assert.equal(DEFAULT_SETTINGS.metronomeVolume, 1);
+  assert.equal(DEFAULT_SETTINGS.metronomeMuted, false);
   assert.equal(DEFAULT_SETTINGS.countInBars, 1);
   assert.equal(DEFAULT_SETTINGS.loop, true);
   assert.equal(DEFAULT_SETTINGS.lastDanceId, null);
@@ -46,6 +48,14 @@ test('broken or foreign values fall back field by field', () => {
   assert.deepEqual(settings.hints, { wakeLockTipShown: false, backupTipShownForRecording: false, backupTipShownForRoutine: false, firstPlaybackDone: false, homeScreenCardDismissed: false });
   assert.deepEqual(settings.speedPresetByRoutine, { 'r-aaaaaaaa': 'slow' });
   assert.deepEqual(settings.customBpmByRoutine, { 'r-aaaaaaaa': 220 });
+});
+
+test('metronome volume is clamped and its mute state is kept separately', () => {
+  assert.equal(normalizeSettings({ metronomeVolume: 0.42, metronomeMuted: true }).metronomeVolume, 0.42);
+  assert.equal(normalizeSettings({ metronomeVolume: 2 }).metronomeVolume, 1);
+  assert.equal(normalizeSettings({ metronomeVolume: -0.2 }).metronomeVolume, 0);
+  assert.equal(normalizeSettings({ metronomeVolume: 'loud' }).metronomeVolume, 1);
+  assert.equal(normalizeSettings({ metronomeVolume: 0.42, metronomeMuted: true }).metronomeMuted, true);
 });
 
 test('deleting a routine forgets its speed memory only', () => {

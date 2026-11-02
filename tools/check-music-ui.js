@@ -14,6 +14,7 @@ try{
     await page.evaluate(locale=>new Promise((resolve,reject)=>{
       const request=indexedDB.open('dance-count-v2');request.onerror=()=>reject(request.error);
       request.onsuccess=()=>{const db=request.result;const tx=db.transaction('settings','readwrite');
+        tx.objectStore('settings').delete('music:paper-umbrella');
         tx.objectStore('settings').put({uiLocale:locale,lastDanceId:'rumba',hints:{firstPlaybackDone:true}},'app');
         tx.oncomplete=()=>{db.close();resolve(true);};tx.onerror=()=>reject(tx.error);};
     }),locale);
@@ -24,7 +25,9 @@ try{
       return{entry:{top:entry.top,bottom:entry.bottom,height:entry.height},tabsTop:tabs.top};
     });
     if(home.entry.height<48)throw Error(`entry hidden: ${locale} ${JSON.stringify(home)}`);
-    await page.getByRole('link',{name:locale==='ja-JP'?'音楽':'Music',exact:true}).click();await page.locator('[data-track]').first().click();
+    await page.getByRole('link',{name:locale==='ja-JP'?'音楽':'Music',exact:true}).click();
+    await page.locator('[data-music-genre] summary').first().click();
+    await page.locator('[data-track]').first().click();
     await page.waitForSelector('[data-screen=U4] [role=radio]');
     for(const rateIndex of [0,1,2]){
       await page.getByRole('radio').nth(rateIndex).click();await page.evaluate(()=>document.fonts.ready);
@@ -54,7 +57,12 @@ try{
       if(width===375&&height===548&&closed.moreBottom>closed.dockTop-8)throw Error(`details hidden ${locale}/${rateIndex}: ${JSON.stringify(closed)}`);
       await page.locator('[data-more]').click();const open=await measure();
       if(open.small.length||open.fonts.length||open.clippedSelect.length||open.untranslated||open.overflow||open.operations>9)throw Error(`open ${locale}/${width}/${rateIndex}: ${JSON.stringify(open)}`);
-      const order=page.getByRole('combobox',{name:locale==='ja-JP'?'曲とカウント、どちらから始めますか？':'Which starts first?',exact:true});
+      await page.getByRole('link',{name:locale==='ja-JP'?'曲を選び直す':'Choose another song',exact:true}).waitFor();
+      const order=page.getByRole('combobox',{name:locale==='ja-JP'?'曲とカウントをどう始めますか？':'How should the music and count start?',exact:true});
+      await order.selectOption('music-first');
+      const wait=page.getByRole('combobox',{name:locale==='ja-JP'?'曲を何小節聞いてから数えますか？':'How many bars should the music play before counting?',exact:true});
+      const waitOptions=await wait.locator('option').evaluateAll(options=>options.map(option=>option.value));
+      if(waitOptions.join(',')!=='4,8')throw Error(`wait options should be one or two bars: ${waitOptions}`);
       const startModes=[];
       for(const mode of ['count-first','together','music-first']){
         await order.selectOption(mode);const state=await measure();
@@ -62,11 +70,15 @@ try{
         startModes.push({mode,...state});
       }
       if(rateIndex===1){
-        const count=page.getByRole('switch',{name:locale==='ja-JP'?'カウントの声':'Hear the count',exact:true});
-        await count.click();
-        if(await count.getAttribute('aria-checked')!=='false'||!await order.isDisabled())throw Error('music-only state did not disable start options');
-        await count.click();
-        if(await count.getAttribute('aria-checked')!=='true'||await order.isDisabled())throw Error('count state did not restore start options');
+        const musicSlider=page.getByRole('slider',{name:locale==='ja-JP'?'音楽の大きさ':'Music volume',exact:true});
+        const countSlider=page.getByRole('slider',{name:locale==='ja-JP'?'カウントの大きさ':'Count volume',exact:true});
+        if(await musicSlider.count()!==1||await countSlider.count()!==1)throw Error('music/count volume sliders missing');
+        const musicMute=page.locator('[data-mute-music]'),countMute=page.locator('[data-mute-count]');
+        await musicMute.click();if(await musicMute.getAttribute('aria-pressed')!=='true')throw Error('music消音 did not turn on');
+        await musicMute.click();if(await musicMute.getAttribute('aria-pressed')!=='false')throw Error('music消音 did not turn off');
+        await countMute.click();if(await countMute.getAttribute('aria-pressed')!=='true')throw Error('count消音 did not turn on');
+        if(await page.getByRole('switch').count())throw Error('duplicate count voice switch remains');
+        await countMute.click();if(await countMute.getAttribute('aria-pressed')!=='false')throw Error('count消音 did not turn off');
         const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze();
         if(axe.violations.length)throw Error(`accessibility ${locale}/${width}: ${axe.violations.map(v=>v.id).join(',')}`);
         await page.screenshot({path:`output/music-probe/music-ui-${locale}-${width}x${height}.png`,fullPage:true});

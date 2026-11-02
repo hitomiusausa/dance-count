@@ -14,8 +14,11 @@ interface CommonOptions {
   danceId: string;
   bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm・routine-preferences.ts を通す）
   metronome: boolean;
+  metronomeVolume?: number;
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
+  voiceVolume?: number;        // D73 声の倍率 0〜1（画面が practice/volume.ts の volumeGain で直して渡す。省略＝1）
+  barCounting?: boolean;       // D72 小節を数える（画面が barCountingAvailable で絞って渡す。省略＝オフ）
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
   voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
   voiceOffsetMs: number;       // 声のタイミング（practice/voice-offset.ts の voiceOffsetFor。Ruling 62）
@@ -71,8 +74,10 @@ export interface SessionView {
   voiceKey: string | null;     // 鳴っている語（表示は lib/count-display.ts）
   originalTick: number | null;
   figureIndex: number | null;  // 鳴っているフィガー（ルーティンの時だけ。はじめの合図の間は null）
+  leadTick: number | null;     // 夜間便 B-5: はじめの合図の間だけ、最初の語までの tick（負の数。帯の丸を灰で 1 語ずつ進める＝beat-indicator.ts leadStripView。数字は出さない＝Ruling 28）
   notice: SessionNotice;
   program: StripProgram | null; // 鳴らしている型（エンジンに渡した compiled の写し。止まっている間は null。D55・Ruling 114-5）
+  bar: number | null;          // D72: 小節を数えている時だけ、今の小節の番号（1〜8。エンジンの同じ frame から）。合図の間・オフの時は null
 }
 
 export interface AudioLike { state: string; currentTime: number }
@@ -83,13 +88,18 @@ export interface EngineFrame {
   countIn?: boolean;
   listening?: boolean;
   originalTick?: number | null;
+  leadTick?: number | null;    // はじめの合図の間だけ。最初の語までの tick＝負の数（エンジンの同じ frame。夜間便 B-5）
+  bar?: number;                // D72: 小節を数えている時だけ
 }
 
 export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
-  setVolumes?(music: number, voice: number): void;
+  // 音楽のエンジンは (music, voice)、カウントだけのエンジンは D73 の { voice }（鳴っている最中でも止めずに効く）
+  setVolumes?(volumes: number | { voice?: number; click?: number }, voice?: number): void;
+  setMetronome?(on: boolean): void;            // 鳴らしながらメトロノームのオン/オフ（止めて最初からにしない）
+  setMetronomeVolume?(volume: number): void;   // D81: メトロノームの大きさ（0〜1。消音は 0）
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -114,7 +124,7 @@ export interface SessionHints {
 }
 
 export const IDLE_VIEW: SessionView = Object.freeze({
-  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, notice: 'none', program: null
+  playing: false, starting: false, countIn: false, voiceKey: null, originalTick: null, figureIndex: null, leadTick: null, notice: 'none', program: null, bar: null
 }) as SessionView;
 
 export class PracticeSession<A extends AudioLike, V> {
@@ -125,6 +135,7 @@ export class PracticeSession<A extends AudioLike, V> {
   private audio: A | null = null;
   private engine: EngineLike | null = null;
   private engineKind: 'music' | 'counts' | null = null;
+  private metronomeOverride: boolean | undefined = undefined;
   private wakeLock: WakeLockLike | null = null;
   private cancelSoundCheck: (() => void) | null = null;
   private unsubscribeState: (() => void) | null = null;
@@ -150,6 +161,7 @@ export class PracticeSession<A extends AudioLike, V> {
     if (options.kind !== 'music' && options.track !== null) throw new Error('Playing with a track is not supported in v1');
     if (typeof options.bpm !== 'number' || !Number.isFinite(options.bpm)) throw new TypeError('bpm must be a finite number');
     this.halt();
+    this.metronomeOverride = undefined;
     const generation = ++this.generation;
     const audio = this.deps.unlock();
     this.attach(audio);
@@ -165,12 +177,27 @@ export class PracticeSession<A extends AudioLike, V> {
     this.update({ ...IDLE_VIEW, notice: this.view.notice });
   }
 
+  // D73: 大きさのスライダー。再生を止めずにエンジンの出口の倍率だけを替える（次の ▶ は options の値で始まる）
+  setVolumes(volumes: { voice?: number; click?: number }): void {
+    if (this.engineKind !== 'music') this.engine?.setVolumes?.(volumes);   // 音楽のエンジンは setMusicVolumes から
+  }
+
   dismissNotice(): void {
     this.update({ ...this.view, notice: 'none' });
   }
 
   setMusicVolumes(music: number, voice: number): void {
     if (this.engineKind === 'music') this.engine?.setVolumes?.(music, voice);
+  }
+
+  setMetronomeVolume(volume: number): void {
+    this.engine?.setMetronomeVolume?.(volume);
+  }
+
+  // メトロノームのオン/オフ。鳴っている最中は止めずにそのまま進む。▶ の直後（声を読み込み中）に押された時は、鳴り始めにその値を使う
+  setMetronome(on: boolean): void {
+    this.metronomeOverride = on;
+    if (this.engineKind !== 'music') this.engine?.setMetronome?.(on);
   }
 
   dispose(): void {
@@ -232,12 +259,14 @@ export class PracticeSession<A extends AudioLike, V> {
         ...compiled,
         bpm: options.bpm,
         loop: options.loop,
-        metronome: options.metronome,
+        metronome: options.kind === 'music' ? options.metronome : this.metronomeOverride ?? options.metronome,
+        metronomeVolume: options.metronomeVolume ?? 1,
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,
         wordOffsetsMs: wordOffsetsFor(options.voice),
         ...(options.kind === 'music' ? { musicAsset, repetitions: options.repetitions, countEnabled: options.countEnabled,
-          musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats } : {})
+          musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats }
+          : { barCounting: options.barCounting === true, voiceVolume: options.voiceVolume ?? 1 })
       });
     } catch {
       void lockPromise.then(lock => lock?.release());
@@ -298,7 +327,9 @@ export class PracticeSession<A extends AudioLike, V> {
       countIn, listening: frame.listening === true,
       voiceKey: countIn ? null : frame.event?.voiceKey ?? null,
       originalTick: countIn ? null : frame.originalTick ?? null,
-      figureIndex: countIn ? null : frame.event?.figureIndex ?? null
+      figureIndex: countIn ? null : frame.event?.figureIndex ?? null,
+      leadTick: countIn ? frame.leadTick ?? null : null,
+      bar: countIn ? null : frame.bar ?? null
     });
   }
 

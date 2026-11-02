@@ -26,6 +26,12 @@
 .dc-music-genre[open] > summary .dc-ic { transform: rotate(90deg); }
 .dc-music-song .dc-link-label { display: flex; flex-direction: column; gap: 4px; }
 .dc-music-song b { font-size: 17px; line-height: 1.5; }
+/* 曲を選ぶ画面の 1 行: 曲（練習へ）＋試聴ボタン。下の線は行に 1 本 */
+.dc-music-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-bottom: var(--bw) solid var(--line); }
+.dc-music-row .dc-music-song { flex: 1 1 200px; min-width: 0; border-bottom: 0; }
+.dc-music-listen { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 56px; height: 56px; margin-top: 8px; padding: 0; border-radius: 50%; }   /* アイコンだけ（▶／■）。名前は aria-label */
+.dc-music-listen[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); }
+.dc-music-listen-error { flex-basis: 100%; margin: 0 0 8px; font-size: 16px; color: var(--ink2); }
 .dc-music-song small, .dc-music-note { font-size: 16px; color: var(--ink2); line-height: 1.5; }
 .dc-music-note { margin: 16px 0; }
 [data-music-context] { overflow-wrap: anywhere; }
@@ -33,7 +39,11 @@
 .dc-music-field { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; font-size: 18px; }
 .dc-music-field select { width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--bg); }
 .dc-music-field input[type="range"] { width: 100%; min-height: 48px; margin: 0; accent-color: var(--primary); }
-.dc-music-count { width: 100%; margin-top: 12px; }
+.dc-music-volume-control { display: flex; align-items: center; gap: 8px; }
+.dc-music-volume-control input[type="range"] { flex: 1; width: 100%; min-width: 0; min-height: 48px; margin: 0; accent-color: var(--primary); }
+.dc-music-mute { flex: none; min-height: 48px; padding: 0 10px; white-space: nowrap; }
+.dc-metronome-volume { margin: 16px 0; }
+.dc-metronome-volume input[type="range"] { flex: 1; width: 100%; min-width: 0; min-height: 48px; margin: 0; accent-color: var(--primary); }
 .dc-music-figures { padding-left: 28px; font-size: 18px; overflow-wrap: anywhere; }
 .dc-music-figures li { margin: 8px 0; }
 .dc-music [data-music-routine-name] { overflow-wrap: anywhere; color: var(--ink); font-weight: 700; }
@@ -43,6 +53,9 @@
 .dc-music [data-group="music-speed"] .dc-chip { display:inline-flex; align-items:center; gap:4px; padding:0 6px; }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+/* PC: 行を開く・追加で縦のスクロールバーが出ても中身が左右に動かない（ひとみうさ 2026-10-15「中央が少しずれる」）。下の帯・上のタブ（fixed）も同じ中心になるのを実測。
+   中身が画面幅いっぱいの狭い幅（スマホ・狭い窓）には付けない（溝の 15px で幅が減り、枠の高さ・折れが変わるため） */
+@media (min-width: 700px) { html { scrollbar-gutter: stable; } }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 18px; line-height: 1.5; }
 button, a { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -61,6 +74,31 @@ button { cursor: pointer; }
 .dc-shell:not([data-tabs]) .dc-screen:not(.dc-screen--dock) { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .dc-heading { font-size: 22px; font-weight: 700; line-height: 1.3; margin: 24px 0 12px; letter-spacing: var(--track); }
 .dc-body { font-size: 18px; margin: 0 0 12px; }
+/* D67: 画面の見出しの行（ScreenHeading）。h1.dc-heading の外の間（上 24・下 12）は行が持つ。ⓘ（D66）は見出しの横・48px の的を上下 -10px で行の高さに収める（行の高さは見出しの 1 行のまま＝ⓘ があっても無くても同じ） */
+.dc-title-row { position: relative; display: flex; align-items: center; gap: 2px; margin: 24px 0 12px; }
+.dc-title-row > .dc-heading { margin: 0; min-width: 0; }
+/* 的は上に 15px・下に 4px はみ出す（上の「‹ 戻る」・下の物との間 8px 以上＝U3）。絵は見出しの字の真ん中の高さ（padding-top 10） */
+.dc-info-button { flex: none; display: grid; place-items: center; width: 48px; height: 48px; margin: -15px 0 -4px; padding: 10px 0 0; border: none; border-radius: 50%; background: none; color: var(--primary); }
+.dc-info-button[aria-expanded="true"] { background: var(--soft); }
+/* 説明の箱: 見出しの行の下端から重ねて出す（下の物を動かさない）。色は地・文字・枠の札（--surface・--ink・--primary）だけ */
+.dc-info-pop { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; padding: 12px 8px 4px 16px; border: var(--bw) solid var(--primary); border-radius: var(--r);
+  background: var(--surface); color: var(--ink); box-shadow: var(--lift-shadow); }
+.dc-info-pop[hidden] { display: none; }
+.dc-info-text { margin: 0 8px 0 0; font-size: 18px; font-weight: 400; line-height: 1.5; text-wrap: pretty; }
+.dc-info-close { display: flex; align-items: center; gap: 4px; min-height: 48px; margin-left: auto; padding: 0 8px; border: none; background: none; color: var(--primary); font-size: 18px; font-weight: 700; }
+/* 見える高さ 600px 未満（375×548 など）: どの画面の見出しの行も同じに詰める（D67）。上の間 0（「‹ 戻る」の的 48 の字の下の空きが間になる）・下 8・
+   見出し 20px（S1 と同じ）。ⓘ は上へだけはみ出し、「‹ 戻る」と横に 8px 以上離すため見出しの幅を 5 字ぶん以上にする（「配る」は ⓘ との間が空く） */
+@media (max-height: 599px) and (max-width: 1023px) {
+  .dc-title-row { margin: 0 0 8px; align-items: flex-end; }
+  .dc-title-row > .dc-heading { min-width: 5em; font-size: 20px; line-height: 1.2; }
+  .dc-title-row > .dc-info-button { align-self: flex-end; margin: -48px 0 0; padding: 0 0 0; place-items: end center; }
+  .dc-record .dc-language-row { min-height: 56px; }   /* 64 → 56（言葉の 2 択を初期表示に） */
+  /* S9: 名前・声・同意・主ボタンを初期表示に（Ruling 82。見出しの行が増えた分をここで詰める） */
+  .dc-share-heading { margin-top: 4px; }
+  .dc-share .dc-consent { margin-top: 8px; }
+  .dc-share .dc-consent-row { padding-bottom: 4px; }
+  .dc-share [data-group="share-voice"] .dc-radio-row { min-height: 52px; }
+}
 
 /* 下タブ（Ruling 17）。1024px 以上は上部の横並び（Ruling 21） */
 .dc-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: calc(var(--tabh) + env(safe-area-inset-bottom)); display: flex; gap: 8px; padding: 0 8px env(safe-area-inset-bottom);
@@ -210,6 +248,8 @@ button { cursor: pointer; }
 .dc-beats[data-dense] li:not([data-cell="sub"]) { font-size: 15px; }
 @media (max-width: 359px) { .dc-beats { gap: 4px; } }
 .dc-beats li[aria-current="true"] { color: var(--beat-on); border-bottom: 6px solid var(--beat-on); font-weight: 800; }
+/* 夜間便 B-5: はじめの合図の間は灰で進む（琥珀は鳴っている語だけ） */
+.dc-beats[data-lead] li[aria-current="true"] { color: var(--ink2); border-bottom-color: var(--ink2); }
 .dc-field-label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-seg { display: grid; grid-template-columns: repeat(var(--seg-cols, 3), 1fr); gap: 8px; }   /* 列数は controls.tsx の --seg-cols（出ている速さの数） */
 .dc-opt { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; padding: 4px;
@@ -246,6 +286,13 @@ button { cursor: pointer; }
 .dc-chip--name { max-width: 100%; padding: 6px 14px; line-height: 1.3; text-align: left; white-space: normal; word-break: keep-all; line-break: strict; overflow-wrap: anywhere; }
 .dc-chip[aria-checked="true"], .dc-chip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel-line); color: var(--sel-ink); }
 .dc-fine { display: flex; flex-direction: column; gap: 8px; }
+.dc-countbox { position: relative; }
+/* D72: 小節を数えている間の「3 / 8 小節」。箱の右上に重ねる（高さを足さない） */
+.dc-bar-count { position: absolute; top: 0; right: 0; padding: 2px 10px; border-radius: 999px; background: var(--soft); color: var(--ink); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.4; }
+.dc-volume { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }   /* D73 */
+.dc-volume input[type="range"] { width: 100%; min-height: 48px; accent-color: var(--primary); }
+.dc-volume [data-volume-value] { font-variant-numeric: tabular-nums; }
+.dc-chip--wrap { max-width: 100%; padding-top: 6px; padding-bottom: 6px; line-height: 1.3; white-space: normal; text-align: left; }   /* D71: 競技の速さ（テンポつき）は句の境で折る */
 .dc-fine input[type="range"] { width: 100%; min-height: 48px; accent-color: var(--primary); }
 .dc-more-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 56px; border-bottom: var(--bw) solid var(--line); }
 .dc-more-row > span { font-size: 18px; font-weight: 700; }
@@ -363,12 +410,17 @@ button { cursor: pointer; }
 .dc-figure-now { align-self: stretch; margin-top: 6px; padding: 0 0 0 10px; border-left: 4px solid var(--line); font-size: 18px; font-weight: 700; line-height: 1.3;
   color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-figure-now--on { border-left-color: var(--beat-on); color: var(--ink); }
+/* 夜間便 B-4: 鳴っている間だけ「今のフィガー」の下に小さく「次: {名前}」（16px・--ink2）。長い名前は「…」 */
+.dc-figure-next { align-self: stretch; padding-left: 14px; font-size: 16px; line-height: 1.3; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-figure-now-pos { font-size: 16px; color: var(--ink2); font-variant-numeric: tabular-nums; }
 .dc-range { display: flex; flex-direction: column; gap: 8px; }
 .dc-range-step { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; min-height: 56px; border-bottom: var(--bw) solid var(--line); }
 .dc-range-label { font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-range-value { min-width: 0; font-size: 18px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-.dc-step { padding: 0 8px; gap: 2px; }
+/* 「‹ 前」「次 ›」: 山の絵は 24 の箱の真ん中 8px だけなので、箱の余白を詰めて外側と文字側の空きをそろえる（字と山の間は 6px ほど） */
+.dc-step { padding: 0 12px; gap: 4px; }
+.dc-step .dc-ic:first-child { margin: 0 -6px 0 -8px; }
+.dc-step .dc-ic:last-child { margin: 0 -8px 0 -6px; }
 .dc-list-heading { margin: 20px 0 0; font-size: 16px; font-weight: 700; color: var(--ink2); }
 .dc-play-list { margin-top: 8px; }
 /* 追従で見せる行が固定の ▶ の帯に隠れない */
@@ -391,6 +443,7 @@ button { cursor: pointer; }
 .dc-link-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; margin-top: 8px; padding: 0 2px; text-decoration: none;
   border-bottom: var(--bw) solid var(--line); font-size: 18px; font-weight: 700; color: var(--ink); }
 .dc-link-label { flex: 1; min-width: 0; }
+/* 夜間便 B-2: S10 受け取った後の 2 番目の出口（「種目を選ぶ ›」）。行の見た目のボタン（画面替えは置き換え＝exitTo なので a ではない） */
 .dc-link-value { min-width: 0; font-size: 16px; font-weight: 400; color: var(--ink2); text-align: right; overflow-wrap: anywhere; }
 .dc-link-row > .dc-ic:last-child { color: var(--ink2); }
 .dc-settings-section { margin-top: 24px; }
@@ -402,13 +455,11 @@ button { cursor: pointer; }
 .dc-voice-line > .dc-radio-row { flex: 1; min-width: 0; }
 .dc-voice-name { flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
 .dc-voice-preview { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; }
-.dc-voice-partial { color: var(--ink); }  /* 途中の声の行も名前は押せる行の色。数だけ灰色（Ruling 73） */
-.dc-voice-count { font-size: 18px; font-weight: 400; color: var(--ink2); white-space: nowrap; }
 .dc-voice-row[data-open] { --line: var(--line-on-soft); background: var(--soft); }
 .dc-voice-row[data-open] .dc-radio-row { background: transparent; }
 .dc-voice-row[data-open] .dc-row-chev { transform: rotate(180deg); }
 .dc-voice-actions { padding: 8px 10px 12px; }  /* 行のボタンとの間隔 8px（U3） */
-/* 「続きを録音する」を語の途中で折らない（375 で 2 行・320 で 3 行に割れた）。入らない幅では 2 つのボタンが縦に並ぶ */
+/* 開いた行は受け取った声の「削除」だけ（D75。「続きを録音する」「配る」は「作る」の側へ） */
 .dc-voice-actions .dc-button--secondary { flex: 1 0 auto; white-space: nowrap; }
 
 /* S8 録音（Ruling 59・モック b-studio-navy の S8）。375×667 で 1 語の画面が初期表示に収まる寸法 */
@@ -419,19 +470,42 @@ button { cursor: pointer; }
 .dc-radio-text > span { word-break: keep-all; overflow-wrap: anywhere; }  /* 「スロ／ー」のように語の途中で折らない */
 .dc-radio-text small { font-size: 16px; font-weight: 400; color: var(--ink2); }
 .dc-language-row { min-height: 64px; }
+/* D75: 説明の画面の 2 択の下の「削除」（選んだ言葉の声に録った語がある時だけ）。幅いっぱいにしない小さい副ボタン・2 択との間 8px（U3） */
+.dc-record-manage { margin-top: 8px; }
+.dc-row-actions.dc-record-manage .dc-button--secondary { flex: 0 0 auto; padding: 0 20px; }   /* 下の .dc-row-actions の flex: 1 より強く */
 .dc-howto { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; }
 .dc-alert-text--solo { padding-bottom: 6px; }  /* 操作の無い枠（ボタンが下の余白を作らない） */
 /* 折り方は .dc-phrased（句の境だけ）。pretty・balance は句の境の中から行を選ぶだけ（Safari 26 でも効く＝F44。効かない所では無害） */
 .dc-record-intro, .dc-record .dc-alert-text { text-wrap: pretty; }
 .dc-record-hint { text-wrap: balance; }
-.dc-record-progress { margin-top: 4px; }
-.dc-record-progress-text { font-size: 18px; color: var(--ink2); white-space: nowrap; }
-.dc-record-progress-text b { font-size: 24px; color: var(--ink); }
-.dc-record-cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 6px; }
-.dc-record-cell { height: 10px; border-radius: 3px; border: 1.5px solid var(--line); }
-.dc-record-cell--done { background: var(--primary); border-color: var(--primary); }
-.dc-record-cell--now { background: var(--soft); border: 2px solid var(--primary); }
-.dc-record-word { margin: 16px 0 4px; text-align: center; }
+/* D64（ひとみうさ承認 2026-10-14）: 進み具合は押せる 12 語のチップ（2 段 × 6）。前の 12 のますと同じ色の決まり（紺＝録音済み・枠＝今の語・白＝まだ）。
+   高さは U3 の 48 ではなく 38（375×548 は 36）・間は 6px（[data-tap-compact]＝D64 の例外。ui:check もこの値で見る）。
+   語は折らない・はみ出さない（クイック・Seven・Three）: かなは詰め（palt）。スマホ幅（〜479px）は 14px（[data-fineprint]＝U1 の小さい字の下限）、
+   それより広い所は 16px。320 幅（〜359px）は 6 列に「クイック」が入らないので 4 列 × 3 段（D64 の妥協） */
+/* D67（ひとみうさ指示 2026-10-14）: 語の画面も見出しは M1 と同じ形（「‹ 戻る」→ 大きい見出し＋ⓘ）。丸・波形・「聞く」・帯を初期表示に残すため、この画面だけ
+   見出しの行の上下の間を 4・0 に（下はチップの段の上の間 8 が区切る）・ⓘ は下にはみ出さない（上へだけ）。スマホ幅では丸を 162 → 138（中の押せる丸 144 → 120・字 20 → 18）・波形の上 16 → 4 */
+.dc-record[data-step="word"] .dc-title-row { margin: 4px 0 0; align-items: flex-end; }
+.dc-record[data-step="word"] .dc-info-button { align-self: flex-end; margin: -48px 0 0; padding: 0 0 2px; place-items: end center; }
+@media (max-width: 1023px) {
+  .dc-record[data-step="word"] .dc-rec-ring { width: 138px; height: 138px; }
+  .dc-record[data-step="word"] .dc-rec { width: 120px; height: 120px; font-size: 18px; }
+  .dc-record[data-step="word"] .dc-take { margin-top: 4px; }
+}
+.dc-record-words { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }   /* 上の「‹ 戻る」との間 8（U3） */
+.dc-record-chip { display: flex; align-items: center; justify-content: center; min-width: 0; height: 38px; padding: 0;
+  border: 1.5px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--ink);
+  font-size: 16px; font-weight: 700; line-height: 1; white-space: nowrap; font-feature-settings: "palt"; }
+.dc-record-chip[data-state="done"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+/* 今の語: 紺の枠＋外に 2px の紺の輪（枠を太くすると中が狭まり「クイック」がはみ出す。輪はチップの間 6px の中に描く） */
+.dc-record-chip[data-state="now"] { background: var(--soft); border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); color: var(--primary); font-weight: 800; }
+.dc-record-chip:disabled { cursor: default; }
+@media (max-width: 479px) {
+  .dc-record-chip { font-size: 14px; letter-spacing: -0.02em; }
+}
+@media (max-width: 359px) {
+  .dc-record-words { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.dc-record-word { margin: 8px 0 4px; text-align: center; }   /* D64: 上はチップの段が区切る（16 → 8） */
 .dc-record-main { font-size: 56px; font-weight: 800; line-height: 1.15; letter-spacing: var(--track); overflow-wrap: anywhere; }
 .dc-record-other { font-size: 20px; color: var(--ink2); }
 /* 説明の 1 行と枠は同じ箱（枠の 2 行 59px 以上）。枠が出ても丸が動かない（Ruling 72-2） */
@@ -462,6 +536,12 @@ button { cursor: pointer; }
 .dc-listen { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 56px; }
 .dc-record-dock { gap: 8px; }
 .dc-record-dock .dc-button { flex: 1; max-width: 300px; }
+/* 「前のカウント／次のカウント」（ひとみうさ 2026-10-14）は 375 幅の半分に 1 行で入るよう、語の画面の帯だけ余白と字を詰める（2 行になると帯が高くなり波形と「聞く」が沈む・R59） */
+.dc-record[data-step="word"] .dc-record-dock .dc-button { gap: 4px; padding: 0 8px; font-size: 18px; white-space: nowrap; }
+@media (max-width: 359px) {
+  .dc-record[data-step="word"] .dc-record-dock .dc-button { font-size: 16px; }
+  .dc-record[data-step="word"] .dc-record-dock .dc-button svg { display: none; }
+}
 .dc-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dc-compare .dc-button { min-height: 56px; }
 /* 鳴っている方を塗る（S7 の「試聴」・「聞く」の .dc-chip と同じ見え方。アイコンの ▶／■ だけに頼らない。通し確認） */
@@ -520,6 +600,9 @@ button { cursor: pointer; }
   .dc-routine-play .dc-figure-now { margin-top: 2px; }             /* S5 の音が出ない枠つきでも速さが入る（Ruling 23） */
   .dc-practice .dc-now:not(.dc-now--lead) { min-height: 72px; font-size: 72px; }   /* 96 → 72（S5 と同じ） */
   .dc-practice .dc-countbox { padding-bottom: 4px; margin-bottom: 4px; }
+  /* 次便 A（2026-10-15）: S5 は見出しの下に種目の 1 行があるぶん、画面が暗くなる案内（Android 等の 3 行）の枠が出ると速さが下の ▶ に隠れた。
+     枠が出ている間だけ大きい数字を 72 → 56 に（枠を閉じれば戻る。600px 以上・S2 は変えない） */
+  .dc-routine-play:has([data-alert="wake-tip"]) .dc-now:not(.dc-now--lead) { min-height: 56px; font-size: 56px; }
   .dc-practice .dc-beats { margin-top: 4px; }
   .dc-practice .dc-beats li { height: 28px; }
   .dc-practice .dc-field-label { margin: 2px 0 4px; }
@@ -530,20 +613,26 @@ button { cursor: pointer; }
   .dc-practice .dc-chip-row { margin-top: 8px; min-height: 48px; }  /* 56 → 48（タップ対象の下限） */
   .dc-practice .dc-more { margin-top: 8px; }
   /* S8 語の画面: 丸と、録れた語の波形＋「聞く」が初期表示に入る（Ruling 71-7） */
-  .dc-record-progress { margin-top: 0; }
-  .dc-record-word { margin: 8px 0 4px; }
+  .dc-record-chip { height: 36px; }   /* D64: 375×548 は 36（丸と波形・帯が初期表示に残る） */
+  .dc-record-word { margin: 4px 0 4px; }   /* D64: 8 → 4 */
+  .dc-record-main { line-height: 1.05; }   /* D64: 56px の語の行の上下を詰める（1.15 → 1.05） */
+  .dc-record-other { line-height: 1.25; }  /* D64: 語の下の小さい語の行（日本語の画面）を詰める */
   .dc-record-slot { margin-bottom: 8px; }
   .dc-record[data-taken="true"] .dc-record-slot[data-slot="hint"] { display: none; }   /* 録れた語では説明の 1 行は役目を終えている */
-  /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 のます）の場所に重ねる（最終レビュー M3）。
-     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 56px＝上の余白 8＋戻るの行 48 */
+  /* 録れた語で枠（声が入っていない・保存できない）が出た時は、枠を進み具合の行（12 語のチップ。D64）の場所に重ねる（最終レビュー M3）。
+     丸・波形・「聞く」は動かず帯の上に残る（Ruling 72-2 の意図）。進み具合は枠が消えると戻る。top 88px＝上の余白 8＋戻るの行 48＋見出しの行（上 0＋20px の 1 行 24）＋チップの段の上の間 8（D64・D67） */
   .dc-record[data-step="word"][data-taken="true"][data-notice] { position: relative; }
-  .dc-record[data-taken="true"][data-notice] .dc-record-progress { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 0; margin: 0; }
+  .dc-record[data-taken="true"][data-notice] .dc-record-words { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="alert"] { position: absolute; top: 88px; left: 16px; right: 16px; min-height: 0; margin: 0; }
   /* 録れた語の録り直しの録音中（D59）: 「約 2 秒で…」も同じく進み具合の行に重ねる（丸を動かさない） */
   .dc-record[data-step="word"][data-taken="true"][data-phase="capture"] { position: relative; }
-  .dc-record[data-taken="true"][data-phase="capture"] .dc-record-progress { visibility: hidden; }
-  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 56px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
-  .dc-take { margin-top: 8px; padding: 4px 0; }
+  .dc-record[data-taken="true"][data-phase="capture"] .dc-record-words { visibility: hidden; }
+  .dc-record[data-taken="true"] .dc-record-slot[data-slot="capture"] { position: absolute; top: 88px; left: 16px; right: 16px; min-height: 48px; margin: 0; }
+  .dc-take { margin-top: 4px; padding: 4px 0; }   /* D64: 8 → 4 */
+  /* D67: 語の画面の説明の 1 行の箱の下 8 → 4（見出しの詰め方は下の「見出しの行」の 600px 未満の段） */
+  .dc-record[data-step="word"] .dc-record-slot { margin-bottom: 4px; }
+  .dc-record[data-step="word"] .dc-title-row { margin-bottom: 0; }   /* 下はチップの段の上の間 8 が区切る */
+  .dc-record[data-step="word"] .dc-listen { min-height: 48px; }   /* 56 → 48（U3 の下限） */
 }
 /* S9 配る（Ruling 82）: 名前 → 声 → 同意 → ルーティン → 下固定「ファイルを作る」。押せない理由は近くに 1 行（.dc-hint・.dc-dock-note） */
 .dc-share-heading { margin-top: 16px; }
@@ -562,11 +651,35 @@ button { cursor: pointer; }
 .dc-share-routine { min-height: 64px; }
 .dc-share-dock { flex-direction: column; align-items: center; gap: 6px; }
 .dc-dock-note { font-size: 16px; color: var(--ink2); text-align: center; }
+.dc-dock-note--ask { color: var(--warn-ink); font-weight: 700; }
 .dc-share.dc-screen--dock { padding-bottom: calc(var(--dockh) + 48px + env(safe-area-inset-bottom)); }
 .dc-share-done { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; scroll-margin-top: 12px; }
 .dc-result { padding: 10px 12px; border: var(--bw) solid var(--primary); border-left-width: 4px; border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .dc-result-sub { margin-top: 4px; font-size: 16px; font-weight: 400; }
+/* 夜間便 B-6: 配った後の「案内文を見る」の中身（読む専用。改行はそのまま・長い URL は枠の中で折る） */
+.dc-instructions-more { margin-top: 0; }
+.dc-instructions-view { padding: 8px 12px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface); font-size: 16px; line-height: 1.5;
+  white-space: pre-line; overflow-wrap: anywhere; text-align: left; }
 .dc-instructions { min-height: 0; padding: 8px 12px; font-size: 16px; line-height: 1.5; resize: none; }
+/* D68: 配る時の生徒へのひとこと（S9 のいちばん下）と、受け取った側の「先生からのひとこと」（S10 の受け取りました・S5 の一覧の上） */
+.dc-share-note { margin-top: 16px; }
+.dc-share-note .dc-field { margin: 8px 0 0; }
+.dc-teacher-note { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0 16px; color: var(--ink); }
+.dc-teacher-face { flex: 0 0 36px; width: 36px; height: 36px; }
+.dc-teacher-face svg { display: block; width: 100%; height: 100%; }
+.dc-teacher-note-bubble { min-width: 0; padding: 8px 14px 10px; border-radius: 4px 14px 14px 14px; background: var(--now-bg); }   /* 暖色（ひとみうさ 2026-10-14・S5 の見出しの下とそろえる） */
+.dc-teacher-note-label { font-size: 16px; font-weight: 400; line-height: 1.3; color: var(--warn-ink); }
+.dc-teacher-note-text { font-size: 18px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
+.dc-teacher-note--compact { gap: 8px; margin: 8px 0 12px; }
+.dc-teacher-note--compact .dc-teacher-face { flex-basis: 28px; width: 28px; height: 28px; }
+.dc-teacher-note--compact .dc-teacher-note-bubble { padding: 6px 12px 8px; }
+.dc-teacher-note--compact .dc-teacher-note-text { font-size: 16px; }
+/* S5 の見出しの下（head）: 副題の 1 行の代わり。顔 30px・あたたかい色の吹き出し（--now-bg）に本文 17px の太字 1 行（省略）。押せる物は無い
+   （ひとみうさ 2026-10-14「ちょっと目立たない」→ 灰から暖色・字を太く大きく。高さは 375×548 で速さの選択肢が初期表示に残る範囲） */
+.dc-teacher-note--head { flex-basis: 100%; min-width: 0; gap: 8px; align-items: center; margin: 4px 0 0; }
+.dc-teacher-note--head .dc-teacher-face { flex-basis: 30px; width: 30px; height: 30px; }
+.dc-teacher-note--head .dc-teacher-note-bubble { padding: 3px 12px 4px; border-radius: 3px 12px 12px 12px; background: var(--now-bg); }
+.dc-teacher-note--head .dc-teacher-note-text { font-size: 17px; font-weight: 700; line-height: 1.35; color: var(--warn-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* S10 受け取る（Ruling 83）: 選ぶ（大きいボタン＋説明 2 行）→ 確認（中身の行・下に「やめる」「使う」）→ 受け取った */
 .dc-receive-choose { margin-top: 16px; }
 .dc-receive-help { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; font-size: 18px; }
@@ -578,10 +691,11 @@ button { cursor: pointer; }
 .dc-receive-dock .dc-button { flex: 1; max-width: 300px; }
 /* S10 の枠は 3 行の文＋「Safari で開く」で 120px 以下（Ruling 83-1・Ruling 23 の高さ） */
 .dc-receive .dc-alert-text { line-height: 1.3; }
-/* S7 の下（Ruling 86-1・D56）: 「ファイルから受け取る」（白）→ 録音は「作る」へ、の案内 1 行 */
+/* 夜間便 A-4（Ruling 123）: iPhone 以外の案内（「画面が消えるまでの時間…」）は 375 幅の日本語で 3 行。枠を 120px 以下（R23）に収めるため行の高さだけ詰める（文は変えない） */
+.dc-alert[data-alert="wake-tip"] .dc-alert-text { line-height: 1.3; }
+/* S7 の下（Ruling 86-1・D56・D75）: 「ファイルから受け取る」（白）1 つ（録音は「作る」へ。案内の 1 行は D75 で外した） */
 .dc-receive-link { margin-top: 24px; }
-.dc-record-in-make { margin-top: 12px; }
-/* D56（Ruling 115-5）: S7 の下は「ファイルから受け取る」1 つ＋案内の 1 行（録音のボタンは「作る」へ）。548 では詰める */
+/* 548 では詰める */
 @media (max-height: 599px) and (max-width: 1023px) {
   .dc-voice-entry .dc-receive-link { margin-top: 16px; }
 }
@@ -687,4 +801,55 @@ button { cursor: pointer; }
   .dc-music[data-routine="true"] .dc-countbox { margin-bottom: 0; padding-bottom: 0; }
   .dc-music[data-routine="true"] .dc-figure-now { margin-top: 2px; }
   .dc-music[data-routine="true"] .dc-music-summary { margin-bottom: 0; }
+}
+
+/* ---------- D74 教室に貼る案内（S14）。画面では見本のカード、印刷では A4 縦 1 枚 ---------- */
+.dc-poster-frame { margin: 4px 0 16px; }
+.dc-poster { display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: #fff; color: var(--ink); }
+.dc-poster-head { display: flex; align-items: center; gap: 12px; }
+.dc-poster-head > div { min-width: 0; }
+.dc-poster-mark svg { display: block; width: 56px; height: 56px; }
+.dc-poster-kind { font-size: 16px; font-weight: 700; color: var(--ink2); }
+.dc-poster-brand { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; line-height: 1.15; }
+.dc-poster-school { font-size: 22px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.dc-poster-lead { margin: 0; font-size: 18px; line-height: 1.6; }
+.dc-poster-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dc-poster-qr-code svg { display: block; width: min(240px, 70vw); height: auto; }
+.dc-poster-address { font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
+.dc-poster-steps-head { margin: 4px 0 0; font-size: 20px; font-weight: 800; }
+.dc-poster-steps { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.dc-poster-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 18px; line-height: 1.5; }
+.dc-poster-step-no { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 20px; font-weight: 800; }
+.dc-poster-step-text { display: flex; flex-direction: column; min-width: 0; }
+.dc-poster-step-text b { font-size: 20px; }
+.dc-poster-foot { font-size: 14px; color: var(--ink2); }
+@media (max-width: 299px) {   /* Safari 150%（250 幅）: 見本の紙の余白とロゴを詰めて、ページを横に動かさない */
+  .dc-poster { padding: 16px 10px; }
+  .dc-poster-mark svg { width: 40px; height: 40px; }
+  .dc-poster-brand { font-size: 22px; }
+  .dc-poster .dc-nowrap { white-space: normal; }   /* 「ファイルから受け取る」の括りも 250 幅では折る */
+}
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  html, body { background: #fff !important; }
+  .dc-shell { padding: 0 !important; }
+  .dc-poster-screen { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .dc-poster-screen > :not(.dc-poster-frame) { display: none !important; }
+  .dc-poster-frame { margin: 0; }
+  .dc-poster { box-sizing: border-box; height: 272mm; justify-content: space-between; gap: 6mm; padding: 10mm 12mm; border: 0.6mm solid #1B2A4A; border-radius: 4mm; break-inside: avoid;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .dc-poster-mark svg { width: 22mm; height: 22mm; }
+  .dc-poster-head { gap: 5mm; }
+  .dc-poster-kind { font-size: 14pt; }
+  .dc-poster-brand { font-size: 34pt; }
+  .dc-poster-school { font-size: 26pt; text-align: center; }
+  .dc-poster-lead { font-size: 16pt; text-align: center; }
+  .dc-poster-qr-code svg { width: 82mm; }
+  .dc-poster-address { font-size: 16pt; }
+  .dc-poster-steps-head { font-size: 18pt; }
+  .dc-poster-steps { gap: 4mm; }
+  .dc-poster-steps li { gap: 5mm; font-size: 14pt; }
+  .dc-poster-step-no { width: 12mm; height: 12mm; font-size: 18pt; }
+  .dc-poster-step-text b { font-size: 18pt; }
+  .dc-poster-foot { font-size: 9pt; text-align: center; }
 }

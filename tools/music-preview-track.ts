@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { getDanceProfile } from '../src/engine/dance-profiles.js';
 import { compileMusicPlan } from '../src/engine/music-plan.js';
-import type { MusicTrack } from '../src/app/music/model.ts';
+import type { MusicLevel, MusicTrack } from '../src/app/music/model.ts';
 
 export interface AnalyzedBar {
   startBeat: number; endBeat: number; beatsPerBar: number;
@@ -15,12 +15,16 @@ export interface BarAnalysis {
 
 // A creator-side adapter: source waveform -> learned beat/downbeat times ->
 // contiguous bars in the supplied dance meter. An inferred downbeat is never index%4 by assumption.
-export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'|'tango'}
+export interface PreviewDefinition {id:string;title:string;danceId:'waltz'|'rumba'|'chacha'|'tango'|'samba';level?:MusicLevel|null}
 export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalysis, definition?:PreviewDefinition): MusicTrack {
   const settings=definition??{id:'paper-umbrella',title:'Paper Umbrella',danceId:'rumba' as const};
   if(!/^[a-z0-9-]+$/.test(settings.id)||!settings.title.trim())throw new Error('Invalid track identity');
   const profile=getDanceProfile(settings.danceId),meter=profile.beatsPerBar,counts=profile.templates[0];
-  const countStartBeat=settings.danceId==='waltz'||settings.danceId==='tango'?0:1;
+  // サンバ（2/4）は解析では 4 拍のまとまり（Beat This の小節頭は 2 小節ごと）。まとまりの頭は検出した小節頭で、サンバの小節の頭でもある。
+  // 2 拍目ごとの小節頭を補って作ることはしない（区間の頭と数え始めは検出した小節頭だけ）。2026-11-02 Samba_Low_First_birds で実測: 4 拍 59・5 拍 5・1 拍 1
+  const analysisBeatsPerBar=settings.danceId==='samba'?meter*2:meter;
+  // ルンバ・チャチャチャは曲の拍型「2・3・4・1」に沿って 2 拍目から。ワルツ・タンゴ・サンバは小節の 1 拍目から
+  const countStartBeat=settings.danceId==='rumba'||settings.danceId==='chacha'?1:0;
   if (analysis.schemaVersion!==1 || analysis.sourceSha256!==sourceSha256 || !/^[a-f0-9]{64}$/.test(analysis.analysisId)) {
     throw new Error('Analysis identity or schema mismatch');
   }
@@ -30,8 +34,8 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
   const length=6;
   for (let i=0;i<=analysis.bars.length-length;i++) {
     const bars=analysis.bars.slice(i,i+length);
-    if (bars.some(bar=>bar.status!=='candidate'||bar.issues.length||bar.beatsPerBar!==meter||
-      !Number.isInteger(bar.startBeat)||!Number.isInteger(bar.endBeat)||bar.endBeat-bar.startBeat!==meter||
+    if (bars.some(bar=>bar.status!=='candidate'||bar.issues.length||bar.beatsPerBar!==analysisBeatsPerBar||
+      !Number.isInteger(bar.startBeat)||!Number.isInteger(bar.endBeat)||bar.endBeat-bar.startBeat!==analysisBeatsPerBar||
       !Number.isFinite(bar.meanBeatActivation)||!Number.isFinite(bar.downbeatActivation)||
       bar.startBeat<0||bar.endBeat>=analysis.beatsMs.length||
       !analysis.downbeatsMs.includes(analysis.beatsMs[bar.startBeat]!))) continue;
@@ -41,13 +45,18 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
     windows.push({startBeat,endBeat,score:bars.reduce((sum,b)=>sum+b.meanBeatActivation+b.downbeatActivation,0)/(length*2)});
   }
   const chosen: {startBeat:number;endBeat:number}[]=[];
-  const targets=definition?[.10,.45,.75].map(fraction=>fraction*analysis.durationSeconds):[20,140,280];
+  // 「はじめ」は曲の出だし: 頭からいちばん早い、拍がきれいに取れた 6 小節（2026-11-02 ひとみうさ「出だしが途中から」。
+  // 以前は曲の長さの 10% に近い所から選んでいて、2 分 14 秒の曲では 7 小節目＝8 小節のまとまりの途中から始まっていた）。
+  // Paper Umbrella（definition なし）は頭の拍が不安定なため従来の秒数のまま。
+  const targets=definition?[null,.45*analysis.durationSeconds,.75*analysis.durationSeconds]:[20,140,280];
   const sections=targets.flatMap((target,index)=>{
-    const best=windows.filter(window=>chosen.every(previous=>window.endBeat<=previous.startBeat||window.startBeat>=previous.endBeat)&&
-      Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
-      const distance=(window:typeof a)=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)+2*(1-window.score);
-      return distance(a)-distance(b);
-    })[0];
+    const open=windows.filter(window=>chosen.every(previous=>window.endBeat<=previous.startBeat||window.startBeat>=previous.endBeat));
+    const best=target===null
+      ? open.sort((a,b)=>a.startBeat-b.startBeat)[0]
+      : open.filter(window=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)<=45).sort((a,b)=>{
+        const distance=(window:typeof a)=>Math.abs(analysis.beatsMs[window.startBeat]!/1000-target)+2*(1-window.score);
+        return distance(a)-distance(b);
+      })[0];
     if(!best){if(definition)return [];throw new Error('No consistent six-bar preview near requested range');}
     chosen.push(best);
     return [{ id:['early','middle','late'][index]!,startTick:best.startBeat*960,endTick:best.endBeat*960,
@@ -57,7 +66,8 @@ export function buildMusicPreviewTrack(sourceSha256: string, analysis: BarAnalys
   const mapId=createHash('sha256').update(JSON.stringify({sourceSha256,beatsMs:analysis.beatsMs,sections,settings,counts})).digest('hex');
   const track:MusicTrack={id:settings.id,revision:`${sourceSha256.slice(0,16)}-bars-v2-${mapId.slice(0,12)}`,
     title:settings.title,danceId:settings.danceId,beatsPerBar:meter,counts,anchorTick:countStartBeat*960,
-    beatsMs:[...analysis.beatsMs],rates:[.8,1,1.1],sections,preview:true};
+    beatsMs:[...analysis.beatsMs],rates:[.8,1,1.1],sections,preview:true,durationSeconds:analysis.durationSeconds,
+    ...(definition?.level?{level:definition.level}:{})};
   for (const section of sections) for(const rate of track.rates) compileMusicPlan(track,section.id,rate);
   return track;
 }

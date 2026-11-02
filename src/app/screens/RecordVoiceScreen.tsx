@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { FocusHeader } from '../components/FocusHeader.tsx';
+import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
+import { ScreenHeading } from '../components/ScreenHeading.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { phrased } from '../i18n/phrased.tsx';
 import { showsRecordInstallHint } from '../lib/install-card.ts';
@@ -10,7 +11,6 @@ import { requestPersistentStorage } from '../platform/storage.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
 import type { UiState } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
-import { takeRecordLanguage } from '../state/record-language.ts';
 import { requestShareIntent } from '../state/share-intent.ts';
 import { replaceRoute } from '../state/route.ts';
 import { useSettings } from '../state/settings.ts';
@@ -19,15 +19,19 @@ import { recordedPackIdFor, type VoiceLocale } from '../voices/ids.ts';
 import { captureWaitMs, countdownPlan, type CountMark } from '../voices/countdown.ts';
 import { processTake, type DecodeContext } from '../voices/normalize.ts';
 import { voicePreviewOptions } from '../voices/preview.ts';
-import { DEFAULT_VOICE, chooseVoice, packSelection } from '../voices/selection.ts';
-import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
+import { chooseVoice, forgetVoiceSettings, packDisplayName, packSelection, standardSelectionFor } from '../voices/selection.ts';
+import { VOICE_KEYS, loadVoicePack, newRecordedPack, packProgress, removeVoicePack, saveVoicePack, withWord, type VoicePackRecord } from '../voices/store.ts';
 import { WAVE_BARS, wavPeaks } from '../voices/wave.ts';
-import { defaultVoiceName, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordPrompts, type RecordStep } from '../voices/wizard.ts';
+import { defaultRecordLanguage, defaultVoiceName, jumpStep, nameAfterEdit, nextStep, previousStep, savesVoices, stepAfterStart, takeErrorOutcome, uiStateStartPack, wordChips, wordPrompts, type RecordStep } from '../voices/wizard.ts';
 
-// S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語 → 完成。
+// S8 自分の声を録音（仕様 §4 S8・Ruling 57〜59・D23・D25・D30・D64）。集中画面。0 説明と言葉の 2 択 → 1〜12 の語（上の 12 語のチップでどの語へも移れる）→ 完成。
 // 1 語ごとに端末へ保存（戻る・電話・落ちるのどれでも録った語が残る）。「‹ 戻る」は S8 を出る（確認なし）。
 // マイクが使えない（拒否・ほかのアプリや通話が使用中）は別画面にせず、説明の画面の説明 3 行の場所に枠を出す。
 // 言葉の 2 択と「録音をはじめる」は残す＝もう一度は同じボタン（D30・Fable Q2/Q4）。
+// D75（ひとみうさ承認 2026-10-15）: 自分の声の続き・削除は S7（使う）から S8 の説明の画面へ。主ボタンは選んだ言葉の声の進み具合で
+// 「録音をはじめる」（0 語）／「続きを録音する」（途中。続きの語へ）／「録音した声を開く」（12 語。完成の画面＝名前・聞き比べ・「配る ›」）。
+// 1 語以上ある言葉を選ぶと 2 択の下に「削除」（確認の後で端末から消し、設定の声も忘れる＝S7 と同じ。消せなければ「保存できませんでした」）。
+// 完成の画面の「完了」は M0（作る）へ戻る（この声を選んだまま）。
 // ui-state: mic-denied（説明の画面に拒否の枠）・no-voice（1 語目に「声が入っていませんでした」）・no-recorder（非対応の枠）。見た目だけ（Ruling 63-3）。
 // 段8（Ruling 100-2）: mic-failed（説明の画面に「マイクを使えませんでした」）・save-failed（1 語目に「保存できませんでした」）。
 // D59: rec-countdown（1 語目の合図「3」で止まった見た目）・rec-capture（1 語目の「● 録音中」で止まった見た目）。マイクは開かず、音も鳴らさない。
@@ -86,7 +90,10 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   // バックアップの 1 行（Ruling 86-2）は、この端末で完成の画面を初めて出した時だけ（出したら hints に書く。閉じるボタンは無い）
   const [backupTip] = useState(() => !settings.hints.backupTipShownForRecording);
   const storage = useStorage();
-  const [language, setLanguage] = useState<VoiceLocale>(() => takeRecordLanguage() ?? 'en');
+  // 言葉の既定（夜間便 A-1）: 声を読み終えたら defaultRecordLanguage で決める（2 択を押した後は上書きしない）。
+  // D75: S7 の「続きを録音する」を外したので、一回限りの印（record-language.ts）は無くなった
+  const [language, setLanguage] = useState<VoiceLocale>('en');
+  const languageTouched = useRef(false);
   const [saved, setSaved] = useState<Record<VoiceLocale, VoicePackRecord | null> | null>(null);
   const [pack, setPack] = useState<VoicePackRecord | null>(null);
   const forcedWord = uiState === 'no-voice' || uiState === 'save-failed' || uiState === 'rec-countdown' || uiState === 'rec-capture';
@@ -94,6 +101,9 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   const [blocked, setBlocked] = useState<Blocked>(() => (uiState === 'mic-denied' ? 'denied' : uiState === 'mic-failed' ? 'failed' : uiState === 'no-recorder' || uiState === 'no-https' || !recorderSupported() ? 'unsupported' : 'none'));
   const [alert, setAlert] = useState<Alert>(uiState === 'no-voice' ? 'no-voice' : uiState === 'save-failed' ? 'save-failed' : 'none');
   const [howTo, setHowTo] = useState(false);
+  const [deleting, setDeleting] = useState<VoicePackRecord | null>(null);   // D75: 説明の画面の「削除」の確認
+  const latestSettings = useRef(settings);   // 消し終えた時の設定（確認の後の非同期で古い設定を書き戻さない。S7 と同じ）
+  latestSettings.current = settings;
   const [phase, setPhase] = useState<Phase>(uiState === 'rec-countdown' ? 'countdown' : uiState === 'rec-capture' ? 'capture' : 'idle');
   const [mark, setMark] = useState<CountMark>(3);
   const recording = phase !== 'idle';   // 合図と録音のあいだ（マイクが開いている）
@@ -114,7 +124,9 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     let alive = true;
     void Promise.all(LANGUAGES.map(locale => loadVoicePack(storage, recordedPackIdFor(locale)))).then(([en, ja]) => {
       if (!alive) return;
-      setSaved({ en: en ?? null, 'ja-JP': ja ?? null });
+      const loaded = { en: en ?? null, 'ja-JP': ja ?? null };
+      setSaved(loaded);
+      if (!languageTouched.current) setLanguage(defaultRecordLanguage(loaded));
       if (forcedWord) setPack(uiStateStartPack(en ?? null, newRecordedPack('en', defaultVoiceName(translator, 'en'), new Date().toISOString())));
     });
     // 画面を離れた: 届く結果を捨て、録音中ならやめて（マイクを閉じ・音声セッションを「再生」に戻す）、「聞く」も止める。
@@ -167,6 +179,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
       setPack(existing ?? newRecordedPack(language, defaultVoiceName(translator, language), new Date().toISOString()));
       setBlocked('none');
       setHowTo(false);
+      setAlert('none');
       setStep(stepAfterStart(existing));
     }, (error: unknown) => {
       setBlocked(blockedBy(error));
@@ -252,7 +265,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     if (!pack) return;
     if (comparePlaying && comparing === which) { session.stop(); return; }
     setComparing(which);
-    void session.play(voicePreviewOptions(which === 'mine' ? packSelection(pack) : DEFAULT_VOICE, 0, 2));
+    // D78: 「標準の声」は録った言葉の標準の声（日本語の録音は 標準の声（日本語）と比べる）
+    void session.play(voicePreviewOptions(which === 'mine' ? packSelection(pack) : standardSelectionFor(pack.locale), 0, 2));
   };
 
   // 空にしたら既定名に戻し、欄にも書き戻す（名前が変わらず描き直されない時も欄が空のまま見えない。最終レビュー M1）。
@@ -265,14 +279,28 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     if (persists) void saveVoicePack(storage, next).then(ok => setAlert(ok ? 'none' : 'save-failed'));
   };
 
+  // D75: 「完了」はこの声を選んでから M0（作る）へ。M0 から来た時は 1 つ戻る＝同じ画面を 2 つ並べない（replaceRoute）
   const finish = () => {
     if (!pack) return;
     session.stop();
     if (persists) update(chooseVoice(packSelection(pack)));
-    replaceRoute({ screen: 'S7', params: {} });
+    replaceRoute({ screen: 'M0', params: {} });
   };
 
-  // 「配る ›」（Ruling 86-2・D39）: この声を選んでから S9 へ置き換え（S9 の「戻る」は S7）。S9 にはこの声が選ばれた状態で開く。
+  // D75: 説明の画面の「削除」。端末から消えたと確かめてから、2 択の進み具合と設定を変える（S7 の confirmDelete と同じ。最終レビュー M4）。
+  // 消せなければ声は残し、説明の画面に「保存できませんでした」。ui-state の時は端末に触らない（M5）
+  const confirmDelete = (target: VoicePackRecord) => {
+    setDeleting(null);
+    if (!persists) return;
+    void removeVoicePack(storage, [target], target.id).then(next => {
+      setAlert(next === null ? 'save-failed' : 'none');
+      if (next === null) return;
+      setSaved(current => (current ? { ...current, [target.locale as VoiceLocale]: null } : current));
+      update(forgetVoiceSettings(latestSettings.current, target.id));
+    });
+  };
+
+  // 「配る ›」（Ruling 86-2・D39）: この声を選んでから S9 へ置き換え（S9 の「戻る」は来た所＝M0。D75）。S9 にはこの声が選ばれた状態で開く。
   const share = () => {
     if (!pack) return;
     session.stop();
@@ -281,8 +309,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     replaceRoute({ screen: 'S9', params: {} });
   };
 
-  // 完成の画面だけは本文に見出し（「録音できました」）があるので、上の行の名前は h1 にしない（Ruling 102-3）
-  const header = <FocusHeader screen="S8" title={translator.t('recordTitle')} heading={step.kind !== 'done' || !pack} />;
+  // D67: 見出しは M1 と同じ形（「‹ 戻る」の行 → 大きい見出し＋ⓘ）。完成の画面は見出しが「録音できました」（h1 は 1 つ。Ruling 102-3）
+  const header = <ScreenHeading screen="S8" title={translator.t(step.kind === 'done' && pack ? 'voiceReadyTitle' : 'recordTitle')} info="infoRecord" />;
 
   if (blocked === 'unsupported') {
     // D53: 安全でない接続（http）では iOS が録音の口ごと隠す。ブラウザを替えても録れないので、文は「https で開くと…」に
@@ -300,6 +328,8 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   if (step.kind === 'intro' || !pack) {
     const micProblem = blocked === 'denied' || blocked === 'failed';
     // D46: iPhone のブラウザで、まだ 1 語も録っていない時だけ「先にホーム画面に追加」の 1 行（読み終えるまでは出さない）
+    const chosen = saved?.[language] ?? null;
+    const chosenProgress = packProgress(chosen);
     const addFirst = saved !== null && showsRecordInstallHint({
       kind: platformKind(), standalone: isStandalone(),
       recorded: LANGUAGES.some(locale => packProgress(saved[locale]).recorded > 0)
@@ -328,6 +358,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
           </div>
         )}
         {!micProblem && addFirst && <div class="dc-hint dc-record-add-first">{phrased(translator, 'recordAddFirst')}</div>}
+        {!micProblem && <NoticeLine alert={alert} />}   {/* 枠は同時に 1 つ（Ruling 30） */}
         <h2 class="dc-field-label" id="dc-s8-language">{translator.t('recordLanguage')}</h2>
         <div class="dc-radiogroup" role="radiogroup" aria-labelledby="dc-s8-language" data-group="record-language">
           {LANGUAGES.map(locale => {
@@ -335,7 +366,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             const progress = packProgress(saved?.[locale] ?? null);
             return (
               <button key={locale} type="button" class="dc-radio-row dc-language-row" role="radio" aria-checked={checked ? 'true' : 'false'}
-                onClick={() => setLanguage(locale)}>
+                onClick={() => { languageTouched.current = true; setLanguage(locale); }}>
                 {checked ? <Icon name="check" /> : <span class="dc-ic" aria-hidden="true" />}
                 <span class="dc-radio-text">
                   <span>{countLabel(translator.t(locale === 'ja-JP' ? 'countInJapanese' : 'countInEnglish'))}</span>
@@ -347,11 +378,25 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
             );
           })}
         </div>
+        {/* D75: 選んだ言葉に録った語があれば「削除」（S7 の開いた行と同じ見た目の小さい副ボタン） */}
+        {chosen && chosenProgress.recorded > 0 && (
+          <div class="dc-row-actions dc-record-manage" data-group="record-manage">
+            <button type="button" class="dc-button dc-button--secondary" onClick={() => setDeleting(chosen)}>
+              <Icon name="trash" /><span>{translator.t('delete')}</span>
+            </button>
+          </div>
+        )}
         <div class="dc-dock">
           <button type="button" class="dc-button dc-primary dc-dock-button" disabled={saved === null} onClick={start}>
-            <Icon name="mic" /><span>{translator.t('startRecording')}</span>
+            {chosenProgress.complete
+              ? <><span>{translator.t('openRecordedVoice')}</span><Icon name="chev-r" /></>
+              : <><Icon name="mic" /><span>{translator.t(chosenProgress.recorded > 0 ? 'continueRecording' : 'startRecording')}</span></>}
           </button>
         </div>
+        {deleting && (
+          <ConfirmDialog title={translator.t('confirmDeleteVoiceTitle')} detail={packDisplayName(translator, deleting)} confirmLabel={translator.t('confirmDelete')}
+            onCancel={() => setDeleting(null)} onConfirm={() => confirmDelete(deleting)} />
+        )}
       </main>
     );
   }
@@ -360,7 +405,6 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     return (
       <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="done">
         {header}
-        <h1 class="dc-heading">{translator.t('voiceReadyTitle')}</h1>
         <NoticeLine alert={alert} />
         <div class="dc-field">
           <div class="dc-field-label" id="dc-s8-name-label">{translator.t('voiceName')}</div>
@@ -402,14 +446,17 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
     <main class="dc-screen dc-screen--focus dc-screen--dock dc-record" data-screen="S8" data-step="word" data-recording={recording ? 'true' : 'false'} data-phase={phase}
       data-taken={take ? 'true' : 'false'} data-notice={alert !== 'none' ? alert : undefined}>
       {header}
-      <div class="dc-record-progress" role="progressbar" aria-valuemin={0} aria-valuemax={VOICE_KEYS.length} aria-valuenow={index + 1}
-        aria-label={translator.t('wordProgress', { index: index + 1 })}>
-        <div class="dc-record-progress-text" aria-hidden="true"><b>{index + 1}</b> / 12</div>
-        <div class="dc-record-cells" aria-hidden="true">
-          {VOICE_KEYS.map((key, cell) => (
-            <span key={key} class={`dc-record-cell${cell === index ? ' dc-record-cell--now' : pack.words[key] ? ' dc-record-cell--done' : ''}`} />
-          ))}
-        </div>
+      {/* D64（ひとみうさ承認 2026-10-14）: 進み具合の 12 のますを、押せる 12 語のチップ（2 段 × 6）に。押すとその語へ（「‹ 前の語」と同じ goTo＝録音をやめる・「聞く」を止める・枠を消す）。
+          紺で塗る＝録音済み・枠＝今の語・白＝まだ。合図と録音のあいだは押せない。位置はチップが示すので「6 / 12」の行は外した（375×548 で丸と帯が初期表示に残る）。
+          読み上げは組の名前＋各チップ「4番目・し・録音済み」と aria-current="step"（progressbar は外した＝同じ位置を 2 回読まない） */}
+      <div class="dc-record-words" role="group" aria-label={translator.t('recordWords')} data-group="record-words" data-choices-max={VOICE_KEYS.length}
+        data-tap-compact data-fineprint lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>
+        {wordChips(pack, index, translator).map(chip => (
+          <button key={chip.key} type="button" class="dc-record-chip" data-state={chip.state} aria-current={chip.current ? 'step' : undefined}
+            aria-label={chip.label} disabled={recording} onClick={() => goTo(jumpStep(chip.index, index, recording))}>
+            <span>{chip.word}</span>
+          </button>
+        ))}
       </div>
       <div class="dc-record-word">
         <div class="dc-record-main" lang={pack.locale === 'ja-JP' ? 'ja' : 'en'}>{prompts.main}</div>
@@ -422,7 +469,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
           ? <p class="dc-record-hint dc-record-autostop">{phrased(translator, 'recordAutoStop')}</p>
           : alert !== 'none'
             ? <NoticeLine alert={alert} />
-            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: prompts.main })}</p>}
+            : <p class="dc-record-hint">{phrased(translator, 'recordHint', { word: { text: prompts.main, nowrap: true } })}</p>}   {/* 夜間便 A-3: 語の途中で折らない */}
       </div>
       <div class="dc-rec-ring">
         {/* 合図（3・2・1・今）の間は押すと「やめる」。録音中だけ押せない（D59） */}
@@ -472,7 +519,7 @@ export function RecordVoiceScreen({ uiState }: { uiState?: UiState }) {
   );
 }
 
-// 語の画面と完成画面の枠（Ruling 30 の型。中の操作は無い）。
+// 語の画面と完成画面の枠（Ruling 30 の型。中の操作は無い）。D75: 説明の画面の「削除」が端末から消せなかった時もこれ。
 function NoticeLine({ alert }: { alert: Alert }) {
   const { translator } = useI18n();
   if (alert === 'none') return null;
