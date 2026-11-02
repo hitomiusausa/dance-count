@@ -26,3 +26,6 @@ output/playwright/music-ux-astra-*.png
 /music/
 __pycache__/
 *.pyc
+
+# iOS シミュレーターのビルドと画面（tools/ios-sim-check.sh）
+/build/
