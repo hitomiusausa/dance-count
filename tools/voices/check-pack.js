@@ -101,8 +101,10 @@ export async function checkPack(packDir, { expectedId = path.basename(packDir), 
 }
 
 // dist/audio/ の番人（Ruling 68-3）: (a) JSON の各 ID に manifest がある (b) JSON に無いパックは出荷しない (c) 各パックが checkPack を通る
-// (d) 音のファイルは dist のどこであっても audio/<JSON の ID>/ の直下にしか置けない（I-2。別の場所に置いた候補の素通りを塞ぐ）
-export async function checkDistAudio(distDir, standardVoices) {
+// (d) 音のファイルは dist のどこであっても audio/<JSON の ID>/ の直下にしか置けない（I-2。別の場所に置いた候補の素通りを塞ぐ）。
+// 例外は otherAudio に名指しされたファイルだけ（公開用の音楽の一式。一覧 music-catalog.json に載り、tools/music-pack-check.ts が確かめた物）
+export async function checkDistAudio(distDir, standardVoices, otherAudio = []) {
+  const named = new Set(otherAudio);
   const problems = [];
   const audioDir = path.join(distDir, 'audio');
   const ids = new Set(standardVoices.map(voice => voice.id));
@@ -126,7 +128,7 @@ export async function checkDistAudio(distDir, standardVoices) {
   const all = (await fs.readdir(distDir, { recursive: true, withFileTypes: true })).filter(entry => entry.isFile());
   for (const entry of all) {
     const file = path.relative(distDir, path.join(entry.parentPath, entry.name)).split(path.sep).join('/');
-    if (AUDIO_EXT.test(file) && !(ids.size && allowed.test(file))) problems.push(`must not ship ${file} (audio only under audio/<id in standard-voices.json>/)`);
+    if (AUDIO_EXT.test(file) && !(ids.size && allowed.test(file)) && !named.has(file)) problems.push(`must not ship ${file} (audio only under audio/<id in standard-voices.json>/)`);
   }
   return problems;
 }

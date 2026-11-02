@@ -2,7 +2,7 @@
 // Service Worker（段7・Ruling 88〜93）。vite-plugin-pwa の injectManifest がこのファイルを dist/sw.js に組み、
 // self.__WB_MANIFEST に precache の一覧（ファイル名と revision）を入れる。src/app の外（境界テストの対象外・tsconfig.sw.json で型を見る）。
 // 1. precache: 殻・manifest・アイコン・標準の声・アプリの文字が要る書体（Ruling 89）。?v= は無視して当てる（F32）。
-// 2. 書体の残りは一度表示したら端末に残す（CacheFirst）。
+// 2. 書体の残りは一度表示したら端末に残す（CacheFirst）。公開用の音楽の音源も一度鳴らしたら残す（CacheFirst）。
 // 3. 更新は「更新する」を押した時だけ（SKIP_WAITING）。自動で切り替えない（Ruling 90）。
 // 4. Android の share_target の POST を受け、段5の受け口（Cache）に置いて S10 へ 303（Ruling 93-3）。20MB を超えるファイルは書かず印だけ（M1。Content-Length があれば本文を読む前に。m3）。
 // ユーザーのデータ（声・ルーティン）はここに入れない（IndexedDB。仕様 §7）。
@@ -18,6 +18,10 @@ declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<PrecacheEntr
 const FONT_CACHE = 'dance-count-fonts';
 const FONT_MAX_ENTRIES = 200;
 const FONT_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
+// 公開用の音楽の一式の音源（music/<曲>/<曲の版>/…。docs/app-store/RELEASE-PLAN.md §1-2）。置き場所に曲の版が入るので CacheFirst でよい
+// （差し替えた曲は別の URL）。precache はしない（大きい）＝一度鳴らした区間・速さだけ端末に残り、次からは電波が無くても鳴る。
+const MUSIC_CACHE = 'dance-count-music';
+const MUSIC_MAX_ENTRIES = 120;
 // precache の照合で無視するクエリ: Workbox の既定（utm_・fbclid）に、標準の声の差し替え用の v を足す（voice-pack-loader.js の ?v=<revision>）。
 const IGNORED_QUERY = [/^utm_/, /^fbclid$/, /^v$/];
 const RECEIVE_PATH = '/receive';
@@ -37,6 +41,10 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html'), { allow
 registerRoute(
   ({ request, url }) => request.method === 'GET' && url.origin === self.location.origin && url.pathname.endsWith('.woff2'),
   new CacheFirst({ cacheName: FONT_CACHE, plugins: [new ExpirationPlugin({ maxEntries: FONT_MAX_ENTRIES, maxAgeSeconds: FONT_MAX_AGE_SECONDS })] })
+);
+registerRoute(
+  ({ request, url }) => request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith(new URL('music/', self.registration.scope).pathname),
+  new CacheFirst({ cacheName: MUSIC_CACHE, plugins: [new ExpirationPlugin({ maxEntries: MUSIC_MAX_ENTRIES, purgeOnQuotaError: true })] })
 );
 registerRoute(
   ({ url }) => url.origin === self.location.origin && url.pathname.endsWith(RECEIVE_PATH),

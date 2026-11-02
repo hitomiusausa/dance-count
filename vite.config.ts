@@ -6,6 +6,9 @@ import { SHARE_TARGET_FIELD } from './src/share-inbox-contract.ts';
 import { bootMark as bootFigure } from './src/app/brand/rabbit.ts';
 import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.js';
 import { musicDevPlugin } from './tools/music-dev-plugin.ts';
+import { cp, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { MUSIC_CATALOG_FILE, parseMusicPackCatalog } from './src/app/music/pack.ts';
 
 // 段7: index.html の <meta name="dc-build"> に入る版の印（smoke:pwa が DC_BUILD_TAG=b で別の版を作り、更新されたかを見る）。
 // 既定は package.json の版（同じ木からは同じ dist ができる）。
@@ -53,6 +56,22 @@ const stripHtmlComments: Plugin = { name: 'dc-strip-html-comments', apply: 'buil
 const IS_PREVIEW = process.env.DC_PREVIEW === '1';
 const previewNoindex: Plugin = { name: 'dc-preview-noindex', transformIndexHtml: () => (IS_PREVIEW ? [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head-prepend' }] : []) };
 
+// 公開用の音楽の一式（docs/app-store/RELEASE-PLAN.md §1-2・tools/music-pack.ts）。DC_MUSIC_PACK=<一式のフォルダ> の時だけ、
+// 一覧（music-catalog.json）と音源（music/…）を dist に写し、アプリに __MUSIC_PACK__=true を渡す（platform/music.ts）。
+// 一覧はここでも確かめる（読めない一式で作らない）。音源は precache しない（大きい）。一覧は precache する（下の globPatterns）。
+const MUSIC_PACK_DIR = process.env.DC_MUSIC_PACK ? path.resolve(process.env.DC_MUSIC_PACK) : null;
+const musicPack: Plugin = {
+  name: 'dc-music-pack',
+  apply: 'build',
+  async writeBundle(options) {
+    if (!MUSIC_PACK_DIR) return;
+    const outDir = options.dir ?? 'dist';
+    parseMusicPackCatalog(JSON.parse(await readFile(path.join(MUSIC_PACK_DIR, MUSIC_CATALOG_FILE), 'utf8')));
+    await cp(path.join(MUSIC_PACK_DIR, MUSIC_CATALOG_FILE), path.join(outDir, MUSIC_CATALOG_FILE));
+    await cp(path.join(MUSIC_PACK_DIR, 'music'), path.join(outDir, 'music'), { recursive: true });
+  }
+};
+
 // base:'./' は Capacitor とサブドメイン配信の両方で同じ成果物を使うため（仕様 §10）。
 // optimizeDeps.entries を index.html に限定し、legacy/ や旧 HTML（1MB超）を依存スキャンに巻き込まない。
 export default defineConfig({
@@ -66,6 +85,7 @@ export default defineConfig({
     appUrl,
     stripHtmlComments,
     previewNoindex,
+    musicPack,
     // Service Worker（Ruling 88〜93）。自前の src/sw.ts に precache の一覧を注入する。dev では動かさない（devOptions を付けない）。
     // 登録は src/app/platform/pwa-register.ts（virtual:pwa-register）だけ。更新は「更新する」を押した時（registerType: 'prompt'）。
     VitePWA({
@@ -101,13 +121,13 @@ export default defineConfig({
       injectManifest: {
         // precache（Ruling 89-1）: 殻・アイコン・標準の声の全パック（standard-voices.json にある物だけが public/audio にある＝check-dist）・
         // アプリの文字が要る書体サブセットの woff2 だけ（.woff と残りのサブセットは入れない）。manifest.webmanifest は plugin が足す。
-        globPatterns: ['index.html', 'assets/*.{js,css}', 'icons/*.{png,svg}', 'audio/**/*.{json,wav}', neededFontGlob(neededFontSubsets())]
+        globPatterns: ['index.html', 'assets/*.{js,css}', 'icons/*.{png,svg}', 'audio/**/*.{json,wav}', MUSIC_CATALOG_FILE, neededFontGlob(neededFontSubsets())]
       }
     })
   ],
   // ルーティンの createdWith.version（仕様 §7・Ruling 37）。src/app/app-version.ts が読む。
   // 案内文の公開 URL（§16-1・Ruling 82-7）。src/app/app-url.ts が読む。公開ビルドは RELEASE=1 PUBLIC_APP_URL=https://… npm run build（空なら check-dist が失敗＝final-review I2）。
-  define: { __APP_VERSION__: JSON.stringify(pkg.version), __PUBLIC_APP_URL__: JSON.stringify(process.env.PUBLIC_APP_URL ?? '') },
+  define: { __APP_VERSION__: JSON.stringify(pkg.version), __PUBLIC_APP_URL__: JSON.stringify(process.env.PUBLIC_APP_URL ?? ''), __MUSIC_PACK__: JSON.stringify(MUSIC_PACK_DIR !== null) },
   optimizeDeps: { entries: ['index.html'], include: ['preact', 'preact/hooks', 'preact/jsx-runtime'] },
   server: { port: 5173, strictPort: true },
   preview: { port: 4174, strictPort: true },

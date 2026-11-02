@@ -145,3 +145,20 @@ test('Finder dotfiles (.DS_Store) are ignored by the pack checks', async () => {
     await fs.rm(dist, { recursive: true, force: true });
   }
 });
+
+// 公開用の音楽の一式（docs/app-store/RELEASE-PLAN.md §1-2）: 名指しされた音源だけが audio/ の外に置ける。名指しの無い音は今までどおり落とす
+test('checkDistAudio: only the music clips named by the checked catalog may live outside audio/', async () => {
+  const dist = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-dist-music-'));
+  try {
+    await fs.cp(englishPack, path.join(dist, 'audio/default-en-female-v1'), { recursive: true });
+    await fs.mkdir(path.join(dist, 'music/t/r'), { recursive: true });
+    await fs.writeFile(path.join(dist, 'music/t/r/early-1.flac'), 'x');
+    await fs.writeFile(path.join(dist, 'music/t/r/stray.flac'), 'x');
+    const voices = [{ id: 'default-en-female-v1', locale: 'en' }];
+    const problems = await checkDistAudio(dist, voices, ['music/t/r/early-1.flac']);
+    assert.deepEqual(problems, ['must not ship music/t/r/stray.flac (audio only under audio/<id in standard-voices.json>/)']);
+    assert.equal((await checkDistAudio(dist, voices)).length, 2, 'without the catalog both are refused');
+  } finally {
+    await fs.rm(dist, { recursive: true, force: true });
+  }
+});

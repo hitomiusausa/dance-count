@@ -2,7 +2,7 @@ import { buildHash, type ScreenId, type TabId } from '../router/routes.ts';
 import { useI18n } from '../state/i18n.ts';
 import { replaceRoute } from '../state/route.ts';
 import type { IconName } from './icon-names.ts';
-import { musicPreviewEnabled } from '../platform/music.ts';
+import { musicAvailable } from '../platform/music.ts';
 import { Icon } from './Icon.tsx';
 
 // 2026-10-23: 「使う」はフィガー・ルーティン・音楽の3入口。音楽は開発プレビューの間だけ表示。
@@ -19,7 +19,7 @@ export function TabBar({ current }: { current: TabId }) {
   const { translator } = useI18n();
   return (
     <nav class="dc-tabs" data-nav aria-label={translator.t('navLabel')}>
-      {TABS.filter(tab=>tab.id!=='music'||musicPreviewEnabled()).map(tab => (
+      {TABS.filter(tab=>tab.id!=='music'||musicAvailable()).map(tab => (
         <a
           key={tab.id}
           class="dc-tab"

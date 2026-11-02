@@ -1,5 +1,5 @@
 import { MusicEntry } from '../music/MusicEntry.tsx';
-import { musicPreviewEnabled } from '../platform/music.ts';
+import { musicAvailable } from '../platform/music.ts';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
@@ -209,7 +209,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             onMetronome={toggleMetronome}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
+          <MoreOptions label={musicAvailable()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <MusicEntry source={{routineId:routine.id}} range={range} onLeave={()=>session.stop()}/>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
