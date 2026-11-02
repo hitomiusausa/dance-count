@@ -4,7 +4,7 @@ import { clampBpm, type SpeedChoice } from '../practice/speed.ts';
 import { isFigureSlug } from '../routines/figure-names.ts';
 import { isRoutineId } from '../routines/ids.ts';
 import { normalizeVoiceOffset } from '../practice/voice-offset.ts';
-import { VOLUME_DEFAULT, clampVolumePercent } from '../practice/volume.ts';
+import { VOLUME_DEFAULT, clampVolumePercent, volumeGain } from '../practice/volume.ts';
 import { readDistributorId } from '../share/distributor-id.ts';
 import { DISTRIBUTOR_NAME_MAX } from '../share/limits.ts';
 import { isVoiceId } from '../voices/ids.ts';
@@ -33,10 +33,11 @@ export interface AppSettings {
   speedPresetByRoutine: Record<string, SpeedChoice>;   // S5 の速さはルーティンごと（Ruling 40）。キーはルーティンID
   customBpmByRoutine: Record<string, number>;
   metronome: boolean;
+  metronomeVolume: number;
+  metronomeMuted: boolean;
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
   voiceVolume: number;                      // D73 声の大きさ（0〜100 %・既定 100＝今までと同じ。practice/volume.ts）
-  clickVolume: number;                      // D73 メトロノームの大きさ（同上）
   barCounting: boolean;                     // D72 小節を数える（くわしく。S2・S5 共通・既定オフ。出す種目は practice/bar-count.ts）
   distributorName: string;                  // 配る人の名前（40 字まで・'' は未入力）
   distributorId: string | null;             // D76 見分け用の番号（null＝まだ配っていない。版は上げない＝無ければ null）
@@ -61,10 +62,11 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   speedPresetByRoutine: {},
   customBpmByRoutine: {},
   metronome: true,
+  metronomeVolume: 1,
+  metronomeMuted: false,
   countInBars: 1,
   loop: true,
   voiceVolume: 100,
-  clickVolume: 100,
   barCounting: false,
   distributorName: '',
   distributorId: null,
@@ -95,10 +97,13 @@ export function normalizeSettings(raw: unknown): AppSettings {
     speedPresetByRoutine: pickByRoutine(source.speedPresetByRoutine, value => SPEED_CHOICES.find(choice => choice === value)),
     customBpmByRoutine: pickByRoutine(source.customBpmByRoutine, value => clampBpm(value) ?? undefined),
     metronome: typeof source.metronome === 'boolean' ? source.metronome : DEFAULT_SETTINGS.metronome,
+    // D81: メトロノームの大きさは 0〜1（10/24 の「大きさ」バー＋「消音」に統一）。D73 の clickVolume（0〜100 %）だけが残っている時は、同じ聞こえ方の倍率に直して引き継ぐ
+    metronomeVolume: typeof source.metronomeVolume === 'number' && Number.isFinite(source.metronomeVolume) ? Math.min(1, Math.max(0, source.metronomeVolume))
+      : clampVolumePercent(source.clickVolume) !== null ? volumeGain(clampVolumePercent(source.clickVolume)!) : DEFAULT_SETTINGS.metronomeVolume,
+    metronomeMuted: typeof source.metronomeMuted === 'boolean' ? source.metronomeMuted : DEFAULT_SETTINGS.metronomeMuted,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
     voiceVolume: clampVolumePercent(source.voiceVolume) ?? VOLUME_DEFAULT,
-    clickVolume: clampVolumePercent(source.clickVolume) ?? VOLUME_DEFAULT,
     barCounting: source.barCounting === true,
     distributorName: typeof source.distributorName === 'string' ? [...source.distributorName.trim()].slice(0, DISTRIBUTOR_NAME_MAX).join('') : '',
     distributorId: readDistributorId(source.distributorId),

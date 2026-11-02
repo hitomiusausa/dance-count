@@ -7,7 +7,7 @@ import { BackButton } from '../components/BackButton.tsx';
 import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MetronomeVolumeControl, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseCustomBpm, choosePreset, chooseTemplate, practiceChoice, practiceCounts, practiceLeadInBars, type DanceProfileLike } from '../practice/preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import { speedPresetBpms } from '../practice/speed.ts';
@@ -49,7 +49,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), clickVolume: volumeGain(next.clickVolume), barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), metronomeVolume: next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -78,6 +78,12 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     if (isPlaying()) void start(next);
   };
 
+  // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
+  const saveMetronomeVolume = (volume: number) => {
+    latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+
   // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
   const stepVoiceOffset = (direction: -1 | 1) => {
     const result = playback.step(latest.current.settings, direction);
@@ -88,7 +94,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   };
 
   // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
-  const volumeKey = (kind: VolumeKind) => (kind === 'voice' ? 'voiceVolume' : 'clickVolume') as 'voiceVolume' | 'clickVolume';
+  const volumeKey = (_kind: VolumeKind) => 'voiceVolume' as const;
   const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
   const commitVolume = (kind: VolumeKind, percent: number) => {
     const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
@@ -152,7 +158,8 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
             <PlaySwitches idPrefix="dc-s2" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
               barCounting={barCountingAvailable(danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
-            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume, click: settings.clickVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} />
               <VoiceOffsetRow idPrefix="dc-s2" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
             </SoundGroup>
           </MoreOptions>

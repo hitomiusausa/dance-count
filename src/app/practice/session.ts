@@ -14,10 +14,10 @@ interface CommonOptions {
   danceId: string;
   bpm: number;                 // 必ず数値（practice/speed.ts の resolveBpm・routine-preferences.ts を通す）
   metronome: boolean;
+  metronomeVolume?: number;
   countInBars: 0 | 1 | 2;      // S2 のオンは 2（D17）。1 はルーティンの「1小節」（Ruling 40）
   loop: boolean;
   voiceVolume?: number;        // D73 声の倍率 0〜1（画面が practice/volume.ts の volumeGain で直して渡す。省略＝1）
-  clickVolume?: number;        // D73 メトロノームの倍率 0〜1
   barCounting?: boolean;       // D72 小節を数える（画面が barCountingAvailable で絞って渡す。省略＝オフ）
   track: TrackProfile | null;  // 曲の席（Ruling 20）。v1 は常に null
   voice: VoiceSelection;       // 鳴らす声（画面が voices/use-playback-voice.ts で解いた物。Ruling 61-3）
@@ -96,8 +96,9 @@ export interface EngineLike {
   start(options: Record<string, unknown>): number;
   stop(): void;
   setVoicePack(voicePack: unknown): void;   // 同じ AudioContext ではエンジンを使い回すので、声は毎回これで替える（Ruling 61-3）
-  // 音楽のエンジンは (music, voice)、カウントだけのエンジンは D73 の { voice, click }（鳴っている最中でも止めずに効く）
+  // 音楽のエンジンは (music, voice)、カウントだけのエンジンは D73 の { voice }（鳴っている最中でも止めずに効く）
   setVolumes?(volumes: number | { voice?: number; click?: number }, voice?: number): void;
+  setMetronomeVolume?(volume: number): void;   // D81: メトロノームの大きさ（0〜1。消音は 0）
 }
 
 export interface WakeLockLike { release(): Promise<void> }
@@ -186,6 +187,10 @@ export class PracticeSession<A extends AudioLike, V> {
     if (this.engineKind === 'music') this.engine?.setVolumes?.(music, voice);
   }
 
+  setMetronomeVolume(volume: number): void {
+    this.engine?.setMetronomeVolume?.(volume);
+  }
+
   dispose(): void {
     this.stop();
     this.unsubscribeState?.();
@@ -246,12 +251,13 @@ export class PracticeSession<A extends AudioLike, V> {
         bpm: options.bpm,
         loop: options.loop,
         metronome: options.metronome,
+        metronomeVolume: options.metronomeVolume ?? 1,
         countInBars: options.countInBars,
         voiceOffsetMs: options.voiceOffsetMs,
         wordOffsetsMs: wordOffsetsFor(options.voice),
         ...(options.kind === 'music' ? { musicAsset, repetitions: options.repetitions, countEnabled: options.countEnabled,
           musicVolume: options.musicVolume, voiceVolume: options.voiceVolume, startMode: options.startMode, delayBeats: options.delayBeats }
-          : { barCounting: options.barCounting === true, voiceVolume: options.voiceVolume ?? 1, clickVolume: options.clickVolume ?? 1 })
+          : { barCounting: options.barCounting === true, voiceVolume: options.voiceVolume ?? 1 })
       });
     } catch {
       void lockPromise.then(lock => lock?.release());

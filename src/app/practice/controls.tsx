@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
@@ -80,6 +80,29 @@ export function PracticeToggles({ metronome, leadIn, onMetronome, onLeadIn }: {
     <div class="dc-toggles">
       <Toggle icon="metronome" label={translator.t('metronome')} on={metronome} onToggle={onMetronome} />
       <Toggle icon="leadin" label={translator.t('leadIn')} on={leadIn} onToggle={onLeadIn} />
+    </div>
+  );
+}
+
+// D81: メトロノームの大きさ（0〜1）。「消音」は onMute を渡した画面（音楽）だけ。普通の練習は「メトロノーム オン/オフ」が消音を兼ねる（U4 の操作の数を増やさない）
+// inGroup: S2・S5 では D73 の「音」の束（SoundGroup）の中に入れるので自分の data-group を持たない（束が U4 の 1 つ。VoiceOffsetRow と同じ）
+export function MetronomeVolumeControl({ value, muted = false, inGroup = false, onPreview, onChange, onMute }: {
+  value: number; muted?: boolean; inGroup?: boolean; onPreview(value: number): void; onChange(value: number): void; onMute?(): void;
+}) {
+  const { translator } = useI18n();
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  useEffect(() => setDragValue(null), [value]);
+  const labelId = 'dc-metronome-volume-label';
+  return (
+    <div class="dc-metronome-volume" data-metronome-volume data-group={inGroup ? undefined : 'metronome-volume'}>
+      <div class="dc-field-label" id={labelId}>{translator.t('metronomeVolume')}</div>
+      <div class="dc-music-volume-control">
+        <input aria-labelledby={labelId} type="range" min="0" max="1" step="0.01" value={dragValue ?? value}
+          onInput={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(next); onPreview(next); }}
+          onChange={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(null); onChange(next); }} />
+        {onMute && <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-metronome aria-label={translator.t(muted?'metronomeUnmuteLabel':'metronomeMuteLabel')} aria-pressed={muted}
+          onClick={onMute}>{translator.t(muted?'musicUnmute':'musicMute')}</button>}
+      </div>
     </div>
   );
 }
@@ -209,8 +232,9 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix, inGroup = false }: 
 
 // D73 声とメトロノームの大きさ（くわしく）。2 本のスライダーと声のタイミングを「音」の 1 つの束にする（[data-group="sound"]＝U4 で 1）。
 // 動かしている間は再生を止めずにすぐ効き（onPreview）、指を離した・キーを放した時に端末へ残す（onCommit）。
-export type VolumeKind = 'voice' | 'click';
-const VOLUME_LABEL: Record<VolumeKind, MessageKey> = { voice: 'voiceVolume', click: 'clickVolume' };
+// D81: メトロノームの大きさは MetronomeVolumeControl（バー＋消音）に統一したので、この束のスライダーは声だけ
+export type VolumeKind = 'voice';
+const VOLUME_LABEL: Record<VolumeKind, MessageKey> = { voice: 'voiceVolume' };
 
 export function SoundGroup({ idPrefix, volumes, onPreview, onCommit, children }: {
   idPrefix: string; volumes: Record<VolumeKind, number>;
@@ -218,7 +242,7 @@ export function SoundGroup({ idPrefix, volumes, onPreview, onCommit, children }:
 }) {
   return (
     <div class="dc-sound" data-group="sound">
-      {(['voice', 'click'] as const).map(kind => (
+      {(['voice'] as const).map(kind => (
         <VolumeSlider key={kind} id={`${idPrefix}-${kind}-volume`} kind={kind} percent={volumes[kind]} onPreview={onPreview} onCommit={onCommit} />
       ))}
       {children}

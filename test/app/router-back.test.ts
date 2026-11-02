@@ -67,6 +67,15 @@ test('after going back n steps the stack ends at the cover and the hashchange ke
   assert.deepEqual(dropLast(['#/', '#/use'], 5), ['#/']);
 });
 
+test('music player back can skip the picker and return to the exact figure or routine source',()=>{
+  const figure=['#/practice/waltz/whisk','#/use/music/for/figure/waltz/whisk','#/use/music/sweetest-dance/figure/waltz/whisk'];
+  const routine=['#/routines/r-test-12345678/play','#/use/music/for/routine/r-test-12345678?from=0&to=2','#/use/music/paper-umbrella/routine/r-test-12345678?from=0&to=2'];
+  for(const [visited,origin] of [[figure,'#/practice/waltz/whisk'],[routine,'#/routines/r-test-12345678/play']] as const){
+    const steps=stepsBackTo(visited,origin);assert.equal(steps,2);
+    const returned=dropLast(visited,steps!);assert.deepEqual(recordVisit(returned,origin),[origin]);
+  }
+});
+
 test('an exit whose target is the previous screen goes back instead of stacking a duplicate (Repro A)', () => {
   // S0 → U1 →（タブ・置き換え）U2 → S10 →「ルーティンを見る」
   const stack = walk(['#/', '#/use']);

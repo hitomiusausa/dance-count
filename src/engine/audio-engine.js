@@ -24,6 +24,11 @@ export function spokenVoiceKey(event, { barCounting = false, iteration = 0, rang
   return BAR_COUNT_WORDS[positiveModulo(ordinal, BAR_COUNT_WORDS.length)];
 }
 
+function clampMetronomeVolume(volume) {
+  if (!Number.isFinite(volume) || volume < 0 || volume > 1) throw new RangeError('Metronome volume must be between 0 and 1');
+  return volume;
+}
+
 // tempo は省略可（既定は constantTempo(bpm)）。既定は検査の後で作る（引数の既定値にすると
 // 既存の検査より先に評価され、エラーの順番が変わるため）。BPM の検査は constantTempo が同じ文言で行う。
 export function patternDurationSeconds(durationTicks, bpm, tempo) {
@@ -112,6 +117,7 @@ export class PracticeAudioEngine {
     bpm,
     loop = true,
     metronome = true,
+    metronomeVolume = 1,
     voiceOffsetMs = 0,
     wordOffsetsMs = {},
     countInBars = 1,
@@ -147,6 +153,7 @@ export class PracticeAudioEngine {
       tempo,
       loop,
       metronome,
+      metronomeVolume: clampMetronomeVolume(metronomeVolume),
       voiceOffsetMs,
       wordOffsetsMs,
       rangeStartTick,
@@ -171,6 +178,10 @@ export class PracticeAudioEngine {
     this.schedulerId = setInterval(() => this.scheduleAhead(), 50);
     this.frame();
     return patternStartTime;
+  }
+
+  setMetronomeVolume(volume) {
+    this.state && (this.state.metronomeVolume = clampMetronomeVolume(volume));
   }
 
   stop() {
@@ -208,7 +219,7 @@ export class PracticeAudioEngine {
   }
 
   scheduleIteration(iteration) {
-    const { compiled, bpm, tempo, loop, metronome, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
+    const { compiled, bpm, tempo, loop, metronome, metronomeVolume, voiceOffsetMs, wordOffsetsMs, startTime, rangeStartTick, rangeEndTick, rangeDurationTicks } = this.state;
 
     if (metronome) {
       const firstBeat = Math.ceil(rangeStartTick / TICKS_PER_BEAT);
@@ -216,7 +227,7 @@ export class PracticeAudioEngine {
         const originalTick = beat * TICKS_PER_BEAT;
         const localTick = originalTick - rangeStartTick + iteration * rangeDurationTicks;
         const time = startTime + tempo.tickToSeconds(localTick);
-        this.scheduleClick(time, beat % compiled.profile.beatsPerBar === 0);
+        this.scheduleClick(time, beat % compiled.profile.beatsPerBar === 0, metronomeVolume);
       }
     }
 
@@ -246,12 +257,14 @@ export class PracticeAudioEngine {
     }
   }
 
-  scheduleClick(time, accent) {
+  scheduleClick(time, accent, volume = this.state.metronomeVolume) {
     const oscillator = this.audioContext.createOscillator();
     const gain = this.audioContext.createGain();
     oscillator.frequency.value = accent ? 1320 : 880;
-    gain.gain.setValueAtTime(accent ? 0.18 : 0.10, time);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.035);
+    const peak = (accent ? 0.18 : 0.10) * volume;
+    const floor = Math.min(0.0001, Math.max(0.00001, peak * 0.001));
+    gain.gain.setValueAtTime(Math.max(floor, peak), time);
+    gain.gain.exponentialRampToValueAtTime(floor, time + 0.035);
     oscillator.connect(gain).connect(this.ensureBuses().click);
     oscillator.start(time);
     oscillator.stop(time + 0.04);

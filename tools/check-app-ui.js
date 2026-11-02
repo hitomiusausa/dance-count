@@ -85,7 +85,7 @@ const W_TWO_BARS = WALTZ_FIGURES.find(figure => figure.counts.length > 4) ?? W1;
 const W_LONGEST = REVIEWED ? WALTZ_FIGURES.reduce((longest, figure) => (figureNameJa('waltz', figure.englishName).length > figureNameJa('waltz', longest.englishName).length ? figure : longest)) : undefined;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 // D73: くわしくの「音」の束＝声・メトロノームの大きさ（0〜100%・既定 100）と声のタイミング（U4 で 1。開いて 9 のまま）
-const SOUND_GROUP = ['[data-group="sound"] [data-volume="voice"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-volume="click"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-voice-offset-buttons]'];
+const SOUND_GROUP = ['[data-group="sound"] [data-volume="voice"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-metronome-volume] input[type="range"]', '[data-group="sound"] [data-voice-offset-buttons]'];
 const STATES = [
   // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
   // 言語は [data-utility]、更新の帯の「更新する」は [data-alert-action]（数えない）。戻る・下タブは無い（U11）
@@ -157,7 +157,7 @@ const STATES = [
   { name: 'S2 ジャイブの帯', hash: '#/practice/jive', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: '1 2 3 a 4 5 a 6' } },
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms',
-    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'], present: ['[data-group="play-switches"] [data-bar-counting][aria-checked="false"]', ...SOUND_GROUP], textKeys: ['barCounting', 'voiceVolume', 'clickVolume'] },   // D71・D72・D73
+    texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'], present: ['[data-group="play-switches"] [data-bar-counting][aria-checked="false"]', ...SOUND_GROUP], textKeys: ['barCounting', 'voiceVolume', 'metronomeVolume'] },   // D71・D72・D73・D81
   // D72: 小節を数えるは数字で数え、どの小節の頭にも「1」がある種目だけ（ワルツ・ヴィエニーズワルツ）。タンゴ（S・Q）には出ない。「繰り返す」と 1 つの束（U4 で 1＝開いて 9 のまま）
   { name: 'S2 タンゴ・くわしく開', hash: '#/practice/tango', screen: 'S2', kind: 'focus', openMore: true, total: 8, absent: ['[data-bar-counting]'] },
   // D72: 小節を数えている間は箱の右上に「n / 8 小節」（高さを足さない＝375×548 でも速さと ■ は初期表示）

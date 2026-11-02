@@ -10,7 +10,7 @@ import { danceName } from '../i18n/index.ts';
 import { displayForVoiceKey, formatCounts } from '../lib/count-display.ts';
 import { honorific } from '../lib/honorific.ts';
 import { idleProgram, leadStripView, stripCells, stripView } from '../practice/beat-indicator.ts';
-import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
+import { CountBox, FORCED_NOTICE, type AlertNotice, FineSpeed, MetronomeVolumeControl, MoreOptions, NoticeBox, PlayDock, PracticeToggles, PlaySwitches, SpeedChoices, VoiceChip, VoiceOffsetRow, SoundGroup, type VolumeKind } from '../practice/controls.tsx';
 import { chooseRoutineCustomBpm, chooseRoutinePreset, routineLeadInBars, routinePracticeChoice } from '../practice/routine-preferences.ts';
 import type { PracticeOptions } from '../practice/session.ts';
 import type { SpeedProfile } from '../practice/speed.ts';
@@ -65,7 +65,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), clickVolume: volumeGain(next.clickVolume), barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), metronomeVolume: next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -112,6 +112,12 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     restart(next, latest.current.range);
   };
 
+  // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
+  const saveMetronomeVolume = (volume: number) => {
+    latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+
   const stepVoiceOffset = (direction: -1 | 1) => {
     const result = playback.step(latest.current.settings, direction);
     if (!result) return;
@@ -127,7 +133,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
   };
 
   // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
-  const volumeKey = (kind: VolumeKind) => (kind === 'voice' ? 'voiceVolume' : 'clickVolume') as 'voiceVolume' | 'clickVolume';
+  const volumeKey = (_kind: VolumeKind) => 'voiceVolume' as const;
   const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
   const commitVolume = (kind: VolumeKind, percent: number) => {
     const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
@@ -213,7 +219,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
             <PlaySwitches idPrefix="dc-s5" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
               barCounting={barCountingAvailable(routine.danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
-            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume, click: settings.clickVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume }} onPreview={previewVolume} onCommit={commitVolume}>
+              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} />
               <VoiceOffsetRow idPrefix="dc-s5" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
             </SoundGroup>
           </MoreOptions>

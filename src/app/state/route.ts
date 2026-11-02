@@ -75,3 +75,14 @@ export function goBack(current: ScreenId, fallback?: RouteTarget): void {
   }
   replaceRoute(fallback??{ screen: parentScreen(current) ?? 'S0', params: {} });
 }
+
+// 音楽練習などの一連の選択画面を飛ばし、元の画面まで戻る。
+// 戻り先が履歴にあれば必要な数だけ戻り、直接開いた場合は末尾を置き換える。
+export function goBackTo(target: RouteTarget): void {
+  const hash=buildHash(target);
+  const steps=stepsBackTo(visited,hash);
+  if(steps===null){replaceRoute(target);return;}
+  visited=dropLast(visited,steps);
+  if(steps===1)historyBack();
+  else historyGo(-steps);
+}
