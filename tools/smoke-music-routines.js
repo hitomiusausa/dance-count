@@ -4,6 +4,7 @@ import path from 'node:path';
 import {chromium} from 'playwright-core';
 import {AxeBuilder} from '@axe-core/playwright';
 import {compileMusicProgram,musicJobs} from '../src/engine/music-plan.js';
+import {MUSIC_ROUTINE_SAMPLES} from './music-probe/routine-samples.ts';
 const base=process.env.DC_BASE_URL??'http://127.0.0.1:5195/';
 const browser=await chromium.launch({channel:'chrome'});
 const evidence={playback:[],exports:[],checks:[],errors:[]};
@@ -16,7 +17,10 @@ try{
  const waltzId=(await(await fetch(new URL('/__music/catalog',base))).json()).find(track=>track.danceId==='waltz')?.id;ensure(waltzId,'no waltz in the catalog');
  await page.goto(review(waltzId,'sample-waltz'));
  await page.waitForFunction(()=>waveformReview.plan?.routineEndTick!==undefined);
- const tracks=await page.evaluate(()=>waveformReview.catalog.filter(t=>t.id!=='paper-umbrella'));
+ // お手本のルーティンはワルツ・ルンバ・チャチャチャだけ（タンゴ・サンバは未作成）。無い種目の曲は飛ばして名前を残す
+ const sampleDances=new Set(MUSIC_ROUTINE_SAMPLES.map(sample=>sample.danceId));
+ const all=await page.evaluate(()=>waveformReview.catalog.filter(t=>t.id!=='paper-umbrella'));
+ const tracks=all.filter(track=>sampleDances.has(track.danceId));evidence.skipped=all.filter(track=>!sampleDances.has(track.danceId)).map(track=>track.id);
  // All five provided songs: actual realtime frames from the production audio engine.
  for(const [i,track] of tracks.entries()){
   await page.goto(review(track.id,`sample-${track.danceId}`));
@@ -106,5 +110,5 @@ try{
  evidence.checks.push('3 widths without overflow','WCAG2A/AA');
  ensure(!evidence.errors.length,evidence.errors.join('\n'));
  await fs.writeFile('output/music-probe/routine-browser-evidence.json',JSON.stringify(evidence,null,2)+'\n');
- console.log('routine music OK: 5 realtime songs, 9 saved WAVs, readonly saved routine/range/lifecycle/layout checks');
+ console.log(`routine music OK: ${tracks.length} realtime songs (no sample routine yet: ${evidence.skipped.join(', ')||'none'}), 9 saved WAVs, readonly saved routine/range/lifecycle/layout checks`);
 }finally{await browser.close();}
