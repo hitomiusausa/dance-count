@@ -34,3 +34,15 @@ test('Info.plist declares the microphone purpose and the encryption answer', asy
   assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
   assert.match(plist, /<key>CFBundleLocalizations<\/key>\s*<array>\s*<string>en<\/string>\s*<string>ja<\/string>/);
 });
+
+// iPhone は縦だけ（ひとみうさ 2026-11-02）。iPad は 4 方向のまま（画面の分割＝マルチタスクには 4 方向が要る）。
+test('iPhone is portrait only and iPad keeps all four orientations', async () => {
+  const plist = await fs.readFile(path.join(root, 'ios/App/App/Info.plist'), 'utf8');
+  const orientations = (key: string) => {
+    const block = plist.match(new RegExp(`<key>${key}</key>\\s*<array>([\\s\\S]*?)</array>`));
+    assert.ok(block, key);
+    return [...block[1].matchAll(/<string>([^<]+)<\/string>/g)].map(match => match[1]);
+  };
+  assert.deepEqual(orientations('UISupportedInterfaceOrientations'), ['UIInterfaceOrientationPortrait']);
+  assert.equal(orientations('UISupportedInterfaceOrientations~ipad').length, 4);
+});
