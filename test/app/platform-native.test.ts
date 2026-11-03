@@ -92,3 +92,30 @@ test('the privacy manifest and the Japanese microphone text ship in the app', as
   const strings = await fs.readFile(path.join(root, 'ios/App/App/ja.lproj/InfoPlist.strings'), 'utf8');
   assert.match(strings, /^"NSMicrophoneUsageDescription" = "[^"]{10,}";$/m);
 });
+
+// Capacitor 8.5.3 の iOS は同梱の音（wav・flac）を status 0・ok=false で返す（中身はある）。2026-11-03 Mac のシミュレーターで
+// 標準の声が「まだ端末に入っていません」になった原因（WebViewAssetHandler.swift: 音の拡張子だけ HTTPURLResponse でない）。
+test('bundled media that Capacitor returns with status 0 is read as a success only inside the app', async () => {
+  const { bundledFetchWith } = await import('../../src/app/platform/native.ts');
+  const wav = new Uint8Array([82, 73, 70, 70, 1, 2, 3]).buffer;
+  const capacitorMedia = () => Promise.resolve({ status: 0, ok: false, type: 'basic', headers: new Headers({ 'Content-Type': 'audio/wav' }), arrayBuffer: async () => wav } as unknown as Response);
+  const inApp = bundledFetchWith(capacitorMedia, () => true);
+  const fixed = await inApp('audio/default-en-female-v1/one.wav');
+  assert.equal(fixed.ok, true);
+  assert.equal(fixed.status, 200);
+  assert.equal(fixed.headers.get('content-type'), 'audio/wav');
+  assert.deepEqual(new Uint8Array(await fixed.arrayBuffer()), new Uint8Array(wav));
+  // ブラウザ（Web 版）では何も変えない
+  assert.equal((await bundledFetchWith(capacitorMedia, () => false)('x.wav')).ok, false);
+  // 中身の無い 0・opaque（他の出どころ）は失敗のまま
+  const empty = () => Promise.resolve({ status: 0, ok: false, type: 'basic', headers: new Headers(), arrayBuffer: async () => new ArrayBuffer(0) } as unknown as Response);
+  assert.equal((await bundledFetchWith(empty, () => true)('x.wav')).ok, false);
+  const opaque = () => Promise.resolve({ status: 0, ok: false, type: 'opaque', headers: new Headers(), arrayBuffer: async () => wav } as unknown as Response);
+  assert.equal((await bundledFetchWith(opaque, () => true)('x.wav')).ok, false);
+  // ファイルが無い時は Capacitor が読み込みごと失敗させる＝そのまま失敗
+  await assert.rejects(bundledFetchWith(() => Promise.reject(new TypeError('Load failed')), () => true)('missing.wav'));
+  // 普通の 200・404 はそのまま
+  const ok200 = new Response('{}', { status: 200 });
+  assert.equal(await bundledFetchWith(() => Promise.resolve(ok200), () => true)('m.json'), ok200);
+  assert.equal((await bundledFetchWith(() => Promise.resolve(new Response('', { status: 404 })), () => true)('m.json')).status, 404);
+});

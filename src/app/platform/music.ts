@@ -2,6 +2,7 @@ import type { MusicAsset, MusicTrack } from '../music/model.ts';
 import { MUSIC_CATALOG_FILE, musicClipPath, parseMusicPackCatalog } from '../music/pack.ts';
 import { compileMusicPlan } from '../../engine/music-plan.js';
 import type { MusicOptions } from '../practice/session.ts';
+import { fetchBundled } from './native.ts';
 
 // 曲の出どころは 2 つ（docs/app-store/RELEASE-PLAN.md §1-2）:
 // - 開発の試聴（tools/music-dev-plugin.ts の /__music/）: npm run dev を VITE_MUSIC_PREVIEW=1 で
@@ -30,7 +31,7 @@ export async function loadMusicCatalog(): Promise<MusicTrack[]> {
     return tracks;
   }
   if (MUSIC_PACK) {
-    const response = await fetch(`./${MUSIC_CATALOG_FILE}`);
+    const response = await fetchBundled(`./${MUSIC_CATALOG_FILE}`);
     if (!response.ok) throw new Error('Music catalog is unavailable');
     return parseMusicPackCatalog(await response.json());
   }
@@ -76,7 +77,7 @@ export function loadMusicAsset(audio: BaseAudioContext, options: Pick<MusicOptio
   const known=decoded.get(audio);if(known?.key===key)return known.promise;
   const promise=(async()=>{
     // 開発の試聴は毎回作り直す（no-store）。公開用の一式は置き場所に曲の版が入るので、普通にキャッシュしてよい
-    const response=await fetch(url, MUSIC_PREVIEW ? {cache:'no-store'} : undefined);
+    const response=MUSIC_PREVIEW ? await fetch(url,{cache:'no-store'}) : await fetchBundled(url);   // iOS アプリの同梱の FLAC（native.ts）
     if(!response.ok) throw new Error('Music segment is unavailable');
     const bytes=await response.arrayBuffer();
     if(bytes.byteLength>16*1024*1024)throw new Error('Music segment is too large');
