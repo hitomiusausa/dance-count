@@ -8,7 +8,7 @@ App Store には「プライバシーポリシーの URL」と「サポートの
 ## 0. 決めること ★
 
 1. **置き場所**: 案 `https://count.dancemap.jp/privacy` と `/support`。今の Web 版はハッシュの画面（`#/about`）だけで、単独のページが無い。`check-dist` は `index.html` 以外の HTML を止めるので、作る時は番人の例外か、別の置き方を決める。
-2. **運営者の英語の名前**: アプリの表示は「Kuga Inc.」（`about.ts` の `aboutOperator`）。ひとみうさの説明は「KUGA K.K.」。App Store Connect の販売者名と合わせる。
+2. ~~運営者の英語の名前~~ → **KUGA K.K. に決定**（ひとみうさ 2026-11-03・`docs/app-v1/rulings.md` D82）。アプリの表示も合わせる。
 3. **アプリの「このアプリについて」のプライバシーの文**: 今は Web 版向け（下の §3）。iOS アプリでは当てはまらない文がある。
 
 ## 1. 事実の棚卸し（2026-11-03）
@@ -31,7 +31,7 @@ App Store には「プライバシーポリシーの URL」と「サポートの
 
 **Dance Count プライバシーについて**
 
-運営：くうが株式会社（★英語の名前）　問い合わせ：info@kugainc.com
+運営：くうが株式会社（KUGA K.K.）　問い合わせ：info@kugainc.com
 
 1. **保存するもの** — 録音した声・受け取った声・ルーティン・設定は、お使いの端末の中にだけ保存されます。運営者がこれらを受け取ることはありません。
 2. **マイク** — マイクは、声を録音する画面でだけ使います。許可を求める時と、「録音する」「録り直す」を押してから、合図と録音のあいだ（約 6 秒）だけ開き、すぐ閉じます。
@@ -45,7 +45,7 @@ App Store には「プライバシーポリシーの URL」と「サポートの
 
 **Dance Count — Privacy**
 
-Operated by Kuga Inc. (★name)  Contact: info@kugainc.com
+Operated by KUGA K.K.  Contact: info@kugainc.com
 
 1. **What is stored** — Recorded voices, received voices, routines and settings are stored only on your device. The operator never receives them.
 2. **Microphone** — The microphone is used only on the voice recording screen: when asking for permission, and after you tap “Record” or “Record again”, only during the countdown and the recording (about 6 seconds). It is closed right after.
