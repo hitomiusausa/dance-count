@@ -5,6 +5,7 @@ import pkg from './package.json' with { type: 'json' };
 import { SHARE_TARGET_FIELD } from './src/share-inbox-contract.ts';
 import { bootMark as bootFigure } from './src/app/brand/rabbit.ts';
 import { neededFontGlob, neededFontSubsets } from './tools/fonts/needed-subsets.js';
+import { dropWoffFallback } from './tools/fonts/drop-woff-fallback.ts';
 import { musicDevPlugin } from './tools/music-dev-plugin.ts';
 import { cp, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -128,6 +129,8 @@ export default defineConfig({
   // ルーティンの createdWith.version（仕様 §7・Ruling 37）。src/app/app-version.ts が読む。
   // 案内文の公開 URL（§16-1・Ruling 82-7）。src/app/app-url.ts が読む。公開ビルドは RELEASE=1 PUBLIC_APP_URL=https://… npm run build（空なら check-dist が失敗＝final-review I2）。
   define: { __APP_VERSION__: JSON.stringify(pkg.version), __PUBLIC_APP_URL__: JSON.stringify(process.env.PUBLIC_APP_URL ?? ''), __MUSIC_PACK__: JSON.stringify(MUSIC_PACK_DIR !== null) },
+  // iOS アプリ（DC_TARGET=ios・npm run ios:build）は書体を .woff2 だけにする（tools/fonts/drop-woff-fallback.ts。Web 版は今のまま）
+  css: process.env.DC_TARGET === 'ios' ? { postcss: { plugins: [dropWoffFallback] } } : undefined,
   optimizeDeps: { entries: ['index.html'], include: ['preact', 'preact/hooks', 'preact/jsx-runtime'] },
   server: { port: 5173, strictPort: true },
   preview: { port: 4174, strictPort: true },

@@ -54,6 +54,11 @@ for (const file of files) {
 const music = await checkMusicPack({ dist, files, required: process.env.DC_REQUIRE_MUSIC === '1' });
 for (const problem of music.problems) problems.push(problem);
 for (const problem of await checkDistAudio(dist, standardVoices, music.files)) if (!problems.includes(problem)) problems.push(problem);
+// iOS アプリ（DC_TARGET=ios）は書体を .woff2 だけにする（tools/fonts/drop-woff-fallback.ts）。.woff が残っていたら外し忘れ
+if (process.env.DC_TARGET === 'ios') {
+  const woff = files.filter(file => file.endsWith('.woff'));
+  if (woff.length) problems.push(`the iOS build must not ship .woff fonts (${woff.length} found, e.g. ${woff[0]})`);
+}
 // 段7: Service Worker・manifest・precache（Ruling 89・93）
 for (const problem of await checkPwaDist({ dist, files, standardVoices, fontSubsets: neededFontSubsets(root), preview: process.env.DC_PREVIEW === '1' })) if (!problems.includes(problem)) problems.push(problem);
 // 段8 Task 12（final-review I2）: 公開ビルド（RELEASE=1）は案内文の URL が要る（vite.config.ts と同じ環境変数を見る）

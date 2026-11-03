@@ -1,5 +1,6 @@
 // S13「プライバシー・アプリについて」の文（段8・Ruling 99・D47・D48）。messages.ts に長文を詰めないため別のファイル。
 // **法務確認待ち（ひとみうさ／法務）**: アプリが実際にすること・しないことだけを書く（2026-10-12 にコードで確かめた事実。計画 段8 Task 4 の棚卸し）。
+// D82（2026-11-03 ひとみうさ）: 運営の英語の名前は “KUGA K.K.”（D48 の仮の “Kuga Inc.” を確定）。
 // D79（2026-10-16 ひとみうさ）: 解析あり＝Cloudflare Web Analytics（ゾーン dancemap.jp の自動挿入。クッキーなし）。aboutPrivacy2 をそれに合わせた。
 // 法的な約束（準拠法・免責・損害賠償・保証）は書かない。D47-2 の「外部の書体の読み込み」は禁止語（読み込み）に当たるので「書体も外部から取り寄せません」（段8 計画者の発見）。直すのはこのファイルだけ（test/app/i18n.test.ts が鍵の一致・順・禁止語を見る）。
 // 英語は初版（Ruling 96-2 の一次案の対象）。{version} は APP_VERSION（package.json の version）。
@@ -7,11 +8,11 @@ export const ABOUT_TEXT = {
   en: {
     aboutTitle: 'About Dance Count',
     aboutApp: 'Dance Count — for Ballroom · Version\u00A0{version}',   // 「Version」と番号を折らない
-    aboutOperator: 'Operated by Kuga Inc.',
+    aboutOperator: 'Operated by KUGA K.K.',
     aboutContact: 'Contact',
     aboutNotOfficial: 'The counts in this app are not official and have not been reviewed by any organization.',
     aboutPrivacyHeading: 'Privacy',
-    aboutPrivacy1: 'Recorded voices, received voices, routines and settings are saved only on this device. The operator (Kuga Inc.) never receives them.',
+    aboutPrivacy1: 'Recorded voices, received voices, routines and settings are saved only on this device. The operator (KUGA K.K.) never receives them.',
     aboutPrivacy2: 'To learn how much the app is used, we use Cloudflare Web Analytics. It uses no cookies and only counts visits: the page opened, the time, the type of browser, and the country or region. Your voices, routines, names and other data in the app are not sent. There are no ads, and fonts are not fetched from other sites.',
     aboutPrivacy3: "The server that delivers the app's files (screens, sounds and fonts) may record what browsers normally send, such as the time of access.",
     aboutPrivacy4: 'The microphone is used only on the voice recording screen: when you allow access, and after you tap “Record” or “Record again”, only during the countdown and the recording (about 6 seconds). It is closed right after. Recordings stay on this device, and you can delete them at any time.',
