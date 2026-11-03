@@ -15,6 +15,7 @@
 | 価格 | 無料（最初の版。決定 2） | Free | — |
 | 出す国 | 日本・アメリカ・イギリス・オーストラリア（決定 6） | — | — |
 | Bundle ID | `jp.dancemap.count.app`（決定 10） | — | — |
+| 販売者・著作権者 | KUGA K.K.（日本語の表示は「くうが株式会社」。D82） | Seller / Copyright: KUGA K.K. | App Store Connect の法人名（Apple の開発者登録）と同じにする |
 | SKU ★ | `dance-count-ios`（案。uchikare は `uchikare-ios`） | — | — |
 
 ## 2. 説明文
