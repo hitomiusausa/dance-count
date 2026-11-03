@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
@@ -131,12 +131,20 @@ export function VoiceChip({ name }: { name: string }) {
 }
 
 // 「くわしく」（1画面に1つ。Ruling 18）。label に任意の速さを併記できる（Ruling 31）。
+// 押して開いた時は「くわしく」を画面の上へ送る（2026-11-03: iPhone 12 mini では「くわしく」が下の再生ボタンのすぐ上にあり、
+// 開いても中身は 13px しか見えず・最初の音量のつまみは画面の外＝「開かない」ように見えた）。最初から開いて描く時は動かさない。
 export function MoreOptions({ label, open, onToggle, children }: {
   label: string; open?: boolean; onToggle?(open: boolean): void; children: ComponentChildren;
 }) {
+  const pressed = useRef(false);
   return (
-    <details class="dc-more" open={open} onToggle={event => onToggle?.((event.currentTarget as HTMLDetailsElement).open)}>
-      <summary data-more>
+    <details class="dc-more" open={open} onToggle={event => {
+      const details = event.currentTarget as HTMLDetailsElement;
+      if (details.open && pressed.current) details.querySelector('summary')?.scrollIntoView({ block: 'start' });
+      pressed.current = false;
+      onToggle?.(details.open);
+    }}>
+      <summary data-more onClick={() => { pressed.current = true; }}>
         <span>{label}</span>
         <Icon name="chevron" />
       </summary>

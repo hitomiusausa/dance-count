@@ -280,6 +280,9 @@ button { cursor: pointer; }
 .dc-more summary { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; font-size: 18px; font-weight: 700;
   color: var(--ink2); list-style: none; cursor: pointer; }
 .dc-more summary::-webkit-details-marker { display: none; }
+/* 開いたら「⌄」を上向きに（開いたことが見てわかる）。開いて上へ送る時は、上の安全領域の帯の下で止める（controls.tsx の MoreOptions） */
+.dc-more[open] > summary .dc-ic { transform: rotate(180deg); }
+.dc-more > summary { scroll-margin-top: calc(env(safe-area-inset-top) + 8px); }
 .dc-more-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
 .dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dc-chip { min-height: 48px; min-width: 48px; padding: 0 16px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
