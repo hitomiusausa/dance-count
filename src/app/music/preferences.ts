@@ -1,6 +1,10 @@
 import type { AppStorage } from '../platform/storage.ts';
 import type { MusicTrack } from './model.ts';
 
+// 音楽の画面のバーの最大（倍率）。音楽 0.7・カウント 1.2。画面の % はバーの位置（MusicScreen・D85）
+export const MUSIC_VOLUME_MAX = 0.7;
+export const MUSIC_COUNT_VOLUME_MAX = 1.2;
+
 export interface MusicPreferences {
   sectionId: string; rate: number; repetitions: number;
   musicVolume: number; voiceVolume: number; musicMuted: boolean; countMuted: boolean; startMode: 'together' | 'music-first' | 'count-first'; delayBeats: number;
@@ -12,7 +16,7 @@ export function normalizeMusicPreferences(raw: unknown, track: MusicTrack): Musi
     sectionId: track.sections.find(s=>s.id===source.sectionId)?.id ?? track.sections[0]!.id,
     rate: track.rates.find(r=>r===source.rate) ?? 1,
     repetitions: [1,2,4].find(n=>n===source.repetitions) ?? 1,
-    musicVolume: volume(source.musicVolume,.32,.7),voiceVolume:volume(source.voiceVolume,1,1.2),
+    musicVolume: volume(source.musicVolume,.32,MUSIC_VOLUME_MAX),voiceVolume:volume(source.voiceVolume,1,MUSIC_COUNT_VOLUME_MAX),
     musicMuted:source.musicMuted===true,
     // Migrate the old count switch and voice mute into the single count mute control.
     countMuted:source.countMuted===true||source.voiceMuted===true||source.countEnabled===false,

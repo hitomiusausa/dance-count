@@ -35,6 +35,7 @@ export interface AppSettings {
   metronome: boolean;
   metronomeVolume: number;
   metronomeMuted: boolean;
+  voiceMuted: boolean;                       // D85 声の消音（S2・S5 の「声の大きさ」の横。大きさの値は残す）
   countInBars: 0 | 1;                       // はじめの合図 オン / オフ（オンの小節数は LEAD_IN_BARS=2。D17）
   loop: boolean;
   voiceVolume: number;                      // D73 声の大きさ（0〜100 %・既定 100＝今までと同じ。practice/volume.ts）
@@ -64,6 +65,7 @@ export const DEFAULT_SETTINGS: AppSettings = Object.freeze({
   metronome: true,
   metronomeVolume: 1,
   metronomeMuted: false,
+  voiceMuted: false,
   countInBars: 1,
   loop: true,
   voiceVolume: 100,
@@ -101,6 +103,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
     metronomeVolume: typeof source.metronomeVolume === 'number' && Number.isFinite(source.metronomeVolume) ? Math.min(1, Math.max(0, source.metronomeVolume))
       : clampVolumePercent(source.clickVolume) !== null ? volumeGain(clampVolumePercent(source.clickVolume)!) : DEFAULT_SETTINGS.metronomeVolume,
     metronomeMuted: typeof source.metronomeMuted === 'boolean' ? source.metronomeMuted : DEFAULT_SETTINGS.metronomeMuted,
+    voiceMuted: typeof source.voiceMuted === 'boolean' ? source.voiceMuted : DEFAULT_SETTINGS.voiceMuted,
     countInBars: source.countInBars === 0 ? 0 : 1,
     loop: typeof source.loop === 'boolean' ? source.loop : DEFAULT_SETTINGS.loop,
     voiceVolume: clampVolumePercent(source.voiceVolume) ?? VOLUME_DEFAULT,

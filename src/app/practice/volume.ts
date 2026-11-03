@@ -16,3 +16,9 @@ export function volumeGain(percent: number): number {
   const clamped = clampVolumePercent(percent) ?? VOLUME_DEFAULT;
   return (clamped / VOLUME_MAX) ** 2;
 }
+
+// D85（2026-11-04）: バーの位置を 0〜100 % で見せる（S2・S5・音楽の画面のどのバーも同じ出し方）。min〜max のどこにいるか
+export function rangePercent(value: number, min: number, max: number): number {
+  if (!(max > min) || !Number.isFinite(value)) return 0;
+  return Math.round(Math.min(1, Math.max(0, (value - min) / (max - min))) * 100);
+}

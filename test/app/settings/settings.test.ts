@@ -120,3 +120,11 @@ test('the last figure is a slug kept with the last dance; anything else is null 
   assert.equal(normalizeSettings({ lastDanceId: 'hiphop', lastFigure: 'whisk' }).lastFigure, null, 'no dance, no figure');
   assert.equal(normalizeSettings({ lastFigure: 'whisk' }).lastFigure, null);
 });
+
+// D85: 声の消音（S2・S5）。既定はオフ・保存した値はそのまま・真偽でなければ既定
+test('voiceMuted defaults to off and keeps a saved boolean', () => {
+  assert.equal(DEFAULT_SETTINGS.voiceMuted, false);
+  assert.equal(normalizeSettings({ voiceMuted: true }).voiceMuted, true);
+  assert.equal(normalizeSettings({ voiceMuted: 'yes' }).voiceMuted, false);
+  assert.equal(normalizeSettings({ voiceVolume: 40, voiceMuted: true }).voiceVolume, 40);
+});

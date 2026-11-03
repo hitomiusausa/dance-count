@@ -860,3 +860,6 @@ button { cursor: pointer; }
   .dc-poster-step-text b { font-size: 18pt; }
   .dc-poster-foot { font-size: 9pt; text-align: center; }
 }
+/* D85: バーの名前の横の %（どのバーも同じ）。名前は左・% は右 */
+.dc-volume-head { justify-content: space-between; }
+.dc-volume-head [data-volume-value] { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink2); }

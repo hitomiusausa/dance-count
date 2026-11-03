@@ -41,7 +41,7 @@ const LIMITS = Object.freeze({
   primaryHeight: 56, playHeight: 72, playWidthRatio: 0.6, // U2
   tap: 48, tapGap: 8, // U3
   compactTap: 36, compactTapGap: 6, // D64: S8 の 12 語のチップ（[data-tap-compact]）だけの例外（高さ 36 以上・チップ同士の間 6 以上）
-  initialOps: 5, totalOps: 9, groupChoices: 10, moreSummaries: 1, // U4〜U6
+  initialOps: 5, totalOps: 10, groupChoices: 10, moreSummaries: 1, // U4〜U6。totalOps 9 → 10（D85・ひとみうさ 2026-11-04: 曲が入ったビルドでは S2・S5 のくわしく開に「音楽をつける」が加わり 10）
   catalogChoices: 20, // U5 の例外: 照合済みの名前の一覧 [data-group][data-catalog] は選択肢でなく一覧（Ruling 54。src の FIGURE_CHOICES_MAX と同じ）
   contrastText: 4.5, contrastLarge: 3, contrastUi: 3, // U7
   motionMs: 300, // U8
@@ -85,7 +85,10 @@ const W_TWO_BARS = WALTZ_FIGURES.find(figure => figure.counts.length > 4) ?? W1;
 const W_LONGEST = REVIEWED ? WALTZ_FIGURES.reduce((longest, figure) => (figureNameJa('waltz', figure.englishName).length > figureNameJa('waltz', longest.englishName).length ? figure : longest)) : undefined;
 const S5_13 = `#/routines/${R.waltz13.id}/play`;
 // D73: くわしくの「音」の束＝声・メトロノームの大きさ（0〜100%・既定 100）と声のタイミング（U4 で 1。開いて 9 のまま）
-const SOUND_GROUP = ['[data-group="sound"] [data-volume="voice"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-metronome-volume] input[type="range"]', '[data-group="sound"] [data-voice-offset-buttons]'];
+// D85（2026-11-04）: 声・メトロノームの大きさのバーの横に「消音」（音楽の画面と同じ部品）・名前の横に %。束の中なので U4 は 9 のまま
+const SOUND_GROUP = ['[data-group="sound"] [data-volume="voice"] input[type="range"][aria-valuetext="100%"]', '[data-group="sound"] [data-metronome-volume] input[type="range"]',
+  '[data-group="sound"] [data-mute-metronome][aria-pressed="false"]', '[data-group="sound"] [data-mute-voice][aria-pressed="false"]',
+  '[data-group="sound"] [data-volume="voice"] [data-volume-value]', '[data-group="sound"] [data-metronome-volume] [data-volume-value]', '[data-group="sound"] [data-voice-offset-buttons]'];
 const STATES = [
   // D56（Ruling 115-1・118-3）: 表紙 S0。扉「使う」「作る」＋行「設定」＝3。初めて鳴った後は「使う」の扉にくっついた「前回の練習 ▶ 続きから」で 4（C 案）。
   // 言語は [data-utility]、更新の帯の「更新する」は [data-alert-action]（数えない）。戻る・下タブは無い（U11）
@@ -158,6 +161,10 @@ const STATES = [
   { name: 'S2 タンゴの帯', hash: '#/practice/tango', screen: 'S2', kind: 'focus', ops: 5, speedAndPlay: true, strip: { labels: 'S S Q Q S', wide: [0, 2] } },
   { name: 'S2 くわしく開', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', openMore: true, total: 9, voiceOffset: '±0 ms',
     texts: ['♩=84（テンポ28）', '競技の速さ（♩=84〜90・テンポ28〜30）'], present: ['[data-group="play-switches"] [data-bar-counting][aria-checked="false"]', ...SOUND_GROUP], textKeys: ['barCounting', 'voiceVolume', 'metronomeVolume'] },   // D71・D72・D73・D81
+  // D85: 「消音」を押すと押された形（aria-pressed）・文字は「消音を解除」。操作の数は 9 のまま
+  { name: 'S2 くわしく開・消音', hash: '#/practice/waltz', screen: 'S2', kind: 'focus', total: 9,
+    steps: [{ click: 'summary[data-more]' }, { click: '[data-mute-metronome]' }, { click: '[data-mute-voice]' }],
+    present: ['[data-group="sound"] [data-mute-metronome][aria-pressed="true"]', '[data-group="sound"] [data-mute-voice][aria-pressed="true"]'] },
   // D72: 小節を数えるは数字で数え、どの小節の頭にも「1」がある種目だけ（ワルツ・ヴィエニーズワルツ）。タンゴ（S・Q）には出ない。「繰り返す」と 1 つの束（U4 で 1＝開いて 9 のまま）
   { name: 'S2 タンゴ・くわしく開', hash: '#/practice/tango', screen: 'S2', kind: 'focus', openMore: true, total: 8, absent: ['[data-bar-counting]'] },
   // D72: 小節を数えている間は箱の右上に「n / 8 小節」（高さを足さない＝375×548 でも速さと ■ は初期表示）

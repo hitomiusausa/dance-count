@@ -50,6 +50,8 @@
   "metronomeVolume": ["メトロノームの","大きさ"],
   "metronomeMuteLabel": ["メトロノームを","消音"],
   "metronomeUnmuteLabel": ["メトロノームを","戻す"],
+  "voiceMuteLabel": ["声を","消音"],
+  "voiceUnmuteLabel": ["声を","戻す"],
   "coverUseFor": ["（生徒の","方）"],
   "coverUseSub": ["カウントや","曲、","先生の","ルーティンで","練習"],
   "coverMakeFor": ["（指導者の","方）"],

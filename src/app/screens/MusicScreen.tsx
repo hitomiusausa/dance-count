@@ -10,10 +10,11 @@ import { musicRoutineChoices, musicFigureRange, type MusicFigureRange } from '..
 import { useRoutines } from '../state/routines.ts';
 import type { MusicLevel, MusicTrack } from '../music/model.ts';
 import { canPlayMusicSample, playMusicSample, type MusicSamplePlayback } from '../platform/music.ts';
-import { loadMusicPreferences, normalizeMusicPreferences, saveMusicPreferences, type MusicPreferences } from '../music/preferences.ts';
+import { MUSIC_COUNT_VOLUME_MAX, MUSIC_VOLUME_MAX, loadMusicPreferences, normalizeMusicPreferences, saveMusicPreferences, type MusicPreferences } from '../music/preferences.ts';
 import { useMusicCatalog } from '../music/use-catalog.ts';
 import { onPageHidden } from '../platform/page.ts';
-import { CountBox, MetronomeVolumeControl, MoreOptions, NoticeBox, PlayDock, VoiceChip } from '../practice/controls.tsx';
+import { CountBox, MetronomeVolumeControl, MoreOptions, MuteButton, NoticeBox, PlayDock, VoiceChip } from '../practice/controls.tsx';
+import { rangePercent } from '../practice/volume.ts';
 import { idleProgram, stripCells, stripView } from '../practice/beat-indicator.ts';
 import type { MusicOptions } from '../practice/session.ts';
 import { usePracticeSession } from '../practice/use-session.ts';
@@ -247,17 +248,18 @@ function MusicPlayer({track,source,query,figure}:{track:MusicTrack;source:RouteP
           </select></label>
         </div>
         <div data-group="music-sound">
-          <label class="dc-music-field">{t.t('musicVolume')}<div class="dc-music-volume-control">
-            <input aria-label={t.t('musicVolume')} type="range" min="0" max="0.7" step="0.01" value={prefs.musicVolume} disabled={!ready}
+          {/* D85: どのバーも名前の横に 0〜100 %（バーの位置）。消音は MuteButton（S2・S5 と同じ形） */}
+          <label class="dc-music-field"><span class="dc-field-label dc-volume-head"><span>{t.t('musicVolume')}</span><span data-volume-value>{t.t('volumePercent',{percent:rangePercent(prefs.musicVolume,0,MUSIC_VOLUME_MAX)})}</span></span><div class="dc-music-volume-control">
+            <input aria-label={t.t('musicVolume')} type="range" min="0" max={MUSIC_VOLUME_MAX} step="0.01" value={prefs.musicVolume} disabled={!ready}
+              aria-valuetext={t.t('volumePercent',{percent:rangePercent(prefs.musicVolume,0,MUSIC_VOLUME_MAX)})}
               onInput={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({musicVolume:Number(e.currentTarget.value)},true)}/>
-            <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-music aria-label={t.t(prefs.musicMuted?'musicUnmuteMusicLabel':'musicMuteMusicLabel')} aria-pressed={prefs.musicMuted} disabled={!ready}
-              onClick={()=>changeMute('musicMuted')}>{t.t(prefs.musicMuted?'musicUnmute':'musicMute')}</button>
+            <MuteButton muted={prefs.musicMuted} data="data-mute-music" label={prefs.musicMuted?'musicUnmuteMusicLabel':'musicMuteMusicLabel'} disabled={!ready} onToggle={()=>changeMute('musicMuted')}/>
           </div></label>
-          <label class="dc-music-field">{t.t('musicCountVolume')}<div class="dc-music-volume-control">
-            <input aria-label={t.t('musicCountVolume')} type="range" min="0" max="1.2" step="0.01" value={prefs.voiceVolume} disabled={!ready}
+          <label class="dc-music-field"><span class="dc-field-label dc-volume-head"><span>{t.t('musicCountVolume')}</span><span data-volume-value>{t.t('volumePercent',{percent:rangePercent(prefs.voiceVolume,0,MUSIC_COUNT_VOLUME_MAX)})}</span></span><div class="dc-music-volume-control">
+            <input aria-label={t.t('musicCountVolume')} type="range" min="0" max={MUSIC_COUNT_VOLUME_MAX} step="0.01" value={prefs.voiceVolume} disabled={!ready}
+              aria-valuetext={t.t('volumePercent',{percent:rangePercent(prefs.voiceVolume,0,MUSIC_COUNT_VOLUME_MAX)})}
               onInput={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},false)} onChange={e=>changeVolume({voiceVolume:Number(e.currentTarget.value)},true)}/>
-            <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-count aria-label={t.t(prefs.countMuted?'musicUnmuteCountLabel':'musicMuteCountLabel')} aria-pressed={prefs.countMuted} disabled={!ready}
-              onClick={()=>changeMute('countMuted')}>{t.t(prefs.countMuted?'musicUnmute':'musicMute')}</button>
+            <MuteButton muted={prefs.countMuted} data="data-mute-count" label={prefs.countMuted?'musicUnmuteCountLabel':'musicMuteCountLabel'} disabled={!ready} onToggle={()=>changeMute('countMuted')}/>
           </div></label>
           <MetronomeVolumeControl value={settings.metronomeVolume} muted={settings.metronomeMuted}
             onPreview={value=>changeMetronomeVolume(value,false)} onChange={value=>changeMetronomeVolume(value,true)} onMute={toggleMetronomeMute}/>

@@ -25,10 +25,11 @@ import { WaltzSpinner } from '../brand/BrandMark.tsx';
 // ui-state=confirm-delete は最初の受け取った声の削除確認を見た目だけ出す（D75 で自分の声から替えた）。
 // 段8（Ruling 100-3）: 試聴で声が読めなかった（オフラインでまだ端末に入っていない）時は §11 の「この声はまだ端末に入っていません。…」の枠。
 // ui-state=voice-missing はその枠を見た目だけ出す（試聴を押すか、別の行を選ぶと消える）。
-// 段8（Ruling 103-2）: 声の一覧の行の上限。実際の最大は標準 2 行（英語・日本語。D78）＋声 20 行（VOICE_LIMITS.packs は自分の声・受け取った声・途中の声を合わせた総数）＝22 行。
-// 上限は 2 + 2 + 20 = 24 のまま（22 行を含む。数を詰める意味は無い）。
+// 段8（Ruling 103-2）: 声の一覧の行の上限。実際の最大は標準の声の行（STANDARD_VOICES）＋声 20 行（VOICE_LIMITS.packs は自分の声・受け取った声・途中の声を合わせた総数）。
+// 余り 2 は前からの余裕。2026-11-04 訂正: 前は標準を「2」と決め打ちしていて、日本語の男性（D84）で標準が 3 行になり、
+// ui:check の「S7 声が多い（受け取った 20 本）」が 25 > 24 で落ちていた（標準の数は JSON 1 つから数える）。
 // U5（選択肢 10 以下）の例外として ui:check に渡す（data-choices-max）。声が 4 本以上になる生徒は稀で、下のボタンはスクロールで届く
-const VOICE_ROWS_MAX = 2 + 2 + VOICE_LIMITS.packs;
+const VOICE_ROWS_MAX = STANDARD_VOICES.length + 2 + VOICE_LIMITS.packs;
 export function VoicesScreen({ uiState }: { uiState?: UiState }) {
   const { translator } = useI18n();
   const { settings, update } = useSettings();

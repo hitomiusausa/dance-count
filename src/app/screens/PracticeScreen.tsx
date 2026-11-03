@@ -49,7 +49,7 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
   const optionsFrom = (next: AppSettings, voice: VoiceSelection = latest.current.voice ?? DEFAULT_VOICE): PracticeOptions => {
     const nextChoice = practiceChoice(profile, next);
     return {
-      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), metronomeVolume: next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
+      kind: 'counts', danceId, counts: practiceCounts(profile, next, figure), bpm: nextChoice.bpm, metronome: next.metronome, countInBars: practiceLeadInBars(next), loop: next.loop, voiceVolume: next.voiceMuted ? 0 : volumeGain(next.voiceVolume), metronomeVolume: next.metronomeMuted ? 0 : next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -85,10 +85,17 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
     update({ metronome });
     session.setMetronome(metronome);
   };
-  // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
-  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
+  // D85（ひとみうさ 2026-11-04）: 普通の練習にも「消音」（音楽の画面と同じ metronomeMuted を使う＝消音はどの画面でも 1 つ）。
+  // 消音の間はバーを動かしても鳴らさない（音楽の画面と同じ）。「メトロノーム オン/オフ」はそのまま
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(latest.current.settings.metronomeMuted ? 0 : volume);
   const saveMetronomeVolume = (volume: number) => {
     latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+  const toggleMetronomeMute = () => {
+    const metronomeMuted = !latest.current.settings.metronomeMuted;
+    latest.current.settings = { ...latest.current.settings, metronomeMuted };
+    update({ metronomeMuted });
+    session.setMetronomeVolume(metronomeMuted ? 0 : latest.current.settings.metronomeVolume);
   };
 
   // 声のタイミング（Ruling 62）。標準の声は設定、録音の声は声そのものに書く。再生中なら止めて適用して再開。
@@ -102,12 +109,19 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
 
   // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
   const volumeKey = (_kind: VolumeKind) => 'voiceVolume' as const;
-  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  // D85: 声の消音の間はバーを動かしても鳴らさない（メトロノームの消音と同じ）
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: latest.current.settings.voiceMuted ? 0 : volumeGain(percent) });
   const commitVolume = (kind: VolumeKind, percent: number) => {
     const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
     latest.current.settings = { ...latest.current.settings, ...patch };
     update(patch);
-    session.setVolumes({ [kind]: volumeGain(percent) });
+    previewVolume(kind, percent);
+  };
+  const toggleVoiceMute = () => {
+    const voiceMuted = !latest.current.settings.voiceMuted;
+    latest.current.settings = { ...latest.current.settings, voiceMuted };
+    update({ voiceMuted });
+    session.setVolumes({ voice: voiceMuted ? 0 : volumeGain(latest.current.settings.voiceVolume) });
   };
 
   const togglePlay = () => {
@@ -165,8 +179,8 @@ export function PracticeScreen({ danceId, figureSlug, uiState }: { danceId: stri
               onCommit={value => change(chooseCustomBpm(current(), profile, value))} />
             <PlaySwitches idPrefix="dc-s2" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
               barCounting={barCountingAvailable(danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
-            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume }} onPreview={previewVolume} onCommit={commitVolume}>
-              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} />
+            <SoundGroup idPrefix="dc-s2" volumes={{ voice: settings.voiceVolume }} voiceMuted={settings.voiceMuted} onPreview={previewVolume} onCommit={commitVolume} onVoiceMute={toggleVoiceMute}>
+              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} muted={settings.metronomeMuted} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} onMute={toggleMetronomeMute} />
               <VoiceOffsetRow idPrefix="dc-s2" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
             </SoundGroup>
           </MoreOptions>
