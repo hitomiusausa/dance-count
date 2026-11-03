@@ -93,7 +93,9 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ `npm run typecheck` OK・`ios:build` OK
 - ✅ 画面の再現（アプリの中・日英 40 画面ずつ）: iPhone 12 mini・SE・16 Pro Max・iPad Air 縦横で、横のはみ出し 0・切り欠きの下の部品 0
 - ✅ `ui:check` 1163 件すべて通過（切り欠きの修正・設定の行の変更の後の版）
-- 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面: `tools/ios-sim-check.sh`（端末を探す・無ければ作る → 署名なしでビルド → 起動 → ライトとダークで撮る。まだ Mac で一度も動かしていない）
+- ✅ **Mac で初めてビルド・起動（2026-11-03・Node 24.13.0・iPhone 12 mini のシミュレーター）**: `BUILD SUCCEEDED`・アイコン（うさぎのワルツ）がホーム画面に出る・アプリは `capacitor://localhost` を読み込み、最初の画面（使う・作る・設定）が出た。クラッシュの記録 0・エラーのログ 0。ビルドしたアプリの Info.plist（`UILaunchScreen`・`UIUserInterfaceStyle Light`・`CFBundleLocalizations`）と、`LaunchBackground` の色・`PrivacyInfo.xcprivacy`・`ja.lproj` が中に入っていることも確かめた（ひとみうさの Mac の Claude のセッション）
+- ⚠️ 初回の `npm run ios:sim` は起動で止まり、画面は真っ黒だった。原因はアプリではなく、起動したばかりのシミュレーターの起動画面を作る仕組み（splashboardd）が数分止まっていたこと（その間 `simctl launch` が「No such process」）。道具に起動のやり直しと、起動を確かめてから撮る処理を足した（偽の `xcrun` で、2 回失敗して 3 回目で進むこと・ずっと失敗すると案内を出して止まることを確かめた。Mac では未実行）
+- 🍎 シミュレーター（iPhone 12 mini・iPad）と実機で全画面: `npm run ios:sim` でライトとダークを撮る（まだ 1 枚も撮れていない）。紺の起動画面そのものも、まだ見ていない
 - 🍎 TestFlight で、ひとみうさ・ダンス仲間に試してもらう
 - ⬜ 確認されていないルーティン・フィガーの名前を、確認済みのように出していないかの最終確認
 

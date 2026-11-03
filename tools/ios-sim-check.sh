@@ -4,7 +4,8 @@
 #   tools/ios-sim-check.sh                                  # iPhone 12 mini
 #   DC_SIM_DEVICE="iPad Air 11-inch (M3)" tools/ios-sim-check.sh
 # 出力: build/ios/screens/<端末>-light.png・-dark.png（ダークでも時計の文字が見えるか＝Info.plist の UIUserInterfaceStyle）
-# 2026-11-03 作成。Linux のクラウド環境では動かせないため、まだ一度も実行していない（Mac で初回に確かめる）。
+# 2026-11-03 作成。同じ日に Mac（Xcode・iPhone 12 mini）で初回: ビルド・インストールは成功、起動で失敗（下の launch_app の注記）。
+# 起動のやり直しは Linux のクラウド環境では動かせないため未実行（Mac で確かめる）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEVICE="${DC_SIM_DEVICE:-iPhone 12 mini}"
@@ -46,12 +47,33 @@ xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$UDID" -b >/dev/null
 open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
 xcrun simctl install "$UDID" "$APP"
+
+# 起動して、本当に動いているのを確かめてから撮る。2026-11-03 の初回（Mac・iPhone 12 mini）: 起動したばかりのシミュレーターは
+# 起動画面を作る仕組み（splashboardd）が数分止まり、その間 simctl launch が「No such process」で失敗して画面は真っ黒だった
+# （アプリ側は正常＝あとで起動すると WebView まで読み込み、最初の画面が出た）。失敗したら待ってやり直す。
+LAUNCH_RETRIES=6
+LAUNCH_WAIT_SEC=15
+RENDER_WAIT_SEC=6
+launch_app() {
+  local attempt
+  for attempt in $(seq 1 "$LAUNCH_RETRIES"); do
+    xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+    if xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 && sleep 2 \
+      && xcrun simctl spawn "$UDID" launchctl list | grep -q "UIKitApplication:$BUNDLE_ID"; then
+      return 0
+    fi
+    echo "launch attempt $attempt/$LAUNCH_RETRIES failed; waiting ${LAUNCH_WAIT_SEC}s for the simulator" >&2
+    sleep "$LAUNCH_WAIT_SEC"
+  done
+  echo "Could not launch $BUNDLE_ID. Restart the simulator (xcrun simctl shutdown $UDID) and run this again." >&2
+  return 1
+}
+
 SAFE_NAME="$(echo "$DEVICE" | tr ' ()' '-__')"
 for LOOK in light dark; do
   xcrun simctl ui "$UDID" appearance "$LOOK"
-  xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-  xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
-  sleep 4
+  launch_app
+  sleep "$RENDER_WAIT_SEC"
   xcrun simctl io "$UDID" screenshot "$SHOTS/$SAFE_NAME-$LOOK.png" >/dev/null
   echo "screenshot: $SHOTS/$SAFE_NAME-$LOOK.png"
 done
