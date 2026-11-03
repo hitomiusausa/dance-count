@@ -323,7 +323,7 @@
 | 223 | `aboutPrivacy6` | データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the app added to the Home Screen keep their data separately. Only the one you have open is deleted. | 法務確認待ち・技術語の疑い（ブラウザ・データ・browser・data）・長さ・英語の初版 | You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the Home Screen app keep their data separately, and only the one you have open is deleted. |  |
 | 224 | `aboutCreditsHeading` | 使っているもの | Credits | 法務確認待ち・英語の初版 | OK |  |
 | 225 | `aboutCreditFonts` | 書体：Inter・Noto Sans JP（SIL Open Font License 1.1） | Fonts: Inter and Noto Sans JP (SIL Open Font License 1.1) | 法務確認待ち・長さ・英語の初版 | OK |  |
-| 226 | `aboutCreditCode` | Preact・Workbox・QR Code Generator（MIT License） | Preact, Workbox and QR Code Generator (MIT License) | 法務確認待ち・長さ・英語の初版 | OK |  |
+| 226 | `aboutCreditCode` | Preact・Capacitor・Workbox・QR Code Generator（MIT License） | Preact, Capacitor, Workbox and QR Code Generator (MIT License) | 法務確認待ち・長さ・英語の初版 | OK |  |
 | 227 | `aboutCreditIcons` | 一部のアイコン：Lucide（ISC License） | Some icons: Lucide (ISC License) | 法務確認待ち・英語の初版 | OK |  |
 
 ## U3・U4 音楽練習（開発プレビュー）

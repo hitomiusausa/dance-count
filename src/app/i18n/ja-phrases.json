@@ -304,6 +304,6 @@
   "aboutPrivacy6": ["データは、","この","画面の","「データを","全て","消す」か、","ブラウザの","設定","（サイトの","データの","削除）で","消せます。","iPhone では、","Safari と","ホーム画面に","追加した","アプリで","保存場所が","別々です。","消すのは、","いま開いている","方だけです。"],
   "aboutCreditsHeading": ["使っている","もの"],
   "aboutCreditFonts": ["書体：Inter・Noto Sans JP","（SIL Open Font License 1.1）"],
-  "aboutCreditCode": ["Preact・Workbox・QR Code Generator","（MIT License）"],
+  "aboutCreditCode": ["Preact・Capacitor・Workbox・QR Code Generator","（MIT License）"],
   "aboutCreditIcons": ["一部の","アイコン：Lucide","（ISC License）"]
 }
