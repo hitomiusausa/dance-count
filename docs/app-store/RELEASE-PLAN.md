@@ -80,16 +80,17 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ 音楽が拍より約 21〜23ms 早く鳴っていたのを修正（§1-3）
 - ✅ 同梱の声・音楽が鳴る（2026-11-03 Mac のシミュレーター）。Capacitor は同梱の音（wav・flac）を status 0 で返すため「まだ端末に入っていません」になっていた → `platform/native.ts` の `fetchBundled`
 - ✅ 「くわしく」が開かないように見えた（iPhone 12 mini で中身が再生ボタンの裏・画面の外）→ 押したら上へ送る・矢印を上向き
-- ⚠️ **録音が「ボー」だけ（2026-11-03 Mac のシミュレーター・調査中）**
+- ✅ **実機（ひとみうさの iPhone・2026-11-04・`npm run ios:build:test`＝音楽なし・Xcode から入れた版）**: 新しい日本語の声（女性・男性）が鳴る・録音できる（合図の音・録った声を聞く）・録音の後もカウントが鳴る・**消音モードでも鳴る**（Web 側の `navigator.audioSession.type = 'playback'` で足りた）・鳴らしている間に画面が暗くならない（WKWebView の `navigator.wakeLock` で足りた＝keep-awake は入れない）
+  - ⚠️ **1 回だけ**: 最初に試した時、録音の画面に進むと合図・「聞く」・カウントの音が出なくなり、YouTube を鳴らして戻ると直った。そのあと 2 回（2 回目はアプリを入れ直してマイクの許可の画面から）`[dc-audio]` のログを取りながら同じ操作をしたが再現せず、AudioContext はずっと running・音声セッションの切り替え（play-and-record ⇄ playback）も正常。**く！ちゃんの見立て「マイクの許可の画面で止まる」は当てはまらなかった（訂正）**。原因不明のまま推測で直さない。`audio-context.ts` の `[dc-audio]`（アプリの中だけ・Xcode／`xcrun devicectl device process launch --console … jp.dancemap.count.app` で見える）は残し、TestFlight で起きたらログで確かめる
+- ✅ **録音が「ボー」だけ → シミュレーターだけの現象**（実機では録れた。下はシミュレーターでの調べの記録）
   - 経過: アプリで「ボー」→ 公開中の `count.dancemap.jp` を同じシミュレーターの Safari で開くと録れた → `AppDelegate` の `.playback` 固定が原因と見て外した（`72750a1`）→ **それでも「ボー」**。さらに**この枝の版を Safari で開いても「ボー」**（`npx vite preview` の `127.0.0.1:4174`）。
   - **訂正**: 「アプリの殻（`.playback`）が原因」は誤りだった。比べた Safari は公開中の古い版で、条件がそろっていなかった。`.playback` を外したこと自体は残す（音声セッションを決めるのは Web 側の 1 か所＝Safari と同じ形）。
   - 実測（アプリに保存された録音 5 つ。WAV・48kHz・16bit・モノラル・0.5〜0.64 秒）: 4 つ（10・11・12・14）は、違う語のはずなのに **peak −19.6dB・rms −23.1dB・高さ約 150Hz・ゼロ交差約 195Hz がまったく同じ**＝声ではなく、ずっと同じ低い音。1 つ（13）だけ peak −3.4dB・約 500Hz。合図の音は 880Hz・1320Hz なので合図ではない。
   - 録音まわりのコード（`recorder.ts`・`normalize.ts`・`recording-normalizer.js`・`RecordVoiceScreen.tsx`・`audio-context.ts`・`recorded-voice-pack.js`）は 10/15 から変わっていない。
   - 見立て（未確認）: シミュレーターに届くマイクの入り口が、声ではなく一定の音（ハム・仮想のマイク）になっている。🍎 シミュレーターの I/O → Audio Input と Mac の入力を確かめる・公開中の版をもう一度同じ Safari で録る・**iPhone の実機で録る**（いちばん確実）
-- 🍎 消音スイッチがオンでも鳴るか（Web 側の `navigator.audioSession.type = 'playback'` だけで足りるか。シミュレーターには消音スイッチが無いので実機で）
 - 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
-- 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
-- 🍎 画面が暗くならないか: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。実機で確かめ、動かなければ iOS 側で再生中だけ画面を点けたままにする。候補は `@capacitor-community/keep-awake` 8.0.1（Capacitor 8 対応・2026-04-16 公開・中身は `isIdleTimerDisabled`）を `platform/wake-lock.ts` の中だけで使う形（自前の Swift を足さずに済む）。実機の結果が出るまで入れない
+- 🍎 録音: `navigator.audioSession` が無い古い iOS の版（実機の今の版は ✅）
+- ✅ 画面が暗くならないか（実機 2026-11-04。上の ✅ の行）。調べの記録: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。動かなければ iOS 側で再生中だけ画面を点けたままにする。候補は `@capacitor-community/keep-awake` 8.0.1（Capacitor 8 対応・2026-04-16 公開・中身は `isIdleTimerDisabled`）を `platform/wake-lock.ts` の中だけで使う形（自前の Swift を足さずに済む）。実機で動いたので入れない
 - ✅ 外のリンクと `mailto:`: Capacitor 8.5.3 の `WebViewDelegationHandler.swift` は、アプリの外への移動を止めて `UIApplication.shared.open` に渡す（メールはメールのアプリ・Web は Safari）。🍎 実機で一度押して確かめる
 - 🍎 配る・受け取る（共有シート・ファイルから開く）。`.dancecount.txt` をアプリで開けるようにするか ★
 - 🍎 イヤホン・Bluetooth・電話や Siri の割り込みの後の再開
