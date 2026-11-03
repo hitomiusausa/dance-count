@@ -1,6 +1,15 @@
+import { isNativeApp } from './native.ts';
+
 // iOS 対策（仕様 §9・Ruling 6）はこの面に閉じる。AudioContext はアプリに1つだけ（前回カードのタップで解除し、
 // 遷移先の S2 でそのまま使うため）。
 let context: AudioContext | null = null;
+
+// 2026-11-03 実機（iPhone・App Store 版の試し）: 初めての録音のあと、音が出なくなり、YouTube を鳴らして戻ったら直った。
+// 原因を確かめるため、アプリの中（Capacitor）でだけ、音の状態と音声セッションの切り替えを Xcode のログに出す（[dc-audio]）。
+// Capacitor は JS の console を Xcode のコンソールに写す。Web 版では出さない。
+function audioLog(...parts: unknown[]): void {
+  if (isNativeApp()) console.info('[dc-audio]', ...parts);
+}
 
 type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
@@ -10,6 +19,7 @@ export function configureAudioSession(): void {
   const session = (navigator as AudioSessionNavigator).audioSession;
   if (!session) return;
   try { session.type = 'playback'; } catch { /* 古い実装は書き込み不可 */ }
+  audioLog('session', session.type);
 }
 
 // ▶（と前回カード）のクリック処理の中で、await より前に同期で呼ぶこと。
@@ -19,8 +29,13 @@ export function unlockAudioInsideTap(): AudioContext {
     const Context = window.AudioContext ?? (window as WebkitWindow).webkitAudioContext;
     if (!Context) throw new Error('Web Audio is not available');
     context = new Context();
+    const created = context;
+    created.addEventListener('statechange', () => audioLog('state', created.state, 'session', (navigator as AudioSessionNavigator).audioSession?.type));
+    audioLog('created', created.state);
   }
-  context.resume().catch(() => { /* 2秒判定で拾う */ });
+  const resuming = context;
+  if (resuming.state !== 'running') audioLog('tap while', resuming.state);
+  resuming.resume().then(() => { if (resuming.state !== 'running') audioLog('resume left', resuming.state); }, error => audioLog('resume failed', String(error)));
   const source = context.createBufferSource();
   source.buffer = context.createBuffer(1, 1, context.sampleRate);
   source.connect(context.destination);
@@ -52,7 +67,10 @@ export function outputLatencySeconds(audio: AudioContext): number {
 let recordingSessions = 0;
 export function withRecordingSession<T>(run: () => Promise<T>): Promise<T> {
   const session = (navigator as AudioSessionNavigator).audioSession;
-  const set = (type: string) => { if (session) { try { session.type = type; } catch { /* 古い実装は書き込み不可 */ } } };
+  const set = (type: string) => {
+    if (session) { try { session.type = type; } catch { /* 古い実装は書き込み不可 */ } }
+    audioLog('session', session?.type ?? '(none)', 'audio', context?.state ?? '(none)');
+  };
   const release = () => { recordingSessions = Math.max(0, recordingSessions - 1); if (recordingSessions === 0) set('playback'); };
   recordingSessions += 1;
   set('play-and-record');
