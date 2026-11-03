@@ -18,6 +18,9 @@ export const ABOUT_TEXT = {
     aboutPrivacy4: 'The microphone is used only on the voice recording screen: when you allow access, and after you tap “Record” or “Record again”, only during the countdown and the recording (about 6 seconds). It is closed right after. Recordings stay on this device, and you can delete them at any time.',
     aboutPrivacy5: "A file made with “Share” contains your name, the voice, routines and note you put in it, the date it was made, and an ID. The ID is made at random on this device so the receiving app can tell files from the same person; it contains no information about your device. You decide who gets it. Sending it by LINE or email follows the rules of those services. A file you receive contains the sender's name and voice.",
     aboutPrivacy6: 'You can delete the data with “Delete all data” on this screen, or in your browser settings (delete the site data). On iPhone, Safari and the app added to the Home Screen keep their data separately. Only the one you have open is deleted.',
+    // App Store 版のアプリの中だけ（D83。aboutPrivacy2・3・6 の代わり。アプリは通信しない＝2026-11-02 に全画面と再生で実測）
+    aboutAppPrivacyNoNetwork: 'This app sends no information over the internet while you use it. There are no usage analytics and no ads.',
+    aboutAppPrivacyDelete: 'You can delete the data with “Delete all data” on this screen, or by deleting the app.',
     aboutCreditsHeading: 'Credits',
     aboutCreditFonts: 'Fonts: Inter and Noto Sans JP (SIL Open Font License 1.1)',
     aboutCreditCode: 'Preact, Capacitor, Workbox and QR Code Generator (MIT License)',
@@ -36,6 +39,8 @@ export const ABOUT_TEXT = {
     aboutPrivacy4: 'マイクは、声を録音する画面でだけ使います。許可を取る時と、「録音する」「録り直す」を押してから、合図と録音のあいだ（約\u00A06\u00A0秒）だけ開き、すぐ閉じます。録音した声はこの端末に残り、いつでも消せます。',   // 約 6 秒 = micOpenEstimateMs（voices/countdown.ts・D59）。許可を取る時も開いてすぐ閉じる（requestMicrophone）,
     aboutPrivacy5: '「配る」で作ったファイルには、あなたの名前と、入れた声・ルーティン・ひとこと、作った日時、見分け用の番号が入ります。見分け用の番号は、受け取った側で同じ人のファイルだと分かるように、この端末でランダムに作った物で、端末の情報は含みません。誰に渡すかは、あなた自身が決めます。LINE やメールでの受け渡しは、それぞれのサービスの決まりに従います。受け取ったファイルには、送った人の名前と声が入っています。',
     aboutPrivacy6: 'データは、この画面の「データを全て消す」か、ブラウザの設定（サイトのデータの削除）で消せます。iPhone では、Safari とホーム画面に追加したアプリで保存場所が別々です。消すのは、いま開いている方だけです。',
+    aboutAppPrivacyNoNetwork: 'このアプリは、使っているあいだにインターネットへ情報を送りません。利用状況の解析や広告はありません。',
+    aboutAppPrivacyDelete: 'データは、この画面の「データを全て消す」か、アプリを削除すると消えます。',
     aboutCreditsHeading: '使っているもの',
     aboutCreditFonts: '書体：Inter・Noto Sans JP（SIL Open Font License 1.1）',
     aboutCreditCode: 'Preact・Capacitor・Workbox・QR Code Generator（MIT License）',
@@ -46,5 +51,8 @@ export const ABOUT_TEXT = {
 export type AboutKey = keyof typeof ABOUT_TEXT['en'];
 // 画面に出す順（段落の順を en／ja で同じにする。test/app/i18n.test.ts）
 export const ABOUT_PRIVACY_KEYS = ['aboutPrivacy1', 'aboutPrivacy2', 'aboutPrivacy3', 'aboutPrivacy4', 'aboutPrivacy5', 'aboutPrivacy6'] as const satisfies readonly AboutKey[];
+// App Store 版のアプリの中（isNativeApp）の順（D83・ひとみうさ 2026-11-03 案 A）。Web 版向けの 2（Cloudflare の解析）・3（配信サーバーの記録）・
+// 6（ブラウザの設定）はアプリには当てはまらないので、アプリ用の文に置き換える。1・4・5 はアプリでもそのまま正しい。
+export const ABOUT_PRIVACY_KEYS_APP = ['aboutPrivacy1', 'aboutAppPrivacyNoNetwork', 'aboutPrivacy4', 'aboutPrivacy5', 'aboutAppPrivacyDelete'] as const satisfies readonly AboutKey[];
 // 問い合わせ先（D9・仕様 §12）。mailto: と文字の両方に出す（PC で既定のメールが無くても、アドレスは見えている）
 export const CONTACT_EMAIL = 'info@kugainc.com';

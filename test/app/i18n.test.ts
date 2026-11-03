@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ABOUT_PRIVACY_KEYS, ABOUT_TEXT } from '../../src/app/i18n/about.ts';
+import { ABOUT_PRIVACY_KEYS, ABOUT_PRIVACY_KEYS_APP, ABOUT_TEXT } from '../../src/app/i18n/about.ts';
 import { APP_MESSAGES } from '../../src/app/i18n/messages.ts';
 import { findForbiddenWords } from '../../src/app/i18n/forbidden-words.ts';
 import { createAppTranslator, resolveAppLocale, danceName, APP_LOCALES } from '../../src/app/i18n/index.ts';
@@ -81,6 +81,19 @@ test('the S13 text (about.ts) has the same keys in the same order in both langua
   }
   assert.deepEqual(Object.keys(ABOUT_TEXT.en).filter(key => key in APP_MESSAGES.en), [], 'about.ts keys never shadow messages.ts keys');
   assert.deepEqual([...ABOUT_PRIVACY_KEYS], Object.keys(ABOUT_TEXT.en).filter(key => key.startsWith('aboutPrivacy') && key !== 'aboutPrivacyHeading'));
+});
+
+// D83（ひとみうさ 2026-11-03 案 A）: App Store 版のアプリの中は、Web 版向けの 2（Cloudflare）・3（配信サーバー）・6（ブラウザ）の代わりにアプリ用の文
+test('the app shows its own privacy text instead of the web-only lines (D83)', () => {
+  assert.deepEqual([...ABOUT_PRIVACY_KEYS_APP], ['aboutPrivacy1', 'aboutAppPrivacyNoNetwork', 'aboutPrivacy4', 'aboutPrivacy5', 'aboutAppPrivacyDelete']);
+  for (const locale of ['en', 'ja-JP'] as const) {
+    const shown = ABOUT_PRIVACY_KEYS_APP.map(key => ABOUT_TEXT[locale][key]).join(' ');
+    assert.doesNotMatch(shown, /Cloudflare|ブラウザ|browser/i, `${locale}: no web-only statement in the app`);
+  }
+  assert.match(ABOUT_TEXT['ja-JP'].aboutAppPrivacyNoNetwork, /インターネットへ情報を送りません/);
+  // アプリ用の文の鍵はアプリの一覧にだけ・Web の一覧にはだけ入らない
+  assert.deepEqual(Object.keys(ABOUT_TEXT.en).filter(key => key.startsWith('aboutAppPrivacy')), ['aboutAppPrivacyNoNetwork', 'aboutAppPrivacyDelete']);
+  assert.ok(ABOUT_PRIVACY_KEYS.every(key => !key.startsWith('aboutAppPrivacy')));
 });
 
 test('S13 states what the app does, never a legal promise, and names the operator and the contact (§12・D47・D48)', () => {

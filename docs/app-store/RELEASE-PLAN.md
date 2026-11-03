@@ -54,7 +54,7 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ 作り方（Capacitor）・課金（最初は無料）・音楽（最初の版から Web と iOS に）・法人で登録・iPad 対応・出す国・iPhone は縦だけ・Bundle ID `jp.dancemap.count.app`
 - ★ ストアの名前・サブタイトル・説明文・キーワード・カテゴリ（下書き: [`STORE-LISTING.md`](./STORE-LISTING.md)）
 - ★ プライバシーポリシーとサポートの URL（案: `count.dancemap.jp/privacy`・`/support` を作る）。文の下書き: [`PRIVACY-POLICY-DRAFT.md`](./PRIVACY-POLICY-DRAFT.md)（運営者の英語の名前は **KUGA K.K.** に決定＝D82）
-- ★ 「このアプリについて」のプライバシーの文が Web 版向け（Cloudflare の解析・配信サーバーの記録）で、iOS アプリでは当てはまらない（[`STORE-LISTING.md`](./STORE-LISTING.md) §5）
+- ✅ 「このアプリについて」のプライバシーの文は、アプリの中ではアプリ用（通信しない・解析や広告なし・アプリを削除すると消える）。Web 版は今のまま（D83・案 A）
 - ★ ガイドライン 4.2 への備え: 今のままで出すか、iOS らしい機能（画面を点けたまま・触覚など）を足すか
 - ★ 版の番号（`package.json` 0.3.0 と Xcode の 1.0 (1)）の合わせ方
 

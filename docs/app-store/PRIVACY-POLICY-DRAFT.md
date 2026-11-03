@@ -9,7 +9,7 @@ App Store には「プライバシーポリシーの URL」と「サポートの
 
 1. **置き場所**: 案 `https://count.dancemap.jp/privacy` と `/support`。今の Web 版はハッシュの画面（`#/about`）だけで、単独のページが無い。`check-dist` は `index.html` 以外の HTML を止めるので、作る時は番人の例外か、別の置き方を決める。
 2. ~~運営者の英語の名前~~ → **KUGA K.K. に決定**（ひとみうさ 2026-11-03・`docs/app-v1/rulings.md` D82）。アプリの表示も合わせる。
-3. **アプリの「このアプリについて」のプライバシーの文**: 今は Web 版向け（下の §3）。iOS アプリでは当てはまらない文がある。
+3. ~~アプリの「このアプリについて」のプライバシーの文~~ → **案 A（アプリと Web で分ける）に決定・実装済み**（D83）。
 
 ## 1. 事実の棚卸し（2026-11-03）
 
@@ -57,7 +57,7 @@ Operated by KUGA K.K.  Contact: info@kugainc.com
 
 画面の名前（「設定 → プライバシー・アプリについて → データを全て消す」／“Settings → Privacy & about this app → Delete all data”）は `src/app/i18n/messages.ts` の `settingsAbout`・`deleteAllData` と同じ。
 
-## 3. アプリの「このアプリについて」の文の案（★ひとみうさが決める・まだ変えていない）
+## 3. アプリの「このアプリについて」の文 → **案 A に決定・実装済み**（ひとみうさ 2026-11-03・`docs/app-v1/rulings.md` D83）
 
 今の `about.ts` の `aboutPrivacy2`（Cloudflare）・`aboutPrivacy3`（配信サーバー）・`aboutPrivacy6`（ブラウザの設定）は Web 版向け。iOS アプリでは当てはまらない。
 
