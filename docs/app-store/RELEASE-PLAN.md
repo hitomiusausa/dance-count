@@ -27,6 +27,7 @@ App Store に iOS アプリ（iPhone・iPad）として出すための計画と�
 ```
 npm run music:pack          # output/music-probe/ の台帳から output/music-pack/ を作る（Mac・ffmpeg に rubberband が要る）
 npm run ios:build           # DC_MUSIC_PACK=output/music-pack が既定。一式が無ければ失敗する（DC_REQUIRE_MUSIC=1）
+npm run ios:build:test      # 実機の試し用（音楽なし＝音楽の画面は出ない）。声・録音・消音スイッチ・画面の確かめに。App Store には出さない
 npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許可の後だけ）
 ```
 

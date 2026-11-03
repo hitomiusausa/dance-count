@@ -14,6 +14,7 @@
     "deploy:preview": "DC_PREVIEW=1 RELEASE=1 PUBLIC_APP_URL=https://dance-count-preview.hitomiusausa.workers.dev npm run build && npx -y wrangler@latest deploy -c wrangler.preview.jsonc",
     "ios:build": "DC_TARGET=ios RELEASE=1 DC_REQUIRE_MUSIC=1 DC_MUSIC_PACK=${DC_MUSIC_PACK:-output/music-pack} PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
     "music:pack": "node tools/music-pack.ts",
+    "ios:build:test": "DC_TARGET=ios RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
     "ios:open": "cap open ios",
     "ios:sim": "tools/ios-sim-check.sh",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
