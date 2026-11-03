@@ -86,7 +86,7 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - 🍎 消音スイッチがオンでも鳴るか（Web 側の `navigator.audioSession.type = 'playback'` だけで足りるか。シミュレーターには消音スイッチが無いので実機で）
 - 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
 - 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
-- 🍎 画面が暗くならないか: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。実機で確かめ、動かなければ iOS 側で再生中だけ `isIdleTimerDisabled` を立てる小さなプラグインを足す（ここでは Xcode でビルドを確かめられないので未着手）
+- 🍎 画面が暗くならないか: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。実機で確かめ、動かなければ iOS 側で再生中だけ画面を点けたままにする。候補は `@capacitor-community/keep-awake` 8.0.1（Capacitor 8 対応・2026-04-16 公開・中身は `isIdleTimerDisabled`）を `platform/wake-lock.ts` の中だけで使う形（自前の Swift を足さずに済む）。実機の結果が出るまで入れない
 - ✅ 外のリンクと `mailto:`: Capacitor 8.5.3 の `WebViewDelegationHandler.swift` は、アプリの外への移動を止めて `UIApplication.shared.open` に渡す（メールはメールのアプリ・Web は Safari）。🍎 実機で一度押して確かめる
 - 🍎 配る・受け取る（共有シート・ファイルから開く）。`.dancecount.txt` をアプリで開けるようにするか ★
 - 🍎 イヤホン・Bluetooth・電話や Siri の割り込みの後の再開
