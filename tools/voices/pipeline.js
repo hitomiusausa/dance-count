@@ -12,7 +12,7 @@ export const HEAD_FADE_MS = 5;              // recording-normalizer と同じ
 export const TAIL_FADE_MS = 15;             // recording-normalizer と同じ
 export const TAIL_KEEP_MS = 60;             // 発声の終わり（threshold 以下に落ちた所）から残す尻尾
 export const MAX_WORD_MS = 900;             // これより長い語は警告（英パック最長 745ms）
-export const MIN_WORD_MS = 230;             // これより短い語は警告。2026-10-15 実測で 250→230（Aoede の「アッ」240ms をひとみうさが iPhone で「自然」と判定。D78）
+export const MIN_WORD_MS = 200;             // これより短い語は警告。250→230（D78）→ 200（D84: VOICEPEAK 男性の「ご」220ms・「ア」210ms をひとみうさが聴感ゲートで「採用」2026-11-03）
 export const LOUDNESS_REF = 'default-en-female-v1';   // 英パックの peakRms の中央値に合わせる
 export const PEAK_CEILING_DBFS = -1;        // 合わせた後にこれを超える語は下げる（クリップ防止）
 export const PIPELINE_VERSION = 'ja-v1';
@@ -154,6 +154,61 @@ export function processWords(rawWords, { refPeakRms, resample = resampleWithFfmp
   return { gain, gainDb: Number(dbfs(gain).toFixed(2)), words, problems };
 }
 
+// rubberband（ffmpeg のフィルタ）で高さ・長さを変える。注入で差し替え可（テスト）
+export function rubberbandWithFfmpeg(samples, filter, rate = TARGET_SAMPLE_RATE) {
+  if (!hasFfmpeg()) throw new Error('ffmpeg が見つかりません（brew install ffmpeg。rubberband 入りのもの）');
+  const input = Buffer.from(samples.buffer, samples.byteOffset, samples.byteLength);
+  const result = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-f', 'f32le', '-ar', String(rate), '-ac', '1', '-i', 'pipe:0',
+    '-af', `rubberband=${filter}`, '-f', 'f32le', '-ar', String(rate), '-ac', '1', 'pipe:1'], { input, maxBuffer: 256 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`ffmpeg の rubberband に失敗: ${result.stderr?.toString()}`);
+  const out = result.stdout;
+  return new Float32Array(out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength));
+}
+
+export const TAIL_STRETCH_LEAD_MS = 50;     // 語尾を伸ばす所: 発声の終わりの 50ms 前から後ろ
+const TAIL_STRETCH_CROSSFADE_MS = 10;
+
+/**
+ * 聴感ゲートで決めた、語ごとの手直し（2026-11-03 VOICEPEAK。ひとみうさが聞き比べて選んだ値）。処理済みの語にかけ、書き出してから測り直す。
+ * pitchSemitones: 高さ（半音。声の質＝フォルマントは保つ）。tailStretch: 語尾（発声の終わりの 50ms 前から後ろ）を高さを変えずに何倍に伸ばすか。
+ * どちらも note（理由）が要る（onsetOverrideMs と同じ）。
+ */
+export function adjustWord(word, adjustment, { key = '?', rubberband = rubberbandWithFfmpeg } = {}) {
+  const { pitchSemitones, tailStretch } = adjustment ?? {};
+  if (pitchSemitones === undefined && tailStretch === undefined) return word;
+  if (!adjustment.note?.trim()) throw new Error(`${key}: pitchSemitones・tailStretch には note（理由）が要ります`);
+  const rate = word.sampleRate ?? TARGET_SAMPLE_RATE;
+  let samples = word.samples;
+  if (pitchSemitones !== undefined) {
+    if (!Number.isFinite(pitchSemitones) || Math.abs(pitchSemitones) > 6) throw new Error(`${key}: pitchSemitones は −6〜6`);
+    samples = rubberband(samples, `pitch=${(2 ** (pitchSemitones / 12)).toFixed(6)}:formant=preserved:pitchq=quality`, rate);
+  }
+  if (tailStretch !== undefined) {
+    if (!Number.isFinite(tailStretch) || tailStretch < 1 || tailStretch > 4) throw new Error(`${key}: tailStretch は 1〜4`);
+    const { activeEndMs } = measureWord(samples, rate);
+    const split = Math.max(0, msToSamples(activeEndMs - TAIL_STRETCH_LEAD_MS, rate));
+    const crossfade = msToSamples(TAIL_STRETCH_CROSSFADE_MS, rate);
+    const tail = rubberband(samples.slice(split), `tempo=${(1 / tailStretch).toFixed(4)}:pitchq=quality`, rate);
+    const out = new Float32Array(split + tail.length);
+    out.set(samples.subarray(0, Math.min(samples.length, split + crossfade)), 0);
+    for (let index = 0; index < tail.length; index += 1) {
+      const weight = index < crossfade ? index / crossfade : 1;
+      out[split + index] = (index < crossfade ? out[split + index] * (1 - weight) : 0) + tail[index] * weight;
+    }
+    const tailFade = Math.min(out.length, msToSamples(TAIL_FADE_MS, rate));
+    for (let index = 0; index < tailFade; index += 1) out[out.length - 1 - index] *= index / tailFade;
+    samples = out;
+  }
+  const wav = encodePcm16Wav(samples, rate);
+  const written = parsePcm16Wav(wav).samples;
+  const measured = measureWord(written, rate);
+  const adjusted = { ...word, samples: written, wav, ...measured };
+  delete adjusted.problem;
+  if (measured.durationMs < MIN_WORD_MS) adjusted.problem = 'too-short';
+  else if (measured.durationMs > MAX_WORD_MS) adjusted.problem = 'too-long';
+  return adjusted;
+}
+
 // (6) manifest。英パックの欄＋段6の欄（Ruling 68-1）。gainDb は常に 0（音量は波形に焼く）。
 export function buildManifest({ id, name, provider, locale, voiceName, speakingRate, credit, generatedAt, measuredAt = new Date().toISOString(), words, overrides = {} }) {
   const manifestWords = {};
@@ -174,8 +229,13 @@ export function buildManifest({ id, name, provider, locale, voiceName, speakingR
       entry.onsetMs = override.onsetOverrideMs;
       entry.onsetOverrideMs = override.onsetOverrideMs;
       entry.onsetMethod = 'manual';
-      entry.note = override.note;
     }
+    for (const field of ['pitchSemitones', 'tailStretch']) {
+      if (override?.[field] === undefined) continue;
+      if (!override.note?.trim()) throw new Error(`${key}: ${field} には note（理由）が要ります`);
+      entry[field] = override[field];
+    }
+    if (override?.note?.trim() && Object.keys(entry).some(field => ['onsetOverrideMs', 'pitchSemitones', 'tailStretch'].includes(field))) entry.note = override.note;
     manifestWords[key] = entry;
   }
   const manifest = {

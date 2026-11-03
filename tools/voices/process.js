@@ -2,7 +2,8 @@
 // 生の音（generate.js の出力、または人の録音）を処理経路に通して、1 つの音声パック（manifest＋12 本の WAV）にする。
 //   npm run voices:process -- output/voices/raw/<候補>            → output/voices/<候補>/
 //   npm run voices:process -- --provider recorded <録音パック.json|フォルダ> [--name 候補名]
-//   [--overrides <json>]  語ごとの onsetOverrideMs と note（Ruling 66-3。アルゴリズムは変えない）
+//   [--overrides <json>]  語ごとの onsetOverrideMs と note（Ruling 66-3。アルゴリズムは変えない）。
+//                         pitchSemitones（高さ）・tailStretch（語尾を伸ばす倍率）も書ける（聴感ゲートで決めた値。note 必須。例: tools/voices/overrides/）
 // ネットワークには出ない。public/ には書かない（採用は voices:adopt だけ）。
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -10,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { REQUIRED_VOICE_KEYS } from '../../src/engine/recorded-voice-pack.js';
 import { parsePcm16Wav } from './wav.js';
-import { buildManifest, dbfs, processWords, referencePeakRms } from './pipeline.js';
+import { adjustWord, buildManifest, dbfs, processWords, referencePeakRms } from './pipeline.js';
 import { createRecordedProvider } from './providers/recorded.js';
 
 const root = path.resolve(import.meta.dirname, '../..');
@@ -48,6 +49,16 @@ export async function runProcess(argv, { log = console.log, now = new Date() } =
   const overrides = values.overrides ? JSON.parse(await fs.readFile(values.overrides, 'utf8')) : {};
 
   const result = processWords(words, { refPeakRms: await referencePeakRms() });
+  // 聴感ゲートで決めた高さ・語尾の手直し（overrides の pitchSemitones・tailStretch。note 必須）。音量合わせの後にかけて測り直す
+  for (const key of REQUIRED_VOICE_KEYS) {
+    if (!result.words[key]?.wav) continue;
+    const before = result.words[key].problem;
+    result.words[key] = adjustWord(result.words[key], overrides[key], { key });
+    if (before !== result.words[key].problem) {
+      result.problems = result.problems.filter(item => item.key !== key);
+      if (result.words[key].problem) result.problems.push({ key, problem: result.words[key].problem });
+    }
+  }
   log(`音量: パック全体で ${result.gainDb >= 0 ? '+' : ''}${result.gainDb} dB（基準: 英パックの peakRms の中央値）`);
   log('語        onset  長さ   ピーク(dBFS)  頭打ち  注意');
   for (const key of REQUIRED_VOICE_KEYS) {

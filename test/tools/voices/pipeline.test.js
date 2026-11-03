@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TARGET_ONSET_MS, TAIL_KEEP_MS, PEAK_CEILING_DBFS, MIN_WORD_MS, MAX_WORD_MS,
-  processWords, buildManifest, referencePeakRms, hasFfmpeg, dbfs
+  processWords, buildManifest, referencePeakRms, hasFfmpeg, dbfs, adjustWord
 } from '../../../tools/voices/pipeline.js';
 import { RATE, syntheticWord, voiced, concat, silence } from './helpers.js';
 
@@ -61,7 +61,7 @@ test('a silent input is marked, not thrown', () => {
 
 test('too short and too long words are flagged as warnings', () => {
   const result = processWords({
-    one: { samples: syntheticWord({ voiceMs: 100 }), sampleRate: RATE },
+    one: { samples: syntheticWord({ voiceMs: 60 }), sampleRate: RATE },
     two: { samples: syntheticWord({ voiceMs: 1200 }), sampleRate: RATE }
   }, { refPeakRms: REF });
   assert.ok(result.words.one.durationMs < MIN_WORD_MS);
@@ -124,4 +124,52 @@ test('an onset override is written as a manual onset with its note', () => {
 test('the loudness reference is the median peakRms of the English pack', async () => {
   const value = await referencePeakRms();
   assert.ok(value > 0.19 && value < 0.22, `ref ${value}`);
+});
+
+// 聴感ゲートで決めた高さ・語尾の手直し（2026-11-03 VOICEPEAK）
+test('adjustWord needs a note, stretches only the tail, and re-measures the written word', () => {
+  const word = processOne(syntheticWord());
+  assert.equal(adjustWord(word, undefined), word);
+  assert.equal(adjustWord(word, { onsetOverrideMs: 60, note: 'x' }), word);
+  assert.throws(() => adjustWord(word, { tailStretch: 2 }, { key: 'two' }), /two: .*note/);
+  assert.throws(() => adjustWord(word, { tailStretch: 9, note: 'x' }), /tailStretch/);
+  assert.throws(() => adjustWord(word, { pitchSemitones: 12, note: 'x' }), /pitchSemitones/);
+  const calls = [];
+  // 偽の rubberband: tempo=0.5 なら 2 倍の長さ、pitch はそのまま返す
+  const rubberband = (samples, filter) => {
+    calls.push(filter);
+    const tempo = /tempo=([0-9.]+)/.exec(filter)?.[1];
+    if (!tempo) return Float32Array.from(samples);
+    const out = new Float32Array(Math.round(samples.length / Number(tempo)));
+    for (let index = 0; index < out.length; index += 1) out[index] = samples[Math.floor(index * Number(tempo))];
+    return out;
+  };
+  const stretched = adjustWord(word, { tailStretch: 2, pitchSemitones: 3.5, note: '語尾が切れる・低い' }, { rubberband });
+  assert.deepEqual(calls.map(call => call.split('=')[0]), ['pitch', 'tempo']);
+  assert.match(calls[0], /^pitch=1\.22\d+:formant=preserved/);   // 2^(3.5/12)
+  const tailMs = word.durationMs - (word.activeEndMs - 50);
+  assert.ok(Math.abs(stretched.durationMs - (word.durationMs + tailMs)) <= 3, `duration ${word.durationMs} → ${stretched.durationMs}`);
+  assert.equal(stretched.onsetMs, word.onsetMs);
+  assert.ok(stretched.wav instanceof Uint8Array || Buffer.isBuffer(stretched.wav));
+});
+
+test('pitch and tail adjustments are written to the manifest with their note', () => {
+  const result = processWords({ one: { samples: syntheticWord(), sampleRate: RATE } }, { refPeakRms: REF });
+  const manifest = buildManifest({ id: 'c', name: 'n', provider: 'voicepeak', locale: 'ja-JP', voiceName: 'v', speakingRate: null,
+    words: result.words, overrides: { one: { pitchSemitones: 3.5, tailStretch: 2.5, onsetOverrideMs: 185, note: '低い・遅れて聞こえる' } } });
+  const word = manifest.words.one;
+  assert.equal(word.pitchSemitones, 3.5);
+  assert.equal(word.tailStretch, 2.5);
+  assert.equal(word.onsetMs, 185);
+  assert.equal(word.note, '低い・遅れて聞こえる');
+  assert.throws(() => buildManifest({ id: 'c', name: 'n', provider: 'voicepeak', locale: 'ja-JP', voiceName: 'v', speakingRate: null,
+    words: result.words, overrides: { one: { pitchSemitones: 1 } } }), /pitchSemitones.*note/);
+  const plain = buildManifest({ id: 'c', name: 'n', provider: 'voicepeak', locale: 'ja-JP', voiceName: 'v', speakingRate: null, words: result.words });
+  assert.equal(plain.words.one.note, undefined);
+});
+
+test('the real rubberband keeps the word length when only the pitch changes', { skip: !hasFfmpeg() && 'ffmpeg が無い' }, () => {
+  const word = processOne(syntheticWord());
+  const higher = adjustWord(word, { pitchSemitones: 2, note: 'test' });
+  assert.ok(Math.abs(higher.durationMs - word.durationMs) <= 5, `${word.durationMs} → ${higher.durationMs}`);
 });
