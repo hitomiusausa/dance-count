@@ -1,5 +1,4 @@
 import UIKit
-import AVFoundation
 import Capacitor
 
 @UIApplicationMain
@@ -8,14 +7,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // 消音スイッチ（マナーモード）がオンでもカウントとメトロノームを鳴らす（仕様 §9-1。Web 版の navigator.audioSession.type = 'playback' と同じ意図）。
-        // 既定の soloAmbient のままだと消音スイッチで無音になる。録音の時の切り替えは Web 側（audio-context.ts の withRecordingSession）に任せる。
-        // 実機での確認が必要（消音スイッチ・録音・電話の割り込みの後の再開）: docs/app-store/RELEASE-PLAN.md
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        } catch {
-            print("Dance Count: could not set the audio session category: \(error)")
-        }
+        // 音声セッション（消音スイッチでも鳴らす・録音の間だけ録音もできる形にする）は、Web 側だけが決める
+        // （src/app/platform/audio-context.ts の configureAudioSession・withRecordingSession＝navigator.audioSession）。
+        // 2026-11-03: ここで AVAudioSession を .playback に固定していた版は、シミュレーターのアプリの録音が「ボー」という音だけになった
+        // （同じシミュレーターの Safari では録れた）。ネイティブの側で種類を決めない＝Safari と同じ形にする。
+        // 消音スイッチの効き目は実機で確かめる: docs/app-store/RELEASE-PLAN.md
         return true
     }
 

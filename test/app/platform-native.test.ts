@@ -119,3 +119,14 @@ test('bundled media that Capacitor returns with status 0 is read as a success on
   assert.equal(await bundledFetchWith(() => Promise.resolve(ok200), () => true)('m.json'), ok200);
   assert.equal((await bundledFetchWith(() => Promise.resolve(new Response('', { status: 404 })), () => true)('m.json')).status, 404);
 });
+
+// 音声セッションの種類は Web 側（platform/audio-context.ts）だけが決める。2026-11-03: AppDelegate で .playback に固定した版は、
+// シミュレーターのアプリの録音が「ボー」だけになった（同じシミュレーターの Safari では録れた）。
+test('the native shell does not set the audio session category (the web side owns it)', async () => {
+  const delegate = await fs.readFile(path.join(root, 'ios/App/App/AppDelegate.swift'), 'utf8');
+  const code = delegate.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+  assert.doesNotMatch(code, /AVAudioSession|setCategory/);
+  const web = await fs.readFile(path.join(root, 'src/app/platform/audio-context.ts'), 'utf8');
+  assert.match(web, /session\.type = 'playback'/);
+  assert.match(web, /'play-and-record'/);
+});

@@ -72,7 +72,10 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ アプリの中から外への通信 0 件（全画面と再生で実測）
 - ✅ 音楽の一式の仕組み（`npm run music:pack`・`DC_MUSIC_PACK`・一式が無いリリースは失敗）
 - ✅ 音楽が拍より約 21〜23ms 早く鳴っていたのを修正（§1-3）
-- 🍎 消音スイッチがオンでも鳴るか（`AppDelegate` の `.playback`）
+- ✅ 同梱の声・音楽が鳴る（2026-11-03 Mac のシミュレーター）。Capacitor は同梱の音（wav・flac）を status 0 で返すため「まだ端末に入っていません」になっていた → `platform/native.ts` の `fetchBundled`
+- ✅ 「くわしく」が開かないように見えた（iPhone 12 mini で中身が再生ボタンの裏・画面の外）→ 押したら上へ送る・矢印を上向き
+- ⚠️ 録音が「ボー」だけ（シミュレーターのアプリ）。同じシミュレーターの Safari では録れた → **訂正**: `AppDelegate` で音声セッションを `.playback` に固定したのが原因と見て外した（Web 側の `configureAudioSession`・`withRecordingSession` だけが決める＝Safari と同じ形）。🍎 直した版で録音を確かめる
+- 🍎 消音スイッチがオンでも鳴るか（Web 側の `navigator.audioSession.type = 'playback'` だけで足りるか。シミュレーターには消音スイッチが無いので実機で）
 - 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
 - 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
 - 🍎 画面が暗くならないか: アプリに組み込んだ WKWebView で `navigator.wakeLock` が動くかは公式の資料で確かめられなかった（Safari は 16.4〜、ホーム画面の PWA の不具合は 18.4 で修正。WKWebView についての記述は見つからない）。実機で確かめ、動かなければ iOS 側で再生中だけ `isIdleTimerDisabled` を立てる小さなプラグインを足す（ここでは Xcode でビルドを確かめられないので未着手）
