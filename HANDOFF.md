@@ -7,7 +7,7 @@
 - **iOS の設定**: 署名のチーム `DEVELOPMENT_TEAM = JQU8USCS8L`（KUGA K.K.）を `project.pbxproj` に。`npm run ios:build:test`（音楽なしの試し用。公開の `ios:build` は曲の一式が無いと止まる＝わざと）。
 - **案内の言葉**: 音が出ない時は「マナーモード（本体横のスイッチ、またはコントロールセンターのベル）」にそろえた（英語は silent mode）。マナーモードでも鳴るのは仕様（§9-1・10/11 にひとみうさ確認）。
 - **D85 消音と %**: S2・S5 の「くわしく」の声・メトロノームのバーの横に「消音」、どのバーにも %（音楽の画面の音楽・カウント・メトロノームも）。消音は束の中なので U4 は増えない。曲が入ったビルドでは「音楽をつける」が加わり S2・S5 のくわしく開が 10 になるので、上限を 10 に（ひとみうさ）。音楽の画面のカウントは既定で 83%（最大 1.2 のうち 1）と出る＝ひとみうさの判断待ち。
-- **検証（このセッションの最後）**: `npm test` 857 件通過（Node 24）・typecheck・lint・build・ブラウザ（375・320、日英）で S2 の「音」の束と音楽の画面（テスト用の曲）を目で確認。`ui:check` の結果はこの項の後のコミットに書く。
+- **検証（このセッションの最後）**: `npm test` 857 件通過（Node 24）・typecheck・lint・build・ブラウザ（375・320、日英）で S2 の「音」の束と音楽の画面（テスト用の曲）を目で確認。`ui:check`（公開と同じビルド・曲なし）**1170 PASS・違反 0・終了コード 0**（`f1f7698`）。
 - **訂正（ui:check の数え方）**: 11/03 の声の採用・11/04 の言葉の直しで「ui:check 1156 PASS／0 FAIL」と伝えたが、違反の行は「件の違反」と出るのに「FAIL」で数えていた。実際は **S7 声が多い（受け取った 20 本）× 7 が落ちていた**（日本語の男性で標準が 3 行になり、`VoicesScreen.tsx` の行の上限が標準を 2 と決め打ちしていた＝25 > 24）。上限を `STANDARD_VOICES.length` から数えるよう直した。以後は `grep -c '件の違反'` で数える。
 - **残り**: 曲を `npm run music:pack`（Mac・本物の曲）→ `npm run ios:build` / 音と画面のずれを実機で / スクリーンショット（iPhone 6.9・iPad 13）/ プライバシーポリシーとサポートのページの置き場所（★）/ App Store Connect の登録 / TestFlight / クイックステップ最速の「Q & S」で語が切れる（速い時の早口の語＝別の便）/ `[dc-audio]` のログは TestFlight の間残し、原因が分かったら外す。
 - **Mac の作業場所**: `~/Documents/AI_Playground/dance-count-appstore`（この枝）。`package-lock.json` の差分と `ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`（Xcode が作る部品の版のメモ）は未コミットのまま。ローカルの仮の枝 `tmp/voicepeak-raw` は消してよい（`git branch -D tmp/voicepeak-raw`）。
