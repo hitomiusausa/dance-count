@@ -74,7 +74,12 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ 音楽が拍より約 21〜23ms 早く鳴っていたのを修正（§1-3）
 - ✅ 同梱の声・音楽が鳴る（2026-11-03 Mac のシミュレーター）。Capacitor は同梱の音（wav・flac）を status 0 で返すため「まだ端末に入っていません」になっていた → `platform/native.ts` の `fetchBundled`
 - ✅ 「くわしく」が開かないように見えた（iPhone 12 mini で中身が再生ボタンの裏・画面の外）→ 押したら上へ送る・矢印を上向き
-- ⚠️ 録音が「ボー」だけ（シミュレーターのアプリ）。同じシミュレーターの Safari では録れた → **訂正**: `AppDelegate` で音声セッションを `.playback` に固定したのが原因と見て外した（Web 側の `configureAudioSession`・`withRecordingSession` だけが決める＝Safari と同じ形）。🍎 直した版で録音を確かめる
+- ⚠️ **録音が「ボー」だけ（2026-11-03 Mac のシミュレーター・調査中）**
+  - 経過: アプリで「ボー」→ 公開中の `count.dancemap.jp` を同じシミュレーターの Safari で開くと録れた → `AppDelegate` の `.playback` 固定が原因と見て外した（`72750a1`）→ **それでも「ボー」**。さらに**この枝の版を Safari で開いても「ボー」**（`npx vite preview` の `127.0.0.1:4174`）。
+  - **訂正**: 「アプリの殻（`.playback`）が原因」は誤りだった。比べた Safari は公開中の古い版で、条件がそろっていなかった。`.playback` を外したこと自体は残す（音声セッションを決めるのは Web 側の 1 か所＝Safari と同じ形）。
+  - 実測（アプリに保存された録音 5 つ。WAV・48kHz・16bit・モノラル・0.5〜0.64 秒）: 4 つ（10・11・12・14）は、違う語のはずなのに **peak −19.6dB・rms −23.1dB・高さ約 150Hz・ゼロ交差約 195Hz がまったく同じ**＝声ではなく、ずっと同じ低い音。1 つ（13）だけ peak −3.4dB・約 500Hz。合図の音は 880Hz・1320Hz なので合図ではない。
+  - 録音まわりのコード（`recorder.ts`・`normalize.ts`・`recording-normalizer.js`・`RecordVoiceScreen.tsx`・`audio-context.ts`・`recorded-voice-pack.js`）は 10/15 から変わっていない。
+  - 見立て（未確認）: シミュレーターに届くマイクの入り口が、声ではなく一定の音（ハム・仮想のマイク）になっている。🍎 シミュレーターの I/O → Audio Input と Mac の入力を確かめる・公開中の版をもう一度同じ Safari で録る・**iPhone の実機で録る**（いちばん確実）
 - 🍎 消音スイッチがオンでも鳴るか（Web 側の `navigator.audioSession.type = 'playback'` だけで足りるか。シミュレーターには消音スイッチが無いので実機で）
 - 🍎 **音と画面のずれを実機で測る**（カウント・音楽）
 - 🍎 録音（許可の画面・録って再生・`navigator.audioSession` が無い iOS の版）
