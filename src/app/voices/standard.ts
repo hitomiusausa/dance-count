@@ -4,17 +4,25 @@ import standardVoices from './standard-voices.json' with { type: 'json' };
 // 同梱の標準の声（Ruling 60-5・68-3）。正本は standard-voices.json（段6a が作る。tools/check-dist.js も同じ JSON を読み、
 // JSON の ID ごとに dist/audio/<id>/manifest.json がある・JSON に無いパックは出荷しない、を確かめる）。
 // 日本語（default-ja-female-v1）は段6c（D78）で JSON に 1 行足して S7 に出た。ここで別の定数を持たない。
-export interface StandardVoice { id: string; locale: VoiceLocale }
+// voice は声の性別（2026-11-03: 日本語に VOICEPEAK の女性・男性の 2 つ。同じ言葉に 2 つ以上ある時だけ名前に出す＝selection.ts）
+export type StandardVoiceKind = 'female' | 'male';
+export interface StandardVoice { id: string; locale: VoiceLocale; voice: StandardVoiceKind }
 
 export const STANDARD_VOICES: readonly StandardVoice[] = Object.freeze(
-  (standardVoices satisfies ReadonlyArray<{ id: string; locale: string }>).map(voice => Object.freeze({
+  (standardVoices satisfies ReadonlyArray<{ id: string; locale: string; voice: string }>).map(voice => Object.freeze({
     id: voice.id,
-    locale: voice.locale === 'ja-JP' ? 'ja-JP' as const : 'en' as const
+    locale: voice.locale === 'ja-JP' ? 'ja-JP' as const : 'en' as const,
+    voice: voice.voice === 'male' ? 'male' as const : 'female' as const
   }))
 );
 
 export function findStandardVoice(id: string): StandardVoice | undefined {
   return STANDARD_VOICES.find(voice => voice.id === id);
+}
+
+// その言葉の標準の声の数（2 つ以上なら、表示名に女性・男性を付ける）
+export function standardVoiceCount(locale: VoiceLocale, voices: readonly StandardVoice[] = STANDARD_VOICES): number {
+  return voices.filter(voice => voice.locale === locale).length;
 }
 
 // その言葉の標準の声（D78。S8 の聞き比べは録った言葉の標準の声と比べる）。無ければ undefined。

@@ -3,7 +3,7 @@ import { honorific } from '../lib/honorific.ts';
 import type { AppStorage } from '../platform/storage.ts';
 import { STANDARD_VOICE_ID, type AppSettings } from '../settings/settings.ts';
 import type { VoiceLocale } from './ids.ts';
-import { findStandardVoice, standardVoiceFor } from './standard.ts';
+import { STANDARD_VOICES, findStandardVoice, standardVoiceCount, standardVoiceFor, type StandardVoice } from './standard.ts';
 import { isCompletePack, loadVoicePack, type VoicePackRecord } from './store.ts';
 
 // 選んだ声（Ruling 60-3・61）。再生・声チップ・S7 の選択中の行は、保存された selectedVoiceId をここで解いた物だけを使う。
@@ -56,9 +56,15 @@ export function wordOffsetsFor(voice: VoiceSelection): Record<string, number> {
 
 // 表示名。S7 の行は長い形（「標準の声（英語）」）、声チップは短い形（「標準（英語）」）。
 // 受け取った声は「山田さんの声」（distributor が無ければ声の名前）。録音の声は先生が付けた名前（既定「自分の声（英語）」。D23）。
-export function voiceDisplayName(translator: AppTranslator, voice: VoiceSelection, form: 'row' | 'chip'): string {
+export function voiceDisplayName(translator: AppTranslator, voice: VoiceSelection, form: 'row' | 'chip', voices: readonly StandardVoice[] = STANDARD_VOICES): string {
   if (voice.kind === 'standard') {
-    if (voice.locale === 'ja-JP') return translator.t(form === 'row' ? 'standardVoiceJapanese' : 'standardVoiceJapaneseShort');
+    if (voice.locale === 'ja-JP') {
+      // 日本語の標準の声が 2 つ以上（女性・男性）ある時だけ、どちらかを名前に出す（2026-11-03）
+      const kind = standardVoiceCount('ja-JP', voices) > 1 ? voices.find(item => item.id === voice.id)?.voice : undefined;
+      if (kind === 'male') return translator.t(form === 'row' ? 'standardVoiceJapaneseMale' : 'standardVoiceJapaneseMaleShort');
+      if (kind === 'female') return translator.t(form === 'row' ? 'standardVoiceJapaneseFemale' : 'standardVoiceJapaneseFemaleShort');
+      return translator.t(form === 'row' ? 'standardVoiceJapanese' : 'standardVoiceJapaneseShort');
+    }
     return translator.t(form === 'row' ? 'standardVoiceEnglish' : 'standardVoiceShort');
   }
   return packDisplayName(translator, voice.pack);

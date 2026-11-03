@@ -29,6 +29,7 @@
     "voices:build": "node tools/generate-google-voices.js --measure",
     "voices:plan": "node tools/voices/generate.js --dry-run",
     "voices:synth": "node tools/voices/generate.js",
+    "voices:import": "node tools/voices/import-files.js",
     "voices:process": "node tools/voices/process.js",
     "voices:check": "node tools/voices/check-pack.js",
     "voices:gate": "node tools/voices/render-gate.js",

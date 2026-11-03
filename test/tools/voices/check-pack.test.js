@@ -76,7 +76,7 @@ test('WAV problems are each caught', async () => {
 
 test('standard-voices.json is the single source: English first, then the Japanese standard voice (stage 6c・D78)', async () => {
   const voices = await loadStandardVoices();
-  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en' }, { id: 'default-ja-female-v1', locale: 'ja-JP' }]);
+  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en', voice: 'female' }, { id: 'default-ja-female-v1', locale: 'ja-JP', voice: 'female' }]);
 });
 
 test('the shipped Japanese standard pack passes the guard and its gate was approved by the owner (D78)', async () => {
@@ -160,5 +160,21 @@ test('checkDistAudio: only the music clips named by the checked catalog may live
     assert.equal((await checkDistAudio(dist, voices)).length, 2, 'without the catalog both are refused');
   } finally {
     await fs.rm(dist, { recursive: true, force: true });
+  }
+});
+
+// 2026-11-03: 各行に声の性別（female・male）。日本語に女性・男性の 2 つを並べる時の名前に使う（selection.ts）
+test('each standard voice names female or male', async () => {
+  const fs = await import('node:fs/promises');
+  const os = await import('node:os');
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-voices-json-'));
+  try {
+    const file = path.join(dir, 'standard-voices.json');
+    await fs.writeFile(file, JSON.stringify([{ id: 'default-en-female-v1', locale: 'en' }]));
+    await assert.rejects(loadStandardVoices(file), /voice/);
+    await fs.writeFile(file, JSON.stringify([{ id: 'default-en-female-v1', locale: 'en', voice: 'girl' }]));
+    await assert.rejects(loadStandardVoices(file), /voice/);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
   }
 });

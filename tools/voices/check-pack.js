@@ -35,8 +35,8 @@ export async function loadStandardVoices(file = STANDARD_VOICES_PATH) {
   if (!Array.isArray(voices) || !voices.length) throw new Error(`${file}: 配列で 1 行以上`);
   const seen = new Set();
   for (const voice of voices) {
-    if (typeof voice?.id !== 'string' || !/^[a-z0-9-]+$/.test(voice.id) || typeof voice.locale !== 'string' || !voice.locale) {
-      throw new Error(`${file}: 各行は { id, locale }: ${JSON.stringify(voice)}`);
+    if (typeof voice?.id !== 'string' || !/^[a-z0-9-]+$/.test(voice.id) || typeof voice.locale !== 'string' || !voice.locale || !['female', 'male'].includes(voice.voice)) {
+      throw new Error(`${file}: 各行は { id, locale, voice: "female"|"male" }: ${JSON.stringify(voice)}`);
     }
     if (seen.has(voice.id)) throw new Error(`${file}: id が重複: ${voice.id}`);
     seen.add(voice.id);
