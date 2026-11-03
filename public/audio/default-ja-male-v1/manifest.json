@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "id": "default-ja-male-v1",
+  "name": "VOICEPEAK 日本語・男性（voicepeak-ja-male-20261103）",
+  "source": "voicepeak",
+  "locale": "ja-JP",
+  "voiceName": "voicepeak-ja-male",
+  "speakingRate": null,
+  "sampleRate": 48000,
+  "status": "auto-onset-measured",
+  "provider": "voicepeak",
+  "generatedAt": "2026-11-03T11:50:28.140Z",
+  "pipeline": {
+    "version": "ja-v1",
+    "targetOnsetMs": 40,
+    "loudnessRef": "default-en-female-v1"
+  },
+  "gate": {
+    "status": "approved",
+    "approvedBy": "ひとみうさ",
+    "approvedAt": "2026-11-03T15:04:12.979Z",
+    "listenedOn": "claude.ai の聞き比べページ（機器は未記録）",
+    "notes": "VOICEPEAK（ひとみうさ作成・権利確認済み）。聞き比べ 6 回＋最終確認 2 回（2026-11-03）。語ごとの手直しは tools/voices/overrides/",
+    "candidate": "voicepeak-ja-male-20261103"
+  },
+  "words": {
+    "slow": {
+      "file": "slow.wav",
+      "onsetMs": 66,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "manual",
+      "durationMs": 471,
+      "peakRms": 0.4033,
+      "onsetOverrideMs": 66,
+      "headShorten": 0.4,
+      "headRemovedMs": 114,
+      "note": "「ス」の息から声になるまで約 190ms。タンゴのスローが遅い → 140ms 早く置く（ひとみうさ 2026-11-03 聞き比べ 5 回目で 120ms → 最終確認 2 で 140ms） 速い曲で前の語にかぶる → 息の音を 0.4 倍に縮める（置く位置は縮めた分だけ戻す。ひとみうさ 2026-11-03 聞き比べ 6 回目。「し」はパソドブレで今のままが良かったので縮めない）"
+    },
+    "quick": {
+      "file": "quick.wav",
+      "onsetMs": 35,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 275,
+      "peakRms": 0.1114,
+      "pitchSemitones": 1,
+      "note": "他の語より低く沈んで聞こえる → 半音高く（声の質は保つ）（ひとみうさ 2026-11-03 聞き比べ 1 回目）"
+    },
+    "one": {
+      "file": "one.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 380,
+      "peakRms": 0.2446
+    },
+    "two": {
+      "file": "two.wav",
+      "onsetMs": 25,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 240,
+      "peakRms": 0.0985,
+      "pitchSemitones": 3.5,
+      "note": "他の語より低く沈んで聞こえる → 半音 3.5 個ぶん高く（声の質は保つ）（ひとみうさ 2026-11-03 聞き比べ 3 回目。ワルツ）"
+    },
+    "three": {
+      "file": "three.wav",
+      "onsetMs": 68,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "manual",
+      "durationMs": 303,
+      "peakRms": 0.1322,
+      "onsetOverrideMs": 68,
+      "pitchSemitones": 3.5,
+      "headShorten": 0.4,
+      "headRemovedMs": 117,
+      "note": "低く沈んで聞こえる → 半音 3.5 個ぶん高く。「さ」の息から声になるまで約 190ms で遅れて聞こえる → 高くした後に測った頭（35ms）から 150ms 早く置く（ひとみうさ 2026-11-03 聞き比べ 3 回目。ワルツ） 速い曲で前の語にかぶる → 息の音を 0.4 倍に縮める（置く位置は縮めた分だけ戻す。ひとみうさ 2026-11-03 聞き比べ 6 回目。「し」はパソドブレで今のままが良かったので縮めない）"
+    },
+    "four": {
+      "file": "four.wav",
+      "onsetMs": 160,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "manual",
+      "durationMs": 360,
+      "peakRms": 0.218,
+      "onsetOverrideMs": 160,
+      "note": "「し」の息から声になるまで約 210ms。遅れて聞こえ、次の「ご」が早く聞こえていた → 120ms 早く置く（ひとみうさ 2026-11-03 聞き比べ 3 回目。パソドブレ）"
+    },
+    "five": {
+      "file": "five.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 220,
+      "peakRms": 0.1951
+    },
+    "six": {
+      "file": "six.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 405,
+      "peakRms": 0.133
+    },
+    "seven": {
+      "file": "seven.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 315,
+      "peakRms": 0.3533
+    },
+    "eight": {
+      "file": "eight.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 395,
+      "peakRms": 0.2577
+    },
+    "and": {
+      "file": "and.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 335,
+      "peakRms": 0.2661
+    },
+    "ah": {
+      "file": "ah.wav",
+      "onsetMs": 40,
+      "gainDb": 0,
+      "needsOnsetMeasurement": false,
+      "onsetMethod": "rms-auto-v1",
+      "durationMs": 210,
+      "peakRms": 0.1441
+    }
+  },
+  "onsetMeasuredAt": "2026-11-03T15:03:58.979Z",
+  "credit": "VOICEPEAK でひとみうさが作成。権利確認済み（ひとみうさ 2026-11-03）"
+}

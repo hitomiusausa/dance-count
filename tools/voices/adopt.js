@@ -28,6 +28,9 @@ export async function adoptPack(candidateDir, { targetRoot = path.join(root, 'pu
   if (exists && !replace) throw new Error(`${target} は既にあります（置き換える時は --replace。今のパックはバックアップに移します）`);
   const backup = exists ? path.join(backupRoot, `${id}-${now.toISOString().replace(/[:.]/g, '-')}`) : null;
   const manifest = { ...candidate.manifest, id, gate: { status: 'approved', approvedBy, approvedAt: now.toISOString(), listenedOn, notes, candidate: candidate.manifest.id } };
+  // 置き換える時は、語ごとに revision（候補の名前）を付ける: 同じ URL の古い音がブラウザに残っていても、?v=<revision> で新しい音を取りに行く
+  // （voice-pack-loader.js。SW の precache は中身のハッシュで替わり、?v は照合で無視する＝sw.ts の IGNORED_QUERY）
+  if (exists) manifest.words = Object.fromEntries(Object.entries(manifest.words).map(([key, word]) => [key, { ...word, revision: candidate.manifest.id }]));
   const files = Object.values(manifest.words).map(word => word.file);
   log(`採用: ${candidate.manifest.id} → ${path.relative(root, target) || target}（${files.length} 本＋manifest.json・承認 ${approvedBy}・${listenedOn}）`);
   if (!yes) {

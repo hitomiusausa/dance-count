@@ -62,6 +62,8 @@ test('adopt takes a male id and replaces an existing pack only with --replace, k
     await assert.rejects(adoptPack(second, { targetRoot, backupRoot, ...approval, yes: true, log: () => {} }), /--replace/);
     const replaced = await adoptPack(second, { targetRoot, backupRoot, ...approval, replace: true, yes: true, log: () => {} });
     assert.equal((await checkPack(replaced.target)).manifest.gate.candidate, 'cand-2');
+    // 置き換えた語には revision（候補の名前）が付く＝古い音を持つブラウザも ?v= で新しい音を取りに行く
+    assert.ok(Object.values((await checkPack(replaced.target)).manifest.words).every(word => word.revision === 'cand-2'));
     const backups = await fs.readdir(backupRoot);
     assert.equal(backups.length, 1);
     assert.equal((await checkPack(path.join(backupRoot, backups[0]), { expectedId: 'default-ja-female-v1' })).manifest.gate.candidate, 'cand-1', 'the old pack is kept as a backup');

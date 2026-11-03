@@ -74,17 +74,23 @@ test('WAV problems are each caught', async () => {
   await expectProblem(ja, async (_, dir) => fs.writeFile(path.join(dir, 'notes.txt'), 'x'), /notes\.txt/);
 });
 
-test('standard-voices.json is the single source: English first, then the Japanese standard voice (stage 6c・D78)', async () => {
+test('standard-voices.json is the single source: English first, then the Japanese standard voices (stage 6c・D78・2026-11-03 female and male)', async () => {
   const voices = await loadStandardVoices();
-  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en', voice: 'female' }, { id: 'default-ja-female-v1', locale: 'ja-JP', voice: 'female' }]);
+  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en', voice: 'female' }, { id: 'default-ja-female-v1', locale: 'ja-JP', voice: 'female' },
+    { id: 'default-ja-male-v1', locale: 'ja-JP', voice: 'male' }]);
 });
 
-test('the shipped Japanese standard pack passes the guard and its gate was approved by the owner (D78)', async () => {
-  const dir = path.join(root, 'public/audio/default-ja-female-v1');
-  const { problems, manifest } = await checkPack(dir);
-  assert.deepEqual(problems, []);
-  assert.equal(manifest.locale, 'ja-JP');
-  assert.equal(manifest.gate.status, 'approved');
+test('the shipped Japanese standard packs pass the guard and their gate was approved by the owner (D78・2026-11-03 VOICEPEAK)', async () => {
+  for (const id of ['default-ja-female-v1', 'default-ja-male-v1']) {
+    const { problems, manifest } = await checkPack(path.join(root, 'public/audio', id), { expectedId: id });
+    assert.deepEqual(problems, [], id);
+    assert.equal(manifest.locale, 'ja-JP');
+    assert.equal(manifest.gate.status, 'approved');
+    assert.equal(manifest.gate.approvedBy, 'ひとみうさ');
+  }
+  // 置き換えた女性の声は語ごとに revision が付く（古い音を持つブラウザも ?v= で取り直す）
+  const female = await checkPack(path.join(root, 'public/audio/default-ja-female-v1'));
+  assert.ok(Object.values(female.manifest.words).every(word => word.revision === 'voicepeak-ja-female-20261103'));
 });
 
 test('checkDistAudio: listed packs must exist and pass; unknown packs must not ship', async () => {
