@@ -324,7 +324,7 @@ const trackTitle = track => track.dance + '　' + SPEED[track.speed] + '（1 分
 const app = document.getElementById('app');
 DATA.candidates.forEach((candidate, index) => {
   const n = index + 1;
-  app.append(el('h2', {}, '声 ' + n + '：' + candidate.name + '（速さ ' + candidate.speakingRate + '）'));
+  app.append(el('h2', {}, '声 ' + n + '：' + candidate.name + (candidate.speakingRate == null ? '' : '（速さ ' + candidate.speakingRate + '）')));   // VOICEPEAK などは速さの値が無い
   if (candidate.checks) {
     const ok = candidate.checks.practiceNotWorseThanEnglish && candidate.checks.competitionNotWorseThanEnglish;
     app.append(el('p', { class: 'machine' }, '機械の確認：' + (ok ? '✓ 声どうしの重なりは英語と同じ以下です' : '△ 声どうしが重なる所があります（耳で確かめてください）')));
