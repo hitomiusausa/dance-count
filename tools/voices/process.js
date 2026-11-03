@@ -3,7 +3,8 @@
 //   npm run voices:process -- output/voices/raw/<候補>            → output/voices/<候補>/
 //   npm run voices:process -- --provider recorded <録音パック.json|フォルダ> [--name 候補名]
 //   [--overrides <json>]  語ごとの onsetOverrideMs と note（Ruling 66-3。アルゴリズムは変えない）。
-//                         pitchSemitones（高さ）・tailStretch（語尾を伸ばす倍率）も書ける（聴感ゲートで決めた値。note 必須。例: tools/voices/overrides/）
+//                         pitchSemitones（高さ）・headShorten（息の音を縮める倍率）・tailStretch（語尾を伸ばす倍率）も書ける
+//                         （聴感ゲートで決めた値。note 必須。例: tools/voices/overrides/）。headShorten の時、onsetOverrideMs は縮める前の語で選んだ値を書く（縮めた分を引く）
 // ネットワークには出ない。public/ には書かない（採用は voices:adopt だけ）。
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -50,10 +51,17 @@ export async function runProcess(argv, { log = console.log, now = new Date() } =
 
   const result = processWords(words, { refPeakRms: await referencePeakRms() });
   // 聴感ゲートで決めた高さ・語尾の手直し（overrides の pitchSemitones・tailStretch。note 必須）。音量合わせの後にかけて測り直す
+  const effectiveOverrides = { ...overrides };
   for (const key of REQUIRED_VOICE_KEYS) {
     if (!result.words[key]?.wav) continue;
     const before = result.words[key].problem;
     result.words[key] = adjustWord(result.words[key], overrides[key], { key });
+    // 息の音を短くした分だけ置く位置も戻す（overrides の onsetOverrideMs は「短くする前の語」で選んだ値。声になる所の時刻を変えない）
+    const removed = result.words[key].headRemovedMs;
+    if (removed !== undefined) {
+      effectiveOverrides[key] = { ...overrides[key], headRemovedMs: removed };
+      if (overrides[key].onsetOverrideMs !== undefined) effectiveOverrides[key].onsetOverrideMs = overrides[key].onsetOverrideMs - removed;
+    }
     if (before !== result.words[key].problem) {
       result.problems = result.problems.filter(item => item.key !== key);
       if (result.words[key].problem) result.problems.push({ key, problem: result.words[key].problem });
@@ -74,7 +82,7 @@ export async function runProcess(argv, { log = console.log, now = new Date() } =
   await fs.mkdir(outDir, { recursive: true });
   for (const key of REQUIRED_VOICE_KEYS) await fs.writeFile(path.join(outDir, `${key}.wav`), result.words[key].wav);
   const manifest = buildManifest({ id, name: meta.name, provider: meta.provider, locale: meta.locale, voiceName: meta.voiceName,
-    speakingRate: meta.speakingRate, credit: meta.credit, generatedAt: meta.generatedAt, measuredAt: now.toISOString(), words: result.words, overrides });
+    speakingRate: meta.speakingRate, credit: meta.credit, generatedAt: meta.generatedAt, measuredAt: now.toISOString(), words: result.words, overrides: effectiveOverrides });
   await fs.writeFile(path.join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   if (result.problems.length) log(`注意: ${result.problems.map(item => `${item.key}=${item.problem}`).join(', ')}（聴感ゲートで確かめる）`);
   log(`書きました: ${path.relative(root, outDir)}　次: npm run voices:check -- ${path.relative(root, outDir)} --allow-pending → npm run voices:gate -- ${path.relative(root, outDir)}`);

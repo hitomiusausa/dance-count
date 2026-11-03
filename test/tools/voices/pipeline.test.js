@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TARGET_ONSET_MS, TAIL_KEEP_MS, PEAK_CEILING_DBFS, MIN_WORD_MS, MAX_WORD_MS,
-  processWords, buildManifest, referencePeakRms, hasFfmpeg, dbfs, adjustWord
+  processWords, buildManifest, referencePeakRms, hasFfmpeg, dbfs, adjustWord, voicedStartMs
 } from '../../../tools/voices/pipeline.js';
 import { RATE, syntheticWord, voiced, concat, silence } from './helpers.js';
 
@@ -172,4 +172,33 @@ test('the real rubberband keeps the word length when only the pitch changes', { 
   const word = processOne(syntheticWord());
   const higher = adjustWord(word, { pitchSemitones: 2, note: 'test' });
   assert.ok(Math.abs(higher.durationMs - word.durationMs) <= 5, `${word.durationMs} → ${higher.durationMs}`);
+});
+
+// 息の音（無声の子音）を縮める（聞き比べ 6 回目）
+function fricativeWord({ hissMs = 150, voiceMs = 300 } = {}) {
+  const lead = new Float32Array(Math.round(0.04 * RATE));
+  const hiss = Float32Array.from({ length: Math.round(hissMs / 1000 * RATE) }, (_, index) => 0.08 * (((index * 7919) % 97) / 48.5 - 1));
+  const tail = new Float32Array(Math.round(0.06 * RATE));
+  return concat(lead, hiss, voiced(voiceMs), tail);
+}
+
+test('voicedStartMs finds where the voice starts after a breathy consonant', () => {
+  const samples = fricativeWord({ hissMs: 150 });
+  const found = voicedStartMs(samples, RATE, 40);
+  assert.ok(Math.abs(found - 190) <= 10, `voiced ${found}`);
+});
+
+test('headShorten removes the middle of the breath and reports how much', () => {
+  const samples = fricativeWord({ hissMs: 150 });
+  const word = { samples, sampleRate: RATE, onsetMs: 40, durationMs: Math.round(samples.length / RATE * 1000) };
+  const shorter = adjustWord(word, { headShorten: 0.4, note: '速い曲で前の語にかぶる' });
+  assert.ok(Math.abs(shorter.headRemovedMs - 90) <= 10, `removed ${shorter.headRemovedMs}`);
+  assert.ok(Math.abs(word.durationMs - shorter.durationMs - shorter.headRemovedMs) <= 2);
+  const after = voicedStartMs(shorter.samples, RATE, 40);
+  assert.ok(Math.abs(after - (190 - shorter.headRemovedMs)) <= 10, `voiced after ${after}`);
+  assert.throws(() => adjustWord(word, { headShorten: 0.1, note: 'x' }), /headShorten/);
+  const manifest = buildManifest({ id: 'c', name: 'n', provider: 'voicepeak', locale: 'ja-JP', voiceName: 'v', speakingRate: null,
+    words: { three: { ...shorter, wav: shorter.wav } }, overrides: { three: { headShorten: 0.4, headRemovedMs: shorter.headRemovedMs, onsetOverrideMs: 160 - shorter.headRemovedMs, note: 'x' } } });
+  assert.equal(manifest.words.three.headShorten, 0.4);
+  assert.equal(manifest.words.three.onsetMs, 160 - shorter.headRemovedMs);
 });

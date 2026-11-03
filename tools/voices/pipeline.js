@@ -168,20 +168,69 @@ export function rubberbandWithFfmpeg(samples, filter, rate = TARGET_SAMPLE_RATE)
 export const TAIL_STRETCH_LEAD_MS = 50;     // 語尾を伸ばす所: 発声の終わりの 50ms 前から後ろ
 const TAIL_STRETCH_CROSSFADE_MS = 10;
 
+// 声になる所（息の音＝無声の子音のあと、声帯が鳴り始める所）: 頭から後で、ゼロ交差が少なく（< 8%）十分大きい（ピークの 25% 以上）最初の 10ms 窓
+export const VOICED_FRAME_MS = 10;
+export function voicedStartMs(samples, rate, fromMs = 0) {
+  const frame = msToSamples(VOICED_FRAME_MS, rate);
+  const frames = [];
+  let peak = 0;
+  for (let start = 0; start + frame <= samples.length; start += frame) {
+    let energy = 0;
+    let crossings = 0;
+    for (let index = start; index < start + frame; index += 1) {
+      energy += samples[index] ** 2;
+      if (index > start && (samples[index] >= 0) !== (samples[index - 1] >= 0)) crossings += 1;
+    }
+    const rms = Math.sqrt(energy / frame);
+    frames.push({ rms, zcr: crossings / frame });
+    peak = Math.max(peak, rms);
+  }
+  const first = Math.round(fromMs / VOICED_FRAME_MS);
+  const found = frames.findIndex((item, index) => index >= first && item.rms > peak * 0.25 && item.zcr < 0.08);
+  return found < 0 ? null : found * VOICED_FRAME_MS;
+}
+
+export const HEAD_SHORTEN_KEEP_HEAD_MS = 15;   // 息の音の頭は残す（立ち上がりを変えない）
+const HEAD_SHORTEN_CROSSFADE_MS = 8;
+
 /**
  * 聴感ゲートで決めた、語ごとの手直し（2026-11-03 VOICEPEAK。ひとみうさが聞き比べて選んだ値）。処理済みの語にかけ、書き出してから測り直す。
- * pitchSemitones: 高さ（半音。声の質＝フォルマントは保つ）。tailStretch: 語尾（発声の終わりの 50ms 前から後ろ）を高さを変えずに何倍に伸ばすか。
- * どちらも note（理由）が要る（onsetOverrideMs と同じ）。
+ * pitchSemitones: 高さ（半音。声の質＝フォルマントは保つ）。
+ * headShorten: 息の音（頭〜声になる所）を何倍の長さにするか（0.2〜1）。頭の 15ms の後ろから真ん中を抜いて 8ms でつなぐ。
+ *   抜いた長さを headRemovedMs に返す（置く位置の onsetOverrideMs からこれを引くと、声になる所の時刻が変わらない＝process.js）。
+ * tailStretch: 語尾（発声の終わりの 50ms 前から後ろ）を高さを変えずに何倍に伸ばすか。
+ * どれも note（理由）が要る（onsetOverrideMs と同じ）。
  */
 export function adjustWord(word, adjustment, { key = '?', rubberband = rubberbandWithFfmpeg } = {}) {
-  const { pitchSemitones, tailStretch } = adjustment ?? {};
-  if (pitchSemitones === undefined && tailStretch === undefined) return word;
-  if (!adjustment.note?.trim()) throw new Error(`${key}: pitchSemitones・tailStretch には note（理由）が要ります`);
+  const { pitchSemitones, tailStretch, headShorten } = adjustment ?? {};
+  if (pitchSemitones === undefined && tailStretch === undefined && headShorten === undefined) return word;
+  if (!adjustment.note?.trim()) throw new Error(`${key}: pitchSemitones・headShorten・tailStretch には note（理由）が要ります`);
   const rate = word.sampleRate ?? TARGET_SAMPLE_RATE;
   let samples = word.samples;
+  let headRemovedMs = 0;
   if (pitchSemitones !== undefined) {
     if (!Number.isFinite(pitchSemitones) || Math.abs(pitchSemitones) > 6) throw new Error(`${key}: pitchSemitones は −6〜6`);
     samples = rubberband(samples, `pitch=${(2 ** (pitchSemitones / 12)).toFixed(6)}:formant=preserved:pitchq=quality`, rate);
+  }
+  if (headShorten !== undefined) {
+    if (!Number.isFinite(headShorten) || headShorten < 0.2 || headShorten > 1) throw new Error(`${key}: headShorten は 0.2〜1`);
+    const onsetMs = measureOnset(samples, rate).onsetMs;
+    const voicedMs = voicedStartMs(samples, rate, onsetMs);
+    if (voicedMs === null) throw new Error(`${key}: 声になる所が見つかりません（headShorten）`);
+    headRemovedMs = Math.max(0, Math.min(voicedMs - onsetMs - HEAD_SHORTEN_KEEP_HEAD_MS, Math.round((voicedMs - onsetMs) * (1 - headShorten))));
+    if (headRemovedMs > 0) {
+      const from = msToSamples(onsetMs + HEAD_SHORTEN_KEEP_HEAD_MS, rate);
+      const to = from + msToSamples(headRemovedMs, rate);
+      const crossfade = msToSamples(HEAD_SHORTEN_CROSSFADE_MS, rate);
+      const out = new Float32Array(samples.length - (to - from));
+      out.set(samples.subarray(0, from), 0);
+      for (let index = 0; index < crossfade; index += 1) {
+        const weight = index / crossfade;
+        out[from + index] = samples[from + index] * (1 - weight) + samples[to + index] * weight;
+      }
+      out.set(samples.subarray(to + crossfade), from + crossfade);
+      samples = out;
+    }
   }
   if (tailStretch !== undefined) {
     if (!Number.isFinite(tailStretch) || tailStretch < 1 || tailStretch > 4) throw new Error(`${key}: tailStretch は 1〜4`);
@@ -203,6 +252,7 @@ export function adjustWord(word, adjustment, { key = '?', rubberband = rubberban
   const written = parsePcm16Wav(wav).samples;
   const measured = measureWord(written, rate);
   const adjusted = { ...word, samples: written, wav, ...measured };
+  if (headShorten !== undefined) adjusted.headRemovedMs = headRemovedMs;
   delete adjusted.problem;
   if (measured.durationMs < MIN_WORD_MS) adjusted.problem = 'too-short';
   else if (measured.durationMs > MAX_WORD_MS) adjusted.problem = 'too-long';
@@ -230,12 +280,12 @@ export function buildManifest({ id, name, provider, locale, voiceName, speakingR
       entry.onsetOverrideMs = override.onsetOverrideMs;
       entry.onsetMethod = 'manual';
     }
-    for (const field of ['pitchSemitones', 'tailStretch']) {
+    for (const field of ['pitchSemitones', 'headShorten', 'headRemovedMs', 'tailStretch']) {
       if (override?.[field] === undefined) continue;
       if (!override.note?.trim()) throw new Error(`${key}: ${field} には note（理由）が要ります`);
       entry[field] = override[field];
     }
-    if (override?.note?.trim() && Object.keys(entry).some(field => ['onsetOverrideMs', 'pitchSemitones', 'tailStretch'].includes(field))) entry.note = override.note;
+    if (override?.note?.trim() && Object.keys(entry).some(field => ['onsetOverrideMs', 'pitchSemitones', 'headShorten', 'tailStretch'].includes(field))) entry.note = override.note;
     manifestWords[key] = entry;
   }
   const manifest = {
