@@ -53,7 +53,7 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 ### A. 決めること
 - ✅ 作り方（Capacitor）・課金（最初は無料）・音楽（最初の版から Web と iOS に）・法人で登録・iPad 対応・出す国・iPhone は縦だけ・Bundle ID `jp.dancemap.count.app`
 - ★ ストアの名前・サブタイトル・説明文・キーワード・カテゴリ（下書き: [`STORE-LISTING.md`](./STORE-LISTING.md)）
-- ★ プライバシーポリシーとサポートの URL（案: `count.dancemap.jp/privacy`・`/support` を作る）
+- ★ プライバシーポリシーとサポートの URL（案: `count.dancemap.jp/privacy`・`/support` を作る）。文の下書き: [`PRIVACY-POLICY-DRAFT.md`](./PRIVACY-POLICY-DRAFT.md)（運営者の英語の名前「Kuga Inc.」と「KUGA K.K.」の食い違いも ★）
 - ★ 「このアプリについて」のプライバシーの文が Web 版向け（Cloudflare の解析・配信サーバーの記録）で、iOS アプリでは当てはまらない（[`STORE-LISTING.md`](./STORE-LISTING.md) §5）
 - ★ ガイドライン 4.2 への備え: 今のままで出すか、iOS らしい機能（画面を点けたまま・触覚など）を足すか
 - ★ 版の番号（`package.json` 0.3.0 と Xcode の 1.0 (1)）の合わせ方
@@ -67,6 +67,9 @@ npm run deploy:cf           # Web 版も同じ（公開はひとみうさの許�
 - ✅ アプリの中は「ホーム画面から開いている」扱い（追加のカード・SW・設定の「ホーム画面に追加する」を出さない）
 - ✅ 切り欠き・時計の下に部品が入らない（上の安全領域）・いつもライト表示
 - ✅ アイコン（うさぎのワルツ・1024・透明なし。`tools/make-icons.js --only ios`）
+- ✅ Capacitor（MIT）のライセンスを同梱し「使っているもの」に表示（`cd5460b`）
+- ✅ 確認されていないフィガーの名前・カウントは出ない（名前の候補は ISTD と照合済みだけ＝`figure-names.ts`、フィガーの画面は監修済みのカウントだけ＝`resolve.ts`。点検の道具: 名前 317 個中 照合済み 179・昔のルーティンの 7 個のカウントの失敗は出荷されない＝`check-dist`）
+- ✅ アプリに入る npm の部品の既知の弱点 0 件（`npm audit --omit=dev`）
 - ✅ 起動画面（色だけ・起動の殻と同じ紺）
 - ✅ マイクの使い道（英語・日本語）・暗号化の申告・プライバシーの申告（`PrivacyInfo.xcprivacy`。Capacitor 自身の申告も「追跡なし・集めるデータなし・理由の要る API なし」）
 - ✅ アプリの中から外への通信 0 件（全画面と再生で実測）
