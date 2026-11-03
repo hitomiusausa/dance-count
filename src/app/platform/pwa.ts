@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { isNativeApp } from './native.ts';
 import { reloadPage } from './page.ts';
 
 // ホーム画面のアプリ（PWA）の端末の面（段7・Ruling 88-4・90・92）。Service Worker の登録そのものは pwa-register.ts（virtual:pwa-register）で、
@@ -26,8 +27,9 @@ export function platformKind(): PlatformKind {
   return platformKindFrom(typeof navigator === 'undefined' ? '' : navigator.userAgent);
 }
 
-// ホーム画面から開いているか（display-mode: standalone。古い iOS は navigator.standalone）。
+// ホーム画面から開いているか（display-mode: standalone。古い iOS は navigator.standalone）。App Store 版のアプリの中も「開いている」に数える（native.ts）。
 export function isStandalone(): boolean {
+  if (isNativeApp()) return true;
   try {
     if (matchMedia('(display-mode: standalone)').matches) return true;
   } catch { /* matchMedia の無い環境 */ }

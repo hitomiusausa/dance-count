@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // アプリのアイコン（D62: うさぎのワルツ。絵の元は src/app/brand/rabbit.ts だけ）を作る。PNG は commit する（ビルドでは作らない）。
 // 使い方: node tools/make-icons.js（Google Chrome で描いて撮る。新しい依存なし）。絵を変える時は rabbit.ts を直して再実行する。
+// iOS アプリのアイコンだけ作り直す時は node tools/make-icons.js --only ios。Chrome の代わりの実行ファイルは DC_CHROME_PATH で指す。
 // 作る物: public/icons/icon.svg（ブラウザのタブ・角丸）・icon-192.png・icon-512.png（角丸・角は透明）・icon-512-maskable.png（全面・絵は安全域 80% の円の内側）・
 // apple-touch-icon.png（180・全面・透明なし。iOS が角を丸める）。
+// iOS アプリ（docs/app-store/RELEASE-PLAN.md）: ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png（1024・全面・透明なし。
+// apple-touch-icon と同じ形で大きさだけ違う。App Store は透明・角丸の画像を受け付けない）。
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -11,6 +14,7 @@ import { rabbitIconSvg } from '../src/app/brand/rabbit.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 const outDir = path.join(root, 'public/icons');
+const iosDir = path.join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset');
 
 export const ICONS = [
   { file: 'icon-192.png', size: 192, shape: 'rounded', placement: 'any' },
@@ -18,21 +22,26 @@ export const ICONS = [
   { file: 'icon-512-maskable.png', size: 512, shape: 'square', placement: 'maskable' },
   { file: 'apple-touch-icon.png', size: 180, shape: 'square', placement: 'any' }
 ];
+export const IOS_ICON = { file: 'AppIcon-512@2x.png', size: 1024, shape: 'square', placement: 'any' };
 
 // リポジトリのパスに空白があるので file:// を手で組まず pathToFileURL で比べる（%20 になる）
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await fs.mkdir(outDir, { recursive: true });
-  await fs.writeFile(path.join(outDir, 'icon.svg'), `${rabbitIconSvg({ shape: 'rounded' })}\n`);
-  const browser = await chromium.launch({ channel: 'chrome' });
+  const iosOnly = process.argv.includes('--only') && process.argv[process.argv.indexOf('--only') + 1] === 'ios';
+  const targets = [...(iosOnly ? [] : ICONS.map(icon => ({ ...icon, dir: outDir }))), { ...IOS_ICON, dir: iosDir }];
+  if (!iosOnly) {
+    await fs.mkdir(outDir, { recursive: true });
+    await fs.writeFile(path.join(outDir, 'icon.svg'), `${rabbitIconSvg({ shape: 'rounded' })}\n`);
+  }
+  const browser = await chromium.launch(process.env.DC_CHROME_PATH ? { executablePath: process.env.DC_CHROME_PATH } : { channel: 'chrome' });
   try {
-    for (const icon of ICONS) {
+    for (const icon of targets) {
       const page = await browser.newPage({ viewport: { width: icon.size, height: icon.size }, deviceScaleFactor: 1 });
       await page.setContent(`<!doctype html><style>html, body { margin: 0; background: transparent; } svg { display: block; }</style>${rabbitIconSvg(icon)}`);
-      await page.screenshot({ path: path.join(outDir, icon.file), omitBackground: icon.shape === 'rounded' });
+      await page.screenshot({ path: path.join(icon.dir, icon.file), omitBackground: icon.shape === 'rounded' });
       await page.close();
     }
   } finally {
     await browser.close();
   }
-  console.log(`icons written to ${path.relative(root, outDir)}: icon.svg, ${ICONS.map(icon => icon.file).join(', ')}`);
+  console.log(`icons written: ${targets.map(icon => path.relative(root, path.join(icon.dir, icon.file))).join(', ')}`);
 }

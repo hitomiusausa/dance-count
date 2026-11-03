@@ -1,6 +1,7 @@
 import { decodeRecordedVoicePack } from '../../engine/recorded-voice-pack.js';
 import { loadVoicePack } from '../../engine/voice-pack-loader.js';
 import type { VoicePackRecord } from '../voices/store.ts';
+import { fetchBundled } from './native.ts';
 
 // 同梱の標準音声（public/audio/<packId>/）。base:'./' なので文書の位置から解決する。
 // fetch はここから渡す（キャッシュ方針は段7の Service Worker で決める。段1持ち越し）。
@@ -14,7 +15,7 @@ export function loadStandardVoice(audio: BaseAudioContext, packId: string): Prom
   let pack = packs.get(packId);
   if (!pack) {
     const manifestUrl = new URL(`audio/${packId}/manifest.json`, document.baseURI);
-    pack = loadVoicePack(audio, manifestUrl, (input: RequestInfo | URL) => fetch(input));
+    pack = loadVoicePack(audio, manifestUrl, (input: RequestInfo | URL) => fetchBundled(input));   // iOS アプリの同梱の WAV（native.ts）
     pack.catch(() => packs.delete(packId)); // 失敗は覚えない（オンラインに戻れば次の ▶ で読み直す）
     packs.set(packId, pack);
   }

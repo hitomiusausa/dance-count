@@ -1,0 +1,2 @@
+/* マイクの使い道（日本語）。英語は Info.plist の NSMicrophoneUsageDescription（docs/app-store/RELEASE-PLAN.md） */
+"NSMicrophoneUsageDescription" = "マイクは、自分のカウントの声を録音するときだけ使います。録音した声はこの端末に残ります。";

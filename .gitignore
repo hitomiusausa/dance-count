@@ -10,6 +10,9 @@ dist-*/
 output/voices/
 # Local-only music experiments: source derivatives and browser evidence.
 output/music-probe/
+# 公開用の音楽の一式（npm run music:pack の出力。曲の原本から作るので GitHub に入れない）
+output/music-pack/
+output/music-pack-*/
 output/playwright/music-ux-astra-*.png
 .env
 .env.*
@@ -23,3 +26,6 @@ output/playwright/music-ux-astra-*.png
 /music/
 __pycache__/
 *.pyc
+
+# iOS シミュレーターのビルドと画面（tools/ios-sim-check.sh）
+/build/

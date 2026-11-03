@@ -48,3 +48,24 @@ test('adopt needs who approved it and refuses a broken candidate', async () => {
     await assert.rejects(fs.access(path.join(targetRoot, 'default-ja-female-v1')));
   } finally { await fs.rm(base, { recursive: true, force: true }); }
 });
+
+// 2026-11-03（VOICEPEAK の日本語の女性・男性）: 男性は別の ID・女性は今のパックをバックアップに移して置き換える
+test('adopt takes a male id and replaces an existing pack only with --replace, keeping a backup', async () => {
+  const { base, cand, targetRoot } = await setup();
+  const backupRoot = path.join(base, 'replaced');
+  try {
+    await assert.rejects(adoptPack(cand, { targetRoot, backupRoot, ...approval, id: 'ja-male', yes: true, log: () => {} }), /--id/);
+    const male = await adoptPack(cand, { targetRoot, backupRoot, ...approval, id: 'default-ja-male-v1', yes: true, log: () => {} });
+    assert.equal((await checkPack(male.target, { expectedId: 'default-ja-male-v1' })).manifest.id, 'default-ja-male-v1');
+    await adoptPack(cand, { targetRoot, backupRoot, ...approval, yes: true, log: () => {} });
+    const second = await writeSyntheticPack(base, 'cand-2');
+    await assert.rejects(adoptPack(second, { targetRoot, backupRoot, ...approval, yes: true, log: () => {} }), /--replace/);
+    const replaced = await adoptPack(second, { targetRoot, backupRoot, ...approval, replace: true, yes: true, log: () => {} });
+    assert.equal((await checkPack(replaced.target)).manifest.gate.candidate, 'cand-2');
+    // 置き換えた語には revision（候補の名前）が付く＝古い音を持つブラウザも ?v= で新しい音を取りに行く
+    assert.ok(Object.values((await checkPack(replaced.target)).manifest.words).every(word => word.revision === 'cand-2'));
+    const backups = await fs.readdir(backupRoot);
+    assert.equal(backups.length, 1);
+    assert.equal((await checkPack(path.join(backupRoot, backups[0]), { expectedId: 'default-ja-female-v1' })).manifest.gate.candidate, 'cand-1', 'the old pack is kept as a backup');
+  } finally { await fs.rm(base, { recursive: true, force: true }); }
+});

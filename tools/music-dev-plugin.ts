@@ -1,43 +1,18 @@
 // Loopback-only creator samples. Source music, models and reports never enter dist.
-import { createHash } from 'node:crypto';
+// 曲の読み方と切り出し方は tools/music-library.ts（公開の一式 music-pack.ts と同じ正本）。
 import { readFile, stat, mkdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import type { Plugin } from 'vite';
-import { levelFromFilename, type MusicTrack } from '../src/app/music/model.ts';
-import { buildMusicPreviewTrack, type PreviewDefinition } from './music-preview-track.ts';
-const run=promisify(execFile);
-interface LocalEntry {id:string;title:string;label:string;danceId:string;source:string;stamp:number;analysis:any;track:MusicTrack|null}
+import { CLIP_VERSION, assertRubberband, calibrateClipShifts, libraryPaths, readMusicLibrary, renderClip, sourceSampleRate, type ClipCalibration, type LocalEntry } from './music-library.ts';
 export function musicDevPlugin():Plugin{return{name:'local-music-preview',apply:'serve',async configureServer(server){
   if(process.env.VITE_MUSIC_PREVIEW!=='1')return;
   const source=process.env.DC_MUSIC_SOURCE??path.join(homedir(),'Downloads','Paper Umbrella.wav');
-  const output=path.join(server.config.root,'output/music-probe');
-  const reportPath=path.join(output,'bar-analysis.json'),indexPath=path.join(output,'library-index.json');
+  const paths=libraryPaths(server.config.root),{output,reportPath,indexPath}=paths;
   let entries=new Map<string,LocalEntry>(),generation=0;
   async function refresh(){
-    const mine=++generation,next=new Map<string,LocalEntry>();
-    async function add(id:string,title:string,label:string,danceId:string,file:string,reportFile:string,definition?:PreviewDefinition,expectedHash?:string){
-      try{
-        if(!/^[a-z0-9-]+$/.test(id))throw Error('Invalid id');
-        const analysis=JSON.parse(await readFile(reportFile,'utf8'));
-        const hash=createHash('sha256').update(await readFile(file)).digest('hex');
-        if(hash!==analysis.sourceSha256||(expectedHash&&hash!==expectedHash))throw Error('Source differs from analysis');
-        const entry:LocalEntry={id,title,label,danceId,source:file,stamp:(await stat(file)).mtimeMs,analysis,track:null};
-        next.set(id,entry);
-        try{entry.track=buildMusicPreviewTrack(hash,analysis,definition);}catch{server.config.logger.warn(`Sample ${id} needs bar review before count playback.`);}
-      }catch{server.config.logger.warn(`Sample ${id} needs a matching local source and bar analysis.`);}
-    }
-    await add('paper-umbrella','Paper Umbrella','前の試作曲','rumba',source,reportPath);
-    try{
-      const index=JSON.parse(await readFile(indexPath,'utf8'));
-      if(index.schemaVersion!==1||!Array.isArray(index.tracks)||index.tracks.length>29)throw Error('Invalid library');
-      for(const item of index.tracks){
-        if(!['waltz','rumba','chacha','tango','samba'].includes(item.danceId)||!/^local-inputs\/[a-f0-9]{64}\.(mp3|wav|flac|ogg)$/.test(item.sourcePath)||!/^library\/[a-f0-9]{16}\/bar-analysis\.json$/.test(item.analysisPath))continue;
-        await add(item.id,item.title,item.label,item.danceId,path.join(output,item.sourcePath),path.join(output,item.analysisPath),{id:item.id,title:item.title,danceId:item.danceId,level:levelFromFilename(String(item.filenameAtSnapshot??''))},item.sourceSha256);
-      }
-    }catch{ /* A library is optional until the creator prepares the samples. */ }
+    const mine=++generation;
+    const next=await readMusicLibrary(paths,{trialSource:source,warn:message=>server.config.logger.warn(message)});
     if(mine===generation)entries=next;
   }
   await refresh();
@@ -46,6 +21,10 @@ export function musicDevPlugin():Plugin{return{name:'local-music-preview',apply:
   server.watcher.add([...watched]);server.watcher.on('change',changed);server.watcher.on('add',changed);
   server.httpServer?.once('close',()=>{server.watcher.off('change',changed);server.watcher.off('add',changed);});
   const pending=new Map<string,Promise<Buffer>>();
+  // 切り出しの時刻の打ち消しは、曲のサンプリング周波数ごとに 1 回測る（公開の一式 music-pack.ts と同じ）
+  const calibrations=new Map<string,Promise<ClipCalibration>>();
+  const calibrate=(sampleRate:number,rates:number[])=>{const key=`${sampleRate}/${rates.join(',')}`;let found=calibrations.get(key);
+    if(!found){found=assertRubberband().then(()=>calibrateClipShifts(sampleRate,rates));calibrations.set(key,found);found.catch(error=>{calibrations.delete(key);server.config.logger.error(String(error));});}return found;};
   server.middlewares.use(async(req,res,next)=>{
     const url=new URL(req.url??'/','http://localhost');if(!url.pathname.startsWith('/__music/'))return next();
     if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress??'')){res.statusCode=403;res.end();return;}
@@ -71,17 +50,16 @@ export function musicDevPlugin():Plugin{return{name:'local-music-preview',apply:
     if(!entry||!current||!section||!match){res.statusCode=404;res.end();return;}
     try{
       if((await stat(entry.source)).mtimeMs!==entry.stamp)throw Error('Source changed');
-      const key=`${current.revision}-${section.id}-${match[3]}`;
+      const key=`${current.revision}-${CLIP_VERSION}-${section.id}-${match[3]}`;   // 作り方の版を入れる＝作り方を直したら古い app-clips は使わない
       let promise=pending.get(key);
       if(!promise){
         promise=(async()=>{
           const dir=path.join(output,'app-clips'),file=path.join(dir,`${key}.wav`);
           try{return await readFile(file);}catch{}
-          const from=current.beatsMs[section.startTick/960]!/1000,end=current.beatsMs[section.endTick/960]!/1000,rate=Number(match[3]),duration=(end-from)/rate;
-          const filter=`asetpts=PTS-STARTPTS,atrim=start=${from}:end=${end},asetpts=PTS-STARTPTS,atempo=${rate},apad=whole_dur=${duration},atrim=duration=${duration}`;
-          const result=await run('ffmpeg',['-v','error','-i',entry.source,'-af',filter,'-ar','48000','-c:a','pcm_s16le','-f','wav','-'],{encoding:'buffer',maxBuffer:16*1024*1024});
+          const rate=Number(match[3]),{shifts}=await calibrate(await sourceSampleRate(entry.source),current.rates);
+          const clip=await renderClip(entry.source,current,section.id,rate,'pcm',shifts.get(rate)!);
           if((await stat(entry.source)).mtimeMs!==entry.stamp)throw Error('Source changed during rendering');
-          await mkdir(dir,{recursive:true});await writeFile(file,result.stdout);return result.stdout;
+          await mkdir(dir,{recursive:true});await writeFile(file,clip);return clip;
         })();
         pending.set(key,promise);promise.finally(()=>pending.delete(key)).catch(()=>{});
       }

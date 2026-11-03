@@ -52,7 +52,8 @@ test('names: standard long and short forms, recorded name, received from the dis
   const en = createAppTranslator('en');
   assert.equal(voiceDisplayName(ja, DEFAULT_VOICE, 'row'), '標準の声（英語）');
   assert.equal(voiceDisplayName(ja, DEFAULT_VOICE, 'chip'), '標準（英語）');
-  assert.equal(voiceDisplayName(ja, { kind: 'standard', id: 'default-ja-female-v1', locale: 'ja-JP' }, 'row'), '標準の声（日本語）');
+  assert.equal(voiceDisplayName(ja, { kind: 'standard', id: 'default-ja-female-v1', locale: 'ja-JP' }, 'row'), '標準の声（日本語・女性）');
+  assert.equal(voiceDisplayName(ja, { kind: 'standard', id: 'default-ja-male-v1', locale: 'ja-JP' }, 'chip'), '標準（日本語・男性）');
   assert.equal(voiceDisplayName(en, DEFAULT_VOICE, 'chip'), 'Standard (English)');
   const mine = packSelection(packFixture('en', 12));
   assert.equal(voiceDisplayName(ja, mine, 'chip'), '自分の声（英語）');
@@ -65,4 +66,24 @@ test('per-word offsets only come from a pack', () => {
   assert.deepEqual(wordOffsetsFor(DEFAULT_VOICE), {});
   const pack = { ...packFixture('en', 12), timingAdjustments: { globalOffsetMs: 10, wordOffsetsMs: { slow: 15 }, adjustedAt: 'x' } };
   assert.deepEqual(wordOffsetsFor(packSelection(pack)), { slow: 15 });
+});
+
+// 2026-11-03: 日本語の標準の声が女性・男性の 2 つになったら、名前にどちらかを出す（1 つの間は今までどおり）
+test('Japanese standard voices are told apart by female and male only when there are two', () => {
+  const ja = createAppTranslator('ja-JP');
+  const en = createAppTranslator('en');
+  const two = [
+    { id: 'default-en-female-v1', locale: 'en' as const, voice: 'female' as const },
+    { id: 'default-ja-female-v1', locale: 'ja-JP' as const, voice: 'female' as const },
+    { id: 'default-ja-male-v1', locale: 'ja-JP' as const, voice: 'male' as const }
+  ];
+  const female = { kind: 'standard' as const, id: 'default-ja-female-v1', locale: 'ja-JP' as const };
+  const male = { kind: 'standard' as const, id: 'default-ja-male-v1', locale: 'ja-JP' as const };
+  assert.equal(voiceDisplayName(ja, female, 'row', two), '標準の声（日本語・女性）');
+  assert.equal(voiceDisplayName(ja, male, 'chip', two), '標準（日本語・男性）');
+  assert.equal(voiceDisplayName(en, male, 'row', two), 'Standard voice (Japanese, male)');
+  assert.equal(voiceDisplayName(ja, DEFAULT_VOICE, 'chip', two), '標準（英語）', 'English has one voice, so no female/male');
+  const one = two.slice(0, 2);
+  assert.equal(voiceDisplayName(ja, female, 'chip', one), '標準（日本語）', 'with a single Japanese voice the name has no female/male');
+  assert.equal(voiceDisplayName(ja, female, 'chip'), '標準（日本語・女性）', 'the shipped list has two Japanese voices (VOICEPEAK 2026-11-03)');
 });

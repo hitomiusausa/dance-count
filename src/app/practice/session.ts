@@ -221,7 +221,9 @@ export class PracticeSession<A extends AudioLike, V> {
     let voicePack: V;
     try {
       voicePack = await this.deps.loadVoice(audio, options.voice);
-    } catch {
+    } catch (error) {
+      // 画面は「まだ端末に入っていません」だけなので、本当の理由をログに残す（iOS アプリでは Xcode・simctl launch --console-pty に出る）
+      console.warn('[Dance Count] voice failed to load', error);
       void lockPromise.then(lock => lock?.release());
       if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'voice-missing' });
       return;
@@ -235,7 +237,8 @@ export class PracticeSession<A extends AudioLike, V> {
       try {
         if (!this.deps.loadMusic || !this.deps.createMusicEngine) throw new Error('Music playback is unavailable');
         musicAsset = await this.deps.loadMusic(audio, options);
-      } catch {
+      } catch (error) {
+        console.warn('[Dance Count] music failed to load', error);
         void lockPromise.then(lock => lock?.release());
         if (generation === this.generation) this.update({ ...IDLE_VIEW, notice: 'music-missing' });
         return;

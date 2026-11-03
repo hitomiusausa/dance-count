@@ -7,6 +7,7 @@ import { LICENSE_FILES } from './licenses.js';
 import { checkPwaDist, precacheSummary } from './pwa/check-pwa.js';
 import { appUrlLine, isRelease, releaseAppUrlProblem } from './release/app-url.js';
 import { checkDistAudio, findSecrets, loadStandardVoices } from './voices/check-pack.js';
+import { checkMusicPack } from './music-pack-check.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root, 'dist');
@@ -25,7 +26,7 @@ const DATA_MARKERS = {
 const REVIEW_SHEET_MARKER = 'FIGURE-COUNTS-DRAFT';
 const FORBIDDEN_CONTENT = [...Object.values(DATA_MARKERS).flat(), REVIEW_SHEET_MARKER, '__music/', 'Paper Umbrella', '387307378d92a627'];
 // 音声などの実バイナリ以外は拡張子を問わず（.map・.webmanifest・.txt も含め）すべて走査する。
-const BINARY_EXT = /\.(wav|mp3|ogg|m4a|png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i;
+const BINARY_EXT = /\.(wav|mp3|ogg|m4a|flac|png|jpe?g|gif|webp|ico|woff2?|ttf|otf)$/i;
 
 // 自己検査: src/engine/data/ の全 JSON に目印があり、その目印が本当にファイルの中にあること。
 const dataDir = path.join(root, 'src/engine/data');
@@ -49,7 +50,15 @@ for (const file of files) {
     for (const secret of findSecrets(text)) problems.push(`${file} contains a credential: ${secret}`);
   }
 }
-for (const problem of await checkDistAudio(dist, standardVoices)) if (!problems.includes(problem)) problems.push(problem);
+// 公開用の音楽の一式（docs/app-store/RELEASE-PLAN.md §1-2）: 一覧と音源がそろい、余りが無いこと。リリース（DC_REQUIRE_MUSIC=1）は一式が要る
+const music = await checkMusicPack({ dist, files, required: process.env.DC_REQUIRE_MUSIC === '1' });
+for (const problem of music.problems) problems.push(problem);
+for (const problem of await checkDistAudio(dist, standardVoices, music.files)) if (!problems.includes(problem)) problems.push(problem);
+// iOS アプリ（DC_TARGET=ios）は書体を .woff2 だけにする（tools/fonts/drop-woff-fallback.ts）。.woff が残っていたら外し忘れ
+if (process.env.DC_TARGET === 'ios') {
+  const woff = files.filter(file => file.endsWith('.woff'));
+  if (woff.length) problems.push(`the iOS build must not ship .woff fonts (${woff.length} found, e.g. ${woff[0]})`);
+}
 // 段7: Service Worker・manifest・precache（Ruling 89・93）
 for (const problem of await checkPwaDist({ dist, files, standardVoices, fontSubsets: neededFontSubsets(root), preview: process.env.DC_PREVIEW === '1' })) if (!problems.includes(problem)) problems.push(problem);
 // 段8 Task 12（final-review I2）: 公開ビルド（RELEASE=1）は案内文の URL が要る（vite.config.ts と同じ環境変数を見る）
@@ -62,4 +71,4 @@ if (problems.length) {
 }
 const precache = await precacheSummary(dist);
 console.log(`dist OK: ${files.length} files, no legacy pages or unreviewed data, voices: ${standardVoices.map(voice => voice.id).join(', ')}, `
-  + `precache ${precache.entries} entries ${(precache.bytes / 1024 / 1024).toFixed(2)} MB, ${appUrlLine(appUrl)}`);
+  + `precache ${precache.entries} entries ${(precache.bytes / 1024 / 1024).toFixed(2)} MB, ${music.summary}, ${appUrlLine(appUrl)}`);

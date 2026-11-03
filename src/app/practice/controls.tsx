@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { WaltzSpinner } from '../brand/BrandMark.tsx';
 import { Icon } from '../components/Icon.tsx';
 import type { MessageKey } from '../i18n/index.ts';
@@ -12,7 +12,7 @@ import type { SessionNotice } from './session.ts';
 import { BPM_MAX, BPM_MIN, SPEED_PRESETS, type SpeedChoice, type SpeedPreset } from './speed.ts';
 import { BARS_PER_CYCLE } from './bar-count.ts';
 import { tempoText } from './tempo.ts';
-import { VOLUME_MAX, VOLUME_MIN, VOLUME_STEP } from './volume.ts';
+import { VOLUME_MAX, VOLUME_MIN, VOLUME_STEP, rangePercent } from './volume.ts';
 import { canStep, formatVoiceOffset } from './voice-offset.ts';
 import { wakeLockTipKey } from './wake-tip.ts';
 
@@ -84,7 +84,7 @@ export function PracticeToggles({ metronome, leadIn, onMetronome, onLeadIn }: {
   );
 }
 
-// D81: メトロノームの大きさ（0〜1）。「消音」は onMute を渡した画面（音楽）だけ。普通の練習は「メトロノーム オン/オフ」が消音を兼ねる（U4 の操作の数を増やさない）
+// D81: メトロノームの大きさ（0〜1）。「消音」は onMute を渡した画面だけ（音楽・D85 から普通の練習 S2・S5 も）
 // inGroup: S2・S5 では D73 の「音」の束（SoundGroup）の中に入れるので自分の data-group を持たない（束が U4 の 1 つ。VoiceOffsetRow と同じ）
 export function MetronomeVolumeControl({ value, muted = false, inGroup = false, onPreview, onChange, onMute }: {
   value: number; muted?: boolean; inGroup?: boolean; onPreview(value: number): void; onChange(value: number): void; onMute?(): void;
@@ -93,17 +93,28 @@ export function MetronomeVolumeControl({ value, muted = false, inGroup = false, 
   const [dragValue, setDragValue] = useState<number | null>(null);
   useEffect(() => setDragValue(null), [value]);
   const labelId = 'dc-metronome-volume-label';
+  const valueText = translator.t('volumePercent', { percent: rangePercent(dragValue ?? value, 0, 1) });
   return (
     <div class="dc-metronome-volume" data-metronome-volume data-group={inGroup ? undefined : 'metronome-volume'}>
-      <div class="dc-field-label" id={labelId}>{translator.t('metronomeVolume')}</div>
+      <div class="dc-field-label dc-volume-head"><span id={labelId}>{translator.t('metronomeVolume')}</span><span data-volume-value>{valueText}</span></div>
       <div class="dc-music-volume-control">
-        <input aria-labelledby={labelId} type="range" min="0" max="1" step="0.01" value={dragValue ?? value}
+        <input aria-labelledby={labelId} type="range" min="0" max="1" step="0.01" value={dragValue ?? value} aria-valuetext={valueText}
           onInput={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(next); onPreview(next); }}
           onChange={event => { const next = Number((event.currentTarget as HTMLInputElement).value); setDragValue(null); onChange(next); }} />
-        {onMute && <button type="button" class="dc-button dc-button--secondary dc-music-mute" data-mute-metronome aria-label={translator.t(muted?'metronomeUnmuteLabel':'metronomeMuteLabel')} aria-pressed={muted}
-          onClick={onMute}>{translator.t(muted?'musicUnmute':'musicMute')}</button>}
+        {onMute && <MuteButton muted={muted} data="data-mute-metronome" label={muted ? 'metronomeUnmuteLabel' : 'metronomeMuteLabel'} onToggle={onMute} />}
       </div>
     </div>
+  );
+}
+
+// D85: バーの横の「消音」（S2・S5・音楽の画面で同じ形）。押した形は aria-pressed、文字は「消音」⇄「音を戻す」
+export function MuteButton({ muted, data, label, disabled = false, onToggle }: {
+  muted: boolean; data: 'data-mute-metronome' | 'data-mute-voice' | 'data-mute-music' | 'data-mute-count'; label: MessageKey; disabled?: boolean; onToggle(): void;
+}) {
+  const { translator } = useI18n();
+  return (
+    <button type="button" class="dc-button dc-button--secondary dc-music-mute" {...{ [data]: true }} aria-label={translator.t(label)} aria-pressed={muted} disabled={disabled}
+      onClick={onToggle}>{translator.t(muted ? 'musicUnmute' : 'musicMute')}</button>
   );
 }
 
@@ -131,12 +142,20 @@ export function VoiceChip({ name }: { name: string }) {
 }
 
 // 「くわしく」（1画面に1つ。Ruling 18）。label に任意の速さを併記できる（Ruling 31）。
+// 押して開いた時は「くわしく」を画面の上へ送る（2026-11-03: iPhone 12 mini では「くわしく」が下の再生ボタンのすぐ上にあり、
+// 開いても中身は 13px しか見えず・最初の音量のつまみは画面の外＝「開かない」ように見えた）。最初から開いて描く時は動かさない。
 export function MoreOptions({ label, open, onToggle, children }: {
   label: string; open?: boolean; onToggle?(open: boolean): void; children: ComponentChildren;
 }) {
+  const pressed = useRef(false);
   return (
-    <details class="dc-more" open={open} onToggle={event => onToggle?.((event.currentTarget as HTMLDetailsElement).open)}>
-      <summary data-more>
+    <details class="dc-more" open={open} onToggle={event => {
+      const details = event.currentTarget as HTMLDetailsElement;
+      if (details.open && pressed.current) details.querySelector('summary')?.scrollIntoView({ block: 'start' });
+      pressed.current = false;
+      onToggle?.(details.open);
+    }}>
+      <summary data-more onClick={() => { pressed.current = true; }}>
         <span>{label}</span>
         <Icon name="chevron" />
       </summary>
@@ -236,22 +255,22 @@ export function VoiceOffsetRow({ offsetMs, onStep, idPrefix, inGroup = false }: 
 export type VolumeKind = 'voice';
 const VOLUME_LABEL: Record<VolumeKind, MessageKey> = { voice: 'voiceVolume' };
 
-export function SoundGroup({ idPrefix, volumes, onPreview, onCommit, children }: {
-  idPrefix: string; volumes: Record<VolumeKind, number>;
-  onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void; children?: ComponentChildren;
+export function SoundGroup({ idPrefix, volumes, voiceMuted = false, onPreview, onCommit, onVoiceMute, children }: {
+  idPrefix: string; volumes: Record<VolumeKind, number>; voiceMuted?: boolean;
+  onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void; onVoiceMute?(): void; children?: ComponentChildren;
 }) {
   return (
     <div class="dc-sound" data-group="sound">
       {(['voice'] as const).map(kind => (
-        <VolumeSlider key={kind} id={`${idPrefix}-${kind}-volume`} kind={kind} percent={volumes[kind]} onPreview={onPreview} onCommit={onCommit} />
+        <VolumeSlider key={kind} id={`${idPrefix}-${kind}-volume`} kind={kind} percent={volumes[kind]} muted={voiceMuted} onPreview={onPreview} onCommit={onCommit} onMute={onVoiceMute} />
       ))}
       {children}
     </div>
   );
 }
 
-function VolumeSlider({ id, kind, percent, onPreview, onCommit }: {
-  id: string; kind: VolumeKind; percent: number; onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void;
+function VolumeSlider({ id, kind, percent, muted = false, onPreview, onCommit, onMute }: {
+  id: string; kind: VolumeKind; percent: number; muted?: boolean; onPreview(kind: VolumeKind, percent: number): void; onCommit(kind: VolumeKind, percent: number): void; onMute?(): void;
 }) {
   const { translator } = useI18n();
   const [drag, setDrag] = useState<number | null>(null);
@@ -259,13 +278,16 @@ function VolumeSlider({ id, kind, percent, onPreview, onCommit }: {
   const valueText = translator.t('volumePercent', { percent: shown });
   return (
     <div class="dc-volume" data-volume={kind}>
-      <div class="dc-field-label">
+      <div class="dc-field-label dc-volume-head">
         <span id={`${id}-label`}>{translator.t(VOLUME_LABEL[kind])}</span>
         <span data-volume-value>{valueText}</span>
       </div>
-      <input id={id} aria-labelledby={`${id}-label`} type="range" min={VOLUME_MIN} max={VOLUME_MAX} step={VOLUME_STEP} value={shown} aria-valuetext={valueText}
-        onInput={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(value); onPreview(kind, value); }}
-        onChange={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(null); onCommit(kind, value); }} />
+      <div class="dc-music-volume-control">
+        <input id={id} aria-labelledby={`${id}-label`} type="range" min={VOLUME_MIN} max={VOLUME_MAX} step={VOLUME_STEP} value={shown} aria-valuetext={valueText}
+          onInput={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(value); onPreview(kind, value); }}
+          onChange={event => { const value = Number((event.currentTarget as HTMLInputElement).value); setDrag(null); onCommit(kind, value); }} />
+        {onMute && <MuteButton muted={muted} data="data-mute-voice" label={muted ? 'voiceUnmuteLabel' : 'voiceMuteLabel'} onToggle={onMute} />}
+      </div>
     </div>
   );
 }

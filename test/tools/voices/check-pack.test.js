@@ -74,17 +74,23 @@ test('WAV problems are each caught', async () => {
   await expectProblem(ja, async (_, dir) => fs.writeFile(path.join(dir, 'notes.txt'), 'x'), /notes\.txt/);
 });
 
-test('standard-voices.json is the single source: English first, then the Japanese standard voice (stage 6c・D78)', async () => {
+test('standard-voices.json is the single source: English first, then the Japanese standard voices (stage 6c・D78・2026-11-03 female and male)', async () => {
   const voices = await loadStandardVoices();
-  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en' }, { id: 'default-ja-female-v1', locale: 'ja-JP' }]);
+  assert.deepEqual(voices, [{ id: 'default-en-female-v1', locale: 'en', voice: 'female' }, { id: 'default-ja-female-v1', locale: 'ja-JP', voice: 'female' },
+    { id: 'default-ja-male-v1', locale: 'ja-JP', voice: 'male' }]);
 });
 
-test('the shipped Japanese standard pack passes the guard and its gate was approved by the owner (D78)', async () => {
-  const dir = path.join(root, 'public/audio/default-ja-female-v1');
-  const { problems, manifest } = await checkPack(dir);
-  assert.deepEqual(problems, []);
-  assert.equal(manifest.locale, 'ja-JP');
-  assert.equal(manifest.gate.status, 'approved');
+test('the shipped Japanese standard packs pass the guard and their gate was approved by the owner (D78・2026-11-03 VOICEPEAK)', async () => {
+  for (const id of ['default-ja-female-v1', 'default-ja-male-v1']) {
+    const { problems, manifest } = await checkPack(path.join(root, 'public/audio', id), { expectedId: id });
+    assert.deepEqual(problems, [], id);
+    assert.equal(manifest.locale, 'ja-JP');
+    assert.equal(manifest.gate.status, 'approved');
+    assert.equal(manifest.gate.approvedBy, 'ひとみうさ');
+  }
+  // 置き換えた女性の声は語ごとに revision が付く（古い音を持つブラウザも ?v= で取り直す）
+  const female = await checkPack(path.join(root, 'public/audio/default-ja-female-v1'));
+  assert.ok(Object.values(female.manifest.words).every(word => word.revision === 'voicepeak-ja-female-20261103'));
 });
 
 test('checkDistAudio: listed packs must exist and pass; unknown packs must not ship', async () => {
@@ -143,5 +149,38 @@ test('Finder dotfiles (.DS_Store) are ignored by the pack checks', async () => {
     assert.deepEqual(await checkDistAudio(dist, [{ id: 'default-en-female-v1', locale: 'en' }]), []);
   } finally {
     await fs.rm(dist, { recursive: true, force: true });
+  }
+});
+
+// 公開用の音楽の一式（docs/app-store/RELEASE-PLAN.md §1-2）: 名指しされた音源だけが audio/ の外に置ける。名指しの無い音は今までどおり落とす
+test('checkDistAudio: only the music clips named by the checked catalog may live outside audio/', async () => {
+  const dist = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-dist-music-'));
+  try {
+    await fs.cp(englishPack, path.join(dist, 'audio/default-en-female-v1'), { recursive: true });
+    await fs.mkdir(path.join(dist, 'music/t/r'), { recursive: true });
+    await fs.writeFile(path.join(dist, 'music/t/r/early-1.flac'), 'x');
+    await fs.writeFile(path.join(dist, 'music/t/r/stray.flac'), 'x');
+    const voices = [{ id: 'default-en-female-v1', locale: 'en' }];
+    const problems = await checkDistAudio(dist, voices, ['music/t/r/early-1.flac']);
+    assert.deepEqual(problems, ['must not ship music/t/r/stray.flac (audio only under audio/<id in standard-voices.json>/)']);
+    assert.equal((await checkDistAudio(dist, voices)).length, 2, 'without the catalog both are refused');
+  } finally {
+    await fs.rm(dist, { recursive: true, force: true });
+  }
+});
+
+// 2026-11-03: 各行に声の性別（female・male）。日本語に女性・男性の 2 つを並べる時の名前に使う（selection.ts）
+test('each standard voice names female or male', async () => {
+  const fs = await import('node:fs/promises');
+  const os = await import('node:os');
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'dc-voices-json-'));
+  try {
+    const file = path.join(dir, 'standard-voices.json');
+    await fs.writeFile(file, JSON.stringify([{ id: 'default-en-female-v1', locale: 'en' }]));
+    await assert.rejects(loadStandardVoices(file), /voice/);
+    await fs.writeFile(file, JSON.stringify([{ id: 'default-en-female-v1', locale: 'en', voice: 'girl' }]));
+    await assert.rejects(loadStandardVoices(file), /voice/);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
   }
 });

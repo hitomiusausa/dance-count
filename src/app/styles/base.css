@@ -66,7 +66,11 @@ button { cursor: pointer; }
 .dc-ic--fill { fill: currentColor; stroke: none; }
 
 /* 殻・画面 */
-.dc-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.dc-shell { min-height: 100dvh; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+/* iOS アプリ（Capacitor・viewport-fit=cover）では画面が時計・切り欠きの裏まで広がるので、上の安全領域のぶん下げ、
+   そこに背景色の帯を固定する（スクロールした文字が時計の裏に入り込まない）。Safari・ホーム画面の PWA では 0 なので何も変わらない
+   （docs/app-store/RELEASE-PLAN.md・iPhone 12 mini の再現で、直す前は全 40 画面で「戻る」かアプリ名が切り欠きの下に入っていた） */
+.dc-shell::before { content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background: var(--bg); z-index: 20; pointer-events: none; }
 .dc-screen { flex: 1; width: 100%; max-width: 640px; margin: 0 auto; padding: 16px 16px calc(var(--tabh) + 16px + env(safe-area-inset-bottom)); }
 .dc-screen--focus { padding-bottom: 16px; }
 .dc-screen--dock { padding-bottom: calc(var(--dockh) + 16px + env(safe-area-inset-bottom)); }
@@ -276,6 +280,9 @@ button { cursor: pointer; }
 .dc-more summary { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; font-size: 18px; font-weight: 700;
   color: var(--ink2); list-style: none; cursor: pointer; }
 .dc-more summary::-webkit-details-marker { display: none; }
+/* 開いたら「⌄」を上向きに（開いたことが見てわかる）。開いて上へ送る時は、上の安全領域の帯の下で止める（controls.tsx の MoreOptions） */
+.dc-more[open] > summary .dc-ic { transform: rotate(180deg); }
+.dc-more > summary { scroll-margin-top: calc(env(safe-area-inset-top) + 8px); }
 .dc-more-body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
 .dc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dc-chip { min-height: 48px; min-width: 48px; padding: 0 16px; border: var(--bw) solid var(--line); border-radius: var(--r-s); background: var(--surface);
@@ -853,3 +860,6 @@ button { cursor: pointer; }
   .dc-poster-step-text b { font-size: 18pt; }
   .dc-poster-foot { font-size: 9pt; text-align: center; }
 }
+/* D85: バーの名前の横の %（どのバーも同じ）。名前は左・% は右 */
+.dc-volume-head { justify-content: space-between; }
+.dc-volume-head [data-volume-value] { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink2); }

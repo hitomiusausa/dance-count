@@ -3,8 +3,9 @@ import { APP_VERSION } from '../app-version.ts';
 import { BackButton } from '../components/BackButton.tsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Icon } from '../components/Icon.tsx';
-import { ABOUT_PRIVACY_KEYS, ABOUT_TEXT, CONTACT_EMAIL, type AboutKey } from '../i18n/about.ts';
+import { ABOUT_PRIVACY_KEYS, ABOUT_PRIVACY_KEYS_APP, ABOUT_TEXT, CONTACT_EMAIL, type AboutKey } from '../i18n/about.ts';
 import { PhrasedText, phrased } from '../i18n/phrased.tsx';
+import { isNativeApp } from '../platform/native.ts';
 import { reloadAtHome } from '../platform/page.ts';
 import { clearAllAppData } from '../platform/storage.ts';
 import type { UiState } from '../router/routes.ts';
@@ -43,7 +44,8 @@ export function AboutScreen({ uiState }: { uiState?: UiState }) {
       </a>
       <p class="dc-body" data-body>{text('aboutNotOfficial')}</p>
       <h2 class="dc-field-label dc-settings-section">{ABOUT_TEXT[locale].aboutPrivacyHeading}</h2>
-      {ABOUT_PRIVACY_KEYS.map(key => <p key={key} class="dc-body" data-body>{text(key)}</p>)}
+      {/* App Store 版のアプリの中はアプリ用の文（D83。Web 版の Cloudflare・配信サーバー・ブラウザの設定は当てはまらない） */}
+      {(isNativeApp() ? ABOUT_PRIVACY_KEYS_APP : ABOUT_PRIVACY_KEYS).map(key => <p key={key} class="dc-body" data-body>{text(key)}</p>)}
       <h2 class="dc-field-label dc-settings-section">{ABOUT_TEXT[locale].aboutCreditsHeading}</h2>
       <p class="dc-body" data-body>{text('aboutCreditFonts')}</p>
       <p class="dc-body" data-body>{text('aboutCreditCode')}</p>

@@ -4,14 +4,19 @@
   "version": "0.3.0",
   "type": "module",
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build && node tools/check-dist.js",
     "preview": "vite preview",
-    "deploy:cf": "RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && npx -y wrangler@latest deploy",
+    "deploy:cf": "RELEASE=1 DC_REQUIRE_MUSIC=1 DC_MUSIC_PACK=${DC_MUSIC_PACK:-output/music-pack} PUBLIC_APP_URL=https://count.dancemap.jp npm run build && npx -y wrangler@latest deploy",
     "deploy:preview": "DC_PREVIEW=1 RELEASE=1 PUBLIC_APP_URL=https://dance-count-preview.hitomiusausa.workers.dev npm run build && npx -y wrangler@latest deploy -c wrangler.preview.jsonc",
+    "ios:build": "DC_TARGET=ios RELEASE=1 DC_REQUIRE_MUSIC=1 DC_MUSIC_PACK=${DC_MUSIC_PACK:-output/music-pack} PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
+    "music:pack": "node tools/music-pack.ts",
+    "ios:build:test": "DC_TARGET=ios RELEASE=1 PUBLIC_APP_URL=https://count.dancemap.jp npm run build && cap sync ios",
+    "ios:open": "cap open ios",
+    "ios:sim": "tools/ios-sim-check.sh",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
     "test": "node --test \"test/**/*.test.{js,ts}\"",
     "legacy": "python3 -m http.server 4173",
@@ -25,6 +30,7 @@
     "voices:build": "node tools/generate-google-voices.js --measure",
     "voices:plan": "node tools/voices/generate.js --dry-run",
     "voices:synth": "node tools/voices/generate.js",
+    "voices:import": "node tools/voices/import-files.js",
     "voices:process": "node tools/voices/process.js",
     "voices:check": "node tools/voices/check-pack.js",
     "voices:gate": "node tools/voices/render-gate.js",
@@ -50,6 +56,8 @@
     "smoke:music:navigation": "node tools/smoke-music-navigation.js"
   },
   "dependencies": {
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@fontsource/inter": "5.3.0",
     "@fontsource/noto-sans-jp": "5.3.0",
     "preact": "10.29.8",
@@ -57,6 +65,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@capacitor/cli": "8.5.3",
     "@preact/preset-vite": "2.10.6",
     "@types/node": "24.19.2",
     "budoux": "0.9.3",

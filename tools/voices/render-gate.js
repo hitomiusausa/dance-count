@@ -14,6 +14,7 @@ import { compileRhythm } from '../../src/engine/rhythm-compiler.js';
 import { COUNT_VOCABULARIES } from '../../src/engine/count-vocabularies.js';
 import { REQUIRED_VOICE_KEYS } from '../../src/engine/recorded-voice-pack.js';
 import { encodePcm16Wav, parsePcm16Wav } from './wav.js';
+import { renderWithEngine } from './engine-render.js';
 import { ENGLISH_PACK_DIR, TARGET_SAMPLE_RATE, dbfs, measureWord, peakOf } from './pipeline.js';
 
 const root = path.resolve(import.meta.dirname, '../..');
@@ -71,8 +72,17 @@ function click(mix, at, accent) {
   }
 }
 
-// 語の onset を拍に合わせて置く（render-subdivision-audio-review.js と同じ置き方。アプリの「onset を拍に」と同じ）
+// アプリと同じ鳴り方（engine-render.js がアプリの PracticeAudioEngine の予約どおりに足し合わせる）。語の onset を拍に置き、次の語の拍で 12ms で消す。
+// 2026-11-03 訂正: 前は下の renderTrackOverlapped（語を最後まで重ねる）で、アプリの「次の語の拍で切る」と違っていた。
 export function renderTrack(words, compiled, bpm, beatsPerBar, { clicks = true, repetitions = REPETITIONS } = {}) {
+  const { samples } = renderWithEngine(words, compiled, bpm, { sampleRate: RATE, repetitions, clicks, preRollMs: PRE_ROLL_MS, tailMs: TAIL_MS });
+  const peak = peakOf(samples);
+  if (peak > MIX_CEILING) for (let index = 0; index < samples.length; index += 1) samples[index] *= MIX_CEILING / peak;
+  return { samples, preRollMs: PRE_ROLL_MS };
+}
+
+// 語を最後まで重ねる描き方（比べる時だけ。アプリとは違う）
+export function renderTrackOverlapped(words, compiled, bpm, beatsPerBar, { clicks = true, repetitions = REPETITIONS } = {}) {
   const tickSeconds = 60 / bpm / TICKS_PER_BEAT;
   const totalTicks = compiled.durationTicks * repetitions;
   const mix = new Float32Array(Math.ceil((PRE_ROLL_MS / 1000 + totalTicks * tickSeconds + TAIL_MS / 1000) * RATE));
@@ -324,7 +334,7 @@ const trackTitle = track => track.dance + '　' + SPEED[track.speed] + '（1 分
 const app = document.getElementById('app');
 DATA.candidates.forEach((candidate, index) => {
   const n = index + 1;
-  app.append(el('h2', {}, '声 ' + n + '：' + candidate.name + '（速さ ' + candidate.speakingRate + '）'));
+  app.append(el('h2', {}, '声 ' + n + '：' + candidate.name + (candidate.speakingRate == null ? '' : '（速さ ' + candidate.speakingRate + '）')));   // VOICEPEAK などは速さの値が無い
   if (candidate.checks) {
     const ok = candidate.checks.practiceNotWorseThanEnglish && candidate.checks.competitionNotWorseThanEnglish;
     app.append(el('p', { class: 'machine' }, '機械の確認：' + (ok ? '✓ 声どうしの重なりは英語と同じ以下です' : '△ 声どうしが重なる所があります（耳で確かめてください）')));

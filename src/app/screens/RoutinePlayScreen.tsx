@@ -1,5 +1,5 @@
 import { MusicEntry } from '../music/MusicEntry.tsx';
-import { musicPreviewEnabled } from '../platform/music.ts';
+import { musicAvailable } from '../platform/music.ts';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { closeTarget } from '../practice/notice-close';
 import { getDanceProfile } from '../../engine/dance-profiles.js';
@@ -65,7 +65,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     const whole = nextRange.startIndex === 0 && nextRange.endIndex === last;
     return {
       kind: 'routine', danceId: routine.danceId, figures: routine.figures, ...(whole ? {} : { range: nextRange }),
-      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: volumeGain(next.voiceVolume), metronomeVolume: next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
+      bpm: nextChoice.bpm, metronome: next.metronome, countInBars: routineLeadInBars(next, routine), loop: next.loop, voiceVolume: next.voiceMuted ? 0 : volumeGain(next.voiceVolume), metronomeVolume: next.metronomeMuted ? 0 : next.metronomeVolume, barCounting: next.barCounting && barCountingAvailable(routine.danceId), track: null,
       voice, voiceOffsetMs: voiceOffsetFor(next, voice)
     };
   };
@@ -119,10 +119,17 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
     update({ metronome });
     session.setMetronome(metronome);
   };
-  // D81: 普通の練習の消音は「メトロノーム オン/オフ」。音楽の画面の「消音」（metronomeMuted）はここでは使わない
-  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(volume);
+  // D85（ひとみうさ 2026-11-04）: 普通の練習にも「消音」（音楽の画面と同じ metronomeMuted を使う＝消音はどの画面でも 1 つ）。
+  // 消音の間はバーを動かしても鳴らさない（音楽の画面と同じ）。「メトロノーム オン/オフ」はそのまま
+  const previewMetronomeVolume = (volume: number) => session.setMetronomeVolume(latest.current.settings.metronomeMuted ? 0 : volume);
   const saveMetronomeVolume = (volume: number) => {
     latest.current.settings={...latest.current.settings,metronomeVolume:volume};update({metronomeVolume:volume});previewMetronomeVolume(volume);
+  };
+  const toggleMetronomeMute = () => {
+    const metronomeMuted = !latest.current.settings.metronomeMuted;
+    latest.current.settings = { ...latest.current.settings, metronomeMuted };
+    update({ metronomeMuted });
+    session.setMetronomeVolume(metronomeMuted ? 0 : latest.current.settings.metronomeVolume);
   };
 
   const stepVoiceOffset = (direction: -1 | 1) => {
@@ -141,12 +148,19 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
 
   // D73: 大きさ。動かしている間は止めずにすぐ効かせ（再開しない）、離した時に設定へ残す
   const volumeKey = (_kind: VolumeKind) => 'voiceVolume' as const;
-  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: volumeGain(percent) });
+  // D85: 声の消音の間はバーを動かしても鳴らさない（メトロノームの消音と同じ）
+  const previewVolume = (kind: VolumeKind, percent: number) => session.setVolumes({ [kind]: latest.current.settings.voiceMuted ? 0 : volumeGain(percent) });
   const commitVolume = (kind: VolumeKind, percent: number) => {
     const patch = { [volumeKey(kind)]: percent } as Partial<AppSettings>;
     latest.current.settings = { ...latest.current.settings, ...patch };
     update(patch);
-    session.setVolumes({ [kind]: volumeGain(percent) });
+    previewVolume(kind, percent);
+  };
+  const toggleVoiceMute = () => {
+    const voiceMuted = !latest.current.settings.voiceMuted;
+    latest.current.settings = { ...latest.current.settings, voiceMuted };
+    update({ voiceMuted });
+    session.setVolumes({ voice: voiceMuted ? 0 : volumeGain(latest.current.settings.voiceVolume) });
   };
 
   const togglePlay = () => {
@@ -209,7 +223,7 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
             onMetronome={toggleMetronome}
             onLeadIn={() => change({ countInBars: current().countInBars === 1 ? 0 : 1 })} />
           <VoiceChip name={voiceDisplayName(translator, playback.voice ?? DEFAULT_VOICE, 'chip')} />
-          <MoreOptions label={musicPreviewEnabled()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
+          <MoreOptions label={musicAvailable()?translator.t('musicPracticeSettings'):choice.customBpm !== null ? translator.t('moreOptionsWithTempo', { tempo: choice.customBpm, mpm: tempoText(routine.danceId, choice.customBpm) }) : translator.t('moreOptions')}>
             <MusicEntry source={{routineId:routine.id}} range={range} onLeave={()=>session.stop()}/>
             <div>
               <div class="dc-field-label">{translator.t('practiceRange')}</div>
@@ -226,8 +240,8 @@ function RoutinePlayer({ routine, uiState }: { routine: Routine; uiState?: UiSta
               onCommit={value => change(chooseRoutineCustomBpm(current(), profile, routine, value))} />
             <PlaySwitches idPrefix="dc-s5" loop={settings.loop} onLoop={() => change({ loop: !current().loop })}
               barCounting={barCountingAvailable(routine.danceId) ? settings.barCounting : null} onBarCounting={() => change({ barCounting: !current().barCounting })} />
-            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume }} onPreview={previewVolume} onCommit={commitVolume}>
-              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} />
+            <SoundGroup idPrefix="dc-s5" volumes={{ voice: settings.voiceVolume }} voiceMuted={settings.voiceMuted} onPreview={previewVolume} onCommit={commitVolume} onVoiceMute={toggleVoiceMute}>
+              <MetronomeVolumeControl inGroup value={settings.metronomeVolume} muted={settings.metronomeMuted} onPreview={previewMetronomeVolume} onChange={saveMetronomeVolume} onMute={toggleMetronomeMute} />
               <VoiceOffsetRow idPrefix="dc-s5" inGroup offsetMs={playback.offsetMs} onStep={stepVoiceOffset} />
             </SoundGroup>
           </MoreOptions>

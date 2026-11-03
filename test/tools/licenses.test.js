@@ -19,3 +19,9 @@ test('every Workbox package the service worker uses carries the same MIT text', 
     assert.ok(fs.readFileSync(path.join(root, 'node_modules', name, 'LICENSE')).equals(fs.readFileSync(path.join(root, 'public/licenses/Workbox-MIT.txt'))), name);
   }
 });
+
+test('the Capacitor license covers both the app code and the iOS shell', () => {
+  for (const name of ['@capacitor/core', '@capacitor/ios']) {
+    assert.ok(fs.readFileSync(path.join(root, 'node_modules', name, 'LICENSE')).equals(fs.readFileSync(path.join(root, 'public/licenses/Capacitor-MIT.txt'))), name);
+  }
+});

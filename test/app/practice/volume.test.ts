@@ -27,3 +27,14 @@ test('D81: a saved D73 metronome percent carries over to the 0–1 metronome vol
   assert.equal(normalizeSettings({}).metronomeVolume, 1);
   assert.equal('clickVolume' in normalizeSettings({ clickVolume: 50 }), false);
 });
+
+// D85: どのバーも位置を 0〜100 % で見せる
+test('rangePercent shows where the bar is, from 0 to 100', async () => {
+  const { rangePercent } = await import('../../../src/app/practice/volume.ts');
+  assert.equal(rangePercent(0.7, 0, 0.7), 100);
+  assert.equal(rangePercent(0.35, 0, 0.7), 50);
+  assert.equal(rangePercent(1, 0, 1.2), 83);
+  assert.equal(rangePercent(-1, 0, 1), 0);
+  assert.equal(rangePercent(2, 0, 1), 100);
+  assert.equal(rangePercent(Number.NaN, 0, 1), 0);
+});
